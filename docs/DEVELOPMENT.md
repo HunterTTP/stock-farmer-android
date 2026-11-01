@@ -9,6 +9,8 @@
 ## Commands
 
 ```powershell
+./gradlew spotlessApply         # format Kotlin and Gradle files (ktlint)
+./gradlew spotlessCheck         # fail on style violations
 ./gradlew :core:test            # rules tests, no SDK needed
 ./gradlew :app:assembleDebug    # build the debug APK
 adb install -r app/build/outputs/apk/debug/app-debug.apk

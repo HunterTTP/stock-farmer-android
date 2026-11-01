@@ -11,6 +11,6 @@ An Android remake of the Stock Farmer iOS farming game, with identical gameplay,
 ## Quick start
 
 ```powershell
-./gradlew :core:test
+./gradlew spotlessCheck :core:test
 ./gradlew :app:assembleDebug
 ```

@@ -17,7 +17,7 @@ An exact Android remake of the iOS game at `../stock-farmer-ios` (frozen referen
 1. Read `docs/DEVELOPMENT.md` and the relevant row of `docs/PARITY.md`, then the iOS source and tests for the feature.
 2. Work in vertical slices: a feature's rules, tests and UI land together.
 3. Rules go test-first in `core`. Port the iOS tests with the rules; match behavior, not file names.
-4. Run `./gradlew :core:test`, then `./gradlew :app:assembleDebug` for app changes. Resolve failures before committing. Never claim an unrun check passed.
+4. Run `./gradlew spotlessApply` to format, then `./gradlew spotlessCheck :core:test`, then `./gradlew :app:assembleDebug` for app changes. Resolve failures before committing. Never claim an unrun check passed.
 5. Commit in meaningful pieces with clear messages, and `git push` as each piece of work completes. Never commit signing material or secrets.
 6. Keep `docs/PARITY.md` current.
 
