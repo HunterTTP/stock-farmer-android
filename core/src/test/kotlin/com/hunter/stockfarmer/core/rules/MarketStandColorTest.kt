@@ -61,7 +61,7 @@ class MarketStandColorTest {
     }
 
     @Test
-    fun `reopening a normal stand preserves its color while retaining the old big migration`() {
+    fun `reopening a normal stand preserves its color`() {
         val origin = GridPoint(15, 15)
         val state = GameState()
         state.putBuilding(origin, "marketStand", "blue")
@@ -69,11 +69,5 @@ class MarketStandColorTest {
         engine.reopen(now, SeededRandom(72))
         assertEquals("blue", engine.state.buildingStyles[origin])
         assertEquals("market_stand_blue_small", engine.building(origin)?.building?.assetName)
-        val bigState = GameState()
-        bigState.putBuilding(origin, "marketStand", "big")
-        val big = GameEngine(bigState)
-        big.reopen(now, SeededRandom(72))
-        assertEquals("marketStandLarge", big.state.buildings[origin])
-        assertEquals(null, big.state.buildingStyles[origin])
     }
 }

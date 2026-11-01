@@ -24,4 +24,21 @@ class MoneyTest {
         assertEquals("$1.5K", 1_500.0.compactDollars)
         assertEquals("$2M", 2_000_000.0.compactDollars)
     }
+
+    @Test fun `small amounts are written out`() {
+        assertEquals("$25", 25.0.compactDollars)
+        assertEquals("$999", 999.0.compactDollars)
+    }
+
+    @Test fun `thousands and millions drop their zeros`() {
+        for ((amount, text) in listOf(
+            14_000.0 to "$14K",
+            16_000.0 to "$16K",
+            1500.0 to "$1.5K",
+            2_000_000.0 to "$2M",
+            999_999.0 to "$999.9K",
+        )) {
+            assertEquals(text, amount.compactDollars)
+        }
+    }
 }

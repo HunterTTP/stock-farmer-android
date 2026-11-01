@@ -7,12 +7,14 @@ import com.hunter.stockfarmer.core.catalog.RockSize
 import com.hunter.stockfarmer.core.catalog.StorageItem
 import com.hunter.stockfarmer.core.catalog.Tree
 import com.hunter.stockfarmer.core.catalog.TreeSpecies
+import com.hunter.stockfarmer.core.lateGameXP
 import com.hunter.stockfarmer.core.model.Egg
 import com.hunter.stockfarmer.core.model.FishPond
 import com.hunter.stockfarmer.core.model.GameState
 import com.hunter.stockfarmer.core.model.GridPoint
 import com.hunter.stockfarmer.core.model.PondFish
 import com.hunter.stockfarmer.core.persistence.GameStateJson
+import com.hunter.stockfarmer.core.sameState
 import com.hunter.stockfarmer.core.stateWith
 import com.hunter.stockfarmer.core.util.SystemRandomSource
 import com.hunter.stockfarmer.core.util.advancedBy

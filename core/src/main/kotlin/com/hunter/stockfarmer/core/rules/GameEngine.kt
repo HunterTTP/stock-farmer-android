@@ -7,8 +7,9 @@ import com.hunter.stockfarmer.core.model.GameState
 import com.hunter.stockfarmer.core.model.GridPoint
 import com.hunter.stockfarmer.core.model.PlayMode
 import com.hunter.stockfarmer.core.model.ShopItem
+import com.hunter.stockfarmer.core.util.SystemRandomSource
+import com.hunter.stockfarmer.core.util.nextUnit
 import java.time.Instant
-import java.util.concurrent.ThreadLocalRandom
 
 /** How far the axe has got with one tree. */
 internal class ChopPass(
@@ -43,7 +44,7 @@ class GameEngine(
     internal var storagePlacementQuietUntil: Instant? = null
 
     /** A number from 0 up to but not including 1 for each chance the game takes, which tests replace to settle it. */
-    internal var bonusRoll: () -> Double = { ThreadLocalRandom.current().nextDouble() }
+    internal var bonusRoll: () -> Double = { SystemRandomSource.nextUnit() }
 
     /** An independent engine in the same situation, so an action can be previewed without changing this one. */
     fun copy(): GameEngine =

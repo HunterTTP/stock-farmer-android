@@ -39,7 +39,7 @@ fun GameEngine.buyShares(
     quote: StockQuote,
     shares: Long,
     atCents: Long? = null,
-    now: Instant = Instant.now(),
+    now: Instant,
 ): List<GameEvent> {
     val price = atCents ?: quote.priceCents
     val total = StockMarketRules.totalCents(shares, price)
@@ -82,7 +82,7 @@ fun GameEngine.sellShares(
     quote: StockQuote,
     shares: Long,
     atCents: Long? = null,
-    now: Instant = Instant.now(),
+    now: Instant,
 ): List<GameEvent> {
     val price = atCents ?: quote.priceCents
     val total = StockMarketRules.totalCents(shares, price)

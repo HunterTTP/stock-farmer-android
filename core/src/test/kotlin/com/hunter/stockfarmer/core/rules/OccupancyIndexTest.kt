@@ -90,7 +90,7 @@ class OccupancyIndexTest {
 
     @Test
     fun `a fresh worlds trees are all indexed`() {
-        val state = newGame(SeededRandom(1))
+        val state = newGame(SeededRandom(1), now)
         assertFalse(state.trees.isEmpty())
         assertIndexMatchesWhatStands(state)
     }

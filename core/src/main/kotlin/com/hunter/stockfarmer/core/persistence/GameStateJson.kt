@@ -17,10 +17,9 @@ object GameStateJson {
 
     fun decode(text: String): GameState {
         val saved = json.parseToJsonElement(text).jsonObject
-        return json.decodeFromJsonElement(GameState.serializer(), saved.prepareGameState()).also {
-            it.finishDecoding(saved)
+        return json.decodeFromJsonElement(GameState.serializer(), saved).also {
+            it.finishDecoding()
             it.validate()
-            it.keepBottomRowPlots()
             it.reindex()
         }
     }

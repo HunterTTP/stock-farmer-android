@@ -108,11 +108,3 @@ internal fun GameEngine.settleDucksOnPonds(now: Instant) {
         settled += index
     }
 }
-
-/** The tile and the eight around it, the tile first. */
-internal val GridPoint.surroundingTiles: List<GridPoint>
-    get() =
-        listOf(this) +
-            (-1..1).flatMap { rowOffset ->
-                (-1..1).filter { rowOffset != 0 || it != 0 }.map { GridPoint(row + rowOffset, col + it) }
-            }

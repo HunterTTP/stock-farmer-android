@@ -261,7 +261,7 @@ class PetEngineTest {
         val random = SeededRandom(2)
         val allowed = listOf(GridPoint(0, -1), GridPoint(1, 0), right)
         repeat(30) {
-            assertTrue(engine.wanderDirection(AnimalRef.Pet(house), using = random) in allowed)
+            assertTrue(engine.wanderDirection(AnimalRef.Pet(house), now, using = random) in allowed)
         }
     }
 
@@ -270,14 +270,21 @@ class PetEngineTest {
         for (neighbor in GridPoint(21, 20).neighbors) {
             if (neighbor != house) engine.state.water[neighbor] = WaterStyle.medium
         }
-        assertNull(engine.wanderDirection(AnimalRef.Pet(house), using = SeededRandom(3)))
+        assertNull(engine.wanderDirection(AnimalRef.Pet(house), now, using = SeededRandom(3)))
     }
 
     @Test fun `directions lean toward crops`() {
         val engine = engineWithPet()
-        engine.state.plots[GridPoint(21, 23)] = Plot(Crop.starter.id, Instant.now())
+        engine.state.plots[GridPoint(21, 23)] = Plot(Crop.starter.id, now)
         val random = SeededRandom(4)
-        val towards = (0 until 1000).count { engine.wanderDirection(AnimalRef.Pet(house), using = random) == right }
+        val towards =
+            (0 until 1000).count {
+                engine.wanderDirection(
+                    AnimalRef.Pet(house),
+                    now,
+                    using = random,
+                ) == right
+            }
         assertTrue(towards > 350)
     }
 

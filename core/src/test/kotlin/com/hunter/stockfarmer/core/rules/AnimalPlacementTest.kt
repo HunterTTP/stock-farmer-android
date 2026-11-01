@@ -11,11 +11,15 @@ import com.hunter.stockfarmer.core.lateGameXP
 import com.hunter.stockfarmer.core.model.AnimalMeal
 import com.hunter.stockfarmer.core.model.Chicken
 import com.hunter.stockfarmer.core.model.Coop
+import com.hunter.stockfarmer.core.model.FishPond
+import com.hunter.stockfarmer.core.model.GameState
 import com.hunter.stockfarmer.core.model.GridPoint
 import com.hunter.stockfarmer.core.model.Herd
 import com.hunter.stockfarmer.core.model.Livestock
 import com.hunter.stockfarmer.core.model.Pet
 import com.hunter.stockfarmer.core.model.Plot
+import com.hunter.stockfarmer.core.model.PondFish
+import com.hunter.stockfarmer.core.persistence.GameStateJson
 import com.hunter.stockfarmer.core.stateWith
 import com.hunter.stockfarmer.core.updateHerds
 import com.hunter.stockfarmer.core.util.SeededRandom
@@ -51,7 +55,7 @@ class AnimalPlacementTest {
     fun `an animal on a building tile walks off to open ground`() {
         val engine = petEngine(GridPoint(30, 30))
         engine.state.putBuilding(GridPoint(30, 30), "petHouse")
-        val direction = engine.wanderDirection(pet, using = SeededRandom(1))
+        val direction = engine.wanderDirection(pet, now, using = SeededRandom(1))
         assertNotNull(direction)
         val moved = direction?.let { engine.move(pet, it) }
         assertNotNull(moved)
@@ -65,7 +69,7 @@ class AnimalPlacementTest {
         engine.state.pets[GridPoint(20, 20)] = Pet(breed = "grey", name = "Cat", position = GridPoint(22, 22))
         val generator = SeededRandom(2)
         repeat(10) {
-            val direction = engine.wanderDirection(pet, using = generator) ?: return@repeat
+            val direction = engine.wanderDirection(pet, now, using = generator) ?: return@repeat
             engine.move(pet, direction)
         }
         assertTrue(engine.isOpenGround(engine.position(pet)!!))
@@ -80,7 +84,7 @@ class AnimalPlacementTest {
         assertNull(engine.move(pet, GridPoint(0, -1)))
         val generator = SeededRandom(3)
         repeat(200) {
-            val direction = engine.wanderDirection(pet, using = generator) ?: return@repeat
+            val direction = engine.wanderDirection(pet, now, using = generator) ?: return@repeat
             engine.move(pet, direction)
             assertTrue(engine.isOpenGround(engine.position(pet) ?: house))
         }
@@ -302,5 +306,45 @@ class AnimalPlacementTest {
             val spot = engine.move(ref, direction) ?: return@repeat
             assertTrue(max(abs(spot.row - front.row), abs(spot.col - front.col)) <= 2)
         }
+    }
+
+    @Test fun `every animal comes back to the tile it was left on`() {
+        val state = GameState()
+        state.hasRocks = true
+        val pet = GridPoint(10, 10)
+        state.putBuilding(pet, "petHouse")
+        state.pets[pet] = Pet(breed = Cat.starter.id, name = "Mittens", position = GridPoint(15, 13))
+        val coop = GridPoint(30, 30)
+        state.putBuilding(coop, "chickenCoop")
+        state.coops[coop] =
+            Coop(
+                chickens = listOf(Chicken(0, ChickenVariant.all[0].id, "Henny", GridPoint(33, 34), hatchedAt = now)),
+                nextChickAt = now.advancedBy(1_000_000.0),
+            )
+        val hutch = GridPoint(40, 10)
+        state.putBuilding(hutch, "rabbitHutch")
+        state.herds[hutch] =
+            Herd(
+                listOf(Livestock(0, LivestockSpecies.all[0].variants[0].id, "x", GridPoint(44, 12), bornAt = now)),
+                now.advancedBy(1_000_000.0),
+            )
+        for (row in 20..24) for (col in 20..24) state.water[GridPoint(row, col)] = WaterStyle.deep
+        state.herds[GridPoint(22, 22)] =
+            Herd(
+                listOf(Livestock(0, "duck:white", "Daisy", GridPoint(21, 22), bornAt = now)),
+                now.advancedBy(1_000_000.0),
+            )
+        state.fishPonds[GridPoint(20, 20)] = FishPond(PondFish("carp", GridPoint(23, 21)), now)
+        state.lastSavedAt = now
+        val before = GameEngine(state)
+        val engine = GameEngine(GameStateJson.decode(GameStateJson.encode(state)))
+        val random = SeededRandom(1)
+        val later = now.advancedBy(5 * 86_400.0)
+        engine.reopen(later, random)
+        engine.updateCoops(later, random)
+        engine.updateHerds(later, random)
+        assertEquals(4, before.animals.size)
+        assertEquals(before.state.fishPonds, engine.state.fishPonds)
+        for (animal in before.animals) assertEquals(before.position(animal), engine.position(animal), "$animal")
     }
 }

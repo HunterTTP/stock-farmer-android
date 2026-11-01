@@ -110,4 +110,10 @@ class SaveSafetyTest {
         assertEquals(99.0, slots.load(0)?.money)
         assertEquals(99.0, slots.slots()[0]?.money)
     }
+
+    @Test fun `a damaged field is reported so the original save can be preserved`() {
+        assertThrows(Exception::class.java) {
+            GameStateJson.decode("""{"money":42,"mode":"nonsense","selectedWaterStyle":7}""")
+        }
+    }
 }

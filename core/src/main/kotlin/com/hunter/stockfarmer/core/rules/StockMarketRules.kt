@@ -106,5 +106,3 @@ object StockMarketRules {
 }
 
 val Holding.value: Double get() = StockMarketRules.dollars(valueCents)
-val Holding.averageCost: Double get() = StockMarketRules.dollars(averageCostCents)
-val Holding.lastPrice: Double get() = StockMarketRules.dollars(lastPriceCents)

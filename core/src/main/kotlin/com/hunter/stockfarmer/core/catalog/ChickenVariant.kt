@@ -11,7 +11,6 @@ data class ChickenVariant(
     val isRooster: Boolean get() = id.startsWith("cock-")
 
     companion object {
-        val chickAssetName = "Chick_48x48"
         val all =
             listOf(
                 ChickenVariant("hen-brown", "Brown Hen", "Chicken_Brown_48x48"),

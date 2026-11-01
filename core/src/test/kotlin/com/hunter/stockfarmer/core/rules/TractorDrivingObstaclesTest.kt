@@ -13,6 +13,7 @@ import com.hunter.stockfarmer.core.catalog.RockSize
 import com.hunter.stockfarmer.core.catalog.Tree
 import com.hunter.stockfarmer.core.catalog.TreeColor
 import com.hunter.stockfarmer.core.catalog.WaterStyle
+import com.hunter.stockfarmer.core.lateGameXP
 import com.hunter.stockfarmer.core.model.Chicken
 import com.hunter.stockfarmer.core.model.Coop
 import com.hunter.stockfarmer.core.model.GameState
@@ -26,11 +27,13 @@ import com.hunter.stockfarmer.core.model.TractorRun
 import com.hunter.stockfarmer.core.model.tractorOccupiedTiles
 import com.hunter.stockfarmer.core.persistence.GameStateJson
 import com.hunter.stockfarmer.core.sameState
+import com.hunter.stockfarmer.core.stateWith
 import com.hunter.stockfarmer.core.util.advancedBy
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.time.Instant
@@ -329,5 +332,44 @@ class TractorDrivingObstaclesTest {
         )
         assertTrue(finish(engine).isEmpty())
         assertTrue(engine.state.plots[beyondHome] != null && engine.state.tractorCargo[home] == mapOf("wheat" to 1))
+    }
+
+    @Test fun `parked tractor reserves its whole ground footprint`() {
+        val tractor = Building.named("tractor1")!!
+        for (style in listOf("right", "left", "front", "back")) {
+            val building = tractor.styled(style)
+            for (tile in building.footprint(home)) {
+                val engine = GameEngine(stateWith(money = 1_000_000.0, xp = lateGameXP, logs = 100_000))
+                engine.select(tractor.styles.first { it.id == style }, tractor)
+                engine.beginPlacing(home)
+                engine.movePlacement(home)
+                engine.state.rocks[tile] = RockSize.small
+                assertEquals(Rejection.NotEnoughSpace, engine.placementRejection(now))
+                engine.state.rocks.remove(tile)
+                engine.state.fences[tile] = FenceColor.all[0].id
+                assertEquals(Rejection.NotEnoughSpace, engine.placementRejection(now))
+                engine.state.fences.remove(tile)
+                assertFalse(engine.confirmPlacement(now).containsRejection)
+                assertEquals(home, engine.state.buildingBlocking(tile)?.origin)
+                engine.beginMoving(engine.building(home)!!)
+                engine.movePlacement(GridPoint(home.row + 1, home.col))
+                assertFalse(engine.confirmPlacement(now).containsRejection)
+            }
+        }
+    }
+
+    @Test fun `current trips reject steps longer than one tile`() {
+        val engine = engine()
+        assertTrue(engine.startTractorHarvest(home, "wheat", now).isEmpty())
+        val run = engine.state.tractorRun!!
+        engine.state.tractorRun = run.copy(nextTile = GridPoint(run.position.row, run.position.col + 2))
+        assertThrows(Exception::class.java) { GameStateJson.decode(GameStateJson.encode(engine.state)) }
+    }
+
+    @Test fun `malformed saved trip is rejected before driving`() {
+        val engine = engine()
+        assertTrue(engine.startTractorHarvest(home, "wheat", now).isEmpty())
+        engine.state.tractorRun = engine.state.tractorRun!!.copy(nextTile = GridPoint(Int.MAX_VALUE, Int.MAX_VALUE))
+        assertThrows(Exception::class.java) { GameStateJson.decode(GameStateJson.encode(engine.state)) }
     }
 }

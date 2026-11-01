@@ -1,6 +1,8 @@
 package com.hunter.stockfarmer.core.rules
 
+import com.hunter.stockfarmer.core.model.CareerRecord
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
@@ -24,5 +26,17 @@ class SeasonTest {
     fun `a day before the first counts as spring`() {
         assertEquals(Season.spring, Season.of(0))
         assertEquals(Season.spring, Season.of(-5))
+    }
+
+    @Test fun `seasons and sightings are remembered`() {
+        val engine = GameEngine()
+        assertTrue(engine.hasSeenEnvironment(CareerRecord.environmentID(Season.spring)))
+        assertFalse(engine.hasSeenEnvironment(CareerRecord.environmentID(Season.winter)))
+        engine.setSeason(Season.winter)
+        engine.setSeason(Season.fall)
+        assertTrue(engine.hasSeenEnvironment(CareerRecord.environmentID(Season.winter)))
+        engine.noteSeenEnvironment(CareerRecord.environmentID(Butterflies.Wings.Shifting))
+        assertTrue(engine.hasSeenEnvironment("butterfly:shifting"))
+        assertFalse(engine.hasSeenEnvironment("butterfly:rare"))
     }
 }

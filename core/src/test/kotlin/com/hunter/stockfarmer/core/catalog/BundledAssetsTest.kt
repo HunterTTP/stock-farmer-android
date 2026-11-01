@@ -1,7 +1,6 @@
 package com.hunter.stockfarmer.core.catalog
 
 import com.hunter.stockfarmer.core.feedback.MusicLoudness
-import com.hunter.stockfarmer.core.model.compactDollars
 import com.hunter.stockfarmer.core.rules.Season
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -10,7 +9,7 @@ import org.junit.jupiter.api.Test
 import java.io.File
 import java.security.MessageDigest
 
-class RemainingAssetTest {
+class BundledAssetsTest {
     private val images =
         listOf(File("../app/src/main/assets/images"), File("app/src/main/assets/images"))
             .first { it.isDirectory }
@@ -70,22 +69,5 @@ class RemainingAssetTest {
                 .map { it.relativeTo(music).invariantSeparatorsPath.removeSuffix(".m4a") }
                 .toSet()
         assertEquals(Season.entries.flatMap { SeasonalSoundtrack.tracks(it) }.toSet(), bundled)
-    }
-
-    @Test fun `small amounts are written out`() {
-        assertEquals("$25", 25.0.compactDollars)
-        assertEquals("$999", 999.0.compactDollars)
-    }
-
-    @Test fun `thousands and millions drop their zeros`() {
-        for ((amount, text) in listOf(
-            14_000.0 to "$14K",
-            16_000.0 to "$16K",
-            1500.0 to "$1.5K",
-            2_000_000.0 to "$2M",
-            999_999.0 to "$999.9K",
-        )) {
-            assertEquals(text, amount.compactDollars)
-        }
     }
 }
