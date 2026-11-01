@@ -28,6 +28,7 @@ import kotlin.math.min
 class FarmRenderer(
     private val textures: TextureLibrary,
     private val sources: List<StandingSource> = emptyList(),
+    private val groundEffects: ((SpriteBatch, GameState, Instant) -> Unit)? = null,
 ) {
     private val standing = ArrayList<Standing>()
     private val timelines = HashMap<Plot, GrowthTimelines>()
@@ -39,6 +40,7 @@ class FarmRenderer(
     ) {
         val season = state.season
         drawGround(batch, state, season)
+        groundEffects?.invoke(batch, state, now)
         standing.clear()
         collectBuildings(batch, state)
         collectTrees(batch, state)

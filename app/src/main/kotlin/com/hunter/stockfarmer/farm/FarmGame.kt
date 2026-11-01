@@ -14,6 +14,9 @@ import com.hunter.stockfarmer.core.rules.DayNightCycle
 import com.hunter.stockfarmer.core.rules.advanceTractor
 import com.hunter.stockfarmer.core.rules.minuteOfDay
 import com.hunter.stockfarmer.farm.animals.animalSources
+import com.hunter.stockfarmer.farm.effects.EffectLayers
+import com.hunter.stockfarmer.farm.effects.EffectPhase
+import com.hunter.stockfarmer.farm.effects.effectLayers
 import com.hunter.stockfarmer.game.GameSession
 import com.hunter.stockfarmer.game.ViewSnapshot
 import com.hunter.stockfarmer.game.preview
@@ -29,6 +32,7 @@ class FarmGame(
 ) : ApplicationAdapter() {
     private lateinit var batch: SpriteBatch
     private lateinit var textures: TextureLibrary
+    private lateinit var effects: EffectLayers
     private lateinit var renderer: FarmRenderer
     private lateinit var farmPhoto: FarmPhoto
     private val camera = OrthographicCamera()
@@ -37,7 +41,13 @@ class FarmGame(
     override fun create() {
         batch = SpriteBatch()
         textures = TextureLibrary()
-        renderer = FarmRenderer(textures, listOf(TractorLayer(textures)) + animalSources(textures))
+        effects = effectLayers(textures)
+        renderer =
+            FarmRenderer(
+                textures,
+                listOf(TractorLayer(textures)) + animalSources(textures) + effects.sources,
+                groundEffects = { batch, state, now -> effects.draw(EffectPhase.GROUND, batch, state, now, camera) },
+            )
         Gdx.input.inputProcessor = GestureDetector(Gestures())
         farmPhoto = FarmPhoto(renderer, batch)
         session.photos.handler = { pixels, done ->
@@ -96,9 +106,14 @@ class FarmGame(
         batch.begin()
         val now = Instant.now()
         driveTractor(now)
-        session.read { renderer.draw(batch, it, now) }
-        session.preview(now)?.let { renderer.drawPreview(batch, textures, it) }
+        session.read {
+            effects.draw(EffectPhase.BACKGROUND, batch, it, now, camera)
+            renderer.draw(batch, it, now)
+            effects.draw(EffectPhase.BEFORE_TINT, batch, it, now, camera)
+        }
         drawNightTint(now)
+        session.read { effects.draw(EffectPhase.AFTER_TINT, batch, it, now, camera) }
+        session.preview(now)?.let { renderer.drawPreview(batch, textures, it) }
         batch.end()
     }
 
