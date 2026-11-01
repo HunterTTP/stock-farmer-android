@@ -393,6 +393,133 @@ object HudIcons {
             }
         }
 
+    val cameraFill =
+        icon("camera.fill") {
+            filled(PathFillType.EvenOdd) {
+                polygon(
+                    listOf(
+                        2f to 8f,
+                        7f to 8f,
+                        8.5f to 5f,
+                        15.5f to 5f,
+                        17f to 8f,
+                        22f to 8f,
+                        22f to 20f,
+                        2f to 20f,
+                    ),
+                )
+                circle(12f, 13.5f, 4f)
+            }
+        }
+
+    val film =
+        icon("film") {
+            stroked(1.8f) {
+                polygon(listOf(3f to 5f, 21f to 5f, 21f to 19f, 3f to 19f))
+                moveTo(7f, 5f)
+                lineTo(7f, 19f)
+                moveTo(17f, 5f)
+                lineTo(17f, 19f)
+                moveTo(3f, 9.5f)
+                lineTo(7f, 9.5f)
+                moveTo(3f, 14.5f)
+                lineTo(7f, 14.5f)
+                moveTo(17f, 9.5f)
+                lineTo(21f, 9.5f)
+                moveTo(17f, 14.5f)
+                lineTo(21f, 14.5f)
+            }
+        }
+
+    val folderFill =
+        icon("folder.fill") {
+            filled {
+                polygon(listOf(2f to 6f, 9f to 6f, 11f to 8f, 22f to 8f, 22f to 19f, 2f to 19f))
+            }
+        }
+
+    val gamecontrollerFill =
+        icon("gamecontroller.fill") {
+            filled(PathFillType.EvenOdd) {
+                moveTo(7f, 7f)
+                lineTo(17f, 7f)
+                curveTo(20.5f, 7f, 22.5f, 11f, 22.5f, 15f)
+                curveTo(22.5f, 17.5f, 21f, 18.5f, 19.5f, 18.5f)
+                curveTo(18f, 18.5f, 17f, 17.5f, 16f, 16.5f)
+                lineTo(8f, 16.5f)
+                curveTo(7f, 17.5f, 6f, 18.5f, 4.5f, 18.5f)
+                curveTo(3f, 18.5f, 1.5f, 17.5f, 1.5f, 15f)
+                curveTo(1.5f, 11f, 3.5f, 7f, 7f, 7f)
+                close()
+                polygon(listOf(5.4f to 9.6f, 6.6f to 9.6f, 6.6f to 14.4f, 5.4f to 14.4f))
+                polygon(listOf(3.6f to 11.4f, 8.4f to 11.4f, 8.4f to 12.6f, 3.6f to 12.6f))
+                circle(16.5f, 10.5f, 1.1f)
+                circle(18.8f, 13f, 1.1f)
+            }
+        }
+
+    val speedometer =
+        icon("speedometer") {
+            stroked(1.8f) {
+                moveTo(3.5f, 17f)
+                arcTo(9f, 9f, 0f, true, true, 20.5f, 17f)
+                moveTo(12f, 13f)
+                lineTo(16f, 8f)
+            }
+        }
+
+    val listBulletRectangle =
+        icon("list.bullet.rectangle") {
+            stroked(1.8f) {
+                polygon(listOf(3f to 5f, 21f to 5f, 21f to 19f, 3f to 19f))
+                moveTo(10f, 9f)
+                lineTo(17f, 9f)
+                moveTo(10f, 12f)
+                lineTo(17f, 12f)
+                moveTo(10f, 15f)
+                lineTo(17f, 15f)
+                moveTo(7f, 9f)
+                lineTo(7.1f, 9f)
+                moveTo(7f, 12f)
+                lineTo(7.1f, 12f)
+                moveTo(7f, 15f)
+                lineTo(7.1f, 15f)
+            }
+        }
+
+    val codeBrackets =
+        icon("chevron.left.forwardslash.chevron.right") {
+            stroked(2f) {
+                moveTo(8f, 7f)
+                lineTo(3f, 12f)
+                lineTo(8f, 17f)
+                moveTo(16f, 7f)
+                lineTo(21f, 12f)
+                lineTo(16f, 17f)
+                moveTo(13.5f, 5f)
+                lineTo(10.5f, 19f)
+            }
+        }
+
+    val handRaised =
+        icon("hand.raised") {
+            stroked(1.8f) {
+                moveTo(7f, 12f)
+                lineTo(7f, 6.5f)
+                moveTo(10.5f, 11f)
+                lineTo(10.5f, 4.5f)
+                moveTo(14f, 11f)
+                lineTo(14f, 5.5f)
+                moveTo(17.5f, 12f)
+                lineTo(17.5f, 8f)
+                moveTo(7f, 12f)
+                lineTo(7f, 14f)
+                curveTo(7f, 19f, 10f, 21f, 12.5f, 21f)
+                curveTo(15.5f, 21f, 17.5f, 18.5f, 17.5f, 15f)
+                lineTo(17.5f, 12f)
+            }
+        }
+
     val lineThreeHorizontalDecreaseCircle =
         icon("line.3.horizontal.decrease.circle") {
             stroked(1.8f) { circle(12f, 12f, 9.2f) }

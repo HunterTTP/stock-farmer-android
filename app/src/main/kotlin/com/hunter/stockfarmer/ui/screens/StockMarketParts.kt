@@ -5,11 +5,12 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -112,7 +113,11 @@ internal fun StockRow(
                     Text(if (change >= 0) "▲" else "▼", color = changeColor, style = HudType.subheadline)
                 }
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+                itemVerticalAlignment = Alignment.CenterVertically,
+            ) {
                 Text(row.price, color = Theme.money, style = HudType.headline.copy(fontWeight = FontWeight.Bold))
                 row.dayChange?.let {
                     Text(it, color = changeColor, style = HudType.subheadline.copy(fontWeight = FontWeight.Bold))
@@ -145,7 +150,11 @@ private fun TradePill(
     onClick: () -> Unit,
 ) {
     Box(
-        Modifier.size(72.dp, 36.dp).background(fill, CircleShape).clickable(role = Role.Button, onClick = onClick),
+        Modifier
+            .defaultMinSize(minWidth = 72.dp, minHeight = 36.dp)
+            .background(fill, CircleShape)
+            .clickable(role = Role.Button, onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 6.dp),
         contentAlignment = Alignment.Center,
     ) {
         Text(title, color = text, style = HudType.subheadline.copy(fontWeight = FontWeight.Bold))
@@ -159,9 +168,10 @@ internal fun PillButton(
     text: Color,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    cornerRadius: androidx.compose.ui.unit.Dp = 16.dp,
     onClick: () -> Unit,
 ) = com.hunter.stockfarmer.ui.theme
-    .PillButton(title, fill, text, modifier, enabled, onClick)
+    .PillButton(title, fill, text, modifier, enabled, cornerRadius, onClick)
 
 @Composable
 internal fun PillButton(
@@ -246,7 +256,7 @@ internal fun SearchCard(
         )
         Box(
             Modifier
-                .height(44.dp)
+                .defaultMinSize(minHeight = 44.dp)
                 .background(Theme.accent.copy(alpha = 0.15f), CircleShape)
                 .clickable(enabled = !loading, role = Role.Button, onClick = onRun)
                 .padding(horizontal = 16.dp),

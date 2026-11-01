@@ -6,9 +6,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
@@ -114,7 +114,11 @@ fun QuantityControls(
         verticalArrangement = Arrangement.spacedBy(20.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Row(horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.CenterVertically) {
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(14.dp, Alignment.CenterHorizontally),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+            itemVerticalAlignment = Alignment.CenterVertically,
+        ) {
             StepButton(HudIcons.minus, "Fewer", QuantityRange.canDecrease(quantity)) {
                 val next = QuantityRange.fewer(quantity)
                 textValue = next.toString()
@@ -151,7 +155,7 @@ fun QuantityControls(
             Box(
                 Modifier
                     .pulsing(pulsesMax)
-                    .height(40.dp)
+                    .heightIn(min = 40.dp)
                     .background(Theme.accent.copy(alpha = 0.15f), CircleShape)
                     .clickable(role = Role.Button) {
                         onMax()
