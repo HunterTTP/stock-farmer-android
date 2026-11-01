@@ -1,18 +1,23 @@
 package com.hunter.stockfarmer.game
 
 import com.hunter.stockfarmer.core.model.GridPoint
+import com.hunter.stockfarmer.core.rules.AnimalRef
+import com.hunter.stockfarmer.core.rules.GameEngine
 import com.hunter.stockfarmer.core.rules.GameEvent
 import com.hunter.stockfarmer.core.rules.addPlayTime
 import com.hunter.stockfarmer.core.rules.beginNewDayIfDue
 import com.hunter.stockfarmer.core.rules.eatFavoriteCrops
 import com.hunter.stockfarmer.core.rules.growTrees
 import com.hunter.stockfarmer.core.rules.layEggs
+import com.hunter.stockfarmer.core.rules.move
 import com.hunter.stockfarmer.core.rules.petTendsCrop
 import com.hunter.stockfarmer.core.rules.updateCoops
 import com.hunter.stockfarmer.core.rules.updateFish
 import com.hunter.stockfarmer.core.rules.updateHerds
+import com.hunter.stockfarmer.core.rules.wanderDirection
 import com.hunter.stockfarmer.core.util.RandomSource
 import com.hunter.stockfarmer.core.util.SystemRandomSource
+import com.hunter.stockfarmer.core.util.nextUnit
 import com.hunter.stockfarmer.core.util.secondsSince
 import java.time.Instant
 import kotlin.math.min
@@ -49,6 +54,7 @@ class GameTick(
             events += engine.eatFavoriteCrops(now)
             engine.growTrees(now)
             engine.beginNewDayIfDue(now)
+            walkAnimals(engine, now, random)
             events.filter { it !is GameEvent.Hatched && it !is GameEvent.Born }
         }
 
@@ -56,3 +62,22 @@ class GameTick(
         const val MOST_INTERVAL = 2.0
     }
 }
+
+/** Every animal that has somewhere to go takes a step now and then, the way the iOS scene walks them. */
+internal fun walkAnimals(
+    engine: GameEngine,
+    now: Instant,
+    random: RandomSource,
+) {
+    val state = engine.state
+    val animals =
+        state.pets.keys.map { AnimalRef.Pet(it) } +
+            state.coops.flatMap { (coop, value) -> value.chickens.map { AnimalRef.Chicken(coop, it.id) } } +
+            state.herds.flatMap { (home, herd) -> herd.animals.map { AnimalRef.Livestock(home, it.id) } }
+    for (animal in animals) {
+        if (random.nextUnit() > STEP_CHANCE) continue
+        engine.wanderDirection(animal, now, random)?.let { engine.move(animal, it) }
+    }
+}
+
+private const val STEP_CHANCE = 0.6
