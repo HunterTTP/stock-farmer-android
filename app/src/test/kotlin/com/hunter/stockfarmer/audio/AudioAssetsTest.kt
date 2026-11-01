@@ -9,19 +9,19 @@ import java.io.File
 class AudioAssetsTest {
     private val assets = File("src/main/assets")
 
-    @Test fun `every cue has playable mono WAV variants within the SoundPool decoded limit`() {
+    @Test fun `every cue has playable OGG variants within the SoundPool decoded limit`() {
         for (cue in SoundCue.entries) {
             val files =
                 File(assets, "audio/Effects/${cue.clips.folder}")
                     .listFiles()
                     .orEmpty()
-                    .filter { it.extension == "wav" && cue.clips.includes(it.nameWithoutExtension) }
+                    .filter { it.extension == "ogg" && cue.clips.includes(it.nameWithoutExtension) }
             assertTrue(files.isNotEmpty(), cue.name)
             for (file in files) {
-                val wave = file.inputStream().use(WaveClip::read)
-                assertEquals(44100L, wave.sampleRate, file.name)
-                assertTrue(wave.duration > 0, file.name)
-                assertTrue(wave.byteCount <= 1_048_576, "${file.name} exceeds SoundPool's decoded buffer")
+                val clip = file.inputStream().use(OggClip::read)
+                assertTrue(clip.sampleRate in setOf(44100L, 48000L), file.name)
+                assertTrue(clip.duration > 0, file.name)
+                assertTrue(clip.byteCount <= 1_048_576, "${file.name} exceeds SoundPool's decoded buffer")
             }
         }
     }

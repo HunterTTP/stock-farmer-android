@@ -1,0 +1,5 @@
+{
+  "private": true,
+  "description": "Tool-time dependencies for convert-audio.mjs; not shipped in the app.",
+  "dependencies": { "wasm-media-encoders": "0.7.0" }
+}

@@ -37,7 +37,7 @@ class AmbientPlayer(
         if (!loaded) {
             loaded = true
             output.load(
-                "audio/Effects/Ambience/steady-rain-loop.wav",
+                "audio/Effects/Ambience/steady-rain-loop.ogg",
                 ready = {
                     if (!closed) {
                         ready = true

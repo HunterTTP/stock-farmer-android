@@ -51,14 +51,14 @@ internal class SoundPoolOutput(
                     val folder = "audio/Effects/${cue.clips.folder}"
                     val names = runCatching { assets.list(folder).orEmpty().toList() }.getOrDefault(emptyList())
                     names
-                        .filter { it.endsWith(".wav") && cue.clips.includes(it.removeSuffix(".wav")) }
+                        .filter { it.endsWith(".ogg") && cue.clips.includes(it.removeSuffix(".ogg")) }
                         .sorted()
                         .mapNotNull { name ->
                             val path = "$folder/$name"
                             runCatching {
-                                val wave = assets.open(path).use(WaveClip::read)
-                                require(wave.byteCount <= 1_048_576) { "Clip exceeds SoundPool's decoded buffer" }
-                                Asset(path, wave.duration)
+                                val clip = assets.open(path).use(OggClip::read)
+                                require(clip.byteCount <= 1_048_576) { "Clip exceeds SoundPool's decoded buffer" }
+                                Asset(path, clip.duration)
                             }.onFailure { Log.w(TAG, "Could not read $path", it) }.getOrNull()
                         }
                 }

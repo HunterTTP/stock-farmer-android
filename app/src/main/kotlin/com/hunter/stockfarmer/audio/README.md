@@ -25,7 +25,7 @@ in the private `sound` SharedPreferences using the iOS channel keys. No old-save
 focus interruptions; rain and effects mix with other apps, as on iOS. Android uses the device's media-volume
 controls rather than the iOS silent-switch policy.
 
-Effects use the converted mono WAVs and SoundPool; music and rain use platform MediaPlayer, with no new runtime
+Effects use the converted OGG Vorbis files and SoundPool; music and rain use platform MediaPlayer, with no new runtime
 dependency. Missing or invalid recordings are skipped and logged. Cues fired before loading or while paused are
 dropped. The native adapters require a device to verify audible balance, decoding, routing and interruptions.
 

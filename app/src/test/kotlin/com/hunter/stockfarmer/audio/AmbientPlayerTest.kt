@@ -19,7 +19,7 @@ class AmbientPlayerTest {
             completed: () -> Unit,
             failed: () -> Unit,
         ) {
-            assertEquals("audio/Effects/Ambience/steady-rain-loop.wav", path)
+            assertEquals("audio/Effects/Ambience/steady-rain-loop.ogg", path)
             this.ready = ready
             loads++
         }
