@@ -1,5 +1,6 @@
 package com.hunter.stockfarmer.ui.theme
 
+import androidx.compose.ui.graphics.ClipOp
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -16,6 +17,14 @@ internal class PulseTest {
     fun scaleSwellsUnlessMotionIsReduced() {
         assertEquals(1.05f, Pulse.scale(1f, reduceMotion = false), 1e-6f)
         assertEquals(1f, Pulse.scale(1f, reduceMotion = true), 1e-6f)
+    }
+
+    @Test
+    fun insideGlowStaysInsideAndDoesNotScale() {
+        assertEquals(ClipOp.Intersect, Pulse.clipOp(inside = true))
+        assertEquals(ClipOp.Difference, Pulse.clipOp(inside = false))
+        assertEquals(1f, Pulse.scale(1f, reduceMotion = false, inside = true), 1e-6f)
+        assertEquals(1.05f, Pulse.scale(1f, reduceMotion = false, inside = false), 1e-6f)
     }
 
     @Test

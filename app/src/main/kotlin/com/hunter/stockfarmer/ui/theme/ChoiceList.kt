@@ -125,7 +125,7 @@ fun ChoiceList(
         choices.forEach { choice ->
             Box(
                 Modifier
-                    .pulsing(choice.pulses, keepsPlace = false, shape = RectangleShape)
+                    .pulsing(choice.pulses, keepsPlace = false, shape = RectangleShape, inside = true)
                     .onGloballyPositioned {
                         if (choice.isSelected) {
                             selectedTop.intValue = it.positionInParent().y.toInt()

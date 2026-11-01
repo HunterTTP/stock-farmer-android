@@ -65,11 +65,25 @@ object Pulse {
 
     /** Alpha of each ring; the rings overlap, so the halo is strongest at the outline and fades outward. */
     fun ringAlpha(swell: Float): Float = GLOW_ALPHA * swell / (GLOW_STEPS / 2f)
+
+    /** An inside glow paints within the outline; an outside halo paints everything but the inside. */
+    fun clipOp(inside: Boolean): ClipOp = if (inside) ClipOp.Intersect else ClipOp.Difference
+
+    /** An inside glow stays put, since a swell would spill past the edges of a view that fills its scrolling parent. */
+    fun scale(
+        swell: Float,
+        reduceMotion: Boolean,
+        inside: Boolean,
+    ): Float = if (inside) 1f else scale(swell, reduceMotion)
 }
 
-/** A soft gold halo hugging the outside of [shape]. The inside of the outline is never painted, so a translucent view shows no box. */
+/**
+ * A soft gold halo hugging the outside of [shape]. The inside of the outline is never painted, so a translucent view shows no box.
+ * With [inside] the halo hugs the inner edge instead, for a view whose parent clips what lies outside it.
+ */
 fun Modifier.pulseGlow(
     shape: Shape,
+    inside: Boolean = false,
     swell: () -> Float,
 ): Modifier =
     drawBehind {
@@ -82,7 +96,7 @@ fun Modifier.pulseGlow(
                 is Outline.Rounded -> Path().apply { addRoundRect(outline.roundRect) }
                 is Outline.Generic -> outline.path
             }
-        clipPath(path, ClipOp.Difference) {
+        clipPath(path, Pulse.clipOp(inside)) {
             val color = Theme.gold.copy(alpha = Pulse.ringAlpha(amount).coerceIn(0f, 1f))
             for (step in 0 until Pulse.GLOW_STEPS) {
                 drawPath(path, color, style = Stroke(Pulse.ringWidth(step, radius), join = StrokeJoin.Round))
@@ -99,12 +113,13 @@ fun rememberReduceMotion(): Boolean {
     }
 }
 
-/** Without [keepsPlace] a view that is not pulsing carries no clock at all, so nothing gets in the way of its taps. [shape] is the view's own outline. */
+/** Without [keepsPlace] a view that is not pulsing carries no clock at all, so nothing gets in the way of its taps. [shape] is the view's own outline; [inside] keeps the glow and swell within it. */
 @Composable
 fun Modifier.pulsing(
     isOn: Boolean,
     keepsPlace: Boolean = true,
     shape: Shape = RectangleShape,
+    inside: Boolean = false,
 ): Modifier {
     if (!keepsPlace && !isOn) return this
     val reduceMotion = rememberReduceMotion()
@@ -120,8 +135,8 @@ fun Modifier.pulsing(
         }.toFloat()
     if (swell == 0f) return this
     return this
-        .pulseGlow(shape) { swell }
-        .scale(Pulse.scale(swell, reduceMotion))
+        .pulseGlow(shape, inside) { swell }
+        .scale(Pulse.scale(swell, reduceMotion, inside))
 }
 
 /** Highlights targets during the first-time tutorial walk through. */
