@@ -74,10 +74,10 @@ class FarmRenderer(
         val season = state.season
         measure(PerformanceWork.structure) {
             drawGround(batch, state, season)
-            if (gridShown) drawGrid(batch, textures, cameraScale, maxCameraScale)
             drawFertilizer(batch, state)
         }
         ground?.invoke(batch, state, now)
+        if (gridShown) measure(PerformanceWork.structure) { drawGrid(batch, textures, cameraScale, maxCameraScale) }
         standing.clear()
         growth.prune(state.trees.keys, state.rocks.keys, now)
         measure(PerformanceWork.structure) {
