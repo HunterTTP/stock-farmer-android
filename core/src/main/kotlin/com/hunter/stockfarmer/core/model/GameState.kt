@@ -275,7 +275,7 @@ class GameState {
     val placedBuildings: List<PlacedBuilding> get() = placedBuildingList
 
     init {
-        reindexAll()
+        reindex()
     }
 
     fun putBuilding(
@@ -388,7 +388,8 @@ class GameState {
         return fruitTree(covering)
     }
 
-    private fun reindexAll() {
+    /** Rebuilds what is worked out from the maps above; call it after loading a saved game. */
+    fun reindex() {
         indexBuildings()
         indexTrees()
         indexDecorations()
@@ -513,7 +514,7 @@ class GameState {
             copy.completedMarketQuests = completedMarketQuests
             copy.toolLevels = toolLevels.toMutableMap()
             copy.career = career.copy()
-            copy.reindexAll()
+            copy.reindex()
         }
 
     companion object {

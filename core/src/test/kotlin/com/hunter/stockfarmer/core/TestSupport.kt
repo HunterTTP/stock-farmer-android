@@ -58,3 +58,18 @@ fun GameEngine.hatch(now: Instant): List<GameEvent> = updateCoops(now, SeededRan
 
 /** Brings the animals of every livestock building up to [now], with the same random choices every time. */
 fun GameEngine.updateHerds(now: Instant): List<GameEvent> = updateHerds(now, SeededRandom(1))
+
+/** An egg laid by some hen of some coop, for tests that only care where it lies. */
+fun lyingEgg(
+    point: GridPoint,
+    offsetX: Double,
+    offsetY: Double,
+) = com.hunter.stockfarmer.core.model
+    .Egg(point, offsetX, offsetY, GridPoint(0, 0), 0)
+
+/** Puts a building on the map by its id. */
+fun GameEngine.place(
+    origin: GridPoint,
+    id: String,
+    styleID: String? = null,
+) = state.putBuilding(origin, id, styleID)
