@@ -5,11 +5,13 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -33,6 +35,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.hunter.stockfarmer.core.catalog.StorageItem
 import com.hunter.stockfarmer.core.model.Lesson
@@ -69,11 +72,11 @@ internal fun StorageMenuScreen(
 ) {
     LazyColumn(
         modifier,
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+        contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         item(key = "capacity") {
-            CapacityCard(state)
+            CapacityCard(state, Modifier.padding(bottom = 8.dp))
         }
         if (state.stored.isEmpty()) {
             item(key = "empty") {
@@ -84,7 +87,7 @@ internal fun StorageMenuScreen(
                     style = HudType.subheadline,
                     color = Theme.textSecondary,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
                 )
             }
         }
@@ -95,9 +98,12 @@ internal fun StorageMenuScreen(
 }
 
 @Composable
-private fun CapacityCard(state: MenuState) {
+private fun CapacityCard(
+    state: MenuState,
+    modifier: Modifier = Modifier,
+) {
     Column(
-        modifier = Modifier.fillMaxWidth().categoryCard(isHighlighted = false),
+        modifier = modifier.fillMaxWidth().categoryCard(isHighlighted = false),
         verticalArrangement = Arrangement.spacedBy(10.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -152,6 +158,7 @@ private fun StoredItemCard(
                 style = HudType.headline,
                 color = Theme.textPrimary,
                 maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f),
             )
             Text(
@@ -160,10 +167,11 @@ private fun StoredItemCard(
                 color = Theme.textSecondary,
             )
         }
-        Row(
+        FlowRow(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
-            verticalAlignment = Alignment.CenterVertically,
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            itemVerticalAlignment = Alignment.CenterVertically,
         ) {
             if (row.item.isEquippable) {
                 ActionButton(
@@ -207,11 +215,11 @@ private fun ActionButton(
     Box(
         modifier =
             Modifier
-                .width(ACTION_BUTTON_WIDTH)
-                .height(ACTION_BUTTON_HEIGHT)
+                .defaultMinSize(minWidth = ACTION_BUTTON_WIDTH, minHeight = ACTION_BUTTON_HEIGHT)
                 .lessonPulse(pulses)
                 .background(background, CircleShape)
                 .clickable(role = Role.Button, onClick = onClick)
+                .padding(horizontal = 12.dp, vertical = 6.dp)
                 .semantics { this.contentDescription = contentDescription },
         contentAlignment = Alignment.Center,
     ) {
@@ -303,7 +311,7 @@ internal fun StorageTransactionDialog(
                     modifier =
                         Modifier
                             .fillMaxWidth()
-                            .height(52.dp)
+                            .heightIn(min = 52.dp)
                             .lessonPulse(pulsesConfirm)
                             .background(
                                 if (transaction.sell) Theme.accent else Theme.danger,

@@ -3,6 +3,7 @@ package com.hunter.stockfarmer.ui.sheets
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -312,7 +313,10 @@ private fun TractorSection(
                                     color = Theme.textPrimary,
                                 ),
                         )
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        FlowRow(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
                             PillButton(
                                 title = "Store",
                                 onClick = { act(SheetAction.Cargo(summary.crop.id, false)) },

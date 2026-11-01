@@ -2,9 +2,11 @@ package com.hunter.stockfarmer.ui.screens
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material3.AlertDialog
@@ -25,14 +27,13 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.hunter.stockfarmer.game.GameSession
 import com.hunter.stockfarmer.ui.theme.HudIcon
 import com.hunter.stockfarmer.ui.theme.HudIcons
 import com.hunter.stockfarmer.ui.theme.HudMaterialTheme
 import com.hunter.stockfarmer.ui.theme.HudType
-import com.hunter.stockfarmer.ui.theme.PillButton
-import com.hunter.stockfarmer.ui.theme.PillRole
 import com.hunter.stockfarmer.ui.theme.Theme
 import com.hunter.stockfarmer.ui.theme.glassCard
 import kotlin.math.roundToInt
@@ -44,7 +45,7 @@ fun GraphicsSettingsScreen(
     onClose: () -> Unit,
 ) {
     val settings = PlaySettings.of(LocalContext.current)
-    ScreenLayout("Graphics", session, onClose) {
+    SettingsPage("Graphics", session, onClose) {
         Column(Modifier.fillMaxWidth().glassCard(14.dp)) {
             SettingToggle(
                 "Dynamic Shadows",
@@ -76,7 +77,7 @@ fun GameplaySettingsScreen(
 ) {
     val settings = PlaySettings.of(LocalContext.current)
     val reach = settings.toolReach
-    ScreenLayout("Gameplay", session, onClose) {
+    SettingsPage("Gameplay", session, onClose) {
         Column(
             Modifier.fillMaxWidth().glassCard(14.dp).padding(14.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -169,12 +170,20 @@ internal fun ResetDefaultsButton(
     onReset: () -> Unit,
 ) {
     var confirmsReset by remember { mutableStateOf(false) }
-    PillButton(
-        title = "Reset to Defaults",
-        onClick = { confirmsReset = true },
-        modifier = Modifier.fillMaxWidth(),
-        role = PillRole.neutral,
-    )
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .heightIn(min = 48.dp)
+            .glassCard(14.dp)
+            .clickable(role = Role.Button) { confirmsReset = true }
+            .padding(horizontal = 14.dp, vertical = 8.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        BasicText(
+            "Reset to Defaults",
+            style = HudType.headline.copy(color = Theme.onNeutral, textAlign = TextAlign.Center),
+        )
+    }
     if (confirmsReset) {
         HudMaterialTheme {
             AlertDialog(

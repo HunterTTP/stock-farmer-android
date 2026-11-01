@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -118,16 +117,18 @@ fun PillButton(
     text: Color,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    cornerRadius: Dp = 16.dp,
     onClick: () -> Unit,
 ) {
     Box(
         Modifier
             .fillMaxWidth()
-            .height(52.dp)
+            .heightIn(min = 52.dp)
             .then(modifier)
             .alpha(if (enabled) 1f else 0.4f)
-            .background(fill, RoundedCornerShape(16.dp))
-            .clickable(enabled = enabled, role = Role.Button, onClick = onClick),
+            .background(fill, RoundedCornerShape(cornerRadius))
+            .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 8.dp),
         contentAlignment = Alignment.Center,
     ) {
         Text(

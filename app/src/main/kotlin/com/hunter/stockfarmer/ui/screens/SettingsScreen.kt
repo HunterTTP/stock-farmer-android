@@ -3,9 +3,12 @@ package com.hunter.stockfarmer.ui.screens
 import android.content.Context
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material3.Slider
@@ -111,15 +114,17 @@ fun SettingsScreen(
     isRecording: Boolean,
     onClose: () -> Unit,
 ) {
-    ScreenLayout("Settings", session, onClose) {
-        ScreenLink("Screenshot Farm", onClick = onPhoto)
-        ScreenLink("Timelapse") { onOpen(ToolRoute.Timelapse) }
-        ScreenLink("Load Game") { onOpen(ToolRoute.LoadGame) }
-        ScreenLink("Sound") { onOpen(ToolRoute.SoundSettings) }
-        ScreenLink("Graphics") { onOpen(ToolRoute.GraphicsSettings) }
-        ScreenLink("Gameplay") { onOpen(ToolRoute.GameplaySettings) }
-        ScreenLink("Performance", badge = if (isRecording) "Recording" else null) { onOpen(ToolRoute.Performance) }
-        ScreenLink("About") { onOpen(ToolRoute.About) }
+    SettingsPage("Settings", session, onClose) {
+        FarmPhotoTile(onPhoto)
+        ScreenLink("Timelapse", HudIcons.film) { onOpen(ToolRoute.Timelapse) }
+        ScreenLink("Load Game", HudIcons.folderFill) { onOpen(ToolRoute.LoadGame) }
+        ScreenLink("Sound", HudIcons.speakerWave2Fill) { onOpen(ToolRoute.SoundSettings) }
+        ScreenLink("Graphics", HudIcons.sparkle) { onOpen(ToolRoute.GraphicsSettings) }
+        ScreenLink("Gameplay", HudIcons.gamecontrollerFill) { onOpen(ToolRoute.GameplaySettings) }
+        ScreenLink("Performance", HudIcons.speedometer, badge = if (isRecording) "Recording" else null) {
+            onOpen(ToolRoute.Performance)
+        }
+        ScreenLink("About", HudIcons.infoCircle) { onOpen(ToolRoute.About) }
     }
 }
 
@@ -131,17 +136,57 @@ fun AboutScreen(
     onClose: () -> Unit,
 ) {
     val uri = LocalUriHandler.current
-    ScreenLayout("About", session, onClose) {
-        ScreenLink("Changelog") { onOpen(ToolRoute.Changelog) }
-        ScreenLink("Source Code") { uri.openUri(SOURCE_CODE_URL) }
-        ScreenLink("Privacy") { onOpen(ToolRoute.Privacy) }
+    SettingsPage("About", session, onClose) {
+        ScreenLink("Changelog", HudIcons.listBulletRectangle) { onOpen(ToolRoute.Changelog) }
+        ScreenLink("Source Code", HudIcons.codeBrackets, trailing = HudIcons.arrowUpRight) {
+            uri.openUri(SOURCE_CODE_URL)
+        }
+        ScreenLink("Privacy", HudIcons.handRaised) { onOpen(ToolRoute.Privacy) }
+    }
+}
+
+/** The page body every settings screen shares: rows 12 apart, as on iOS. */
+@Composable
+internal fun SettingsPage(
+    title: String,
+    session: GameSession,
+    onClose: () -> Unit,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    ScreenLayout(title, session, onClose) {
+        Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp), content = content)
+    }
+}
+
+/** The camera tile: centered, 110 tall, wide enough for its caption. */
+@Composable
+private fun FarmPhotoTile(onClick: () -> Unit) {
+    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+        Column(
+            Modifier
+                .heightIn(min = 110.dp)
+                .glassCard(18.dp)
+                .clickable(role = Role.Button, onClick = onClick)
+                .padding(horizontal = 22.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            HudIcon(HudIcons.cameraFill, Theme.textPrimary, size = 34.dp)
+            BasicText(
+                "Screenshot Farm",
+                style = HudType.subheadline.copy(fontWeight = FontWeight.SemiBold, color = Theme.textPrimary),
+                maxLines = 1,
+            )
+        }
     }
 }
 
 @Composable
 private fun ScreenLink(
     title: String,
+    icon: ImageVector,
     badge: String? = null,
+    trailing: ImageVector = HudIcons.chevronRight,
     onClick: () -> Unit,
 ) {
     Row(
@@ -153,16 +198,10 @@ private fun ScreenLink(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        BasicText(
-            title,
-            Modifier.weight(1f),
-            style = HudType.headline.copy(color = Theme.textPrimary),
-        )
+        HudIcon(icon, Theme.textPrimary, size = 20.dp)
+        BasicText(title, Modifier.weight(1f), style = HudType.headline.copy(color = Theme.textPrimary))
         badge?.let { BasicText(it, style = HudType.subheadline.copy(color = Theme.spend)) }
-        BasicText(
-            "›",
-            style = HudType.headline.copy(fontWeight = FontWeight.Bold, color = Theme.textSecondary),
-        )
+        HudIcon(trailing, Theme.textSecondary, size = 13.dp)
     }
 }
 
@@ -184,7 +223,7 @@ fun SoundSettingsScreen(
         AudioChannel.entries.filter { settings[it] != next[it] }.forEach { audio.setVolume(it, next[it]) }
         settings = next
     }
-    ScreenLayout("Sound", session, onClose) {
+    SettingsPage("Sound", session, onClose) {
         Column(Modifier.fillMaxWidth().glassCard(14.dp)) {
             AudioChannel.entries.forEach { channel ->
                 VolumeRow(

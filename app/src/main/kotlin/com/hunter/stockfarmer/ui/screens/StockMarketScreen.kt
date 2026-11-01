@@ -19,7 +19,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -130,11 +129,17 @@ fun StockMarketScreen(
                         modifier = Modifier.fillMaxWidth(),
                     )
                 }
-                owned.forEach { row -> StockRow(row) { trade = TradeSelection(row.quote.ticker, it) } }
-                PillButton("Buy Stock", Theme.accent, Theme.onAccent) { searching = true }
-            }
-            state.upgrade?.takeIf { !searching }?.let {
-                PillButton("Upgrade", Theme.xp.copy(alpha = 0.14f), Theme.xp) { upgrading = true }
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    owned.forEach { row -> StockRow(row) { trade = TradeSelection(row.quote.ticker, it) } }
+                }
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    PillButton("Buy Stock", Theme.accent, Theme.onAccent) { searching = true }
+                    state.upgrade?.let {
+                        PillButton("Upgrade", Theme.xp.copy(alpha = 0.14f), Theme.xp, cornerRadius = 14.dp) {
+                            upgrading = true
+                        }
+                    }
+                }
             }
         }
     }
@@ -261,7 +266,6 @@ private fun StockTradeDialog(
                     fill = buttonFill,
                     text = buttonText,
                     enabled = canConfirm,
-                    modifier = Modifier.alpha(if (canConfirm) 1f else 0.5f),
                     onClick = {
                         val events =
                             session.screenAction {
