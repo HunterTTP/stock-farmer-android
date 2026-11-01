@@ -56,8 +56,9 @@ class GameSession(
     fun showToast(
         message: String,
         tool: HarvestTool? = null,
+        durationMillis: Long = 4_000L,
     ) {
-        toastsFlow.tryEmit(ToastMessage(message, tool))
+        toastsFlow.tryEmit(ToastMessage(message, tool, durationMillis))
     }
 
     /** The fish on the line while the fishing game is open; null otherwise. */

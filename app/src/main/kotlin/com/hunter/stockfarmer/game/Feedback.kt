@@ -9,10 +9,8 @@ import com.hunter.stockfarmer.ui.screens.QuestReward
 data class ToastMessage(
     val text: String,
     val tool: HarvestTool? = null,
-) {
-    /** A banner that offers a tool stays long enough to be tapped. */
-    val durationMillis: Long get() = if (tool == null) Feedback.TOAST_MILLIS else Feedback.TOOL_TOAST_MILLIS
-}
+    val durationMillis: Long = if (tool == null) Feedback.TOAST_MILLIS else Feedback.TOOL_TOAST_MILLIS,
+)
 
 /** How the game answers what happened, as text: the pure half of iOS `FeedbackPresenter`. */
 object Feedback {

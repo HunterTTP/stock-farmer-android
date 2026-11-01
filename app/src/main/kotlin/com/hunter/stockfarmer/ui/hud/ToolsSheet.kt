@@ -47,6 +47,7 @@ internal fun ToolsSheet(
     onTakePhoto: ((String) -> Unit) -> Unit,
     onClose: () -> Unit,
     onSelected: () -> Unit = onClose,
+    onToast: (String) -> Unit = {},
     onUpgradeResult: (ToolUpgradeResult) -> Unit = {},
 ) {
     var stack by remember(root) { mutableStateOf(ToolRouteStack(root)) }
@@ -56,7 +57,7 @@ internal fun ToolsSheet(
     val route = stack.current
     if (route == ToolRoute.Storage) {
         BackHandler(enabled = stack.canGoBack, onBack = back)
-        MenusHost(session, Menu.Storage, onClose = back)
+        MenusHost(session, Menu.Storage, onClose = back, onToast = onToast)
         return
     }
     val itemScreen =

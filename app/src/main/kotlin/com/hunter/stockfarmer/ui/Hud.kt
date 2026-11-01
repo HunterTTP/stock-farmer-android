@@ -114,6 +114,7 @@ fun Hud(
     val sheet by session.sheets.collectAsState()
     val confirmation by session.confirmations.collectAsState()
     LaunchedEffect(session) { session.newDays.collect { daySummary = it } }
+    LaunchedEffect(session) { session.toasts.collect { toast = it } }
     LaunchedEffect(session) {
         session.events.collect { events ->
             Feedback.toast(events)?.let { toast = it }
@@ -176,6 +177,9 @@ fun Hud(
                         onSelected = {
                             toolRoute = null
                             closeRequests++
+                        },
+                        onToast = { message ->
+                            toast = ToastMessage(message, durationMillis = 4_000L)
                         },
                         onUpgradeResult = { result ->
                             if (result.bought) {

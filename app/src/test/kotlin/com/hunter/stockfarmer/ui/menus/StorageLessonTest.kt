@@ -105,5 +105,6 @@ class StorageLessonTest {
             val toast = deferred.await()
             assertEquals("Have fun building your farm!", toast.text)
             assertNull(toast.tool)
+            assertEquals(4_000L, toast.durationMillis)
         }
 }

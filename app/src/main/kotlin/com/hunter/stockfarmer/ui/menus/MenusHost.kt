@@ -18,12 +18,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.selectable
-import androidx.compose.material3.Card
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -36,8 +31,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -48,6 +45,8 @@ import com.hunter.stockfarmer.core.rules.learn
 import com.hunter.stockfarmer.game.GameSession
 import com.hunter.stockfarmer.ui.theme.ChoiceRow
 import com.hunter.stockfarmer.ui.theme.HudChoice
+import com.hunter.stockfarmer.ui.theme.HudIcon
+import com.hunter.stockfarmer.ui.theme.HudIcons
 import com.hunter.stockfarmer.ui.theme.HudSheet
 import com.hunter.stockfarmer.ui.theme.HudType
 import com.hunter.stockfarmer.ui.theme.MoneyBadge
@@ -148,10 +147,19 @@ fun MenusHost(
                 CatalogMenuScreen(state, loader, choose, onInfo = { detail = it }, Modifier.weight(1f))
             }
             message?.let { text ->
-                Surface(color = MaterialTheme.colorScheme.secondaryContainer) {
+                Box(
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                            .glassCard(12.dp, tint = Theme.spend)
+                            .padding(14.dp),
+                ) {
                     Text(
                         text,
-                        Modifier.fillMaxWidth().padding(16.dp).semantics { liveRegion = LiveRegionMode.Polite },
+                        style = HudType.body,
+                        color = Theme.spend,
+                        modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
                     )
                 }
             }
@@ -194,11 +202,18 @@ private fun MenuHeader(
     menu: Menu,
     state: MenuState,
 ) {
-    Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(menu.title, style = MaterialTheme.typography.headlineSmall)
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text(state.money, style = MaterialTheme.typography.titleMedium)
-            Text("Level ${state.level}")
+    Column(
+        Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Text(menu.title, style = HudType.headline, color = Theme.textPrimary)
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(state.money, style = HudType.title3.copy(fontWeight = FontWeight.Bold), color = Theme.money)
+            Text("Level ${state.level}", style = HudType.subheadline, color = Theme.textSecondary)
         }
     }
 }
@@ -218,7 +233,12 @@ private fun CatalogMenuScreen(
     ) {
         state.sections.filter { it.choices.isNotEmpty() }.forEach { section ->
             item(key = section.title) {
-                Text(section.title, style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(8.dp))
+                Text(
+                    section.title,
+                    style = HudType.headline.copy(fontWeight = FontWeight.Bold),
+                    color = Theme.textPrimary,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                )
             }
             items(section.choices, key = { it.id }) { choice ->
                 CatalogChoiceCard(choice, loader, onChoose, onInfo)
@@ -270,27 +290,62 @@ private fun CatalogChoiceCard(
             )
             val item = choice.selection.shopItem
             if (item != null || choice.selection == MenuSelection.Grass) {
-                TextButton(onClick = { onInfo(item?.let { ItemScreen.Item(it) } ?: ItemScreen.Eraser) }) {
-                    Text("ⓘ", color = Theme.accent)
+                Box(
+                    modifier =
+                        Modifier
+                            .padding(end = 8.dp)
+                            .size(36.dp)
+                            .glassCard(10.dp)
+                            .clickable(role = Role.Button) {
+                                onInfo(item?.let { ItemScreen.Item(it) } ?: ItemScreen.Eraser)
+                            }.semantics { contentDescription = "About ${choice.title}" },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    HudIcon(HudIcons.infoCircle, Theme.accent, size = 20.dp)
                 }
             }
         }
         if (choice.variants.isNotEmpty()) {
-            TextButton(onClick = { expanded = !expanded }, modifier = Modifier.padding(horizontal = 8.dp)) {
-                Text("${if (expanded) "Hide" else "Show"} ${choice.variantTitle.lowercase()}")
+            Box(
+                modifier =
+                    Modifier
+                        .padding(horizontal = 14.dp, vertical = 4.dp)
+                        .glassCard(10.dp)
+                        .clickable(role = Role.Button) { expanded = !expanded }
+                        .padding(horizontal = 12.dp, vertical = 6.dp),
+            ) {
+                Text(
+                    text = "${if (expanded) "Hide" else "Show"} ${choice.variantTitle.lowercase()}",
+                    style = HudType.caption.copy(fontWeight = FontWeight.SemiBold),
+                    color = Theme.accent,
+                )
             }
             if (expanded) {
                 LazyRow(
-                    contentPadding = PaddingValues(horizontal = 12.dp),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     items(choice.variants, key = { it.id }) { variant ->
-                        FilterChip(
-                            selected = variant.selected,
-                            onClick = { onChoose(variant.selection) },
-                            label = { Text(variant.title) },
-                            leadingIcon = { MenuImage(variant.picture, loader, Modifier.size(28.dp)) },
-                        )
+                        Box(
+                            modifier =
+                                Modifier
+                                    .glassCard(12.dp, tint = if (variant.selected) Theme.accent else null)
+                                    .clickable(role = Role.RadioButton) { onChoose(variant.selection) }
+                                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                MenuImage(variant.picture, loader, Modifier.size(28.dp))
+                                Text(
+                                    variant.title,
+                                    style = HudType.caption.copy(fontWeight = FontWeight.SemiBold),
+                                    color = if (variant.selected) Theme.accent else Theme.textPrimary,
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -316,7 +371,10 @@ fun MenusHost(
         }
     }
     HudSheet(onDismiss = onClose) {
-        Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             Text(
                 when (screen) {
                     is ItemScreen.Item -> {
@@ -337,9 +395,24 @@ fun MenusHost(
                 },
                 Modifier.weight(1f),
                 style = HudType.headline,
+                color = Theme.textPrimary,
             )
             MoneyBadge(money)
-            TextButton(onClick = onClose) { Text("Close") }
+            Box(
+                modifier =
+                    Modifier
+                        .padding(start = 12.dp)
+                        .glassCard(12.dp)
+                        .clickable(role = Role.Button, onClick = onClose)
+                        .padding(horizontal = 14.dp, vertical = 8.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = "Close",
+                    style = HudType.subheadline.copy(fontWeight = FontWeight.SemiBold),
+                    color = Theme.textPrimary,
+                )
+            }
         }
         Column(Modifier.weight(1f)) {
             when (screen) {
@@ -366,6 +439,22 @@ fun MenusHost(
                 }
             }
         }
-        message?.let { Text(it, Modifier.padding(20.dp).semantics { liveRegion = LiveRegionMode.Polite }) }
+        message?.let { text ->
+            Box(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .glassCard(12.dp, tint = Theme.spend)
+                        .padding(14.dp),
+            ) {
+                Text(
+                    text,
+                    style = HudType.body,
+                    color = Theme.spend,
+                    modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+                )
+            }
+        }
     }
 }

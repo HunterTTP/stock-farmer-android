@@ -20,7 +20,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -322,7 +321,14 @@ internal fun StorageTransactionDialog(
                 }
             },
             dismissButton = {
-                TextButton(onClick = onDismiss) {
+                Box(
+                    modifier =
+                        Modifier
+                            .glassCard(12.dp)
+                            .clickable(role = Role.Button, onClick = onDismiss)
+                            .padding(horizontal = 16.dp, vertical = 10.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
                     Text("Cancel", style = HudType.subheadline, color = Theme.textSecondary)
                 }
             },
