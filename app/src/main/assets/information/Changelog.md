@@ -2,6 +2,8 @@
 - The Career screen is now called Progress.
 - Ducks no longer lay eggs. Tap a duck and Sell it for $25 (toast "Sold for $25") instead of releasing it; every other animal still offers
   Release.
+- Trees and rocks you place yourself give no logs or stone when you chop or break them, even with full storage, and do not
+  count as mined; only the ones that grew on their own do.
 
 ## 2026-10-22
 - Music is half as loud as it was.

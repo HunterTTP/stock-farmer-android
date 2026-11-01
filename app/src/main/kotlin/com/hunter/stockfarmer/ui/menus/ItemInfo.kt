@@ -110,7 +110,7 @@ data class ItemInfo(
                                 " colors",
                             ),
                             effect("Stands on bare grass, and animals can't walk through it"),
-                            effect("Fell it with the Axe from the Harvest tool"),
+                            effect("Fell it with the Axe from the Harvest tool; a tree you plant gives no logs"),
                         )
                     }
 
@@ -310,9 +310,9 @@ data class ItemInfo(
             if (decoration.isRock) {
                 return listOf(
                     effect(
-                        "Break it with the Pickaxe for ",
+                        "Break it with the Pickaxe; wild rocks give ",
                         green(RockSize.stoneSizes.joinToString(", ") { "${it.stones}" }),
-                        " stones, by size",
+                        " stones by size; a rock you place gives none",
                     ),
                 )
             }

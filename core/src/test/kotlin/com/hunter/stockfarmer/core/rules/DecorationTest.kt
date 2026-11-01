@@ -462,7 +462,7 @@ class DecorationEffectTest {
     }
 
     @Test
-    fun `a rock is set down in the chosen size and breaks with the pickaxe like any other`() {
+    fun `a rock is set down in the chosen size and breaks with the pickaxe for nothing`() {
         val rock = Decoration.named("rock")!!
         assertTrue(rock.isRock && rock.sizeNames == RockSize.stoneSizes.map { it.displayName } && rock.unlockLevel == 1)
         val engine = GameEngine(stateWith(money = 1_000.0, xp = 0, logs = 0, stones = 0))
@@ -479,6 +479,11 @@ class DecorationEffectTest {
             engine.liftTool()
         }
         assertNull(engine.state.rocks[place])
-        assertEquals(RockSize.big.stones, engine.state.storage[StorageItem.Stone.id])
+        assertNull(engine.state.storage[StorageItem.Stone.id])
+        assertTrue(engine.state.playerPlacedRocks.isEmpty())
+        assertTrue(
+            engine.state.career.minedRockIDs
+                .isEmpty(),
+        )
     }
 }
