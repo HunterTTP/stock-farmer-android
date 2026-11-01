@@ -2,11 +2,11 @@ package com.hunter.stockfarmer.farm
 
 import com.badlogic.gdx.ApplicationAdapter
 import com.badlogic.gdx.Gdx
+import com.badlogic.gdx.InputAdapter
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.OrthographicCamera
-import com.badlogic.gdx.input.GestureDetector
-import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.math.Vector3
+import com.badlogic.gdx.utils.TimeUtils
 import com.hunter.stockfarmer.core.catalog.HarvestTool
 import com.hunter.stockfarmer.core.model.GameState
 import com.hunter.stockfarmer.core.model.GridPoint
@@ -34,6 +34,7 @@ import com.hunter.stockfarmer.ui.screens.PlaySettings
 import kotlinx.coroutines.flow.update
 import java.time.Instant
 import kotlin.math.floor
+import kotlin.math.hypot
 import kotlin.math.min
 
 /** The farm scene: draws the session's game and turns taps and drags into play and camera movement. */
@@ -101,7 +102,7 @@ class FarmGame(
                 treeLean = treeLean,
                 monitor = monitor,
             )
-        Gdx.input.inputProcessor = GestureDetector(20f, 0.4f, 0.35f, 0.15f, Gestures())
+        Gdx.input.inputProcessor = FarmTouchProcessor()
         session.sceneFeedback.catchButterfly = ::catchButterfly
         farmPhoto = FarmPhoto(renderer, batch, textures, effects.photo)
         session.photos.handler = { request, done ->
@@ -163,6 +164,7 @@ class FarmGame(
             batch.startCount()
             batch.begin()
             val now = Instant.now()
+            recognizer.update(TimeUtils.millis())
             measure(PerformanceWork.tractor) { driveTractor(now) }
             session.act {
                 measure(PerformanceWork.animals) {
@@ -281,39 +283,79 @@ class FarmGame(
         textures.dispose()
     }
 
-    private inner class Gestures : GestureDetector.GestureAdapter() {
+    /** Routes libGDX touches into the recognizer, which alone decides between pan and pinch. */
+    private inner class FarmTouchProcessor : InputAdapter() {
         override fun touchDown(
-            x: Float,
-            y: Float,
+            screenX: Int,
+            screenY: Int,
             pointer: Int,
             button: Int,
         ): Boolean {
+            recognizer.touchDown(pointer, screenX.toFloat(), screenY.toFloat(), TimeUtils.millis())
+            return true
+        }
+
+        override fun touchDragged(
+            screenX: Int,
+            screenY: Int,
+            pointer: Int,
+        ): Boolean {
+            recognizer.touchDragged(pointer, screenX.toFloat(), screenY.toFloat())
+            return true
+        }
+
+        override fun touchUp(
+            screenX: Int,
+            screenY: Int,
+            pointer: Int,
+            button: Int,
+        ): Boolean {
+            recognizer.touchUp(pointer, screenX.toFloat(), screenY.toFloat())
+            return true
+        }
+
+        override fun touchCancelled(
+            screenX: Int,
+            screenY: Int,
+            pointer: Int,
+            button: Int,
+        ): Boolean {
+            recognizer.cancel()
+            return true
+        }
+    }
+
+    private val recognizer = FarmGestureRecognizer(Gestures())
+
+    private inner class Gestures : FarmGestureListener {
+        override fun touchDown(
+            x: Float,
+            y: Float,
+            isFirst: Boolean,
+        ) {
             session.farmTouches.update { it + 1 }
-            if (pointer == 0) placementDrag.begin(tileAt(x, y))
-            return false
+            if (isFirst) placementDrag.begin(tileAt(x, y))
         }
 
         override fun tap(
             x: Float,
             y: Float,
-            count: Int,
-            button: Int,
-        ): Boolean =
+        ) {
             measure(PerformanceWork.tap) {
                 val tile = tileAt(x, y)
                 if (!session.touchAnimalAt(touch.x, touch.y)) tile?.let { session.touch(it) }
-                true
             }
+        }
 
         override fun longPress(
             x: Float,
             y: Float,
-        ): Boolean =
+        ) {
             measure(PerformanceWork.tap) {
                 val tile = tileAt(x, y)
                 if (!session.touchAnimalAt(touch.x, touch.y)) tile?.let { session.hold(it) }
-                true
             }
+        }
 
         private fun tileAt(
             x: Float,
@@ -333,22 +375,14 @@ class FarmGame(
             y: Float,
             deltaX: Float,
             deltaY: Float,
-        ): Boolean {
+        ) {
             val moved = measure(PerformanceWork.drag) { placementDrag.move(tileAt(x, y)) }
-            if (moved) return true
-            cameraControls.pan(deltaX, deltaY)
-            return true
+            if (!moved) cameraControls.pan(deltaX, deltaY)
         }
 
-        override fun panStop(
-            x: Float,
-            y: Float,
-            pointer: Int,
-            button: Int,
-        ): Boolean {
+        override fun panStop() {
             placementDrag.end()
             saveCamera()
-            return true
         }
 
         override fun pinchStop() {
@@ -360,25 +394,30 @@ class FarmGame(
         private var zoomAtStart: Float? = null
 
         override fun pinch(
-            initialPointer1: Vector2,
-            initialPointer2: Vector2,
-            pointer1: Vector2,
-            pointer2: Vector2,
-        ): Boolean {
-            val initialDistance = initialPointer1.dst(initialPointer2)
-            if (initialDistance <= 0f) return true
+            initial1: FingerPoint,
+            initial2: FingerPoint,
+            current1: FingerPoint,
+            current2: FingerPoint,
+        ) {
+            val initialDistance = distance(initial1, initial2)
+            if (initialDistance <= 0f) return
             val start = zoomAtStart ?: camera.zoom.also { zoomAtStart = it }
             cameraControls.pinch(
                 start,
-                pointer1.dst(pointer2) / initialDistance,
-                (pointer1.x + pointer2.x) / 2,
-                (pointer1.y + pointer2.y) / 2,
+                distance(current1, current2) / initialDistance,
+                (current1.x + current2.x) / 2,
+                (current1.y + current2.y) / 2,
             )
-            return true
         }
+
+        private fun distance(
+            a: FingerPoint,
+            b: FingerPoint,
+        ) = hypot(a.x - b.x, a.y - b.y)
     }
 
     override fun pause() {
+        recognizer.cancel()
         saveCamera()
     }
 }
