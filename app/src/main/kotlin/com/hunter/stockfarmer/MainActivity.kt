@@ -60,7 +60,7 @@ class MainActivity :
                     val persistence = model.persistenceState
                     if (persistence.isReady) {
                         FarmHost()
-                        Hud(model.session, Modifier.fillMaxSize())
+                        Hud(model.session, sound, Modifier.fillMaxSize())
                         persistence.error?.let { message ->
                             AlertDialog(
                                 onDismissRequest = {},
