@@ -1,7 +1,7 @@
 # Handoff: where the project stands and what to do next
 
 Read this first in a fresh session, then `AGENTS.md`, `docs/DEVELOPMENT.md` and `docs/PARITY.md`.
-Last updated at `main` = `0881a31` (2026-11-01).
+Last updated at `main` = `b9cc118` (2026-11-01).
 
 ## The goal
 
@@ -17,7 +17,8 @@ Standing instructions from the user:
   `main`. Commit as `git -c user.name=HunterTTP -c user.email=hunterttp@gmail.com commit`, message ending with
   `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>` (add a `Co-Authored-By: Codex <noreply@openai.com>` line
   for Codex-written code).
-- Orchestrate work across **Claude Sonnet 5.5** (`claude -p ... --model claude-sonnet-5-5`), **Codex Sol 6.1** (`codex.cmd exec -m gpt-6.1-sol`), and **Gemini Flash 3.8** (`invoke_subagent` `Model = "flash"`). Aim to always have **4 agents running** until the port is complete. If any service hits usage limits, take it out of rotation until limits reset and then bring it back in.
+- Orchestrate work across **Claude Sonnet 5.5** (`claude -p ... --model claude-sonnet-5-5`), **Codex Sol 6.1** (`codex.cmd exec -m gpt-6.1-sol`), and **Gemini Flash 3.8** (`invoke_subagent` `Model = "flash"`):
+  - **Concurrency & fallback policy**: Run **2 agents per provider** by default. If a provider is rate-limited, spin up **2 additional agents of the next best choice provider** to fill the gap, with a **hard maximum of 4 agents per provider** (and bring rate-limited providers back into rotation as soon as their limits reset).
 - **Model preference order by task complexity** (among services currently in rotation):
   1. **Claude Sonnet 5.5** (preferred for the most complex multi-file porting, architecture/wiring, and nuanced UI/state slices)
   2. **Codex Sol 6.1** (next preference for complex/medium feature and test slices)
@@ -35,11 +36,11 @@ Standing instructions from the user:
 - **Claude Sonnet 5.5 (`claude`)**: Rate-limited (`You've hit your session limit · resets 2:10pm (America/New_York)`). Active wakeup timers scheduled for **13:11 -05:00** (~5m remaining) and **14:11 -05:00** (~1h 5m remaining, since EST is `-05:00`).
 - **Codex Sol 6.1 (`codex.cmd`)**: Rate-limited (`try again at 2:54 PM`). Active wakeup timer scheduled for **14:55 -05:00** (~1h 49m remaining).
 
-## Verified state (all green on `main` = `0881a31`)
+## Verified state (all green on `main` = `b9cc118`)
 
 ```
-./gradlew spotlessCheck :core:test :app:assembleDebug :app:testDebugUnitTest   -> BUILD SUCCESSFUL (at 0881a31)
-core tests: 1,019, 0 failures.   app unit tests: 365, 0 failures.   debug APK builds (85 MB, 16 KB aligned).
+./gradlew spotlessCheck :core:test :app:assembleDebug :app:testDebugUnitTest   -> BUILD SUCCESSFUL (at b9cc118)
+core tests: 1,019, 0 failures.   app unit tests: 374, 0 failures.   debug APK builds (85 MB, 16 KB aligned).
 ```
 
 ### Completed on `main` (`736658c`)
@@ -66,15 +67,16 @@ core tests: 1,019, 0 failures.   app unit tests: 365, 0 failures.   debug APK bu
   - `LaunchScreen`, `SaveStatusView`, `StatusHud`, `LessonGuide` & `RewardFlights` HUD theme polish (`a7499c7`)
   - `ToolBar`, `ToolRing`, `ToolCircle`, `ToolsSheet`, `PlacementButtons` & `HudSheet` parity audit (`e234fa0`)
   - Storage tutorial lesson progression/pulses (`StorageMenuScreen`) & `NoticeScreens`/`SaveSlotsScreen` HUD theme polish (`0881a31`)
+  - Farm renderer tree/rock 96px/tile scale fix, full-workshop & dairy/oven animation parity, seasonal building textures & `FarmAssetCoverageTest` (`b9cc118`)
 
 ## In flight right now (4 parallel slices)
 
 | Slice | Branch | Worktree | Status |
 |---|---|---|---|
 | 1. Farm touch/hold/tap-menus/scene-interactions & audio/notifications parity audit | `app/farm-scene-and-audio-audit` | `..\stock-farmer-android-wt-sheet-nav` | Running (Gemini Flash 3.8, high) |
-| 2. Farm renderer sprite asset coverage & effects/standing-layer parity audit | `app/renderer-and-effects-audit` | `..\stock-farmer-android-wt-stock-quest` | Running (Gemini Flash 3.8, high) |
-| 3. Market session, `GamePersistence`/`FarmSlots` & `PhotoSaver`/`FarmPhotoTaker` parity audit | `app/market-persistence-photo-audit` | `..\stock-farmer-android-wt-perf-inst` | Running (Gemini Flash 3.8, high) |
-| 4. `Hud` `session.toasts` wiring & `MenusHost`/`Catalog` HUD theme parity audit | `app/hud-toast-and-catalog-audit` | `..\stock-farmer-android-wt-storage-notices` | Running (Gemini Flash 3.8, high) |
+| 2. Market session, `GamePersistence`/`FarmSlots` & `PhotoSaver`/`FarmPhotoTaker` parity audit | `app/market-persistence-photo-audit` | `..\stock-farmer-android-wt-perf-inst` | Running (Gemini Flash 3.8, high) |
+| 3. `Hud` `session.toasts` wiring & `MenusHost`/`Catalog` HUD theme parity audit | `app/hud-toast-and-catalog-audit` | `..\stock-farmer-android-wt-storage-notices` | Running (Gemini Flash 3.8, high) |
+| 4. Farm layers geometry, anchors, `pixelsPerTile`, animated sprites & z-sorting parity audit | `app/farm-layers-geometry-audit` | `..\stock-farmer-android-wt-stock-quest` | Running (Gemini Flash 3.8, high) |
 
 ## Next steps, in order
 
