@@ -14,7 +14,7 @@ Done:
 
 Not started:
 
-1. Still to port: the `SoundAssetTests` check (needs the audio assets copied in first); the legacy Retired* tests (migrations, skipped).
+1. Still to port: the legacy Retired* tests (migrations, skipped).
 2. Ported tests that failed pointed at real behavior differences and were fixed; keep porting this way.
 3. Swift behavior that depends on exact random draws (seeded tests) may need the generator mapping checked: `util/RandomSource.kt` follows Swift's documented algorithms but could not be compared against a Swift toolchain here.
 
@@ -29,3 +29,7 @@ Nothing built yet beyond the Compose shell. The SDK licenses are accepted and `.
 | Feature | Rules (core) | UI | Verified |
 |---|---|---|---|
 | Plant, grow, Scythe harvest, Storage sale, save and relaunch (first slice) | yes, tested | no | no |
+
+## Assets
+
+`app/src/main/assets/images` is a straight copy of the iOS `Images` folder. `app/src/main/assets/audio` comes from `node tools/convert-audio.mjs <iOS Resources/Audio> app/src/main/assets/audio`: the Core Audio effects become WAV (still 16-bit mono, checked by `SoundAssetTest`) and the music is copied as is. The effects are uncompressed, so a later pass should encode them to OGG to shrink the download.
