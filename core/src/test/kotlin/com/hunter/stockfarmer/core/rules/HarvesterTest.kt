@@ -177,7 +177,8 @@ class AxeTest {
         origin: GridPoint,
         hits: Int,
         isNewHit: Boolean = true,
-    ) = GameEvent.Chopped(tile, origin, hits, isNewHit)
+        total: Int = 6,
+    ) = GameEvent.Chopped(tile, origin, hits, total, isNewHit)
 
     @Test
     fun `bigger trees take more passes to fell`() {
@@ -226,7 +227,7 @@ class AxeTest {
         engine.state.putTree(kind.origin(other), PlacedTree(kind, kind.species.colors[0], Instant.now()))
         pass(engine, spot)
         pass(engine, spot)
-        assertEquals(listOf<GameEvent>(chopped(other, other, 1)), pass(engine, other))
+        assertEquals(listOf<GameEvent>(chopped(other, other, 1, total = kind.hitsToFell)), pass(engine, other))
         assertEquals(listOf<GameEvent>(chopped(spot, treeOrigin, 1)), pass(engine, spot))
         assertEquals(2, engine.state.trees.size)
     }

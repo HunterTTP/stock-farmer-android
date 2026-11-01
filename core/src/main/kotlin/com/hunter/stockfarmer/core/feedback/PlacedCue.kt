@@ -70,7 +70,11 @@ private fun cuesOf(
             at(event.point, SoundCue.fishingCast)
         }
 
-        is GameEvent.Stored, is GameEvent.TractorGathered -> {
+        is GameEvent.Stored -> {
+            at(event.point, SoundCue.cropPickup)
+        }
+
+        is GameEvent.TractorGathered -> {
             emptyList()
         }
 

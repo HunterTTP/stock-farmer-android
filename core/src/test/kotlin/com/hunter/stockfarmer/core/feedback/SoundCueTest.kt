@@ -50,8 +50,29 @@ class SoundCueTest {
 
     @Test
     fun `a chopping hit that is not new is silent`() {
-        assertTrue(cues(listOf(GameEvent.Chopped(here, here, 2, false))).isEmpty())
-        assertEquals(listOf(PlacedCue(SoundCue.destroy, here)), cues(listOf(GameEvent.Chopped(here, here, 1, true))))
+        assertTrue(cues(listOf(GameEvent.Chopped(here, here, 2, 4, false))).isEmpty())
+        assertEquals(listOf(PlacedCue(SoundCue.destroy, here)), cues(listOf(GameEvent.Chopped(here, here, 1, 4, true))))
+    }
+
+    @Test
+    fun `gathering an item into storage picks it up where it was`() {
+        assertEquals(listOf(PlacedCue(SoundCue.cropPickup, here)), cues(listOf(GameEvent.Stored(here, "wheat", 1))))
+    }
+
+    @Test
+    fun `many items stored in one stroke make one pickup sound`() {
+        val events = listOf(GameEvent.Stored(here, "wheat", 1), GameEvent.Stored(there, "wheat", 1))
+        assertEquals(listOf(PlacedCue(SoundCue.cropPickup, here)), cues(events))
+    }
+
+    @Test
+    fun `selling a gathered item sounds as a sale, not a pickup`() {
+        assertEquals(listOf(PlacedCue(SoundCue.sell, here)), cues(listOf(GameEvent.Sold(here, "wheat", 1.0, 1))))
+    }
+
+    @Test
+    fun `cooked food stored keeps the cooking chime`() {
+        assertEquals(listOf(PlacedCue(SoundCue.cookDone)), cues(listOf(GameEvent.Stored(here, "bread", 1))))
     }
 
     @Test
