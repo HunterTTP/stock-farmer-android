@@ -1,9 +1,5 @@
 package com.hunter.stockfarmer.ui
 
-import android.content.Context
-import android.os.Handler
-import android.os.Looper
-import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,14 +7,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -27,6 +19,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -35,35 +28,43 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.hunter.stockfarmer.audio.SoundCenter
-import com.hunter.stockfarmer.core.catalog.Crop
-import com.hunter.stockfarmer.core.catalog.HarvestTool
 import com.hunter.stockfarmer.core.model.DaySummary
-import com.hunter.stockfarmer.core.model.PlayMode
-import com.hunter.stockfarmer.core.model.dollars
 import com.hunter.stockfarmer.core.rules.GameEvent
-import com.hunter.stockfarmer.core.rules.LevelRules
 import com.hunter.stockfarmer.core.rules.LevelUnlocks
-import com.hunter.stockfarmer.core.rules.firstRejection
-import com.hunter.stockfarmer.core.rules.isPlacing
 import com.hunter.stockfarmer.core.rules.select
-import com.hunter.stockfarmer.core.rules.selectDecorating
-import com.hunter.stockfarmer.core.rules.selectFertilizer
-import com.hunter.stockfarmer.core.rules.selectTerrain
 import com.hunter.stockfarmer.game.FarmSlots
+import com.hunter.stockfarmer.game.Feedback
 import com.hunter.stockfarmer.game.GameSession
+import com.hunter.stockfarmer.game.ToastMessage
 import com.hunter.stockfarmer.game.cancelPlacement
 import com.hunter.stockfarmer.game.confirmPlacement
 import com.hunter.stockfarmer.ui.fishing.FishingOverlay
+import com.hunter.stockfarmer.ui.hud.BannerBox
+import com.hunter.stockfarmer.ui.hud.HUD_REFRESH_MILLIS
+import com.hunter.stockfarmer.ui.hud.HudScreen
+import com.hunter.stockfarmer.ui.hud.HudState
+import com.hunter.stockfarmer.ui.hud.LevelHud
+import com.hunter.stockfarmer.ui.hud.MenuInteractionRegions
+import com.hunter.stockfarmer.ui.hud.MoneyHud
+import com.hunter.stockfarmer.ui.hud.RingScreen
+import com.hunter.stockfarmer.ui.hud.SaveStatusView
+import com.hunter.stockfarmer.ui.hud.ScreenButtons
+import com.hunter.stockfarmer.ui.hud.TimeSheet
+import com.hunter.stockfarmer.ui.hud.ToolBar
+import com.hunter.stockfarmer.ui.hud.ToolPalette
+import com.hunter.stockfarmer.ui.hud.hud
+import com.hunter.stockfarmer.ui.hud.observesOutsideTouches
+import com.hunter.stockfarmer.ui.hud.takeFarmPhoto
 import com.hunter.stockfarmer.ui.menus.Menu
+import com.hunter.stockfarmer.ui.menus.MenuImage
 import com.hunter.stockfarmer.ui.menus.MenusHost
+import com.hunter.stockfarmer.ui.menus.rememberMenuAssetLoader
 import com.hunter.stockfarmer.ui.rewards.HUDTarget
 import com.hunter.stockfarmer.ui.rewards.LocalRewardFlights
 import com.hunter.stockfarmer.ui.rewards.rewardTarget
 import com.hunter.stockfarmer.ui.screens.CareerScreen
 import com.hunter.stockfarmer.ui.screens.ChangelogScreen
 import com.hunter.stockfarmer.ui.screens.DaySummaryBanner
-import com.hunter.stockfarmer.ui.screens.LessonGuide
-import com.hunter.stockfarmer.ui.screens.LessonGuideState
 import com.hunter.stockfarmer.ui.screens.LevelUpScreen
 import com.hunter.stockfarmer.ui.screens.LocalScreenAudio
 import com.hunter.stockfarmer.ui.screens.MarketQuestScreen
@@ -76,70 +77,17 @@ import com.hunter.stockfarmer.ui.screens.SaveSlotsScreen
 import com.hunter.stockfarmer.ui.screens.SettingsScreen
 import com.hunter.stockfarmer.ui.screens.SoundCenterScreenAudio
 import com.hunter.stockfarmer.ui.screens.StockMarketScreen
-import com.hunter.stockfarmer.ui.screens.lessonPulse
 import com.hunter.stockfarmer.ui.sheets.SheetHost
+import com.hunter.stockfarmer.ui.theme.PlacementButtons
+import com.hunter.stockfarmer.ui.theme.ScalesHudForTablets
+import com.hunter.stockfarmer.ui.theme.ToastView
 import com.hunter.stockfarmer.ui.timelapse.TimelapseScreen
 import kotlinx.coroutines.delay
-import kotlin.concurrent.thread
 
-/** What the heads-up display shows, read from the game a few times a second. */
-private data class HudState(
-    val money: Double,
-    val xp: Int,
-    val level: Int,
-    val levelProgress: Float,
-    val mode: PlayMode,
-    val harvestTool: HarvestTool,
-    val selectedCropID: String,
-    val isPlacing: Boolean,
-) {
-    /** What the tool circle says: the thing in hand. */
-    val toolLabel: String
-        get() =
-            when (mode) {
-                PlayMode.plant -> "Seed"
-                PlayMode.harvest -> harvestTool.displayName
-                PlayMode.landscape -> "Terrain"
-                PlayMode.build -> "Build"
-                PlayMode.decorate -> "Decor"
-                PlayMode.fertilize -> "Soil"
-            }
-}
-
-private fun GameSession.hud(): HudState =
-    act { engine ->
-        val state = engine.state
-        val (earned, span) = LevelRules.progress(state.xp)
-        HudState(
-            money = state.money,
-            xp = state.xp,
-            level = state.level,
-            levelProgress = earned.toFloat() / span.coerceAtLeast(1),
-            mode = state.mode,
-            harvestTool = state.harvestTool,
-            selectedCropID = state.selectedCropID,
-            isPlacing = engine.isPlacing,
-        )
-    }
-
-/** The full screens the HUD can open over the farm. */
-private enum class HudScreen(
-    val label: String,
-) {
-    Quests("Quests"),
-    Stocks("Stocks"),
-    Career("Career"),
-    Farms("Farms"),
-    Timelapse("Timelapse"),
-    Performance("Performance"),
-    Changelog("Changelog"),
-    Privacy("Privacy"),
-    Settings("Settings"),
-}
-
-private const val REFRESH_MILLIS = 250L
-private val TOOL_CIRCLE_BOTTOM = 132.dp
-
+/**
+ * The heads-up display over the farm, in the composition order of iOS `GameView`: the money and level panels on top, the
+ * placement buttons and the tool bar at the bottom, then the messages, and the screens and sheets above everything.
+ */
 @Composable
 fun Hud(
     session: GameSession,
@@ -147,20 +95,26 @@ fun Hud(
     farms: FarmSlots,
     performance: PerformanceMonitor,
     modifier: Modifier = Modifier,
+    /** Why saving is failing, shown over the farm with a Retry; null while saving works. */
+    saveError: String? = null,
+    onRetrySave: () -> Unit = {},
 ) {
     val context = LocalContext.current
     var hud by remember { mutableStateOf(session.hud()) }
-    var lesson by remember { mutableStateOf(session.read { LessonGuideState.from(it) }) }
     var menu by remember { mutableStateOf<Menu?>(null) }
     var screen by remember { mutableStateOf<HudScreen?>(null) }
+    var isTimeShown by remember { mutableStateOf(false) }
     var levelUnlocks by remember { mutableStateOf<LevelUnlocks?>(null) }
     var rewards by remember { mutableStateOf(emptyList<QuestReward>()) }
     var daySummary by remember { mutableStateOf<DaySummary?>(null) }
+    var toast by remember { mutableStateOf<ToastMessage?>(null) }
+    var isDraggingTool by remember { mutableStateOf(false) }
+    var closeRequests by remember { mutableIntStateOf(0) }
+    val regions = remember { MenuInteractionRegions() }
     LaunchedEffect(session) {
         while (true) {
             hud = session.hud()
-            lesson = session.read { LessonGuideState.from(it) }
-            delay(REFRESH_MILLIS)
+            delay(HUD_REFRESH_MILLIS)
         }
     }
     val cast by session.casts.collectAsState()
@@ -169,118 +123,232 @@ fun Hud(
     LaunchedEffect(session) { session.newDays.collect { daySummary = it } }
     LaunchedEffect(session) {
         session.events.collect { events ->
-            events.firstRejection?.let { Toast.makeText(context, it.message, Toast.LENGTH_SHORT).show() }
+            Feedback.toast(events)?.let { toast = it }
             events.filterIsInstance<GameEvent.LeveledUp>().lastOrNull()?.let {
                 levelUnlocks = LevelUnlocks.unlocked(it.from, it.level)
             }
-            QuestReward.from(events).takeIf { it.isNotEmpty() }?.let { rewards = it }
+            Feedback.questBanner(events)?.let { rewards = it }
         }
     }
-    Box(modifier) {
-        Column(Modifier.fillMaxSize().padding(12.dp), verticalArrangement = Arrangement.SpaceBetween) {
-            Column {
-                StatusBar(hud)
-                ScreenButtons(
-                    onStorage = { menu = Menu.Storage },
-                    onPhoto = { takeFarmPhoto(context, session) },
-                    onScreen = { screen = it },
-                )
-            }
-            Column {
-                if (hud.isPlacing) PlacementBar(session)
-                if (hud.mode == PlayMode.plant) SeedPicker(session, hud)
-                if (hud.mode == PlayMode.harvest) HarvestToolPicker(session, hud)
-                ToolBar(session, hud, onMenu = { menu = it })
-            }
-        }
-        LessonGuide(
-            lesson,
-            Modifier.align(Alignment.BottomEnd).padding(end = 16.dp, bottom = TOOL_CIRCLE_BOTTOM + 96.dp),
-        )
-        ToolCircle(
-            session,
-            hud.toolLabel,
-            Modifier
-                .align(Alignment.BottomEnd)
-                .padding(end = 16.dp, bottom = TOOL_CIRCLE_BOTTOM)
-                .lessonPulse(lesson.pulses),
-        )
-        menu?.let { open -> Overlay { MenusHost(session, open, onClose = { menu = null }) } }
-        screen?.let { open ->
-            val audio = remember(sound) { SoundCenterScreenAudio(sound) }
-            Overlay {
-                CompositionLocalProvider(LocalScreenAudio provides audio) {
-                    val close = { screen = null }
-                    when (open) {
-                        HudScreen.Quests -> {
-                            MarketQuestScreen(session, close)
-                        }
+    LaunchedEffect(toast) {
+        val shown = toast ?: return@LaunchedEffect
+        delay(shown.durationMillis)
+        if (toast == shown) toast = null
+    }
+    val opensOverFarm = menu != null || screen != null || isTimeShown || sheet != null
+    LaunchedEffect(opensOverFarm) { if (opensOverFarm) closeRequests++ }
+    ScalesHudForTablets {
+        Box(modifier) {
+            StatusAndBars(
+                session = session,
+                hud = hud,
+                regions = regions,
+                isDraggingTool = isDraggingTool,
+                closeRequests = closeRequests,
+                onCloseMenus = { closeRequests++ },
+                onCareer = { screen = HudScreen.Career },
+                onStorage = { menu = Menu.Storage },
+                onPhoto = { takeFarmPhoto(context, session) { toast = ToastMessage(it) } },
+                onScreen = { screen = it },
+                onRingScreen = {
+                    when (it) {
+                        RingScreen.Storage -> menu = Menu.Storage
+                        RingScreen.Settings -> screen = HudScreen.Settings
+                        RingScreen.Time -> isTimeShown = true
+                    }
+                },
+                onDraggingChanged = { isDraggingTool = it },
+            )
+            menu?.let { open -> Overlay { MenusHost(session, open, onClose = { menu = null }) } }
+            screen?.let { open ->
+                val audio = remember(sound) { SoundCenterScreenAudio(sound) }
+                Overlay {
+                    CompositionLocalProvider(LocalScreenAudio provides audio) {
+                        val close = { screen = null }
+                        when (open) {
+                            HudScreen.Quests -> {
+                                MarketQuestScreen(session, close)
+                            }
 
-                        HudScreen.Stocks -> {
-                            StockMarketScreen(session, close)
-                        }
+                            HudScreen.Stocks -> {
+                                StockMarketScreen(session, close)
+                            }
 
-                        HudScreen.Career -> {
-                            CareerScreen(session, close)
-                        }
+                            HudScreen.Career -> {
+                                CareerScreen(session, close)
+                            }
 
-                        HudScreen.Farms -> {
-                            SaveSlotsScreen(session, farms, close)
-                        }
+                            HudScreen.Farms -> {
+                                SaveSlotsScreen(session, farms, close)
+                            }
 
-                        HudScreen.Timelapse -> {
-                            TimelapseScreen(session, close)
-                        }
+                            HudScreen.Timelapse -> {
+                                TimelapseScreen(session, close)
+                            }
 
-                        HudScreen.Performance -> {
-                            PerformanceScreen(session, performance, close, recordingContext = { "Stock Farmer" })
-                        }
+                            HudScreen.Performance -> {
+                                PerformanceScreen(
+                                    session,
+                                    performance,
+                                    close,
+                                    recordingContext = { "Stock Farmer" },
+                                )
+                            }
 
-                        HudScreen.Changelog -> {
-                            ChangelogScreen(session, close)
-                        }
+                            HudScreen.Changelog -> {
+                                ChangelogScreen(session, close)
+                            }
 
-                        HudScreen.Privacy -> {
-                            PrivacyScreen(session, close)
-                        }
+                            HudScreen.Privacy -> {
+                                PrivacyScreen(session, close)
+                            }
 
-                        HudScreen.Settings -> {
-                            SettingsScreen(session, close)
+                            HudScreen.Settings -> {
+                                SettingsScreen(session, close)
+                            }
                         }
                     }
                 }
             }
+            if (isTimeShown) TimeSheet(session, onDismiss = { isTimeShown = false })
+            levelUnlocks?.let { unlocks ->
+                Overlay { LevelUpScreen(session, onClose = { levelUnlocks = null }, unlocks = unlocks) }
+            }
+            confirmation?.let { asked ->
+                AlertDialog(
+                    onDismissRequest = { session.confirmations.value = null },
+                    title = { Text(asked.title) },
+                    text = { Text(asked.message) },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                session.confirmations.value = null
+                                asked.action()
+                            },
+                        ) { Text(asked.confirmTitle) }
+                    },
+                    dismissButton = { TextButton(onClick = { session.confirmations.value = null }) { Text("Cancel") } },
+                )
+            }
+            sheet?.let { open ->
+                Overlay { SheetHost(session, open, onClose = { session.sheets.value = null }) }
+            }
+            cast?.let { hooked ->
+                FishingOverlay(session, hooked, onFinish = { events ->
+                    session.publish(events)
+                    session.casts.value = null
+                })
+            }
+            ToastBanner(session, toast) { toast = null }
+            QuestBanner(session, onClose = { rewards = emptyList() }, rewards = rewards)
+            DaySummaryBanner(session, onClose = { daySummary = null }, summary = daySummary)
+            if (saveError != null) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    SaveStatusView(saveError, onRetrySave, Modifier.padding(16.dp))
+                }
+            }
         }
-        levelUnlocks?.let { unlocks ->
-            Overlay { LevelUpScreen(session, onClose = { levelUnlocks = null }, unlocks = unlocks) }
+    }
+}
+
+/** The panels and controls on the farm itself: status on top, placement buttons and the tool bar below. */
+@Composable
+private fun StatusAndBars(
+    session: GameSession,
+    hud: HudState,
+    regions: MenuInteractionRegions,
+    isDraggingTool: Boolean,
+    closeRequests: Int,
+    onCloseMenus: () -> Unit,
+    onCareer: () -> Unit,
+    onStorage: () -> Unit,
+    onPhoto: () -> Unit,
+    onScreen: (HudScreen) -> Unit,
+    onRingScreen: (RingScreen) -> Unit,
+    onDraggingChanged: (Boolean) -> Unit,
+) {
+    val flights = LocalRewardFlights.current
+    val money = flights?.displayedMoney(hud.money) ?: hud.money
+    val xp = flights?.displayedXP(hud.xp) ?: hud.xp
+    Box(Modifier.fillMaxSize().safeDrawingPadding()) {
+        Column(
+            Modifier.fillMaxSize().padding(horizontal = 16.dp).padding(bottom = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, Alignment.Top) {
+                MoneyHud(
+                    money,
+                    pulse = 0,
+                    modifier =
+                        Modifier
+                            .rewardTarget(
+                                HUDTarget.Money,
+                            ).observesOutsideTouches(true, regions, onCloseMenus),
+                )
+                LevelHud(
+                    xp,
+                    pulse = 0,
+                    onClick = { if (!hud.isPlacing) onCareer() },
+                    modifier =
+                        Modifier
+                            .rewardTarget(
+                                HUDTarget.Level,
+                            ).observesOutsideTouches(true, regions, onCloseMenus),
+                )
+            }
+            if (!hud.isPlacing) {
+                ScreenButtons(
+                    onStorage,
+                    onPhoto,
+                    onScreen,
+                    Modifier.observesOutsideTouches(true, regions, onCloseMenus),
+                )
+            }
         }
-        confirmation?.let { asked ->
-            AlertDialog(
-                onDismissRequest = { session.confirmations.value = null },
-                title = { Text(asked.title) },
-                text = { Text(asked.message) },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            session.confirmations.value = null
-                            asked.action()
-                        },
-                    ) { Text(asked.confirmTitle) }
-                },
-                dismissButton = { TextButton(onClick = { session.confirmations.value = null }) { Text("Cancel") } },
+        if (hud.isPlacing && !isDraggingTool) {
+            PlacementButtons(
+                onConfirm = { session.confirmPlacement() },
+                onCancel = { session.cancelPlacement() },
+                modifier = Modifier.align(Alignment.BottomCenter).padding(horizontal = 16.dp).padding(bottom = 8.dp),
+                cost = hud.placementCost,
             )
         }
-        sheet?.let { open ->
-            Overlay { SheetHost(session, open, onClose = { session.sheets.value = null }) }
+        if (!hud.isPlacing || isDraggingTool) {
+            ToolBar(
+                session = session,
+                hud = hud,
+                regions = regions,
+                onRingScreen = onRingScreen,
+                modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 8.dp),
+                closeRequests = closeRequests,
+                onDraggingChanged = onDraggingChanged,
+            )
         }
-        cast?.let { hooked ->
-            FishingOverlay(session, hooked, onFinish = { events ->
-                session.publish(events)
-                session.casts.value = null
-            })
-        }
-        QuestBanner(session, onClose = { rewards = emptyList() }, rewards = rewards)
-        DaySummaryBanner(session, onClose = { daySummary = null }, summary = daySummary)
+    }
+}
+
+/** The message over the farm, with the implement it offers to pick up. */
+@Composable
+private fun ToastBanner(
+    session: GameSession,
+    toast: ToastMessage?,
+    onDismiss: () -> Unit,
+) {
+    val loader = rememberMenuAssetLoader()
+    val tool = toast?.tool
+    BannerBox {
+        ToastView(
+            message = toast?.text,
+            toolName = tool?.displayName,
+            toolIcon =
+                tool?.let { held ->
+                    { MenuImage(ToolPalette.harvestPicture(held), loader, Modifier.size(36.dp)) }
+                },
+            onToolTap = {
+                tool?.let { held -> session.act { it.select(held) } }
+                onDismiss()
+            },
+        )
     }
 }
 
@@ -288,142 +356,4 @@ fun Hud(
 @Composable
 private fun Overlay(content: @Composable () -> Unit) {
     Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background, content = content)
-}
-
-@Composable
-private fun StatusBar(hud: HudState) {
-    val flights = LocalRewardFlights.current
-    val money = flights?.displayedMoney(hud.money) ?: hud.money
-    val xp = flights?.displayedXP(hud.xp) ?: hud.xp
-    val level = LevelRules.levelForXP(xp)
-    val (earned, span) = LevelRules.progress(xp)
-    val progress = earned.toFloat() / span.coerceAtLeast(1)
-    Column(Modifier.fillMaxWidth()) {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text(
-                money.dollars,
-                style = MaterialTheme.typography.titleLarge,
-                modifier = Modifier.rewardTarget(HUDTarget.Money),
-            )
-            Text(
-                "Level $level",
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.rewardTarget(HUDTarget.Level),
-            )
-        }
-        LinearProgressIndicator(progress = { progress }, modifier = Modifier.fillMaxWidth())
-    }
-}
-
-@Composable
-private fun ScreenButtons(
-    onStorage: () -> Unit,
-    onPhoto: () -> Unit,
-    onScreen: (HudScreen) -> Unit,
-) {
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-        TextButton(onClick = onStorage, modifier = Modifier.rewardTarget(HUDTarget.Storage)) { Text("Storage") }
-        TextButton(onClick = onPhoto) { Text("Photo") }
-        HudScreen.entries.forEach { TextButton(onClick = { onScreen(it) }) { Text(it.label) } }
-    }
-}
-
-@Composable
-private fun SeedPicker(
-    session: GameSession,
-    hud: HudState,
-) {
-    val seeds = remember(hud.level) { Crop.all.filter { !it.isFruitTree && it.unlockLevel <= hud.level } }
-    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 8.dp)) {
-        items(seeds, key = { it.id }) { crop ->
-            FilterChip(
-                selected = crop.id == hud.selectedCropID,
-                onClick = { session.act { it.select(crop) } },
-                label = { Text(crop.name) },
-            )
-        }
-    }
-}
-
-@Composable
-private fun HarvestToolPicker(
-    session: GameSession,
-    hud: HudState,
-) {
-    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 8.dp)) {
-        items(HarvestTool.entries, key = { it.name }) { tool ->
-            FilterChip(
-                selected = tool == hud.harvestTool,
-                onClick = { session.act { it.select(tool) } },
-                label = { Text(tool.displayName) },
-            )
-        }
-    }
-}
-
-@Composable
-private fun ToolBar(
-    session: GameSession,
-    hud: HudState,
-    onMenu: (Menu) -> Unit,
-) {
-    val tools =
-        listOf<Triple<String, Boolean, () -> Unit>>(
-            Triple("Plant", hud.mode == PlayMode.plant) { session.act { it.setMode(PlayMode.plant) } },
-            Triple("Harvest", hud.mode == PlayMode.harvest) { session.act { it.select(hud.harvestTool) } },
-            Triple("Terrain", hud.mode == PlayMode.landscape) {
-                session.act { it.selectTerrain() }
-                onMenu(Menu.Terrain)
-            },
-            Triple("Build", hud.mode == PlayMode.build) {
-                session.act { it.setMode(PlayMode.build) }
-                onMenu(Menu.Build)
-            },
-            Triple("Decorate", hud.mode == PlayMode.decorate) {
-                session.act { it.selectDecorating() }
-                onMenu(Menu.Decorate)
-            },
-            Triple("Fertilize", hud.mode == PlayMode.fertilize) { session.act { it.selectFertilizer() } },
-        )
-    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        items(tools, key = { it.first }) { (label, selected, onClick) ->
-            FilterChip(selected = selected, onClick = onClick, label = { Text(label) })
-        }
-    }
-}
-
-/** Shown while something is being placed: put it down where the green tiles are, or put it away. */
-@Composable
-private fun PlacementBar(session: GameSession) {
-    Row(Modifier.fillMaxWidth().padding(bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        Button(onClick = { session.confirmPlacement() }) { Text("Place") }
-        OutlinedButton(onClick = { session.cancelPlacement() }) { Text("Cancel") }
-    }
-}
-
-private const val PHOTO_PIXELS = 4096
-private const val SMALLER_PHOTO_PIXELS = 2048
-
-/** Takes a picture of the whole farm and saves it to the gallery, trying a smaller one if the device is short of memory. */
-private fun takeFarmPhoto(
-    context: Context,
-    session: GameSession,
-) {
-    val main = Handler(Looper.getMainLooper())
-
-    fun tell(message: String) = main.post { Toast.makeText(context, message, Toast.LENGTH_SHORT).show() }
-
-    fun save(png: ByteArray) =
-        thread {
-            tell(if (PhotoSaver.save(context, png)) "Farm photo saved" else "The farm photo could not be saved")
-        }
-    session.photos.request(PHOTO_PIXELS) { large ->
-        if (large != null) {
-            save(large)
-        } else {
-            session.photos.request(SMALLER_PHOTO_PIXELS) { small ->
-                if (small != null) save(small) else tell("The farm photo could not be created. Please try again.")
-            }
-        }
-    }
 }

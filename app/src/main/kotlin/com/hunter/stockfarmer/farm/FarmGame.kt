@@ -27,6 +27,7 @@ import com.hunter.stockfarmer.game.animalGestures
 import com.hunter.stockfarmer.game.hold
 import com.hunter.stockfarmer.game.preview
 import com.hunter.stockfarmer.game.touch
+import kotlinx.coroutines.flow.update
 import java.time.Instant
 import kotlin.math.floor
 import kotlin.math.max
@@ -214,6 +215,16 @@ class FarmGame(
     }
 
     private inner class Gestures : GestureDetector.GestureAdapter() {
+        override fun touchDown(
+            x: Float,
+            y: Float,
+            pointer: Int,
+            button: Int,
+        ): Boolean {
+            session.farmTouches.update { it + 1 }
+            return false
+        }
+
         override fun tap(
             x: Float,
             y: Float,

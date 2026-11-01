@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import com.hunter.stockfarmer.core.model.DaySummary
 import com.hunter.stockfarmer.core.rules.LevelUnlocks
 import com.hunter.stockfarmer.game.GameSession
+import com.hunter.stockfarmer.ui.hud.BannerBox
 import com.hunter.stockfarmer.ui.theme.HudMaterialTheme
 import com.hunter.stockfarmer.ui.theme.Theme
 import kotlinx.coroutines.delay
@@ -63,7 +64,7 @@ fun DaySummaryBanner(
         onClose()
     }
     HudMaterialTheme {
-        Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.2f)), contentAlignment = Alignment.Center) {
+        BannerBox {
             Column(Modifier.widthIn(max = 360.dp).padding(16.dp)) {
                 ScreenCard {
                     Text(state.title, style = MaterialTheme.typography.titleMedium)
@@ -98,7 +99,7 @@ fun QuestBanner(
         onClose()
     }
     HudMaterialTheme {
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        BannerBox {
             Column(Modifier.widthIn(max = 360.dp).padding(16.dp)) { QuestRewardCard(rewards) }
         }
     }

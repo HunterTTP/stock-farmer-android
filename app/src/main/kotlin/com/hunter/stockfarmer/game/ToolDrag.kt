@@ -4,12 +4,15 @@ import com.hunter.stockfarmer.core.model.GridPoint
 import com.hunter.stockfarmer.core.model.PlayMode
 import com.hunter.stockfarmer.core.rules.GameEngine
 import com.hunter.stockfarmer.core.rules.GameEvent
+import com.hunter.stockfarmer.core.rules.Rejection
 import com.hunter.stockfarmer.core.rules.ToolStroke
 import com.hunter.stockfarmer.core.rules.containsRejection
+import com.hunter.stockfarmer.core.rules.firstRejection
 import com.hunter.stockfarmer.core.rules.isFruitTreeSelected
 import com.hunter.stockfarmer.core.rules.isPlacing
 import com.hunter.stockfarmer.core.rules.isSprinklerSelected
 import com.hunter.stockfarmer.core.rules.movePlacement
+import com.hunter.stockfarmer.core.rules.placementRejection
 import com.hunter.stockfarmer.core.rules.toolFootprint
 import java.time.Instant
 import kotlin.math.abs
@@ -24,6 +27,7 @@ class ToolDrag(
 ) {
     private var stroke = ToolStroke()
     private var last: GridPoint? = null
+    private var lastRejection: Rejection? = null
 
     /** The finger is over [tile], or over nothing when it is null. */
     fun move(
@@ -46,11 +50,16 @@ class ToolDrag(
         last = tile
     }
 
+    /** Why the tool can not be used where the finger rests, as a direct tap would say: null when it can. */
+    fun explain(now: Instant = Instant.now()): Rejection? =
+        session.act { engine -> if (engine.carriesWhatItPlaces()) engine.placementRejection(now) else lastRejection }
+
     /** The finger lifted: a carried thing stays put awaiting the player's OK, and the stroke is over. */
     fun end() {
         session.act { stroke.end(it) }
         stroke = ToolStroke()
         last = null
+        lastRejection = null
         session.view.toolPreview = null
     }
 
@@ -71,6 +80,7 @@ class ToolDrag(
         now: Instant,
     ): List<GameEvent> {
         val events = stroke.use(engine, tilesBetween(last ?: tile, tile), now)
+        lastRejection = events.firstRejection
         session.view.toolPreview =
             PlacementPreview(engine.toolFootprint(tile), !events.containsRejection, null)
         return events

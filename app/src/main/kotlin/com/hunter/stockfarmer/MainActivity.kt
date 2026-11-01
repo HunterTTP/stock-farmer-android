@@ -98,17 +98,17 @@ class MainActivity :
                         TimelapseCapture(recorder, ready = persistence.error == null)
                         RewardFlightsHost(model.session) {
                             CompositionLocalProvider(LocalTimelapseRecorder provides recorder) {
-                                Hud(model.session, sound, model.farms, model.performance, Modifier.fillMaxSize())
+                                Hud(
+                                    model.session,
+                                    sound,
+                                    model.farms,
+                                    model.performance,
+                                    Modifier.fillMaxSize(),
+                                    saveError = persistence.error,
+                                    onRetrySave = model::retry,
+                                )
                             }
                             RewardFlights(model.session, Modifier.fillMaxSize())
-                        }
-                        persistence.error?.let { message ->
-                            AlertDialog(
-                                onDismissRequest = {},
-                                title = { Text("Save failed") },
-                                text = { Text(message) },
-                                confirmButton = { TextButton(onClick = model::retry) { Text("Retry") } },
-                            )
                         }
                     }
                     LaunchedEffect(persistence.isReady) {

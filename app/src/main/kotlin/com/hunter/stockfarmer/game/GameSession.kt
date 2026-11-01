@@ -51,6 +51,9 @@ class GameSession(
     /** The building, animal or fish whose sheet is open; null when none is. */
     val sheets = MutableStateFlow<SheetTarget?>(null)
 
+    /** Counts the touches that land on the farm, which close the floating tool menus. */
+    val farmTouches = MutableStateFlow(0)
+
     /** Asks the farm for a picture of the whole map. */
     val photos = PhotoRequests()
 

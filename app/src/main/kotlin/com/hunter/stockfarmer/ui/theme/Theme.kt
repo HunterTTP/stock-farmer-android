@@ -70,6 +70,7 @@ object HudType {
 
     val caption = style(12)
     val footnote = style(13)
+    val body = style(17)
     val subheadline = style(15)
     val headline = style(17, FontWeight.SemiBold)
     val title3 = style(20)
