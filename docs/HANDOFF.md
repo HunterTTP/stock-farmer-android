@@ -1,7 +1,7 @@
 # Handoff: where the project stands and what to do next
 
 Read this first in a fresh session, then `AGENTS.md`, `docs/DEVELOPMENT.md` and `docs/PARITY.md`.
-Last updated at `main` = `6950222` (2026-11-01).
+Last updated at `main` = `a7499c7` (2026-11-01).
 
 ## The goal
 
@@ -35,11 +35,11 @@ Standing instructions from the user:
 - **Claude Sonnet 5.5 (`claude`)**: Rate-limited (`resets 2:10pm America/New_York`); timer scheduled to bring back into rotation at reset.
 - **Codex Sol 6.1 (`codex.cmd`)**: Rate-limited (`try again at 2:54 PM`); timer scheduled to bring back into rotation at reset.
 
-## Verified state (all green on `main` = `6950222`)
+## Verified state (all green on `main` = `a7499c7`)
 
 ```
-./gradlew spotlessCheck :core:test :app:assembleDebug :app:testDebugUnitTest   -> BUILD SUCCESSFUL (at 6950222)
-core tests: 1,019, 0 failures.   app unit tests: 356, 0 failures.   debug APK builds (85 MB, 16 KB aligned).
+./gradlew spotlessCheck :core:test :app:assembleDebug :app:testDebugUnitTest   -> BUILD SUCCESSFUL (at a7499c7)
+core tests: 1,019, 0 failures.   app unit tests: 357, 0 failures.   debug APK builds (85 MB, 16 KB aligned).
 ```
 
 ### Completed on `main` (`736658c`)
@@ -63,15 +63,16 @@ core tests: 1,019, 0 failures.   app unit tests: 356, 0 failures.   debug APK bu
   - `TimelapseScreen` HUD theme conversion & `CareerScreen` collection search/filter/chart axis polish (`b15560d`)
   - `GameTick` `learnWheatIsRipe` tutorial hook & `PerformanceScreen`/`InformationScreens` HUD theme polish (`f9c20f7`)
   - 16 KB APK native alignment verification (`NativeAlignmentTest`) & `ItemDetailScreens`/`BuildingChoiceScreens`/`TimeSheet` HUD button polish (`6950222`)
+  - `LaunchScreen`, `SaveStatusView`, `StatusHud`, `LessonGuide` & `RewardFlights` HUD theme polish (`a7499c7`)
 
 ## In flight right now (4 parallel slices)
 
 | Slice | Branch | Worktree | Status |
 |---|---|---|---|
 | 1. Storage tutorial lesson progression/pulses (`StorageMenu`) & `NoticeScreens`/`SaveSlotsScreen` HUD polish | `app/storage-notices-polish` | `..\stock-farmer-android-wt-storage-notices` | Running (Gemini Flash 3.8, high) |
-| 2. `StatusHud`, `SaveStatusView`, `LaunchScreen`, `LessonGuide` & `RewardFlights` parity audit | `app/hud-components-audit` | `..\stock-farmer-android-wt-stock-quest` | Running (Gemini Flash 3.8, high) |
-| 3. `ToolBar`, `ToolRing`, `ToolCircle`, `ToolsSheet`, `PlacementButtons` & `HudSheet` parity audit | `app/hud-toolbar-and-blur-audit` | `..\stock-farmer-android-wt-perf-inst` | Running (Gemini Flash 3.8, high) |
-| 4. Farm touch/hold/tap-menus/scene-interactions & audio/notifications parity audit | `app/farm-scene-and-audio-audit` | `..\stock-farmer-android-wt-sheet-nav` | Running (Gemini Flash 3.8, high) |
+| 2. `ToolBar`, `ToolRing`, `ToolCircle`, `ToolsSheet`, `PlacementButtons` & `HudSheet` parity audit | `app/hud-toolbar-and-blur-audit` | `..\stock-farmer-android-wt-perf-inst` | Running (Gemini Flash 3.8, high) |
+| 3. Farm touch/hold/tap-menus/scene-interactions & audio/notifications parity audit | `app/farm-scene-and-audio-audit` | `..\stock-farmer-android-wt-sheet-nav` | Running (Gemini Flash 3.8, high) |
+| 4. Farm renderer sprite asset coverage & effects/standing-layer parity audit | `app/renderer-and-effects-audit` | `..\stock-farmer-android-wt-stock-quest` | Running (Gemini Flash 3.8, high) |
 
 ## Next steps, in order
 
