@@ -64,7 +64,7 @@ internal class AmbientMotionTest {
         motion.tiles(state, Instant.ofEpochSecond(5), first)
         motion.tiles(state, Instant.ofEpochSecond(10), Point(30.0, 30.0))
         assertEquals(first, motion.origin)
-        assertTrue(motion.tiles(state, Instant.ofEpochSecond(100), first).isEmpty())
+        assertEquals(0, motion.tiles(state, Instant.ofEpochSecond(100), first).size)
         motion.tiles(state, Instant.ofEpochSecond(1445), Point(30.0, 30.0))
         assertEquals(Point(30.0, 30.0), motion.origin)
     }
@@ -75,10 +75,11 @@ internal class AmbientMotionTest {
         state.water[GridPoint(18, 18)] = com.hunter.stockfarmer.core.catalog.WaterStyle.deep
         state.putBuilding(GridPoint(18, 20), "house1")
         val tiles = PulseMotion().tiles(state, Instant.ofEpochSecond(5), Point(20.0, 20.0))
-        assertFalse(tiles.isEmpty())
+        assertTrue(tiles.size > 0)
         val covered = state.farmland + state.water.keys + state.placedBuildings.flatMap { it.footprint }
-        assertTrue(tiles.none { it.tile in covered })
-        assertTrue(tiles.all { it.intensity > 0 && it.intensity <= 1 && it.twinkle in 0.4..1.0 })
+        val glowing = 0 until tiles.size
+        assertTrue(glowing.none { GridPoint(tiles.row(it), tiles.col(it)) in covered })
+        assertTrue(glowing.all { tiles.intensity(it) > 0 && tiles.intensity(it) <= 1 && tiles.twinkle(it) in 0.4..1.0 })
     }
 
     @Test

@@ -2,6 +2,7 @@ package com.hunter.stockfarmer.farm.effects
 
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
+import com.badlogic.gdx.graphics.g2d.TextureRegion
 import com.hunter.stockfarmer.core.model.GameState
 import com.hunter.stockfarmer.farm.FarmRenderer
 import com.hunter.stockfarmer.farm.TextureLibrary
@@ -41,7 +42,7 @@ class NightPulseLayer(
     override val phase = EffectPhase.GROUND
     override val work = PerformanceWork.night
     private val motion = PulseMotion()
-    private val patterns = List(6) { pattern -> (0 until 144).shuffled(Random(pattern)).take(7).toSet() }
+    private var patterns: Array<TextureRegion>? = null
 
     fun sync(
         night: Int?,
@@ -54,41 +55,64 @@ class NightPulseLayer(
         now: Instant,
         camera: OrthographicCamera,
     ) {
-        val tiles = motion.tiles(state, now, Point(camera.position.x / TILE, (WORLD - camera.position.y) / TILE))
+        val tiles =
+            motion.tiles(state, now, Point(camera.position.x / TILE, (WORLD - camera.position.y) / TILE), camera.view())
+        if (tiles.size == 0) return
         val color = NightLights.pulseColor(state.season)
-        val view = camera.view()
+        val red = color.red / 255f
+        val green = color.green / 255f
+        val blue = color.blue / 255f
+        val size = FarmRenderer.TILE
+        val glow = textures.glow()
+        val patterns = patterns ?: PulsePatterns.regions(textures).also { patterns = it }
         batch.preserve {
             batch.additive()
-            for (tile in tiles) {
-                val x = tile.tile.col * TILE
-                val y = FarmRenderer.worldY(tile.tile.row).toDouble()
-                if (x + TILE < view.left || x > view.right || y + TILE < view.bottom || y > view.top) continue
-                batch.setColor(
-                    color.red / 255f,
-                    color.green / 255f,
-                    color.blue / 255f,
-                    (tile.intensity * 0.4).toFloat(),
+            // Added light sums the same in any order, so every glow goes before every pattern. Each change of texture
+            // flushes the batch into a draw call, and this makes two a frame instead of two for every glowing tile.
+            for (index in 0 until tiles.size) {
+                batch.setColor(red, green, blue, (tiles.intensity(index) * 0.4).toFloat())
+                batch.draw(glow, tiles.col(index) * size, FarmRenderer.worldY(tiles.row(index)), size, size)
+            }
+            for (index in 0 until tiles.size) {
+                batch.setColor(red, green, blue, (tiles.intensity(index) * tiles.twinkle(index)).toFloat())
+                batch.draw(
+                    patterns[tiles.pattern(index)],
+                    tiles.col(index) * size,
+                    FarmRenderer.worldY(tiles.row(index)),
+                    size,
+                    size,
                 )
-                batch.glow(textures, Point(x + TILE / 2, y + TILE / 2), TILE)
-                val texture =
-                    textures.generated("effects/pulse/${tile.pattern}", 12, 12) { col, row ->
-                        if (row * 12 +
-                            col in
-                            patterns[tile.pattern]
-                        ) {
-                            -1
-                        } else {
-                            0
-                        }
-                    }
-                batch.setColor(
-                    color.red / 255f,
-                    color.green / 255f,
-                    color.blue / 255f,
-                    (tile.intensity * tile.twinkle).toFloat(),
-                )
-                batch.draw(texture, x.toFloat(), y.toFloat(), TILE.toFloat(), TILE.toFloat())
             }
         }
+    }
+}
+
+/** The sparkle patterns of the wave, a few lit pixels each, side by side in one texture with a clear column between. */
+internal object PulsePatterns {
+    const val COUNT = 6
+    const val SIZE = 12
+    private const val LIT_PIXELS = 7
+    private const val STRIDE = SIZE + 1
+    const val STRIP_WIDTH = COUNT * STRIDE
+
+    /** The pixels lit in each pattern, numbered row by row. */
+    private val lit: List<Set<Int>> =
+        List(COUNT) { pattern -> (0 until SIZE * SIZE).shuffled(Random(pattern)).take(LIT_PIXELS).toSet() }
+
+    /** The color of a pixel of the strip: white where a pattern is lit, clear elsewhere. */
+    fun stripPixel(
+        x: Int,
+        y: Int,
+    ): Int {
+        val col = x % STRIDE
+        return if (col < SIZE && y * SIZE + col in lit[x / STRIDE]) -1 else 0
+    }
+
+    /** Where in the strip each pattern lies, in pixels from its left edge. */
+    fun left(pattern: Int) = pattern * STRIDE
+
+    fun regions(textures: TextureLibrary): Array<TextureRegion> {
+        val strip = textures.generated("effects/pulse", STRIP_WIDTH, SIZE, pixel = ::stripPixel)
+        return Array(COUNT) { TextureRegion(strip, left(it), 0, SIZE, SIZE) }
     }
 }
