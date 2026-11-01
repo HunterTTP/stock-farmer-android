@@ -46,6 +46,8 @@ class SoundCenter(
     private var easedRain = 0.0
     private var snowing = false
 
+    val isActive: Boolean get() = active && !closed
+
     var settings: SoundSettings =
         SoundSettings.from(
             preferences.all.mapValues { (_, value) ->

@@ -2,6 +2,7 @@ package com.hunter.stockfarmer
 
 import android.os.Bundle
 import android.view.View
+import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Box
@@ -31,6 +32,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.badlogic.gdx.backends.android.AndroidFragmentApplication
 import com.hunter.stockfarmer.audio.SoundCenter
+import com.hunter.stockfarmer.audio.ambienceDriver
 import com.hunter.stockfarmer.core.feedback.HapticCue
 import com.hunter.stockfarmer.core.model.GameState
 import com.hunter.stockfarmer.core.rules.GameEvent
@@ -44,6 +46,8 @@ import com.hunter.stockfarmer.notifications.FieldReadyNotificationPermission
 import com.hunter.stockfarmer.notifications.FieldReadyNotifier
 import com.hunter.stockfarmer.notifications.WorkManagerFieldReadyScheduler
 import com.hunter.stockfarmer.ui.Hud
+import com.hunter.stockfarmer.ui.rewards.RewardFlights
+import com.hunter.stockfarmer.ui.rewards.RewardFlightsHost
 import com.hunter.stockfarmer.ui.timelapse.LocalTimelapseRecorder
 import com.hunter.stockfarmer.ui.timelapse.TimelapseRecorder
 import com.hunter.stockfarmer.ui.timelapse.rememberTimelapseRecorder
@@ -81,8 +85,11 @@ class MainActivity :
                         FarmHost()
                         val recorder = rememberTimelapseRecorder(model.session)
                         TimelapseCapture(recorder, ready = persistence.error == null)
-                        CompositionLocalProvider(LocalTimelapseRecorder provides recorder) {
-                            Hud(model.session, sound, model.farms, Modifier.fillMaxSize())
+                        RewardFlightsHost(model.session) {
+                            CompositionLocalProvider(LocalTimelapseRecorder provides recorder) {
+                                Hud(model.session, sound, model.farms, Modifier.fillMaxSize())
+                            }
+                            RewardFlights(model.session, Modifier.fillMaxSize())
                         }
                         persistence.error?.let { message ->
                             AlertDialog(
@@ -116,6 +123,10 @@ class MainActivity :
     /** Turns what happens in the game into sound, and keeps the music in step with the farm's clock. */
     private fun listenForSound() {
         val session = model.session
+        val ambience =
+            session.ambienceDriver(sound) { message ->
+                Toast.makeText(this@MainActivity, message, Toast.LENGTH_SHORT).show()
+            }
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
@@ -142,6 +153,7 @@ class MainActivity :
                                 Triple(engine.state.season, minute, engine.state.lastNewDayNight == night)
                             }
                         sound.updateMusic(season, minute, chimed)
+                        if (model.persistenceState.isReady) ambience.tick(now)
                         delay(MUSIC_REFRESH_MILLIS)
                     }
                 }

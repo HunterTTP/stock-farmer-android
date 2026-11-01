@@ -13,6 +13,7 @@ import com.hunter.stockfarmer.core.rules.cancelPlacement
 import com.hunter.stockfarmer.core.rules.confirmPlacement
 import com.hunter.stockfarmer.core.rules.isFruitTreeSelected
 import com.hunter.stockfarmer.core.rules.isPlacing
+import com.hunter.stockfarmer.core.rules.isPlacingFirstOfItsKind
 import com.hunter.stockfarmer.core.rules.isSprinklerSelected
 import com.hunter.stockfarmer.core.rules.movePlacement
 import com.hunter.stockfarmer.core.rules.nudgePlacement
@@ -78,7 +79,17 @@ internal fun GameEngine.startsPlacing(point: GridPoint): Boolean =
 
 /** Puts down whatever is being placed, or says why it cannot be. */
 fun GameSession.confirmPlacement(now: Instant = Instant.now()): List<GameEvent> =
-    publish(act { it.confirmPlacement(now) })
+    publish(
+        act { engine ->
+            val first = engine.buildingPlacement?.takeIf { engine.isPlacingFirstOfItsKind }
+            engine.confirmPlacement(now).also { events ->
+                if (first != null && events.any { it is GameEvent.Built }) {
+                    val building = first.building
+                    celebrations.celebrate(BuildingCelebration(first.origin, building.width, building.height))
+                }
+            }
+        },
+    )
 
 fun GameSession.cancelPlacement() = act { it.cancelPlacement() }
 

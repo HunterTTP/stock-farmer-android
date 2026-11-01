@@ -8,10 +8,14 @@ import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.input.GestureDetector
 import com.badlogic.gdx.math.Vector3
+import com.hunter.stockfarmer.core.catalog.HarvestTool
 import com.hunter.stockfarmer.core.model.GameState
 import com.hunter.stockfarmer.core.model.GridPoint
+import com.hunter.stockfarmer.core.model.PlayMode
 import com.hunter.stockfarmer.core.rules.DayNightCycle
 import com.hunter.stockfarmer.core.rules.advanceTractor
+import com.hunter.stockfarmer.core.rules.catchButterfly
+import com.hunter.stockfarmer.core.rules.containsRejection
 import com.hunter.stockfarmer.core.rules.minuteOfDay
 import com.hunter.stockfarmer.farm.animals.animalSources
 import com.hunter.stockfarmer.farm.effects.EffectLayers
@@ -122,8 +126,25 @@ class FarmGame(
         }
         drawNightTint(now)
         session.read { effects.draw(EffectPhase.AFTER_TINT, batch, it, now, camera) }
+        celebrateBuildings(now)
         session.preview(now)?.let { renderer.drawPreview(batch, textures, it) }
         batch.end()
+    }
+
+    /** Sets off the fireworks the game side asked for since the last frame. */
+    private fun celebrateBuildings(now: Instant) {
+        val darkness = session.act { DayNightCycle.darkness(it.minuteOfDay(now)) }.coerceAtLeast(0.0)
+        session.celebrations.drain { effects.fireworks.celebrateAround(it.origin, it.width, it.height, darkness) }
+    }
+
+    /** With the Bucket in hand, a tap on a flying butterfly catches it instead of using the tool. */
+    private fun catchButterfly(tile: GridPoint): Boolean {
+        if (!session.read { it.mode == PlayMode.harvest && it.harvestTool == HarvestTool.bucket }) return false
+        val target = effects.butterflies.catchable(tile) ?: return false
+        val events = session.act { it.catchButterfly(target.wings, target.releasedID, tile, Instant.now()) }
+        session.publish(events)
+        if (!events.containsRejection) effects.butterflies.remove(target)
+        return true
     }
 
     /** Tells the sound side where the camera is looking. */
@@ -176,7 +197,7 @@ class FarmGame(
             count: Int,
             button: Int,
         ): Boolean {
-            tileAt(x, y)?.let { session.touch(it) }
+            tileAt(x, y)?.let { if (!catchButterfly(it)) session.touch(it) }
             return true
         }
 

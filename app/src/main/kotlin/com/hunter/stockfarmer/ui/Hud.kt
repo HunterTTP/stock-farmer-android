@@ -56,6 +56,9 @@ import com.hunter.stockfarmer.game.confirmPlacement
 import com.hunter.stockfarmer.ui.fishing.FishingOverlay
 import com.hunter.stockfarmer.ui.menus.Menu
 import com.hunter.stockfarmer.ui.menus.MenusHost
+import com.hunter.stockfarmer.ui.rewards.HUDTarget
+import com.hunter.stockfarmer.ui.rewards.LocalRewardFlights
+import com.hunter.stockfarmer.ui.rewards.rewardTarget
 import com.hunter.stockfarmer.ui.screens.CareerScreen
 import com.hunter.stockfarmer.ui.screens.DaySummaryBanner
 import com.hunter.stockfarmer.ui.screens.LevelUpScreen
@@ -75,6 +78,7 @@ import kotlin.concurrent.thread
 /** What the heads-up display shows, read from the game a few times a second. */
 private data class HudState(
     val money: Double,
+    val xp: Int,
     val level: Int,
     val levelProgress: Float,
     val mode: PlayMode,
@@ -101,6 +105,7 @@ private fun GameSession.hud(): HudState =
         val (earned, span) = LevelRules.progress(state.xp)
         HudState(
             money = state.money,
+            xp = state.xp,
             level = state.level,
             levelProgress = earned.toFloat() / span.coerceAtLeast(1),
             mode = state.mode,
@@ -238,12 +243,26 @@ private fun Overlay(content: @Composable () -> Unit) {
 
 @Composable
 private fun StatusBar(hud: HudState) {
+    val flights = LocalRewardFlights.current
+    val money = flights?.displayedMoney(hud.money) ?: hud.money
+    val xp = flights?.displayedXP(hud.xp) ?: hud.xp
+    val level = LevelRules.levelForXP(xp)
+    val (earned, span) = LevelRules.progress(xp)
+    val progress = earned.toFloat() / span.coerceAtLeast(1)
     Column(Modifier.fillMaxWidth()) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text(hud.money.dollars, style = MaterialTheme.typography.titleLarge)
-            Text("Level ${hud.level}", style = MaterialTheme.typography.titleMedium)
+            Text(
+                money.dollars,
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.rewardTarget(HUDTarget.Money),
+            )
+            Text(
+                "Level $level",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.rewardTarget(HUDTarget.Level),
+            )
         }
-        LinearProgressIndicator(progress = { hud.levelProgress }, modifier = Modifier.fillMaxWidth())
+        LinearProgressIndicator(progress = { progress }, modifier = Modifier.fillMaxWidth())
     }
 }
 
@@ -254,7 +273,7 @@ private fun ScreenButtons(
     onScreen: (HudScreen) -> Unit,
 ) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-        TextButton(onClick = onStorage) { Text("Storage") }
+        TextButton(onClick = onStorage, modifier = Modifier.rewardTarget(HUDTarget.Storage)) { Text("Storage") }
         TextButton(onClick = onPhoto) { Text("Photo") }
         HudScreen.entries.forEach { TextButton(onClick = { onScreen(it) }) { Text(it.label) } }
     }

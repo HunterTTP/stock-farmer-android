@@ -57,6 +57,9 @@ class GameSession(
     /** Where the farm camera looks, so sounds can be placed to one side or made quieter when far away. */
     val view = FarmView()
 
+    /** Fireworks waiting for the farm scene to draw them. */
+    val celebrations = FarmCelebrations()
+
     /** Tells everyone listening what just happened; nothing is sent for an empty batch. */
     fun publish(batch: List<GameEvent>): List<GameEvent> = batch.also { if (it.isNotEmpty()) published.tryEmit(it) }
 
