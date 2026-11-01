@@ -42,6 +42,8 @@ import com.hunter.stockfarmer.core.rules.GameEngine
 import com.hunter.stockfarmer.core.rules.learn
 import com.hunter.stockfarmer.core.rules.saleValue
 import com.hunter.stockfarmer.game.GameSession
+import com.hunter.stockfarmer.ui.theme.HudIcon
+import com.hunter.stockfarmer.ui.theme.HudIcons
 import com.hunter.stockfarmer.ui.theme.HudMaterialTheme
 import com.hunter.stockfarmer.ui.theme.HudType
 import com.hunter.stockfarmer.ui.theme.QuantityControls
@@ -99,6 +101,7 @@ private fun CapacityCard(state: MenuState) {
         verticalArrangement = Arrangement.spacedBy(10.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+        HudIcon(HudIcons.bagFill, Color.White, size = 34.dp)
         Text(
             text = state.capacityText,
             style = HudType.title2.copy(fontWeight = FontWeight.ExtraBold),
@@ -164,7 +167,7 @@ private fun StoredItemCard(
         ) {
             if (row.item.isEquippable) {
                 ActionButton(
-                    title = if (row.selected) "Selected" else "Select",
+                    title = "Select",
                     textColor = Theme.onNeutral,
                     background = Color.White.copy(alpha = 0.18f),
                     contentDescription = "Select ${row.item.name}",
@@ -314,7 +317,14 @@ internal fun StorageTransactionDialog(
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
-                        text = "${transaction.title} ${MenuNumbers.count(quantity)}",
+                        text =
+                            if (transaction.sell) {
+                                transaction.title
+                            } else {
+                                "${transaction.title} ${MenuNumbers.count(
+                                    quantity,
+                                )}"
+                            },
                         style = HudType.headline,
                         color = if (transaction.sell) Theme.onAccent else Theme.onDanger,
                     )
@@ -351,7 +361,14 @@ private fun PriceRow(
         Spacer(Modifier.width(8.dp))
         Text(
             text = price,
-            style = if (isTotal) HudType.title3.copy(fontWeight = FontWeight.ExtraBold) else HudType.body,
+            style =
+                if (isTotal) {
+                    HudType.title3.copy(
+                        fontWeight = FontWeight.ExtraBold,
+                    )
+                } else {
+                    HudType.body.copy(fontWeight = FontWeight.SemiBold)
+                },
             color = Theme.money,
         )
     }

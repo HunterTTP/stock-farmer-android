@@ -1,6 +1,7 @@
 package com.hunter.stockfarmer.ui.hud
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -53,7 +54,11 @@ object StatusText {
     ): String = if (level >= LevelRules.maxLevel) "Max level" else "${count(earned)} / ${count(needed)} XP"
 }
 
-private const val THROB_SWELL = 0.12f
+private const val THROB_SWELL = 0.2f
+
+// SwiftUI's `.bouncy` spring settling over 0.3s: damping 0.7, stiffness (2π / 0.3)².
+private const val THROB_DAMPING = 0.7f
+private const val THROB_STIFFNESS = 439f
 
 /** Swells briefly each time [trigger] changes (iOS `throb`). */
 @Composable
@@ -71,8 +76,8 @@ private fun rememberThrob(trigger: Int): Animatable<Float, *> {
     val swell = remember { Animatable(0f) }
     LaunchedEffect(trigger) {
         if (trigger == 0) return@LaunchedEffect
-        swell.animateTo(1f, tween(120))
-        swell.animateTo(0f, tween(220))
+        swell.animateTo(1f, tween(100))
+        swell.animateTo(0f, spring(THROB_DAMPING, THROB_STIFFNESS))
     }
     return swell
 }

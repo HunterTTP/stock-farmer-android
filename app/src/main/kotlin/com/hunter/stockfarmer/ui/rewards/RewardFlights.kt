@@ -1,6 +1,7 @@
 package com.hunter.stockfarmer.ui.rewards
 
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -103,7 +104,7 @@ fun Modifier.rewardTarget(target: HUDTarget): Modifier {
             HUDTarget.Storage -> state.tracker.storagePulse
         }
     var expanded by remember { mutableStateOf(false) }
-    val scale by animateFloatAsState(if (expanded) 1.2f else 1f, tween(if (expanded) 100 else 300))
+    val scale by animateFloatAsState(if (expanded) 1.2f else 1f, if (expanded) tween(100) else spring(0.7f, 439f))
     LaunchedEffect(pulse) {
         if (pulse > 0) {
             expanded = true

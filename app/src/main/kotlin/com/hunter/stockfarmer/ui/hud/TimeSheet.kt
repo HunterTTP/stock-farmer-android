@@ -207,7 +207,12 @@ fun TimeSheet(
             }
             Column(Modifier.categoryCard(false), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Season.entries.forEach {
-                    TimeButton(it.name.replaceFirstChar(Char::uppercase), null, it == season, Modifier.fillMaxWidth()) {
+                    TimeButton(
+                        "${seasonSymbol(it)} ${it.name.replaceFirstChar(Char::uppercase)}",
+                        null,
+                        it == season,
+                        Modifier.fillMaxWidth(),
+                    ) {
                         session.setSeason(it)
                     }
                 }
@@ -244,3 +249,11 @@ private fun TimeButton(
         detail?.let { BasicText(it, style = HudType.caption.copy(color = ink.copy(alpha = 0.8f))) }
     }
 }
+
+/** Stands in for the SF Symbol each season shows beside its name (leaf, wind, snowflake). */
+private fun seasonSymbol(season: Season) =
+    when (season) {
+        Season.spring -> "🍃"
+        Season.fall -> "💨"
+        Season.winter -> "❄️"
+    }
