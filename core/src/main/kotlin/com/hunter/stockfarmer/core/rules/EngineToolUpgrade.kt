@@ -38,7 +38,7 @@ fun GameEngine.upgrade(tool: HarvestTool): List<GameEvent> {
 }
 
 /** How many passes of a tool a thing takes, with what the tool has been upgraded to. */
-private fun GameEngine.passes(
+internal fun GameEngine.passes(
     base: Int,
     tool: HarvestTool,
 ): Int =
@@ -53,7 +53,7 @@ fun GameEngine.hitsToFell(tree: Tree): Int = passes(tree.hitsToFell, HarvestTool
 fun GameEngine.hitsToBreak(rock: RockSize): Int = passes(rock.hitsToBreak, HarvestTool.pickaxe)
 
 /** How often the tool gathers a second item with what it has been upgraded to. */
-private fun GameEngine.doubleDropChance(tool: HarvestTool): Double =
+internal fun GameEngine.doubleDropChance(tool: HarvestTool): Double =
     (ToolUpgrade.reaching(level(tool), tool)?.effect as? ToolEffect.DoubleDrop)?.chance ?: 0.0
 
 /** How many times as wide the rod's circle is in fishing mode, with what it has been upgraded to. */
