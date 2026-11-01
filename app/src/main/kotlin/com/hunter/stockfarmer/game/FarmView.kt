@@ -21,6 +21,10 @@ class FarmView {
     @Volatile
     var snapshot: ViewSnapshot? = null
 
+    /** Sprites drawn in the last frame, for the performance screen's node count. */
+    @Volatile
+    var drawnSprites: Int = 0
+
     /** What the dragged tool would do under the finger, drawn on the farm like a placement. */
     @Volatile
     var toolPreview: PlacementPreview? = null

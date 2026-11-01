@@ -91,7 +91,7 @@ class MainActivity :
                     val persistence = model.persistenceState
                     var launchId by remember { mutableIntStateOf(0) }
                     var launching by remember { mutableStateOf(true) }
-                    PerformanceSampling(model.performance, nodeCount = { 0 })
+                    PerformanceSampling(model.performance, nodeCount = { model.session.view.drawnSprites })
                     if (persistence.isReady) {
                         FarmHost()
                         val recorder = rememberTimelapseRecorder(model.session)

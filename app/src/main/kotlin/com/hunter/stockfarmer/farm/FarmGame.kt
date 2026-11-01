@@ -4,7 +4,6 @@ import com.badlogic.gdx.ApplicationAdapter
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.OrthographicCamera
-import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.input.GestureDetector
 import com.badlogic.gdx.math.Vector3
 import com.hunter.stockfarmer.core.catalog.HarvestTool
@@ -36,7 +35,7 @@ import kotlin.math.min
 class FarmGame(
     private val session: GameSession,
 ) : ApplicationAdapter() {
-    private lateinit var batch: SpriteBatch
+    private lateinit var batch: CountingSpriteBatch
     private lateinit var textures: TextureLibrary
     private lateinit var effects: EffectLayers
     private lateinit var renderer: FarmRenderer
@@ -62,7 +61,7 @@ class FarmGame(
     }
 
     override fun create() {
-        batch = SpriteBatch()
+        batch = CountingSpriteBatch()
         textures = TextureLibrary()
         val tractor = TractorLayer(textures)
         effects = effectLayers(textures, foreground = listOf(tractor))
@@ -135,6 +134,7 @@ class FarmGame(
         camera.update()
         publishView()
         batch.projectionMatrix = camera.combined
+        batch.startCount()
         batch.begin()
         val now = Instant.now()
         driveTractor(now)
@@ -152,6 +152,7 @@ class FarmGame(
         celebrateBuildings(now)
         tilePreview.draw(batch, textures, session.preview(now), now, screenScale)
         batch.end()
+        session.view.drawnSprites = batch.sprites
     }
 
     /** Sets off the fireworks the game side asked for since the last frame. */
