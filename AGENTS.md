@@ -10,7 +10,7 @@ An exact Android remake of the iOS game at `../stock-farmer-ios` (frozen referen
 
 - `core`: pure Kotlin/JVM, no Android imports. Catalog, rules, persistence, sound and drag policies. `GameEngine` is an immutable value; preview an action by running it on a copy.
 - `app`: single-activity Android app. Jetpack Compose for menus and HUD, libGDX for the farm, Media3 for music.
-- Gradle Kotlin DSL with a version catalog (`gradle/libs.versions.toml`). Build JDK 21. minSdk 26, targetSdk 36.
+- Gradle Kotlin DSL with a version catalog (`gradle/libs.versions.toml`). Build JDK 25. minSdk 26, targetSdk 36.
 
 ## Workflow
 

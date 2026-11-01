@@ -2,7 +2,7 @@
 
 ## Environment (Windows)
 
-- JDK 21 (Temurin) with `JAVA_HOME` set to it. Gradle 9.8 runs through the committed wrapper.
+- JDK 25 (Temurin) with `JAVA_HOME` set to it. Gradle 9.8 runs through the committed wrapper.
 - Android SDK in `%LOCALAPPDATA%\Android\Sdk` with `ANDROID_HOME` set. Install packages with `sdkmanager` after accepting licenses.
 - Real phone: enable USB debugging, then `adb devices` and authorize the computer.
 
