@@ -9,10 +9,12 @@ import com.hunter.stockfarmer.core.rules.GameEvent
 import com.hunter.stockfarmer.core.rules.LevelRules
 import com.hunter.stockfarmer.core.rules.beginPlacing
 import com.hunter.stockfarmer.core.rules.confirmPlacement
+import com.hunter.stockfarmer.core.rules.movePlacement
 import com.hunter.stockfarmer.core.rules.updateCoops
 import com.hunter.stockfarmer.core.rules.updateHerds
 import com.hunter.stockfarmer.core.util.SeededRandom
 import java.time.Instant
+import com.hunter.stockfarmer.core.rules.beginMoving as beginMovingInPlace
 
 /** A game with the given money, XP, mode and building materials, as the Swift tests build theirs. */
 fun stateWith(
@@ -73,3 +75,18 @@ fun GameEngine.place(
     id: String,
     styleID: String? = null,
 ) = state.putBuilding(origin, id, styleID)
+
+/** Picks a building up and sets the placement centered on a tile, as dragging it there would. */
+fun GameEngine.beginMoving(
+    placed: com.hunter.stockfarmer.core.catalog.PlacedBuilding,
+    aroundTile: GridPoint,
+) {
+    beginMovingInPlace(placed)
+    movePlacement(
+        GridPoint(aroundTile.row - (placed.building.height - 1) / 2, aroundTile.col - (placed.building.width - 1) / 2),
+    )
+}
+
+fun com.hunter.stockfarmer.core.catalog.PlacedBuilding.covers(point: GridPoint): Boolean =
+    point.row in origin.row until origin.row + building.height &&
+        point.col in origin.col until origin.col + building.width
