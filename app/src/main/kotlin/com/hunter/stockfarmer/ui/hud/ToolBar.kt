@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -288,7 +289,7 @@ private fun Options(
                 isOpen = openDropdown == dropdown.id,
                 modifier =
                     Modifier
-                        .pulsing(dropdown.pulses, keepsPlace = false)
+                        .pulsing(dropdown.pulses, keepsPlace = false, shape = RoundedCornerShape((17 * scale).dp))
                         .menuInteractionRegion(
                             regions,
                             "tool-dropdown-${dropdown.id}",

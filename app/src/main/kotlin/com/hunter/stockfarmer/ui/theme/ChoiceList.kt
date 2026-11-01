@@ -24,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.layout.positionInParent
@@ -124,7 +125,7 @@ fun ChoiceList(
         choices.forEach { choice ->
             Box(
                 Modifier
-                    .pulsing(choice.pulses, keepsPlace = false)
+                    .pulsing(choice.pulses, keepsPlace = false, shape = RectangleShape)
                     .onGloballyPositioned {
                         if (choice.isSelected) {
                             selectedTop.intValue = it.positionInParent().y.toInt()

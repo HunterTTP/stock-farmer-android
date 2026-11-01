@@ -19,7 +19,8 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.hunter.stockfarmer.ui.theme.LessonBubble
-import com.hunter.stockfarmer.ui.theme.Theme
+import com.hunter.stockfarmer.ui.theme.Pulse
+import com.hunter.stockfarmer.ui.theme.pulseGlow
 import kotlin.math.cos
 
 /** Place above the tool circle; the owner uses state.pulses and the targets to highlight its existing controls. */
@@ -61,12 +62,7 @@ fun Modifier.lessonPulse(
             rememberUpdatedState(if (enabled) 0.5f else 0f)
         }
     return graphicsLayer {
-        val amount = swell.value
-        scaleX = if (reduceMotion) 1f else 1 + 0.05f * amount
+        scaleX = Pulse.scale(swell.value, reduceMotion)
         scaleY = scaleX
-        this.shape = shape
-        shadowElevation = 7.dp.toPx() * amount
-        ambientShadowColor = Theme.gold.copy(alpha = 0.8f * amount)
-        spotShadowColor = ambientShadowColor
-    }
+    }.pulseGlow(shape) { swell.value }
 }
