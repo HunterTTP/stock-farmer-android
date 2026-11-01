@@ -19,7 +19,7 @@ internal data class LaunchPresentation(
             }
 
         /**
-         * The renderer's progress as iOS reports it: the scene is built, then a first frame is drawn (textures load while it
+         * The renderer's progress: the scene is built, then a first frame is drawn (textures load while it
          * draws, so there is no separate preload), then one more frame confirms the farm is on screen.
          */
         fun stage(

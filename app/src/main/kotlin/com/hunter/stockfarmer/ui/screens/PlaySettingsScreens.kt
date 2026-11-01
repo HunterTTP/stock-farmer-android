@@ -37,7 +37,7 @@ import com.hunter.stockfarmer.ui.theme.Theme
 import com.hunter.stockfarmer.ui.theme.glassCard
 import kotlin.math.roundToInt
 
-/** Shadows, grid lines and the money and level panels (iOS `SettingsScreen` graphics page). */
+/** Shadows, grid lines and the money and level panels. */
 @Composable
 fun GraphicsSettingsScreen(
     session: GameSession,
@@ -68,7 +68,7 @@ fun GraphicsSettingsScreen(
     }
 }
 
-/** How far up and to the right of the finger a dragged tool starts working (iOS gameplay page). */
+/** How far up and to the right of the finger a dragged tool starts working. */
 @Composable
 fun GameplaySettingsScreen(
     session: GameSession,
@@ -122,7 +122,7 @@ internal val settingSliderColors
             inactiveTrackColor = Theme.accent.copy(alpha = 0.24f),
         )
 
-/** A setting's name with its icon, as an iOS `Label`. */
+/** A setting's name with its icon. */
 @Composable
 internal fun SettingLabel(
     title: String,

@@ -16,7 +16,7 @@ import java.io.ByteArrayOutputStream
 import java.time.Instant
 
 /**
- * A picture of the whole farm, drawn off screen and encoded as a PNG. Call on the graphics thread. Like the iOS photo it keeps
+ * A picture of the whole farm, drawn off screen and encoded as a PNG. Call on the graphics thread. It keeps
  * the season's sky, water, finished shadows, the night's darkness and the rain or snow of the moment, and leaves out the effects that
  * move with the live view.
  */

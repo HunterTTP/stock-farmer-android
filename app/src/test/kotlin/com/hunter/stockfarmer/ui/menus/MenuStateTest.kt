@@ -140,7 +140,7 @@ class MenuStateTest {
     }
 
     @Test
-    fun `storage follows iOS progression order and excludes empty or unknown entries`() {
+    fun `storage follows progression order and excludes empty or unknown entries`() {
         val state =
             GameState().apply {
                 listOf("coffee", "wheat", "egg", "milk", "log", "cotton", "cloth").forEach { storage[it] = 1 }

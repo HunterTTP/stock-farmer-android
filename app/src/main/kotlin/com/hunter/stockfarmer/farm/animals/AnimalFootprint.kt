@@ -2,7 +2,7 @@ package com.hunter.stockfarmer.farm.animals
 
 import kotlin.math.max
 
-/** Alpha bounds, normalized with y counting up from the frame's bottom, as in the iOS footprint measurement. */
+/** Alpha bounds, normalized with y counting up from the frame's bottom. */
 internal data class AnimalFootprint(
     val centerX: Float,
     val bottom: Float,

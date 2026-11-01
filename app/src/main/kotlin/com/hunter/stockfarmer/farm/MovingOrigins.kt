@@ -7,7 +7,7 @@ import com.hunter.stockfarmer.core.rules.buildingPlacement
 
 /**
  * Where the things being moved stand until the move is confirmed. The picture of the thing follows the finger, so the one at its
- * old spot is left out of the farm, and out of the shadows, as in the iOS scene.
+ * old spot is left out of the farm, and out of the shadows.
  */
 data class MovingOrigins(
     val building: GridPoint? = null,

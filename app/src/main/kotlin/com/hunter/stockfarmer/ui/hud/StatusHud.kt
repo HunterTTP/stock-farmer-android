@@ -41,7 +41,7 @@ import java.util.Locale
 
 /** The text on the money and level panels. */
 object StatusText {
-    /** SwiftUI's `.currency(code: "USD")`: always two decimals. */
+    /** US dollars, always two decimals. */
     fun currency(money: Double): String = NumberFormat.getCurrencyInstance(Locale.US).format(money)
 
     fun count(value: Int): String = NumberFormat.getIntegerInstance(Locale.US).format(value)
@@ -56,11 +56,11 @@ object StatusText {
 
 private const val THROB_SWELL = 0.2f
 
-// SwiftUI's `.bouncy` spring settling over 0.3s: damping 0.7, stiffness (2π / 0.3)².
+// A bouncy spring settling over 0.3s: damping 0.7, stiffness (2π / 0.3)².
 private const val THROB_DAMPING = 0.7f
 private const val THROB_STIFFNESS = 439f
 
-/** Swells briefly each time [trigger] changes (iOS `throb`). */
+/** Swells briefly each time [trigger] changes. */
 @Composable
 fun Modifier.throb(trigger: Int): Modifier {
     val swell = rememberThrob(trigger)

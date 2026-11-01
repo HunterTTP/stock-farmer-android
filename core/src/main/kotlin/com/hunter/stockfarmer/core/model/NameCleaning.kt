@@ -4,7 +4,7 @@ import java.util.regex.Pattern
 
 private val nameCharacter = Pattern.compile("\\X")
 
-/** Trim and limit Swift Characters (extended grapheme clusters), falling back for a blank result. */
+/** Trims and limits by user-perceived characters (extended grapheme clusters); falls back when the result is blank. */
 fun String.cleanedName(
     maxLength: Int,
     fallback: String,

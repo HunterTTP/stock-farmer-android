@@ -36,7 +36,7 @@ import com.hunter.stockfarmer.ui.timelapse.TimelapseScreen
 
 /**
  * One sheet opened on a single screen, such as an item's page, Storage or Settings, with deeper screens pushed on top of it
- * (iOS `ToolsSheet`). Android Back goes one screen up; on the first screen it closes the sheet. Each screen's own Close does the
+ * Android Back goes one screen up; on the first screen it closes the sheet. Each screen's own Close does the
  * same, so [onClose] is reached only from the first screen.
  */
 @OptIn(ExperimentalMaterial3Api::class)

@@ -84,7 +84,7 @@ import kotlinx.coroutines.delay
 private val Theme.panelFill get() = launchBackground
 
 /**
- * The heads-up display over the farm, in the composition order of iOS `GameView`: the money and level panels on top, the
+ * The heads-up display over the farm, in composition order: the money and level panels on top, the
  * placement buttons and the tool bar at the bottom, then the messages, and the screens and sheets above everything.
  */
 @OptIn(ExperimentalMaterial3Api::class)

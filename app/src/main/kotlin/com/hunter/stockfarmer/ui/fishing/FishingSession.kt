@@ -10,7 +10,7 @@ import com.hunter.stockfarmer.core.rules.loseFish
 import com.hunter.stockfarmer.core.util.RandomSource
 import java.time.Instant
 
-/** UI-independent contest lifecycle. Coordinates are density-independent screen points, as on iOS. */
+/** UI-independent contest lifecycle. Coordinates are density-independent screen points. */
 class FishingSession(
     val cast: FishingCast,
     bounds: FishingContest.Bounds,

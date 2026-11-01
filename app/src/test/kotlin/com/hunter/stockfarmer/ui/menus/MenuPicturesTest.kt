@@ -43,7 +43,7 @@ class MenuPicturesTest {
     }
 
     @Test
-    fun `fruit and rare crop icons use the same harvested produce art as iOS`() {
+    fun `fruit and rare crop icons use the same harvested produce art`() {
         Crop.all.forEach { crop ->
             val picture = MenuPictures.stored(StorageItem.CropItem(crop)) as MenuPicture.Asset
             assertEquals(picture, MenuPictures.stored(StorageItem.RareCrop(crop)))

@@ -84,7 +84,7 @@ class ToolPaletteTest {
     }
 
     @Test
-    fun `stock counts read like iOS`() {
+    fun `stock counts read as owned amounts`() {
         assertEquals(" (x1,200)", ToolPalette.stockSuffix(1200))
         assertEquals(" (x0)", ToolPalette.stockSuffix(0))
     }

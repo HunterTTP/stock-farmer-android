@@ -18,7 +18,7 @@ import kotlin.math.roundToInt
 
 class RainLayer(
     private val textures: TextureLibrary,
-    /** Pixels to a point: a photo lays the rain out in points of its own, like the iOS one, so it counts one. */
+    /** Pixels to a point: a photo lays the rain out in points of its own so it counts one. */
     private val pixelsPerPoint: () -> Float = { Gdx.graphics.density },
 ) : EffectOverlay {
     override val phase = EffectPhase.AFTER_TINT

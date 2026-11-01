@@ -9,7 +9,7 @@ import com.hunter.stockfarmer.core.rules.selectTerrain
 import com.hunter.stockfarmer.core.rules.selectTilling
 import com.hunter.stockfarmer.core.rules.selectedDecoration
 
-/** What the player is holding: each tool is dragged over the farm and owns a group of things to choose from (iOS `Tool`). */
+/** What the player is holding: each tool is dragged over the farm and owns a group of things to choose from. */
 enum class HudTool(
     val title: String,
 ) {

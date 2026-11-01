@@ -2,7 +2,7 @@ package com.hunter.stockfarmer.ui.timelapse
 
 import com.hunter.stockfarmer.core.presentation.TimelapsePlayback
 
-/** iOS timing: one screenshot a second, with no skipped frames after a slow decode or background pause. */
+/** Timing: one screenshot a second, with no skipped frames after a slow decode or background pause. */
 class TimelapsePlayer(
     count: Int,
 ) {

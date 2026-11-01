@@ -32,7 +32,7 @@ import java.time.Instant
 import kotlin.math.abs
 import kotlin.math.max
 
-/** The Swift `ChickenTests`, `DogTests` and `RoosterTests`: coops, their chickens, dogs and roosters. */
+/** Coops, their chickens, dogs and roosters. */
 class ChickenEngineTest {
     private val now = Instant.ofEpochSecond(30_000_000)
     private val coop = GridPoint(20, 20)

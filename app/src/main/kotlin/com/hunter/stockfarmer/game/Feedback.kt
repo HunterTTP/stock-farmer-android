@@ -5,14 +5,14 @@ import com.hunter.stockfarmer.core.rules.GameEvent
 import com.hunter.stockfarmer.core.rules.firstRejection
 import com.hunter.stockfarmer.ui.screens.QuestReward
 
-/** A short message over the farm, with the implement it offers to pick up (iOS `FeedbackPresenter.toast`). */
+/** A short message over the farm, with the implement it offers to pick up. */
 data class ToastMessage(
     val text: String,
     val tool: HarvestTool? = null,
     val durationMillis: Long = if (tool == null) Feedback.TOAST_MILLIS else Feedback.TOOL_TOAST_MILLIS,
 )
 
-/** How the game answers what happened, as text: the pure half of iOS `FeedbackPresenter`. */
+/** How the game answers what happened, as text: the pure half of the feedback presenter. */
 object Feedback {
     const val TOAST_MILLIS = 2_000L
     const val TOOL_TOAST_MILLIS = 4_000L

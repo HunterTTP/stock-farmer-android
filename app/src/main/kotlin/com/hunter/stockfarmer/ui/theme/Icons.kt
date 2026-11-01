@@ -25,7 +25,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 /**
- * Vector stand-ins for the SF Symbols the iOS HUD uses, drawn on a 24 unit grid and tinted at the call site. The pixel-art
+ * Vector icons drawn on a 24 unit grid and tinted at the call site. The pixel-art
  * pictures (crops, buildings, animals) are not here: they are sprite sheets, drawn by `ui.screens.ScreenIcon`.
  */
 object HudIcons {

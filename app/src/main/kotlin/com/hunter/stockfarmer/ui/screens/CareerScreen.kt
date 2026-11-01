@@ -250,7 +250,7 @@ private fun CollectionPage(
     }
 }
 
-/** A filter icon that opens a menu of the choices, filled and in the accent color while a filter is on (iOS `filterMenu`). */
+/** A filter icon that opens a menu of the choices, filled and in the accent color while a filter is on. */
 @Composable
 private fun CareerFilterMenu(
     filter: CareerFilter,

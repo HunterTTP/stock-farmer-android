@@ -3,7 +3,7 @@ package com.hunter.stockfarmer.ui.hud
 import com.hunter.stockfarmer.core.catalog.HarvestTool
 import com.hunter.stockfarmer.core.model.ShopItem
 
-/** Every screen a menu can show; each opens on top of the last and Back returns to it (iOS `ToolRoute`). */
+/** Every screen a menu can show; each opens on top of the last and Back returns to it. */
 sealed interface ToolRoute {
     data class Item(
         val item: ShopItem,

@@ -28,7 +28,7 @@ interface MusicOutput : AutoCloseable {
     )
 }
 
-/** Seasonal playlist positions survive pauses and season changes, just as they do on iOS. */
+/** Seasonal playlist positions survive pauses and season changes. */
 class MusicPlayer(
     private val output: MusicOutput,
     playlists: Map<Season, Playlist>,

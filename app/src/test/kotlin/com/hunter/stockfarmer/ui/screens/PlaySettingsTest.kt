@@ -139,7 +139,7 @@ class PlaySettingsTest {
     }
 
     @Test
-    fun `a new install starts as the iOS game does`() {
+    fun `a new install starts with the default settings`() {
         val settings = PlaySettings(MemoryStorage())
         assertFalse(settings.isDynamicShadowsEnabled)
         assertEquals(0.5f, settings.shadowIntensity)

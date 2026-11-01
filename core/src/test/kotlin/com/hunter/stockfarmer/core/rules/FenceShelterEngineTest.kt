@@ -27,7 +27,7 @@ import org.junit.jupiter.api.Test
 import java.time.Instant
 import kotlin.math.abs
 
-/** The engine halves of the Swift `FenceTests` and `ShelterTests`. */
+/** Fences and shelters in the engine. */
 class FenceShelterEngineTest {
     private val now = Instant.ofEpochSecond(40_000_000)
     private val spot = GridPoint(10, 10)

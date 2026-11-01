@@ -1,13 +1,12 @@
-package com.hunter.stockfarmer.parity
+﻿package com.hunter.stockfarmer.farm.animals
 
-import com.hunter.stockfarmer.farm.animals.AnimalHearts
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.time.Instant
 
-/** AnimalNode.swift: replacing the keyed hearts action leaves already emitted child nodes alive. */
-internal class AnimalReactionParityTest {
+/** Replacing the keyed hearts action leaves already emitted hearts alive. */
+internal class AnimalHeartsTest {
     private val start = Instant.parse("2026-01-01T00:00:00Z")
 
     @Test

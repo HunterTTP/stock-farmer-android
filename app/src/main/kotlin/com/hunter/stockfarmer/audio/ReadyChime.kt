@@ -5,7 +5,7 @@ data class ReadyCrop(
     val name: String,
 )
 
-/** Crop-group transitions are silent on the first partial-field observation, just as on iOS. */
+/** Crop-group transitions are silent on the first partial-field observation. */
 class ReadyChime(
     initialAllReady: Boolean = false,
 ) {

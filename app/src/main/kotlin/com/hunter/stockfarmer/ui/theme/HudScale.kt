@@ -11,7 +11,7 @@ val LocalHudScale = staticCompositionLocalOf { 1f }
 object HudScale {
     const val TABLET_SCALE = 1.3f
 
-    /** Android's "medium" window width starts at 600dp, which is where iOS's regular size class begins on an iPad. */
+    /** Android's "medium" window width starts at 600dp; treat that as the regular size class. */
     const val TABLET_MIN_WIDTH_DP = 600
 
     fun forWidth(widthDp: Int): Float = if (widthDp >= TABLET_MIN_WIDTH_DP) TABLET_SCALE else 1f

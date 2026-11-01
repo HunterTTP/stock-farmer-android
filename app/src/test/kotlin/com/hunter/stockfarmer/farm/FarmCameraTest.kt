@@ -1,14 +1,11 @@
-package com.hunter.stockfarmer.parity
+﻿package com.hunter.stockfarmer.farm
 
 import com.badlogic.gdx.graphics.OrthographicCamera
-import com.hunter.stockfarmer.farm.FarmCamera
-import com.hunter.stockfarmer.farm.FarmRenderer
-import com.hunter.stockfarmer.farm.VisualTiming
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
-/** FarmScene.swift: camera placement, applyCameraScale, clampCameraToWorld and handlePinch. */
-internal class FarmCameraParityTest {
+/** Camera placement, zoom limits, pan clamping and pinch handling. */
+internal class FarmCameraTest {
     private val camera = OrthographicCamera()
     private val controls = FarmCamera(camera)
 

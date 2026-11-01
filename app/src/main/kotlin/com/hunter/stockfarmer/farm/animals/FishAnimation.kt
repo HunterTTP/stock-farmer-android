@@ -38,7 +38,7 @@ internal fun fishOrientation(
     return FishOrientation(mirror, angle)
 }
 
-/** The two eased scale actions on the iOS shadow, 1 -> 1.04 in 1.1s, then -> 0.97 in 1.3s. */
+/** The two eased scale actions on the shadow: 1 -> 1.04 in 1.1s, then -> 0.97 in 1.3s. */
 internal fun fishBreathing(seconds: Double): Float {
     val age = seconds.coerceAtLeast(0.0)
     val phase = age % 2.4

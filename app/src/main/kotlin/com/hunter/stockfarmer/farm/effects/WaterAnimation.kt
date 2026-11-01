@@ -36,7 +36,7 @@ internal object WaterDrops {
     val foam = listOf(RGB(237, 247, 255), RGB(204, 230, 255), RGB(173, 214, 250))
 }
 
-/** The same unsigned LCG, 16-square cells and 60-frame loop as WaterAnimation.swift. */
+/** Unsigned LCG, 16-square cells and 60-frame loop; the constants are part of the look. */
 internal object WaterAnimation {
     const val SIDE = 16
     const val FRAMES = 60

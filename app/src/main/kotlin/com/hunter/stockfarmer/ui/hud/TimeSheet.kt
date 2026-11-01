@@ -48,7 +48,7 @@ import java.time.Instant
 import kotlin.math.abs
 import com.hunter.stockfarmer.core.rules.setSeason as setEngineSeason
 
-/** A time of day the Time sheet can jump to, picked to try something out (iOS `TimePreset`). */
+/** A time of day the Time sheet can jump to, picked to try something out. */
 enum class TimePreset(
     val title: String,
     val minute: Double,

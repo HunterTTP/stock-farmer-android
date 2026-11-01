@@ -26,7 +26,7 @@ class ToolRingLayoutTest {
     }
 
     @Test
-    fun `span and inset match iOS geometric proportions`() {
+    fun `span and inset match the geometric proportions`() {
         assertEquals(290f, ToolRingLayout.span(1f))
         assertEquals(34f, ToolRingLayout.inset(1f))
 

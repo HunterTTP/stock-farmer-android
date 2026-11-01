@@ -31,7 +31,7 @@ import java.time.Instant
 import kotlin.math.abs
 import kotlin.math.max
 
-/** The engine and world halves of the Swift `TreeTests` and `RockTests`. */
+/** Trees and rocks in the engine and the world. */
 class TreeRockEngineTest {
     private val now = Instant.ofEpochSecond(14_000_000)
     private val spot = GridPoint(10, 10)

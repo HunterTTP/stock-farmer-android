@@ -44,7 +44,7 @@ class SoundPlaybackTest {
         val player = SoundEffectsPlayer(output, { now }, RandomSource { -1L })
     }
 
-    @Test fun `settings default to full and persist the iOS channel keys`() {
+    @Test fun `settings default to full and persist the channel keys`() {
         val settings = SoundSettings.from(mapOf("musicVolume" to 0.4, "animalSoundsVolume" to -1.0))
         assertEquals(0.4, settings[AudioChannel.music])
         assertEquals(0.0, settings[AudioChannel.animals])
@@ -94,7 +94,7 @@ class SoundPlaybackTest {
         assertTrue(h.player.play(SoundCue.plant))
     }
 
-    @Test fun `cooldown six copies and nonrepeating variants match the Swift engine`() {
+    @Test fun `cooldown six copies and nonrepeating variants behave as designed`() {
         val h = Harness()
         h.player.resume()
         assertTrue(h.player.play(SoundCue.plant))
@@ -106,7 +106,7 @@ class SoundPlaybackTest {
         }
         h.now += 0.04
         assertFalse(h.player.play(SoundCue.plant))
-        // A rejected request still consumes a variant, as it does in Swift.
+        // A rejected request still consumes a variant.
         assertNotEquals(
             h.output.played[2]
                 .first.id,

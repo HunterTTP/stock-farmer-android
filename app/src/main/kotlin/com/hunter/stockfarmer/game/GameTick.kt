@@ -154,7 +154,7 @@ class GameTick(
     }
 }
 
-/** Every animal that has somewhere to go takes a step now and then, the way the iOS scene walks them. */
+/** Every animal that has somewhere to go takes a step now and then. */
 internal fun walkAnimals(
     engine: GameEngine,
     now: Instant,

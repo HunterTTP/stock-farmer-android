@@ -10,7 +10,7 @@ import kotlin.random.Random
 
 internal enum class AnimalKind { CAT, DOG, CHICKEN, LIVESTOCK }
 
-/** Sheet layouts and timings follow the iOS AnimalSprites implementations. */
+/** Sheet layouts and timings per animal kind. */
 internal data class AnimalSprites(
     val folder: String,
     val asset: String,

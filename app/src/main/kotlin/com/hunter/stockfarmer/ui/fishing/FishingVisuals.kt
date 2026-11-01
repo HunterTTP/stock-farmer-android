@@ -47,7 +47,7 @@ internal fun fishingFishPose(
     }
 }
 
-/** The same 16 by 16 shimmer, five-second loop and six phase groups as iOS WaterAnimation. */
+/** A 16 by 16 shimmer, five-second loop and six phase groups. */
 internal class FishingWater(
     style: WaterStyle,
 ) {

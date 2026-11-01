@@ -7,7 +7,7 @@ import com.hunter.stockfarmer.core.util.RandomSource
 import com.hunter.stockfarmer.core.util.SystemRandomSource
 import com.hunter.stockfarmer.game.GameSession
 
-/** The iOS commit policy turns in finished quests after each action, including stock sales. */
+/** Finished quests are turned in after each action, including stock sales. */
 internal fun GameSession.screenAction(
     using: RandomSource = SystemRandomSource,
     change: (GameEngine) -> List<GameEvent>,

@@ -23,7 +23,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 
-/** The field iOS shows: a 44 pt box tinted 10% white with 12 pt corners and a placeholder. */
+/** A 44 pt box tinted 10% white with 12 pt corners and a placeholder. */
 @Composable
 fun HudTextField(
     value: String,

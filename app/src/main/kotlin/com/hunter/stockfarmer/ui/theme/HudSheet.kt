@@ -20,7 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 /**
- * The backdrop of a menu: dark glass with a faint light sweep from the top left. iOS blurs the farm through it; here the wash sits
+ * The backdrop of a menu: dark glass with a faint light sweep from the top left. the wash sits
  * over a slightly lighter base because the farm cannot be blurred behind a sheet.
  */
 fun Modifier.glassSheetBackground(): Modifier =
@@ -59,7 +59,7 @@ fun HudSheet(
     }
 }
 
-/** iOS's drag indicator: a 36 by 5 point capsule. */
+/** The drag indicator: a 36 by 5 point capsule. */
 @Composable
 private fun SheetHandle() {
     Box(

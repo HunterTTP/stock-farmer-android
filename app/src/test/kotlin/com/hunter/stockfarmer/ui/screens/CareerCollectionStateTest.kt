@@ -153,7 +153,7 @@ class CareerCollectionStateTest {
     }
 
     @Test
-    fun `all collection asset paths exist in bundled iOS graphics`() {
+    fun `all collection asset paths exist in bundled graphics`() {
         val engine = GameEngine(GameState())
         val assets = File("src/main/assets")
         CareerCollection.entries

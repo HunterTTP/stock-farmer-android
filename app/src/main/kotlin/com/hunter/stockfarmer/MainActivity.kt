@@ -245,7 +245,7 @@ class MainActivity :
 
     // The game pauses on stop, not pause: a visible but unfocused window (split screen, a dialog) keeps playing.
     override fun onStop() {
-        // Readiness is worked out before the pause holds the farm's clock, as on iOS.
+        // Readiness is worked out before the pause holds the farm's clock.
         model.session.act { fieldReady.onBackground(it, Instant.now()) }
         model.pause()
         super.onStop()

@@ -14,7 +14,7 @@ import kotlin.math.pow
 /**
  * Now and then a gust leans the tip of some of the trees the way it blows, then they straighten, leaving their feet where they are.
  * Which trees a gust reaches, and how far each one bends, is chance; each is reached as the gust sweeps across the map. The picture
- * is drawn as horizontal strips whose edges shift, the top most, as the iOS warp grid does.
+ * is drawn as horizontal strips whose edges shift the top most (a warp grid).
  */
 class TreeLean(
     private val random: RandomSource = SystemRandomSource,
