@@ -17,7 +17,7 @@ object NightPulse {
     const val LENGTH_MINUTES = 20.0
 
     /** The chime rings for this long from midnight, as the wave sets off; the music fades out as it starts. */
-    private const val CHIME_MINUTES = 10.0
+    const val CHIME_MINUTES = 10.0
 
     /** The minute at which the summary of the day starts to fade in, while the chime is still ringing. */
     const val SUMMARY_MINUTE = 9.0
