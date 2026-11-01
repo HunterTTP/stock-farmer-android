@@ -3,9 +3,11 @@ package com.hunter.stockfarmer.ui.theme
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -28,6 +30,13 @@ object Theme {
 
     /** How much black is washed over every glass panel and menu, which sets how little of the farm shows through. */
     const val GLASS_WASH = 0.5f
+
+    /**
+     * The base under the wash. iOS blurs the farm here with a regular material; Android cannot blur a libGDX
+     * surface cheaply, so a mostly opaque grey keeps panels as solid as the blur reads on iOS.
+     */
+    val glassBase = Color(0.17f, 0.17f, 0.17f, GLASS_BASE_ALPHA)
+    const val GLASS_BASE_ALPHA = 0.88f
 
     /** The faint fill of a tile inside a glass menu. */
     val glassFill = Color.White.copy(alpha = 0.09f)
@@ -88,7 +97,7 @@ object HudType {
  */
 fun Modifier.darkGlass(shape: Shape): Modifier =
     this
-        .background(Color.White.copy(alpha = 0.06f), shape)
+        .background(Theme.glassBase, shape)
         .background(Color.Black.copy(alpha = Theme.GLASS_WASH), shape)
         .border(1.dp, Theme.glassEdge, shape)
 
@@ -128,6 +137,8 @@ fun HudMaterialTheme(content: @Composable () -> Unit) {
                 error = Theme.spend,
                 onError = Theme.onDanger,
             ),
-        content = content,
+        content = {
+            CompositionLocalProvider(LocalContentColor provides Theme.textPrimary, content = content)
+        },
     )
 }

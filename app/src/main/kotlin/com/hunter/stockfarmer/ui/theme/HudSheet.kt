@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.dp
  */
 fun Modifier.glassSheetBackground(): Modifier =
     this
-        .background(Color.White.copy(alpha = 0.06f))
+        .background(Theme.glassBase)
         .background(Color.Black.copy(alpha = Theme.GLASS_WASH))
         .background(
             Brush.linearGradient(
