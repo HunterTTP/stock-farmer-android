@@ -6,11 +6,16 @@ import com.hunter.stockfarmer.core.rules.GameEngine
 import com.hunter.stockfarmer.core.rules.GameEvent
 import com.hunter.stockfarmer.core.rules.Rejection
 import com.hunter.stockfarmer.core.rules.ToolStroke
+import com.hunter.stockfarmer.core.rules.cannotStartPlacingSelectedBuilding
+import com.hunter.stockfarmer.core.rules.cannotStartPlacingSelectedDecoration
+import com.hunter.stockfarmer.core.rules.cannotStartPlacingSelectedFruitTree
 import com.hunter.stockfarmer.core.rules.containsRejection
 import com.hunter.stockfarmer.core.rules.firstRejection
+import com.hunter.stockfarmer.core.rules.isChopping
 import com.hunter.stockfarmer.core.rules.isFruitTreeSelected
 import com.hunter.stockfarmer.core.rules.isPlacing
 import com.hunter.stockfarmer.core.rules.isSprinklerSelected
+import com.hunter.stockfarmer.core.rules.missingHarvestToolRejection
 import com.hunter.stockfarmer.core.rules.movePlacement
 import com.hunter.stockfarmer.core.rules.placementRejection
 import com.hunter.stockfarmer.core.rules.toolFootprint
@@ -70,7 +75,33 @@ class ToolDrag(
         engine: GameEngine,
         tile: GridPoint,
     ): List<GameEvent> {
-        if (engine.isPlacing) engine.movePlacement(tile) else engine.startsPlacing(tile)
+        if (engine.isPlacing) {
+            engine.movePlacement(tile)
+            return emptyList()
+        }
+        val isFirst = last == null
+        val rejection =
+            when {
+                engine.state.mode == PlayMode.build -> {
+                    engine.cannotStartPlacingSelectedBuilding
+                }
+
+                engine.isFruitTreeSelected -> {
+                    engine.cannotStartPlacingSelectedFruitTree
+                }
+
+                engine.state.mode == PlayMode.decorate && engine.isSprinklerSelected -> {
+                    engine.cannotStartPlacingSelectedDecoration
+                }
+
+                else -> {
+                    null
+                }
+            }
+        if (rejection != null) {
+            return if (isFirst) listOf(GameEvent.Rejected(rejection)) else emptyList()
+        }
+        engine.startsPlacing(tile)
         return emptyList()
     }
 
@@ -79,10 +110,32 @@ class ToolDrag(
         tile: GridPoint,
         now: Instant,
     ): List<GameEvent> {
-        val events = stroke.use(engine, tilesBetween(last ?: tile, tile), now)
-        lastRejection = events.firstRejection
+        val tiles = tilesBetween(last ?: tile, tile)
+        val butterflies =
+            buildList {
+                for (t in tiles) {
+                    val caught =
+                        session.sceneFeedback.catchButterfly
+                            ?.invoke(t, now)
+                            .orEmpty()
+                    if (caught.isNotEmpty()) {
+                        addAll(caught)
+                        if (caught.containsRejection) break
+                    }
+                }
+            }
+        val events = butterflies + stroke.use(engine, tiles, now)
+        val rejection =
+            events.firstRejection
+                ?: if (events.isEmpty()) engine.missingHarvestToolRejection(tile, now) else null
+        lastRejection = rejection
+        val isAllowed = !events.containsRejection && rejection == null
         session.view.toolPreview =
-            PlacementPreview(engine.toolFootprint(tile), !events.containsRejection, null)
+            if (engine.isChopping) {
+                null
+            } else {
+                PlacementPreview(engine.toolFootprint(tile), isAllowed, null)
+            }
         return events
     }
 

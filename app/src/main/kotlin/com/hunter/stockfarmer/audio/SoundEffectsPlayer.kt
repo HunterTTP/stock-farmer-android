@@ -110,6 +110,11 @@ class SoundEffectsPlayer(
         for (sound in cuesFor(events, landscapeTool, petSpecies)) {
             play(sound.cue, sound.tile?.let(placement) ?: SoundPlacement.centered)
         }
+        for (event in events) {
+            if (event is GameEvent.TractorGathered) {
+                play(SoundCue.cropPickup, placement(event.point))
+            }
+        }
     }
 
     fun stop(cue: SoundCue) {

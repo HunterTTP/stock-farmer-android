@@ -10,6 +10,9 @@ import com.hunter.stockfarmer.core.rules.beginPlacingFruitTree
 import com.hunter.stockfarmer.core.rules.beginPlacingSelectedDecoration
 import com.hunter.stockfarmer.core.rules.buildingPlacement
 import com.hunter.stockfarmer.core.rules.cancelPlacement
+import com.hunter.stockfarmer.core.rules.cannotStartPlacingSelectedBuilding
+import com.hunter.stockfarmer.core.rules.cannotStartPlacingSelectedDecoration
+import com.hunter.stockfarmer.core.rules.cannotStartPlacingSelectedFruitTree
 import com.hunter.stockfarmer.core.rules.confirmPlacement
 import com.hunter.stockfarmer.core.rules.containsRejection
 import com.hunter.stockfarmer.core.rules.isChopping
@@ -54,13 +57,38 @@ private fun GameSession.tapTile(
     val crops = engine.tapCrop(point, now)
     if (crops.isNotEmpty()) return toolFlash(engine, point, crops, now)
     if (target is SheetTarget.Animal) return interactWithAnimal(target.animal, now)
-    if (engine.startsPlacing(point)) return emptyList()
+    engine.tryPlaceOnTap(point)?.let { return it }
     return engine.useTool(point, now).also {
         engine.liftTool()
         hookFish(engine, it)
         if (it.isNotEmpty()) toolFlash(engine, point, it, now)
     }
 }
+
+private fun GameEngine.tryPlaceOnTap(point: GridPoint): List<GameEvent>? =
+    when {
+        state.mode == PlayMode.build -> {
+            cannotStartPlacingSelectedBuilding?.let { return listOf(GameEvent.Rejected(it)) }
+            beginPlacing(point)
+            emptyList()
+        }
+
+        isFruitTreeSelected -> {
+            cannotStartPlacingSelectedFruitTree?.let { return listOf(GameEvent.Rejected(it)) }
+            beginPlacingFruitTree(point)
+            emptyList()
+        }
+
+        state.mode == PlayMode.decorate && isSprinklerSelected -> {
+            cannotStartPlacingSelectedDecoration?.let { return listOf(GameEvent.Rejected(it)) }
+            beginPlacingSelectedDecoration(point)
+            emptyList()
+        }
+
+        else -> {
+            null
+        }
+    }
 
 internal fun GameSession.flash(
     tiles: List<GridPoint>,
@@ -131,7 +159,17 @@ fun GameSession.confirmPlacement(now: Instant = Instant.now()): List<GameEvent> 
         },
     )
 
-fun GameSession.cancelPlacement() = act { it.cancelPlacement() }
+fun GameSession.cancelPlacement(now: Instant = Instant.now()) =
+    act { engine ->
+        val footprint =
+            engine.buildingPlacement?.replacing?.footprint
+                ?: engine.fruitPlacement?.replacing?.let { engine.fruitPlacement?.crop?.footprint(it.origin) }
+                ?: engine.objectPlacement?.let { obj -> obj.from?.let { obj.footprint(it) } }
+        engine.cancelPlacement()
+        if (footprint != null) {
+            sceneFeedback.flash(footprint, false, now)
+        }
+    }
 
 fun GameSession.nudgePlacement(
     rows: Int,

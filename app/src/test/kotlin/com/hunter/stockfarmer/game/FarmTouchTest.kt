@@ -14,9 +14,13 @@ import com.hunter.stockfarmer.core.model.PondFish
 import com.hunter.stockfarmer.core.rules.GameEngine
 import com.hunter.stockfarmer.core.rules.GameEvent
 import com.hunter.stockfarmer.core.rules.Rejection
+import com.hunter.stockfarmer.core.rules.beginMoving
+import com.hunter.stockfarmer.core.rules.building
 import com.hunter.stockfarmer.core.rules.firstRejection
+import com.hunter.stockfarmer.core.rules.isPlacing
 import com.hunter.stockfarmer.core.rules.select
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -99,5 +103,32 @@ class FarmTouchTest {
         assertTrue(session.touch(tile, now).any { it is GameEvent.FishHooked })
         assertNotNull(session.casts.value)
         assertNull(session.sheets.value)
+    }
+
+    @Test
+    fun `tapping to place building when unaffordable reports problem`() {
+        engine.state.mode = PlayMode.build
+        engine.state.money = 0.0
+        val events = session.touch(tile, now)
+        assertTrue(events.any { it is GameEvent.Rejected })
+        assertFalse(engine.isPlacing)
+    }
+
+    @Test
+    fun `cancelling placement of moving building flashes original footprint`() {
+        val coop =
+            com.hunter.stockfarmer.core.catalog.Building
+                .named("chickenCoop")!!
+        val origin = GridPoint(10, 10)
+        engine.state.putBuilding(origin, coop.id)
+        val placed = engine.building(origin)!!
+        engine.beginMoving(placed)
+        assertTrue(engine.isPlacing)
+        session.cancelPlacement(now)
+        assertFalse(engine.isPlacing)
+        val flashes = session.sceneFeedback.drainFlashes()
+        assertEquals(1, flashes.size)
+        assertEquals(coop.footprint(origin), flashes.single().tiles)
+        assertFalse(flashes.single().allowed)
     }
 }

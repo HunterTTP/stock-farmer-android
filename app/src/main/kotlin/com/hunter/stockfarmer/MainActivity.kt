@@ -38,6 +38,7 @@ import com.badlogic.gdx.backends.android.AndroidFragmentApplication
 import com.hunter.stockfarmer.audio.SoundCenter
 import com.hunter.stockfarmer.audio.ambienceDriver
 import com.hunter.stockfarmer.core.feedback.HapticCue
+import com.hunter.stockfarmer.core.feedback.SoundCue
 import com.hunter.stockfarmer.core.model.GameState
 import com.hunter.stockfarmer.core.presentation.LaunchSequence
 import com.hunter.stockfarmer.core.rules.GameEvent
@@ -196,6 +197,11 @@ class MainActivity :
                                 session.view.placement(tile, FarmRenderer.TILE, GameState.GRID_SIZE)
                             },
                         )
+                    }
+                }
+                launch {
+                    session.newDays.collect {
+                        sound.play(SoundCue.nightPulse)
                     }
                 }
                 launch {

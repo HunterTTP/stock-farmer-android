@@ -6,12 +6,14 @@ data class ReadyCrop(
 )
 
 /** Crop-group transitions are silent on the first partial-field observation, just as on iOS. */
-class ReadyChime {
-    private var cropsWereAllReady = false
+class ReadyChime(
+    initialAllReady: Boolean = false,
+) {
+    private var cropsWereAllReady = initialAllReady
     private var readyCropIDs: Set<String>? = null
 
-    fun clear() {
-        cropsWereAllReady = false
+    fun clear(initialAllReady: Boolean = false) {
+        cropsWereAllReady = initialAllReady
         readyCropIDs = null
     }
 

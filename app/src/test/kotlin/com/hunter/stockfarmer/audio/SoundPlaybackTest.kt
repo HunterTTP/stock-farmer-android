@@ -199,4 +199,27 @@ class SoundPlaybackTest {
                 .second
         assertEquals(fanfare.left, fanfare.right)
     }
+
+    @Test fun `tractor gathered event plays crop pickup sound at tile placement`() {
+        val h = Harness()
+        h.player.resume()
+        val point = GridPoint(2, 5)
+        val placement = SoundPlacement(0.8, 0.5, false)
+        h.player.react(
+            listOf(GameEvent.TractorGathered(point)),
+            LandscapeTool.farmland,
+            { null },
+            {
+                assertEquals(point, it)
+                placement
+            },
+        )
+        assertEquals(1, h.output.played.size)
+        assertEquals(
+            1,
+            h.output.played
+                .single()
+                .first.id,
+        )
+    }
 }
