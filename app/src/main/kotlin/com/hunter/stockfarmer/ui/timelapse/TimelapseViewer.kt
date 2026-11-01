@@ -58,7 +58,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.hunter.stockfarmer.core.persistence.TimelapseArchive
 import com.hunter.stockfarmer.core.presentation.TimelapsePlayback
 import com.hunter.stockfarmer.core.rules.DayNightCycle
-import com.hunter.stockfarmer.ui.screens.ScreenTheme
+import com.hunter.stockfarmer.ui.theme.HudMaterialTheme
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.isActive
@@ -173,7 +173,7 @@ fun TimelapseViewer(
         onDismissRequest = ::close,
         properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
     ) {
-        ScreenTheme {
+        HudMaterialTheme {
             Box(
                 Modifier.fillMaxSize().timelapseReveal(reveal.value, reduceMotion).background(Color.Black),
                 contentAlignment = Alignment.Center,
