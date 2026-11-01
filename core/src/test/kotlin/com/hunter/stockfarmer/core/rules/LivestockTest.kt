@@ -6,20 +6,17 @@ import com.hunter.stockfarmer.core.catalog.Building
 import com.hunter.stockfarmer.core.catalog.HarvestTool
 import com.hunter.stockfarmer.core.catalog.LivestockHome
 import com.hunter.stockfarmer.core.catalog.LivestockSpecies
-import com.hunter.stockfarmer.core.catalog.LivestockWork
 import com.hunter.stockfarmer.core.catalog.PlacedBuilding
 import com.hunter.stockfarmer.core.catalog.StorageItem
 import com.hunter.stockfarmer.core.catalog.WaterStyle
 import com.hunter.stockfarmer.core.lateGameXP
 import com.hunter.stockfarmer.core.model.AnimalMeal
-import com.hunter.stockfarmer.core.model.Egg
 import com.hunter.stockfarmer.core.model.GameState
 import com.hunter.stockfarmer.core.model.GridPoint
 import com.hunter.stockfarmer.core.model.Herd
 import com.hunter.stockfarmer.core.model.Livestock
 import com.hunter.stockfarmer.core.model.Pet
 import com.hunter.stockfarmer.core.model.PlayMode
-import com.hunter.stockfarmer.core.model.eatsToProduce
 import com.hunter.stockfarmer.core.persistence.GameStateJson
 import com.hunter.stockfarmer.core.stateWith
 import com.hunter.stockfarmer.core.updateHerds
@@ -431,7 +428,7 @@ class LivestockWorkTest {
     }
 
     @Test
-    fun `ducks give an egg without eating then count down to the next one once it is taken`() {
+    fun `ducks give nothing and are sold for 25 dollars instead of released`() {
         val tile = GridPoint(30, 30)
         val engine = GameEngine(stateWith(money = 1_000.0, xp = lateGameXP))
         engine.state.water[tile] = WaterStyle.deep
@@ -440,17 +437,33 @@ class LivestockWorkTest {
         val duckAnimal = Livestock.born(0, variant, "x", tile, born)
         engine.state.herds[tile] = Herd(listOf(duckAnimal), now.advancedBy(1_000_000.0))
         val duck = LivestockSpecies.duck
-        assertTrue(duck.work == LivestockWork.Gives(StorageItem.Egg, HarvestTool.bucket) && !duck.eatsToProduce)
-        assertTrue(duck.workInterval > Egg.LAY_INTERVAL)
-        val beforeReady = born.advancedBy(duck.growDuration + duck.workInterval - 1)
-        assertNull(engine.readyProduce(tile, beforeReady))
-        val ready = beforeReady.advancedBy(1.0)
-        assertEquals(StorageItem.Egg, engine.readyProduce(tile, ready)?.first)
-        assertEquals(StorageItem.Egg, engine.readyProduce(tile, ready.advancedBy(duck.workInterval * 5))?.first)
-        engine.collectProduce(tile, HarvestTool.bucket, ready.advancedBy(500.0))
-        assertEquals(1, engine.state.storage[StorageItem.Egg.id])
-        assertNull(engine.readyProduce(tile, ready.advancedBy(500 + duck.workInterval - 1)))
-        assertEquals(StorageItem.Egg, engine.readyProduce(tile, ready.advancedBy(500 + duck.workInterval))?.first)
+        assertNull(duck.work)
+        assertEquals(25.0, duck.salePrice)
+        assertNull(engine.readyProduce(tile, born.advancedBy(duck.growDuration * 100)))
+        assertTrue(engine.collectProduce(tile, HarvestTool.bucket, born.advancedBy(duck.growDuration * 100)).isEmpty())
+        assertNull(engine.state.storage[StorageItem.Egg.id])
+        assertTrue(LivestockSpecies.all.filter { it != duck }.all { it.salePrice == null })
+        assertEquals(listOf<GameEvent>(GameEvent.AnimalSold(tile, 25.0)), engine.sellLivestock(0, tile))
+        assertEquals(1_025.0, engine.state.money)
+        assertEquals(
+            25.0,
+            engine.state.salesToday
+                .getValue("duck")
+                .earnings,
+        )
+        assertEquals(2_500L, engine.state.career.grossIncomeCents)
+        assertTrue(engine.animals(tile).isEmpty())
+        assertTrue(engine.sellLivestock(0, tile).isEmpty())
+    }
+
+    @Test
+    fun `an animal with no price cannot be sold`() {
+        val tile = GridPoint(30, 30)
+        val engine = engine("barn2", "cow:bigWhite", tile)
+        val money = engine.state.money
+        assertTrue(engine.sellLivestock(0, engine.state.placedBuildings[0].origin).isEmpty())
+        assertEquals(money, engine.state.money)
+        assertEquals(1, engine.animals(engine.state.placedBuildings[0].origin).size)
     }
 
     @Test

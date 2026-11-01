@@ -188,6 +188,11 @@ sealed interface GameEvent {
         val point: GridPoint,
     ) : GameEvent
 
+    data class AnimalSold(
+        val point: GridPoint,
+        val value: Double,
+    ) : GameEvent
+
     data class Born(
         val point: GridPoint,
     ) : GameEvent

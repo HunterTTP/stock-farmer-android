@@ -26,6 +26,7 @@ import com.hunter.stockfarmer.core.rules.releaseChicken
 import com.hunter.stockfarmer.core.rules.releaseLivestock
 import com.hunter.stockfarmer.core.rules.rename
 import com.hunter.stockfarmer.core.rules.select
+import com.hunter.stockfarmer.core.rules.sellLivestock
 import com.hunter.stockfarmer.core.rules.sellStored
 import com.hunter.stockfarmer.core.rules.sellTractorCargo
 import com.hunter.stockfarmer.core.rules.startTractorHarvest
@@ -88,6 +89,8 @@ internal sealed interface SheetAction {
     ) : SheetAction
 
     data object Release : SheetAction
+
+    data object Sell : SheetAction
 
     data class Feed(
         val item: StorageItem,
@@ -237,6 +240,13 @@ internal object SheetActions {
                     is AnimalRef.Chicken -> SheetResult(engine.releaseChicken(animal.id, animal.coop), true)
                     is AnimalRef.Livestock -> SheetResult(engine.releaseLivestock(animal.id, animal.home), true)
                     is AnimalRef.Pet -> rejected(Rejection.NothingHere)
+                }
+            }
+
+            SheetAction.Sell -> {
+                when (animal) {
+                    is AnimalRef.Livestock -> SheetResult(engine.sellLivestock(animal.id, animal.home), true)
+                    is AnimalRef.Chicken, is AnimalRef.Pet -> rejected(Rejection.NothingHere)
                 }
             }
 

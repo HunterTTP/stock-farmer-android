@@ -190,6 +190,20 @@ fun GameEngine.releaseLivestock(
     return listOf(GameEvent.AnimalReleased(animal.position))
 }
 
+/** The player sells an animal that has a price: it is gone and the price is paid, and its pond or building has another baby in its own time. */
+fun GameEngine.sellLivestock(
+    id: Int,
+    home: GridPoint,
+): List<GameEvent> {
+    val animal = livestock(id, home) ?: return emptyList()
+    val price = animal.species.salePrice ?: return emptyList()
+    val herd = state.herds.getValue(home)
+    state.herds[home] = herd.copy(animals = herd.animals.filter { it.id != id })
+    credit(price)
+    recordSale(animal.species.id, animal.species.name, 1, price)
+    return listOf(GameEvent.AnimalSold(animal.position, price))
+}
+
 /** How long until an animal grows up, counting any remaining meal boost. */
 fun GameEngine.timeUntilGrown(
     animal: Livestock,

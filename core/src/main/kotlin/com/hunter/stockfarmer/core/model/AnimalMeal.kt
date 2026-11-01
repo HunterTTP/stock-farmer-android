@@ -42,7 +42,7 @@ data class AnimalMeal(
 
 /**
  * What it grazes and is fed by hand, a different plain crop for each kind that gives something to harvest, one that
- * unlocks by the level its home does; null for ducks, which give eggs without eating and so are never fed.
+ * unlocks by the level its home does; null for ducks, which give nothing and so are never fed.
  */
 val LivestockSpecies.favoriteCrop: Crop?
     get() =
@@ -56,5 +56,5 @@ val LivestockSpecies.favoriteCrop: Crop?
             else -> null
         }?.let(Crop::named)
 
-/** Whether it must eat its favorite crop before it gives anything: every animal that gives something does, except ducks. */
+/** Whether it must eat its favorite crop before it gives anything: every animal that gives something does. */
 val LivestockSpecies.eatsToProduce: Boolean get() = favoriteCrop != null

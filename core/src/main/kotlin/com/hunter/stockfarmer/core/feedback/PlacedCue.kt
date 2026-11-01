@@ -176,6 +176,10 @@ private fun cuesOf(
             )
         }
 
+        is GameEvent.AnimalSold -> {
+            at(event.point, SoundCue.sell)
+        }
+
         is GameEvent.AnimalReleased -> {
             at(event.point, SoundCue.release)
         }

@@ -122,7 +122,7 @@ object QuestRules {
             }
         for (building in Building.all.filter { it.unlockLevel <= level }) {
             for (species in building.livestockHome?.species ?: emptyList()) {
-                val work = species.work as LivestockWork.Gives
+                val work = species.work as? LivestockWork.Gives ?: continue
                 val goal = QuestGoal.Collect(work.item.id)
                 if (goal !in produce) produce += goal
             }

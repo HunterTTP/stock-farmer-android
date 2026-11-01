@@ -119,6 +119,8 @@ internal data class AnimalState(
     val name: String,
     val description: List<String>,
     val releasable: Boolean,
+    /** Whether it is sold for money instead of released, which only the ducks are. */
+    val sellable: Boolean,
     val foods: List<StoredState>,
     val pet: Pet? = null,
     val chicken: ChickenVariant? = null,
@@ -290,23 +292,25 @@ internal data class SheetState(
                         add(growth)
                     }
                     livestock?.let {
+                        it.species.salePrice?.let { price -> add("Sells for ${price.dollars}") }
                         if (!it.isGrown(now)) {
                             add("Grows up in ${engine.timeUntilGrown(it, now).durationText}")
                         } else {
                             add("(Fully grown)")
-                            val work = it.species.work as LivestockWork.Gives
-                            val wait =
-                                it.readyAt
-                                    .secondsSince(now)
-                                    .coerceAtLeast(0.0)
-                                    .durationText
-                            val readiness =
-                                if (it.readyProduce(now) != null) {
-                                    "${work.item.name} is ready: use the ${work.tool.displayName}"
-                                } else {
-                                    "${work.item.name} ready in $wait"
-                                }
-                            add(readiness)
+                            (it.species.work as? LivestockWork.Gives)?.let { work ->
+                                val wait =
+                                    it.readyAt
+                                        .secondsSince(now)
+                                        .coerceAtLeast(0.0)
+                                        .durationText
+                                val readiness =
+                                    if (it.readyProduce(now) != null) {
+                                        "${work.item.name} is ready: use the ${work.tool.displayName}"
+                                    } else {
+                                        "${work.item.name} ready in $wait"
+                                    }
+                                add(readiness)
+                            }
                         }
                     }
                     favorite?.let { add("Favorite crop: ${it.name} (ripe in the field)") }
@@ -324,8 +328,9 @@ internal data class SheetState(
                             else -> false
                         }
                     }.map { StoredState(it.first, it.second, "") }
-            val feedable = ref !is AnimalRef.Pet
-            return AnimalState(ref, name, lines, feedable, foods, pet, chicken?.kind, livestock?.variant)
+            val sellable = livestock?.species?.salePrice != null
+            val releasable = ref !is AnimalRef.Pet && !sellable
+            return AnimalState(ref, name, lines, releasable, sellable, foods, pet, chicken?.kind, livestock?.variant)
         }
     }
 }

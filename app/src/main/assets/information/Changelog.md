@@ -1,5 +1,7 @@
 ## 2026-11-01
 - The Career screen is now called Progress.
+- Ducks no longer lay eggs. Tap a duck and Sell it for $25 (toast "Sold for $25") instead of releasing it; every other animal still offers
+  Release.
 
 ## 2026-10-22
 - Music is half as loud as it was.
