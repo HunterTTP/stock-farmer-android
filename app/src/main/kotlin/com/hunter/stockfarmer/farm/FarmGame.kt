@@ -5,6 +5,7 @@ import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.input.GestureDetector
+import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.math.Vector3
 import com.hunter.stockfarmer.core.catalog.HarvestTool
 import com.hunter.stockfarmer.core.model.GameState
@@ -33,7 +34,6 @@ import com.hunter.stockfarmer.ui.screens.PlaySettings
 import kotlinx.coroutines.flow.update
 import java.time.Instant
 import kotlin.math.floor
-import kotlin.math.max
 import kotlin.math.min
 
 /** The farm scene: draws the session's game and turns taps and drags into play and camera movement. */
@@ -48,6 +48,8 @@ class FarmGame(
     private lateinit var renderer: FarmRenderer
     private lateinit var farmPhoto: FarmPhoto
     private val camera = OrthographicCamera()
+    private val cameraControls = FarmCamera(camera)
+    private val cameraPreferences by lazy { Gdx.app.getPreferences("camera") }
     private val touch = Vector3()
     private val tilePreview = TilePreview()
     private val placementDrag = PlacementDrag(session)
@@ -101,7 +103,7 @@ class FarmGame(
             )
         Gdx.input.inputProcessor = GestureDetector(20f, 0.4f, 0.35f, 0.15f, Gestures())
         session.sceneFeedback.catchButterfly = ::catchButterfly
-        farmPhoto = FarmPhoto(renderer, batch, textures, effects.photo, foreground = tractor::drawLoad)
+        farmPhoto = FarmPhoto(renderer, batch, textures, effects.photo)
         session.photos.handler = { request, done ->
             Gdx.app.postRunnable {
                 applyGraphicsSettings()
@@ -123,41 +125,30 @@ class FarmGame(
         width: Int,
         height: Int,
     ) {
-        camera.setToOrtho(false, width.toFloat(), height.toFloat())
-        placeCamera()
+        placeCamera(width, height)
     }
 
-    private fun placeCamera() {
-        val shortSide = min(Gdx.graphics.width, Gdx.graphics.height).coerceAtLeast(1)
-        camera.zoom = INITIAL_VISIBLE_TILES * FarmRenderer.TILE / shortSide
-        val start = GameState.startingFarmland.first()
-        camera.position.set(
-            (start.col + 0.5f) * FarmRenderer.TILE,
-            FarmRenderer.worldY(start.row) + FarmRenderer.TILE / 2,
-            0f,
-        )
-        keepOnMap()
+    private fun placeCamera(
+        width: Int = Gdx.graphics.width,
+        height: Int = Gdx.graphics.height,
+    ) {
+        val firstLayout = !cameraControls.isPlaced
+        cameraControls.resize(width, height, Gdx.graphics.density)
+        if (firstLayout && cameraControls.isPlaced && cameraPreferences.contains("cameraScale")) {
+            cameraControls.restore(
+                cameraPreferences.getFloat("cameraX"),
+                cameraPreferences.getFloat("cameraY"),
+                cameraPreferences.getFloat("cameraScale"),
+            )
+        }
     }
 
-    private fun keepOnMap() {
-        val halfWidth = camera.viewportWidth * camera.zoom / 2
-        val halfHeight = camera.viewportHeight * camera.zoom / 2
-        camera.position.x =
-            camera.position.x.coerceIn(
-                min(halfWidth, FarmRenderer.WORLD - halfWidth),
-                max(
-                    halfWidth,
-                    FarmRenderer.WORLD - halfWidth,
-                ),
-            )
-        camera.position.y =
-            camera.position.y.coerceIn(
-                min(halfHeight, FarmRenderer.WORLD - halfHeight),
-                max(
-                    halfHeight,
-                    FarmRenderer.WORLD - halfHeight,
-                ),
-            )
+    private fun saveCamera() {
+        if (!cameraControls.isPlaced) return
+        cameraPreferences.putFloat("cameraX", camera.position.x)
+        cameraPreferences.putFloat("cameraY", camera.position.y)
+        cameraPreferences.putFloat("cameraScale", cameraControls.logicalScale)
+        cameraPreferences.flush()
     }
 
     override fun render() {
@@ -189,7 +180,7 @@ class FarmGame(
             effects.shadows.moving = moving
             val screenScale = camera.zoom * Gdx.graphics.density
             renderer.cameraScale = screenScale
-            renderer.maxCameraScale = maxZoom() * Gdx.graphics.density
+            renderer.maxCameraScale = FarmCamera.MAX_SCALE
             session.read {
                 effects.nightPulse.sync(session.nightPulse, session.nightPulseRevision)
                 effects.draw(EffectPhase.BACKGROUND, batch, it, now, camera)
@@ -237,7 +228,6 @@ class FarmGame(
 
     /** Tells the sound side where the camera is looking. */
     private fun publishView() {
-        val range = maxZoom() - MIN_ZOOM
         session.view.snapshot =
             ViewSnapshot(
                 centerX = camera.position.x,
@@ -245,11 +235,9 @@ class FarmGame(
                 worldPerPixel = camera.zoom,
                 widthPixels = Gdx.graphics.width,
                 heightPixels = Gdx.graphics.height,
-                zoomFraction = if (range > 0) ((camera.zoom - MIN_ZOOM) / range).coerceIn(0f, 1f) else 0f,
+                zoomFraction = cameraControls.zoomFraction,
             )
     }
-
-    private fun maxZoom() = FarmRenderer.WORLD / min(camera.viewportWidth, camera.viewportHeight)
 
     /** Lets a running tractor move on by the time since the last frame. */
     private fun driveTractor(now: Instant) {
@@ -273,6 +261,7 @@ class FarmGame(
     }
 
     override fun dispose() {
+        saveCamera()
         session.photos.handler = null
         session.view.isSceneBuilt = false
         session.view.framesDrawn = 0
@@ -336,8 +325,7 @@ class FarmGame(
         ): Boolean {
             val moved = measure(PerformanceWork.drag) { placementDrag.move(tileAt(x, y)) }
             if (moved) return true
-            camera.position.add(-deltaX * camera.zoom, deltaY * camera.zoom, 0f)
-            keepOnMap()
+            cameraControls.pan(deltaX, deltaY)
             return true
         }
 
@@ -348,30 +336,119 @@ class FarmGame(
             button: Int,
         ): Boolean {
             placementDrag.end()
+            saveCamera()
             return true
         }
 
         override fun pinchStop() {
             placementDrag.end()
+            zoomAtStart = null
+            saveCamera()
         }
 
-        private var zoomAtStart = 1f
+        private var zoomAtStart: Float? = null
 
-        override fun zoom(
-            initialDistance: Float,
-            distance: Float,
+        override fun pinch(
+            initialPointer1: Vector2,
+            initialPointer2: Vector2,
+            pointer1: Vector2,
+            pointer2: Vector2,
         ): Boolean {
-            if (initialDistance == distance) zoomAtStart = camera.zoom
-            val wanted = zoomAtStart * initialDistance / distance
-            camera.zoom = wanted.coerceIn(MIN_ZOOM, maxZoom())
-            keepOnMap()
+            val initialDistance = initialPointer1.dst(initialPointer2)
+            if (initialDistance <= 0f) return true
+            val start = zoomAtStart ?: camera.zoom.also { zoomAtStart = it }
+            cameraControls.pinch(
+                start,
+                pointer1.dst(pointer2) / initialDistance,
+                (pointer1.x + pointer2.x) / 2,
+                (pointer1.y + pointer2.y) / 2,
+            )
             return true
         }
     }
 
-    private companion object {
-        const val INITIAL_VISIBLE_TILES = 8f
-        const val MIN_ZOOM = 0.25f
+    override fun pause() {
+        saveCamera()
+    }
+}
+
+/** SpriteKit scales are in logical points; libGDX's camera covers physical pixels. */
+internal class FarmCamera(
+    private val camera: OrthographicCamera,
+) {
+    private var density = 1f
+    var isPlaced = false
+        private set
+    val logicalScale: Float get() = camera.zoom * density
+    val zoomFraction: Float get() = ((logicalScale - MIN_SCALE) / (MAX_SCALE - MIN_SCALE)).coerceIn(0f, 1f)
+
+    fun resize(
+        width: Int,
+        height: Int,
+        density: Float,
+    ) {
+        if (width <= 0 || height <= 0) return
+        val previousScale = logicalScale
+        this.density = density.coerceAtLeast(0.1f)
+        camera.viewportWidth = width.toFloat()
+        camera.viewportHeight = height.toFloat()
+        if (!isPlaced) {
+            camera.position.set(FarmRenderer.WORLD / 2, FarmRenderer.WORLD / 2, 0f)
+            camera.zoom = 5 * FarmRenderer.TILE / min(width, height)
+            isPlaced = true
+        } else {
+            camera.zoom = previousScale / this.density
+        }
+        applyScale(camera.zoom)
+    }
+
+    fun restore(
+        x: Float,
+        y: Float,
+        logicalScale: Float,
+    ) {
+        camera.position.set(x, y, 0f)
+        applyScale(logicalScale / density)
+    }
+
+    fun pan(
+        deltaX: Float,
+        deltaY: Float,
+    ) {
+        camera.position.add(-deltaX * camera.zoom, deltaY * camera.zoom, 0f)
+        clampPosition()
+    }
+
+    fun pinch(
+        startScale: Float,
+        magnification: Float,
+        focusX: Float,
+        focusY: Float,
+    ) {
+        if (magnification <= 0f || !magnification.isFinite()) return
+        val before = camera.zoom
+        applyScale(startScale / magnification)
+        camera.position.add(
+            (focusX - camera.viewportWidth / 2) * (before - camera.zoom),
+            -(focusY - camera.viewportHeight / 2) * (before - camera.zoom),
+            0f,
+        )
+        clampPosition()
+    }
+
+    private fun applyScale(scale: Float) {
+        camera.zoom = scale.coerceIn(MIN_SCALE / density, MAX_SCALE / density)
+        clampPosition()
+    }
+
+    private fun clampPosition() {
+        camera.position.x = camera.position.x.coerceIn(0f, FarmRenderer.WORLD)
+        camera.position.y = camera.position.y.coerceIn(0f, FarmRenderer.WORLD)
+    }
+
+    companion object {
+        const val MIN_SCALE = 1f / 3
+        const val MAX_SCALE = 8f
     }
 }
 

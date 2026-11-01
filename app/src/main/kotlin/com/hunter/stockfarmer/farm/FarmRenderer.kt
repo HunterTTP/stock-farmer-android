@@ -379,7 +379,7 @@ class FarmRenderer(
             if (crop.isFruitTree) {
                 collectFruitTree(batch, plot, crop, point, progress, state.season)
             } else {
-                collectPlanting(batch, plot, crop, point, progress)
+                collectPlanting(batch, plot, crop, point, progress, state.season)
             }
         }
     }
@@ -391,12 +391,14 @@ class FarmRenderer(
         crop: Crop,
         point: GridPoint,
         progress: Double,
+        season: Season,
     ) {
         val growth = timelines.getOrPut(plot) { GrowthTimelines(plot, point, crop) }
         for (quadrant in 0 until QUADRANTS) {
             if (quadrant >= QUADRANTS - plot.servingsEaten) continue
             val phase = growth.phase(quadrant, progress)
-            val texture = textures.texture("crops", "${crop.id}-phase-${phase.spriteNumber}") ?: continue
+            val texture =
+                textures.texture("crops", "${crop.id}-phase-${phase.spriteNumber}", season = season) ?: continue
             val (x, y, width, height) = StandingLayout.quadrant(point, quadrant)
             val near = quadrant >= 2
             standing +=

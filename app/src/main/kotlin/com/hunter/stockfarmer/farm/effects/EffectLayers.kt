@@ -107,6 +107,8 @@ class PhotoEffects internal constructor(
 ) {
     private val rainTint = RainTint(textures)
 
+    internal fun fresh(): PhotoEffects = PhotoEffects(textures, SeasonSky(textures), WaterLayer(textures), shadows)
+
     fun drawSky(
         batch: SpriteBatch,
         state: GameState,

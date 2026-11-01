@@ -6,14 +6,14 @@ import com.hunter.stockfarmer.core.market.StockQuoteProvider
 import com.hunter.stockfarmer.core.model.StockQuote
 import com.hunter.stockfarmer.core.rules.StockMarketRules
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.async
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.launch
 import java.time.Instant
 
 /**
@@ -50,7 +50,7 @@ class StockMarketSession(
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
     private val fetchedAt = mutableMapOf<String, Instant>()
-    private val mutex = Mutex()
+    private val lock = Any()
     private var generation = 0
 
     /** Fetches these tickers now; the caller has already checked that a pull is allowed. */
@@ -59,10 +59,10 @@ class StockMarketSession(
         now: Instant = this.now(),
         reportsFailure: Boolean = false,
     ): List<StockQuote> =
-        mutex.withLock {
+        run {
             val fetched = fetch(tickers, reportsFailure)
-            for (quote in fetched) {
-                fetchedAt[quote.ticker] = now
+            synchronized(lock) {
+                for (quote in fetched) fetchedAt[quote.ticker] = now
             }
             fetched
         }
@@ -71,19 +71,19 @@ class StockMarketSession(
     suspend fun search(
         text: String,
         now: Instant = this.now(),
-    ) = mutex.withLock {
+    ) {
         val ticker = StockMarketRules.normalizedTicker(text)
         if (ticker == null) {
             updateStatus(message = StockQuoteError.invalidTicker.message)
-            return@withLock
+            return
         }
         if (hasFreshQuote(ticker, now)) {
             updateStatus(selected = ticker, message = null)
-            return@withLock
+            return
         }
         val fetched = fetch(listOf(ticker), reportsFailure = true)
-        for (quote in fetched) {
-            fetchedAt[quote.ticker] = now
+        synchronized(lock) {
+            for (quote in fetched) fetchedAt[quote.ticker] = now
         }
         if (fetched.isNotEmpty()) {
             updateStatus(selected = ticker)
@@ -97,24 +97,28 @@ class StockMarketSession(
     fun hasFreshQuote(
         ticker: String,
         now: Instant = this.now(),
-    ): Boolean = _quotes.value[ticker] != null && !StockMarketRules.isPullDue(fetchedAt[ticker], now)
+    ): Boolean =
+        synchronized(lock) {
+            _quotes.value[ticker] != null && !StockMarketRules.isPullDue(fetchedAt[ticker], now)
+        }
 
     private fun updateStatus(
         quotes: Map<String, StockQuote>? = null,
-        selected: String? = _selected.value,
-        message: String? = _message.value,
-        loading: Boolean = _isLoading.value,
-    ) {
+        selected: String? = null,
+        message: String? = null,
+        loading: Boolean? = null,
+        changesMessage: Boolean = true,
+    ) = synchronized(lock) {
         if (quotes != null) _quotes.value = quotes
-        _selected.value = selected
-        _message.value = message
-        _isLoading.value = loading
+        if (selected != null) _selected.value = selected
+        if (changesMessage) _message.value = message
+        if (loading != null) _isLoading.value = loading
         _marketPrices.value =
             MarketPrices(
                 quotes = quotes ?: _quotes.value,
-                selected = selected,
-                message = message,
-                loading = loading,
+                selected = _selected.value,
+                message = _message.value,
+                loading = _isLoading.value,
             )
     }
 
@@ -123,29 +127,34 @@ class StockMarketSession(
         reportsFailure: Boolean,
     ): List<StockQuote> =
         coroutineScope {
-            generation++
-            val mine = generation
-            updateStatus(loading = true)
+            val mine =
+                synchronized(lock) {
+                    generation++
+                    updateStatus(loading = true, changesMessage = false)
+                    generation
+                }
             try {
-                val deferreds =
-                    tickers.map { ticker ->
-                        async {
+                val results = Channel<Result<StockQuote>?>(Channel.UNLIMITED)
+                tickers.forEach { ticker ->
+                    launch {
+                        val result =
                             try {
                                 Result.success(provider.quote(ticker))
                             } catch (cancelled: CancellationException) {
+                                results.close(cancelled)
                                 throw cancelled
                             } catch (error: StockQuoteException) {
                                 Result.failure(error)
                             } catch (_: Exception) {
-                                Result.failure(StockQuoteException(StockQuoteError.network))
+                                null
                             }
-                        }
+                        results.send(result)
                     }
-                val results = deferreds.map { it.await() }
+                }
                 val fetched = mutableListOf<StockQuote>()
                 var failure: StockQuoteError? = null
-                for (result in results) {
-                    result.fold(
+                repeat(tickers.size) {
+                    results.receive()?.fold(
                         onSuccess = { fetched.add(it) },
                         onFailure = { error ->
                             if (failure == null && error is StockQuoteException) {
@@ -154,29 +163,33 @@ class StockMarketSession(
                         },
                     )
                 }
-                val updatedQuotes =
-                    if (fetched.isNotEmpty()) {
-                        _quotes.value + fetched.associateBy { it.ticker }
-                    } else {
-                        _quotes.value
-                    }
-                val updatedMessage =
-                    if (reportsFailure || failure == null) {
-                        failure?.let {
-                            if (fetched.isEmpty()) it.message else "Some prices couldn't be refreshed"
+                results.close()
+                currentCoroutineContext().ensureActive()
+                synchronized(lock) {
+                    val updatedQuotes =
+                        if (fetched.isNotEmpty()) {
+                            _quotes.value + fetched.associateBy { it.ticker }
+                        } else {
+                            _quotes.value
                         }
-                    } else {
-                        _message.value
-                    }
-                updateStatus(
-                    quotes = updatedQuotes,
-                    message = updatedMessage,
-                    loading = if (mine == generation) false else _isLoading.value,
-                )
+                    val updatedMessage =
+                        if (reportsFailure || failure == null) {
+                            failure?.let {
+                                if (fetched.isEmpty()) it.message else "Some prices couldn't be refreshed"
+                            }
+                        } else {
+                            _message.value
+                        }
+                    updateStatus(
+                        quotes = updatedQuotes,
+                        message = updatedMessage,
+                        loading = if (mine == generation) false else null,
+                    )
+                }
                 fetched
             } finally {
-                if (mine == generation) {
-                    updateStatus(loading = false)
+                synchronized(lock) {
+                    if (mine == generation) updateStatus(loading = false, changesMessage = false)
                 }
             }
         }

@@ -57,17 +57,19 @@ internal data class Heart(
 
 /** Petting is independent of the body animation; repeating it replaces the pending heart sequence. */
 internal class AnimalHearts {
-    private var pettedAt: Instant? = null
+    private val births = mutableListOf<Instant>()
 
     fun pet(now: Instant) {
-        pettedAt = now
+        // Replacing the keyed action cancels future emissions, but its existing child hearts finish floating.
+        births.removeAll { it > now || now.secondsSince(it) >= 1 }
+        repeat(3) { index -> births += now.plusMillis(600L + index * 800L) }
     }
 
     fun hearts(now: Instant): List<Heart> {
-        val age = pettedAt?.let { now.secondsSince(it) } ?: return emptyList()
-        return (0..2).mapNotNull { index ->
-            val life = age - 0.6 - index * 0.8
-            if (life < -1e-9 || life >= 1) {
+        births.removeAll { now.secondsSince(it) >= 1 }
+        return births.mapNotNull { birth ->
+            val life = now.secondsSince(birth)
+            if (life < 0) {
                 null
             } else {
                 Heart(
