@@ -50,7 +50,7 @@ internal const val NEW_GAME_MINUTE = 8.0 * 60
  */
 fun newGame(
     using: RandomSource,
-    now: Instant = Instant.now(),
+    now: Instant,
 ): GameState {
     val state = pondsOnly(using)
     state.addTrees(now, using)

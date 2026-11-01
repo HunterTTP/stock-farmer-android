@@ -222,7 +222,7 @@ internal fun GameEngine.relocateAnimals(points: List<GridPoint>) {
  */
 fun GameEngine.wanderDirection(
     animal: AnimalRef,
-    now: Instant = Instant.now(),
+    now: Instant,
     using: RandomSource,
 ): GridPoint? {
     val current = position(animal) ?: return null

@@ -122,7 +122,7 @@ class TreeRockEngineTest {
 
     private val worlds: List<GameState> by lazy {
         val random = SeededRandom(2_024)
-        (0 until 40).map { newGame(random) }
+        (0 until 40).map { newGame(random, now) }
     }
 
     private fun worlds(count: Int) = worlds.take(count)
@@ -421,7 +421,7 @@ class TreeRockEngineTest {
 
     private val rockWorlds: List<GameState> by lazy {
         val random = SeededRandom(77)
-        (0 until 40).map { newGame(random) }
+        (0 until 40).map { newGame(random, now) }
     }
 
     @Test fun `a new map has few rocks on bare ground away from the start`() {

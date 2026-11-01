@@ -24,8 +24,5 @@ data class SaveBackup(
         daily("daily"),
     }
 
-    @Suppress("ktlint:standard:enum-entry-name-case")
-    enum class RestoreError { missing, }
-
     val id: String get() = "$slot-" + kind.rawValue
 }

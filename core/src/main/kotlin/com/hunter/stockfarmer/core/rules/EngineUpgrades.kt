@@ -89,36 +89,7 @@ fun GameEngine.reopen(
 ) {
     holdClockWhileAway(now)
     skipNewDayInProgress(now)
-    splitMarketStands()
-    migrateQuestRewards()
-    capHarvestQuests()
-    removeRetiredBuildings()
     growTrees(now)
     scatterRocksIfNeeded(using)
     scatterOreVeinsIfNeeded(using)
-}
-
-private fun GameEngine.splitMarketStands() {
-    if (state.selectedBuildingID == "marketStandLarge") state.selectedBuildingID = "marketStand"
-    for ((origin, id) in state.buildings.toMap()) {
-        if (id == "marketStand") {
-            when (state.buildingStyles[origin]) {
-                "big" -> state.putBuilding(origin, "marketStandLarge")
-                "small" -> state.putBuilding(origin, id)
-            }
-        }
-    }
-}
-
-private fun GameEngine.removeRetiredBuildings() {
-    for ((origin, id) in state.buildings.toMap()) {
-        if (Building.named(id) == null) {
-            state.removeBuilding(origin)
-            state.herds.remove(origin)
-            state.workshops.remove(origin)
-            state.selectedWorkshopRecipes.remove(origin)
-            state.eggs = state.eggs.filter { it.coop != origin }
-        }
-    }
-    state.eggs = state.eggs.filter { it.coop in state.coops }
 }

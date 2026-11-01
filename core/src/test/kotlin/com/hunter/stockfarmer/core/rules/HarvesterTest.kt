@@ -319,7 +319,7 @@ class BuildingLogBudgetTest {
     /** Every pass of the axe gives a log, so a map holds more logs than the buildings ask for between them. */
     @Test
     fun `a new map holds more logs than building everything takes`() {
-        val maps = List(40) { newGame(SystemRandomSource) }
+        val maps = List(40) { newGame(SystemRandomSource, Instant.ofEpochSecond(15_000_000)) }
         val logsPerMap = maps.flatMap { it.trees.values }.sumOf { it.tree.logs }.toDouble() / maps.size
         assertTrue(logsPerMap > Building.all.sumOf { it.logCost })
     }

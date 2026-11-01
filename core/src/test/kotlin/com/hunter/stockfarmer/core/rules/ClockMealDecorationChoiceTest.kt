@@ -177,4 +177,31 @@ class ClockMealDecorationChoiceTest {
         }
         assertNotNull(Decoration.named("nest"))
     }
+
+    @Test fun `a game keeps its clock and starts at eight in the morning`() {
+        val fresh = newGame(SeededRandom(1), now)
+        val engine = GameEngine(fresh)
+        assertEquals(480.0, engine.minuteOfDay(now), 0.0001)
+        engine.setTimeOfDay(60.0, now)
+        assertEquals(60.0, engine.minuteOfDay(now), 0.0001)
+        assertEquals(1.0, DayNightCycle.darkness(now, engine.state.clockOffset))
+        engine.setTimeOfDay(5000.0, now)
+        assertEquals(1439.0, engine.minuteOfDay(now), 0.0001)
+        assertEquals(engine.state.clockOffset, GameStateJson.decode(GameStateJson.encode(engine.state)).clockOffset)
+        assertEquals(0.0, GameStateJson.decode("""{"money":1}""").clockOffset)
+    }
+
+    @Test fun `setting the time stays within the farms day whatever the real time of day`() {
+        for (realHour in listOf(0.0, 5.0, 12.0, 23.9)) {
+            val real = Instant.EPOCH.advancedBy(100 * DayNightCycle.secondsPerDay + realHour * 3600)
+            val engine = GameEngine()
+            engine.state.clockOffset = 3 * 3600.0
+            val day = NightPulse.day(real, engine.state.clockOffset)
+            for (minute in listOf(0.0, 5.0, 600.0, 1439.0)) {
+                engine.setTimeOfDay(minute, real)
+                assertEquals(minute, engine.minuteOfDay(real), 1e-6)
+                assertEquals(day, NightPulse.day(real, engine.state.clockOffset))
+            }
+        }
+    }
 }

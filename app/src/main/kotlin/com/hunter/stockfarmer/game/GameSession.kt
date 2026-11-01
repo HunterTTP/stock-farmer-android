@@ -23,7 +23,7 @@ import java.time.Instant
  * so every access goes through [read] or [act], which take turns.
  */
 class GameSession(
-    private val engine: GameEngine = GameEngine(newGame(SystemRandomSource)),
+    private val engine: GameEngine = GameEngine(newGame(SystemRandomSource, Instant.now())),
 ) {
     init {
         engine.countCurrentUnlocksAsSeen()

@@ -3,6 +3,7 @@ package com.hunter.stockfarmer.core.rules
 import com.hunter.stockfarmer.core.catalog.Crop
 import com.hunter.stockfarmer.core.catalog.HarvestTool
 import com.hunter.stockfarmer.core.catalog.StorageItem
+import com.hunter.stockfarmer.core.lateGameXP
 import com.hunter.stockfarmer.core.model.GameState
 import com.hunter.stockfarmer.core.model.GridPoint
 import com.hunter.stockfarmer.core.model.PlayMode
@@ -134,5 +135,18 @@ class GameEngineTest {
         assertEquals(xp + LevelRules.harvestXP(Crop.starter), engine.state.xp)
         assertEquals(PlayMode.harvest, engine.state.mode)
         assertEquals("carrot", engine.state.selectedCropID)
+    }
+
+    @Test fun `harvests produce ordinary crops without the retired quality bonus`() {
+        val now = Instant.ofEpochSecond(40_000_000)
+        val engine = GameEngine(stateWith(money = 0.0, xp = lateGameXP, logs = 0))
+        val point = GridPoint(15, 15)
+        engine.state.farmland.add(point)
+        engine.select(HarvestTool.scythe)
+        repeat(50) { trial ->
+            engine.state.plots[point] = Plot("wheat", now.advancedBy(-10_000.0 - trial))
+            engine.useTool(point, now)
+        }
+        assertEquals(mapOf("wheat" to 50), engine.state.storage)
     }
 }

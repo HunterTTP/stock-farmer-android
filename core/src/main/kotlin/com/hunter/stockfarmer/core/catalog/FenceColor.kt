@@ -10,21 +10,6 @@ data class FenceColor(
 ) {
     companion object {
         val all = listOf(FenceColor("wood", "Wood", "Fences"))
-        val retiredIDs =
-            setOf(
-                "darkWood",
-                "rustic",
-                "picket",
-                "lightPicket",
-                "goldenPicket",
-                "redPicket",
-                "whiteRail",
-                "brownRail",
-                "darkRail",
-                "woodGate",
-                "darkWoodGate",
-                "rusticGate",
-            )
         val starter = all[0]
         val price = 2.0
 

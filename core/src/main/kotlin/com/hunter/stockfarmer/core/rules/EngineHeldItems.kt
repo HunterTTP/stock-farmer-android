@@ -13,9 +13,6 @@ import java.time.Instant
 /** The stored item the Decorate tool is holding to put into water or feed to an animal, if it is holding one. */
 val GameEngine.heldItem: StorageItem? get() = state.heldItemID?.let(StorageItem::of)
 
-/** The kind of fish the Decorate tool is holding, if it is holding one. */
-val GameEngine.heldFish: FishKind? get() = (heldItem as? StorageItem.Fish)?.kind
-
 /** Picks up a stored fish or crop for the Decorate tool: a fish is let go in water or fed to a cat or dog, a crop fed to an animal. */
 internal fun GameEngine.equipHeld(item: StorageItem): Boolean {
     if ((state.storage[item.id] ?: 0) <= 0) return false

@@ -127,11 +127,11 @@ class CareerTrackingTest {
         engine.sellStored(StorageItem.CropItem(Crop.starter), 3)
         val sales = engine.grossIncome
         assertTrue(sales == engine.saleValue(StorageItem.CropItem(Crop.starter), 3) && sales > 0)
-        engine.buyShares(quote(1_000), 2)
+        engine.buyShares(quote(1_000), 2, now = now)
         assertEquals(sales, engine.grossIncome)
-        engine.sellShares(quote(1_500), 1)
+        engine.sellShares(quote(1_500), 1, now = now)
         assertEquals(sales + 5, engine.grossIncome)
-        engine.sellShares(quote(500), 1)
+        engine.sellShares(quote(500), 1, now = now)
         assertEquals(sales + 5, engine.grossIncome)
         assertEquals(0.0, engine.lifetimeStockProfit)
     }
@@ -205,11 +205,11 @@ class CareerTrackingTest {
     @Test
     fun `a bad stock day never lowers the best stock day`() {
         val engine = GameEngine(stateWith(money = 10_000.0))
-        engine.buyShares(quote(1_000), 2)
-        engine.sellShares(quote(1_500), 1)
+        engine.buyShares(quote(1_000), 2, now = now)
+        engine.sellShares(quote(1_500), 1, now = now)
         assertEquals(5.0, engine.bestDayStockProfit)
         engine.beginNextDay()
-        engine.sellShares(quote(100), 1)
+        engine.sellShares(quote(100), 1, now = now)
         assertEquals(5.0, engine.bestDayStockProfit)
         assertEquals(-4.0, engine.lifetimeStockProfit)
     }
@@ -271,5 +271,15 @@ class CareerTrackingTest {
         engine.noteSeenEnvironment(CareerRecord.environmentID(Butterflies.Wings.Shifting))
         assertTrue(engine.hasSeenEnvironment("butterfly:shifting"))
         assertFalse(engine.hasSeenEnvironment("butterfly:rare"))
+    }
+
+    @Test fun `a saved farm does not celebrate kinds it already has`() {
+        val state = stateWith(money = 1_000_000.0, xp = lateGameXP, mode = PlayMode.build, logs = 1000)
+        state.putBuilding(GridPoint(3, 3), "shed")
+        state.career.builtBuildingIDs.addAll(state.buildings.values)
+        val engine = GameEngine(state)
+        engine.state.selectedBuildingID = "shed"
+        engine.beginPlacing(GridPoint(10, 10))
+        assertFalse(engine.isPlacingFirstOfItsKind)
     }
 }

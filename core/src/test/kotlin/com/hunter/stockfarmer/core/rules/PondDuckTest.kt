@@ -183,7 +183,7 @@ class PondDuckTest {
 
     private val worlds: List<GameState> by lazy {
         val generator = SeededRandom(515)
-        List(40) { newGame(generator) }
+        List(40) { newGame(generator, now) }
     }
 
     @Test

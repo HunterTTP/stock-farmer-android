@@ -6,10 +6,10 @@ import kotlin.math.floor
 
 /** A repeatable wobble above the last real price, so every screen agrees between pulls. */
 object PriceJitter {
-    val interval = 1.0
-    val maxSpread = 0.0005
+    const val INTERVAL = 1.0
+    const val MAX_SPREAD = 0.0005
 
-    fun step(at: Instant): Long = floor((at.epochSecond.toDouble() + at.nano / 1_000_000_000.0) / interval).toLong()
+    fun step(at: Instant): Long = floor((at.epochSecond.toDouble() + at.nano / 1_000_000_000.0) / INTERVAL).toLong()
 
     fun priceCents(
         ticker: String,
@@ -18,7 +18,7 @@ object PriceJitter {
     ): Long {
         if (baseCents <= 0) return baseCents
         val wobble = (noise(ticker, step) + noise(ticker, step - 1) + 2) / 4
-        val bound = floor(baseCents.toDouble() * maxSpread)
+        val bound = floor(baseCents.toDouble() * MAX_SPREAD)
         return baseCents + (wobble * bound).roundedHalfAwayFromZero().toLong()
     }
 
