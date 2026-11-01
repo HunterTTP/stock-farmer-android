@@ -82,7 +82,6 @@ import com.hunter.stockfarmer.ui.screens.QuestBanner
 import com.hunter.stockfarmer.ui.screens.QuestReward
 import com.hunter.stockfarmer.ui.screens.SoundCenterScreenAudio
 import com.hunter.stockfarmer.ui.sheets.SheetHost
-import com.hunter.stockfarmer.ui.theme.HudSheet
 import com.hunter.stockfarmer.ui.theme.PillButton
 import com.hunter.stockfarmer.ui.theme.PillRole
 import com.hunter.stockfarmer.ui.theme.PlacementButtons
@@ -232,9 +231,7 @@ fun Hud(
             }
             if (isTimeShown) TimeSheet(session, onDismiss = { isTimeShown = false })
             levelUnlocks?.takeIf { rewards.isEmpty() }?.let { unlocks ->
-                HudSheet(onDismiss = { levelUnlocks = null }) {
-                    LevelUpScreen(session, onClose = { levelUnlocks = null }, unlocks = unlocks)
-                }
+                LevelUpScreen(session, onClose = { levelUnlocks = null }, unlocks = unlocks)
             }
             confirmation?.let { asked ->
                 AlertDialog(
