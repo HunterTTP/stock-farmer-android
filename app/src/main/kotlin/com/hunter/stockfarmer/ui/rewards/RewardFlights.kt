@@ -175,6 +175,7 @@ fun RewardFlights(
             .onGloballyPositioned { bounds = it.boundsInRoot() }
             .semantics { hideFromAccessibility() },
     ) {
+        ChopProgressOverlay(session)
         state.tracker.tally?.let { tally ->
             Column(
                 Modifier

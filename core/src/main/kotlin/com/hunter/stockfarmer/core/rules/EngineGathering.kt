@@ -113,14 +113,15 @@ internal fun GameEngine.chopTree(
     val logs = placed.tree.logs
     if (!hasRoom(logs, HarvestTool.axe)) return listOf(GameEvent.Rejected(Rejection.StorageFull))
     val (pass, isNewHit) = advanceAxe(point, origin, placed.tree.footprint(origin))
-    if (pass.hits < hitsToFell(placed.tree)) {
+    val total = hitsToFell(placed.tree)
+    if (pass.hits < total) {
         chopPass = pass
-        return listOf(GameEvent.Chopped(point, origin, pass.hits, isNewHit))
+        return listOf(GameEvent.Chopped(point, origin, pass.hits, total, isNewHit))
     }
     chopPass = null
     state.removeTree(origin)
     val gathered = (0 until logs).map { gather(StorageItem.Log, point, HarvestTool.axe) }
-    return listOf<GameEvent>(GameEvent.Chopped(point, origin, pass.hits, true)) + gathered
+    return listOf<GameEvent>(GameEvent.Chopped(point, origin, pass.hits, total, true)) + gathered
 }
 
 /** The axe takes a fence down in one pass and stores it, as it does a decoration. */
@@ -131,7 +132,7 @@ private fun GameEngine.takeDownFence(
     if (!hasRoom(1, HarvestTool.axe)) return listOf(GameEvent.Rejected(Rejection.StorageFull))
     chopPass = null
     state.fences.remove(point)
-    return listOf(GameEvent.Chopped(point, point, 1, true), gather(StorageItem.Fence(color), point, HarvestTool.axe))
+    return listOf(GameEvent.Chopped(point, point, 1, 1, true), gather(StorageItem.Fence(color), point, HarvestTool.axe))
 }
 
 private fun GameEngine.fellDecoration(
@@ -145,7 +146,7 @@ private fun GameEngine.fellDecoration(
     dryOut(placed, origin, now)
     state.removeDecoration(origin)
     return listOf(
-        GameEvent.Chopped(tile, origin, 1, true),
+        GameEvent.Chopped(tile, origin, 1, 1, true),
         gather(StorageItem.DecorationItem(placed.decoration, placed.size), tile, HarvestTool.axe),
     )
 }
@@ -159,16 +160,17 @@ internal fun GameEngine.mineRock(point: GridPoint): List<GameEvent> {
     }
     if (!hasRoom(size.stones, HarvestTool.pickaxe)) return listOf(GameEvent.Rejected(Rejection.StorageFull))
     val (pass, isNewHit) = advanceAxe(point, point, listOf(point))
-    if (pass.hits < hitsToBreak(size)) {
+    val total = hitsToBreak(size)
+    if (pass.hits < total) {
         chopPass = pass
-        return listOf(GameEvent.Mined(point, pass.hits, isNewHit))
+        return listOf(GameEvent.Mined(point, pass.hits, total, isNewHit))
     }
     chopPass = null
     state.rocks.remove(point)
     noteMined(size)
     val item = size.ore?.let { StorageItem.Ore(it) } ?: StorageItem.Stone
     val gathered = (0 until size.stones).map { gather(item, point, HarvestTool.pickaxe) }
-    return listOf<GameEvent>(GameEvent.Mined(point, pass.hits, true)) + gathered
+    return listOf<GameEvent>(GameEvent.Mined(point, pass.hits, total, true)) + gathered
 }
 
 /**

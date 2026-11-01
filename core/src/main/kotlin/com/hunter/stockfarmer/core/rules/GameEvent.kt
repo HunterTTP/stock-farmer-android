@@ -152,12 +152,16 @@ sealed interface GameEvent {
         val point: GridPoint,
         val treeOrigin: GridPoint,
         val hits: Int,
+        /** The passes that fell the tree; the pass that fells it counts to its own total. */
+        val total: Int,
         val isNewHit: Boolean,
     ) : GameEvent
 
     data class Mined(
         val point: GridPoint,
         val hits: Int,
+        /** The passes that break the rock; the pass that breaks it counts to its own total. */
+        val total: Int,
         val isNewHit: Boolean,
     ) : GameEvent
 

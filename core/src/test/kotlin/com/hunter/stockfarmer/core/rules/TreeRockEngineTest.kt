@@ -317,11 +317,11 @@ class TreeRockEngineTest {
     @Test fun `the last pass of the pickaxe breaks a rock and stores its stones`() {
         val engine = rockEngine()
         for (hit in 1 until RockSize.big.hitsToBreak) {
-            assertEquals(listOf<GameEvent>(GameEvent.Mined(spot, hit, true)), pass(engine))
+            assertEquals(listOf<GameEvent>(GameEvent.Mined(spot, hit, RockSize.big.hitsToBreak, true)), pass(engine))
         }
         assertEquals(1, engine.state.rocks.size)
         val broken = pass(engine)
-        assertEquals(GameEvent.Mined(spot, RockSize.big.hitsToBreak, true), broken.first())
+        assertEquals(GameEvent.Mined(spot, RockSize.big.hitsToBreak, RockSize.big.hitsToBreak, true), broken.first())
         assertEquals(List(6) { GameEvent.Stored(spot, StorageItem.Stone.id, 0) }, broken.drop(1))
         assertTrue(engine.state.rocks.isEmpty())
         assertEquals(mapOf(StorageItem.Stone.id to 6), engine.state.storage)
@@ -331,7 +331,13 @@ class TreeRockEngineTest {
     @Test fun `one stroke over a rock is one pass`() {
         val engine = rockEngine()
         val events = engine.useTool(spot, now) + engine.useTool(spot, now)
-        assertEquals(listOf<GameEvent>(GameEvent.Mined(spot, 1, true), GameEvent.Mined(spot, 1, false)), events)
+        assertEquals(
+            listOf<GameEvent>(
+                GameEvent.Mined(spot, 1, RockSize.big.hitsToBreak, true),
+                GameEvent.Mined(spot, 1, RockSize.big.hitsToBreak, false),
+            ),
+            events,
+        )
     }
 
     @Test fun `a rock stays when its stones would not fit`() {
