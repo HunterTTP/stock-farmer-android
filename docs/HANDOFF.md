@@ -1,7 +1,7 @@
 # Handoff: where the project stands and what to do next
 
 Read this first in a fresh session, then `AGENTS.md`, `docs/DEVELOPMENT.md` and `docs/PARITY.md`.
-Last updated at `main` = `b9cc118` (2026-11-01).
+Last updated at `main` = `e65677a` (2026-11-01).
 
 ## The goal
 
@@ -36,10 +36,10 @@ Standing instructions from the user:
 - **Claude Sonnet 5.5 (`claude`)**: Rate-limited (`You've hit your session limit · resets 2:10pm (America/New_York)`). Active wakeup timers scheduled for **13:11 -05:00** (~5m remaining) and **14:11 -05:00** (~1h 5m remaining, since EST is `-05:00`).
 - **Codex Sol 6.1 (`codex.cmd`)**: Rate-limited (`try again at 2:54 PM`). Active wakeup timer scheduled for **14:55 -05:00** (~1h 49m remaining).
 
-## Verified state (all green on `main` = `b9cc118`)
+## Verified state (all green on `main` = `e65677a`)
 
 ```
-./gradlew spotlessCheck :core:test :app:assembleDebug :app:testDebugUnitTest   -> BUILD SUCCESSFUL (at b9cc118)
+./gradlew spotlessCheck :core:test :app:assembleDebug :app:testDebugUnitTest   -> BUILD SUCCESSFUL (at e65677a)
 core tests: 1,019, 0 failures.   app unit tests: 374, 0 failures.   debug APK builds (85 MB, 16 KB aligned).
 ```
 
@@ -68,6 +68,7 @@ core tests: 1,019, 0 failures.   app unit tests: 374, 0 failures.   debug APK bu
   - `ToolBar`, `ToolRing`, `ToolCircle`, `ToolsSheet`, `PlacementButtons` & `HudSheet` parity audit (`e234fa0`)
   - Storage tutorial lesson progression/pulses (`StorageMenuScreen`) & `NoticeScreens`/`SaveSlotsScreen` HUD theme polish (`0881a31`)
   - Farm renderer tree/rock 96px/tile scale fix, full-workshop & dairy/oven animation parity, seasonal building textures & `FarmAssetCoverageTest` (`b9cc118`)
+  - `Hud` `session.toasts` wiring & `MenusHost`/`Catalog` HUD theme parity (`e65677a`)
 
 ## In flight right now (4 parallel slices)
 
@@ -75,8 +76,8 @@ core tests: 1,019, 0 failures.   app unit tests: 374, 0 failures.   debug APK bu
 |---|---|---|---|
 | 1. Farm touch/hold/tap-menus/scene-interactions & audio/notifications parity audit | `app/farm-scene-and-audio-audit` | `..\stock-farmer-android-wt-sheet-nav` | Running (Gemini Flash 3.8, high) |
 | 2. Market session, `GamePersistence`/`FarmSlots` & `PhotoSaver`/`FarmPhotoTaker` parity audit | `app/market-persistence-photo-audit` | `..\stock-farmer-android-wt-perf-inst` | Running (Gemini Flash 3.8, high) |
-| 3. `Hud` `session.toasts` wiring & `MenusHost`/`Catalog` HUD theme parity audit | `app/hud-toast-and-catalog-audit` | `..\stock-farmer-android-wt-storage-notices` | Running (Gemini Flash 3.8, high) |
-| 4. Farm layers geometry, anchors, `pixelsPerTile`, animated sprites & z-sorting parity audit | `app/farm-layers-geometry-audit` | `..\stock-farmer-android-wt-stock-quest` | Running (Gemini Flash 3.8, high) |
+| 3. Farm layers geometry, anchors, `pixelsPerTile`, animated sprites & z-sorting parity audit | `app/farm-layers-geometry-audit` | `..\stock-farmer-android-wt-stock-quest` | Running (Gemini Flash 3.8, high) |
+| 4. `FishingCanvas`/`FishingCast` & `TimelapseViewer`/`TimelapseRecorder` parity audit | `app/fishing-canvas-and-timelapse-audit` | `..\stock-farmer-android-wt-storage-notices` | Running (Gemini Flash 3.8, high) |
 
 ## Next steps, in order
 
