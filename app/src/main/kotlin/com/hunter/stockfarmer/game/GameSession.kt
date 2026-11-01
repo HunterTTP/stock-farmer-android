@@ -45,6 +45,9 @@ class GameSession(
     /** The fish on the line while the fishing game is open; null otherwise. */
     val casts = MutableStateFlow<FishingCast?>(null)
 
+    /** Something the player is asked to confirm before it happens; null when nothing is. */
+    val confirmations = MutableStateFlow<Confirmation?>(null)
+
     /** The building, animal or fish whose sheet is open; null when none is. */
     val sheets = MutableStateFlow<SheetTarget?>(null)
 

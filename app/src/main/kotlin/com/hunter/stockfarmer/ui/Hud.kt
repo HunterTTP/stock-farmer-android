@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.LinearProgressIndicator
@@ -42,6 +43,7 @@ import com.hunter.stockfarmer.core.model.dollars
 import com.hunter.stockfarmer.core.rules.GameEvent
 import com.hunter.stockfarmer.core.rules.LevelRules
 import com.hunter.stockfarmer.core.rules.LevelUnlocks
+import com.hunter.stockfarmer.core.rules.firstRejection
 import com.hunter.stockfarmer.core.rules.isPlacing
 import com.hunter.stockfarmer.core.rules.select
 import com.hunter.stockfarmer.core.rules.selectDecorating
@@ -143,9 +145,11 @@ fun Hud(
     }
     val cast by session.casts.collectAsState()
     val sheet by session.sheets.collectAsState()
+    val confirmation by session.confirmations.collectAsState()
     LaunchedEffect(session) { session.newDays.collect { daySummary = it } }
     LaunchedEffect(session) {
         session.events.collect { events ->
+            events.firstRejection?.let { Toast.makeText(context, it.message, Toast.LENGTH_SHORT).show() }
             events.filterIsInstance<GameEvent.LeveledUp>().lastOrNull()?.let {
                 levelUnlocks = LevelUnlocks.unlocked(it.from, it.level)
             }
@@ -192,6 +196,22 @@ fun Hud(
         }
         levelUnlocks?.let { unlocks ->
             Overlay { LevelUpScreen(session, onClose = { levelUnlocks = null }, unlocks = unlocks) }
+        }
+        confirmation?.let { asked ->
+            AlertDialog(
+                onDismissRequest = { session.confirmations.value = null },
+                title = { Text(asked.title) },
+                text = { Text(asked.message) },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            session.confirmations.value = null
+                            asked.action()
+                        },
+                    ) { Text(asked.confirmTitle) }
+                },
+                dismissButton = { TextButton(onClick = { session.confirmations.value = null }) { Text("Cancel") } },
+            )
         }
         sheet?.let { open ->
             Overlay { SheetHost(session, open, onClose = { session.sheets.value = null }) }

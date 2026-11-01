@@ -19,6 +19,7 @@ import com.hunter.stockfarmer.farm.effects.EffectPhase
 import com.hunter.stockfarmer.farm.effects.effectLayers
 import com.hunter.stockfarmer.game.GameSession
 import com.hunter.stockfarmer.game.ViewSnapshot
+import com.hunter.stockfarmer.game.hold
 import com.hunter.stockfarmer.game.preview
 import com.hunter.stockfarmer.game.touch
 import java.time.Instant
@@ -167,15 +168,29 @@ class FarmGame(
             count: Int,
             button: Int,
         ): Boolean {
+            tileAt(x, y)?.let { session.touch(it) }
+            return true
+        }
+
+        override fun longPress(
+            x: Float,
+            y: Float,
+        ): Boolean {
+            tileAt(x, y)?.let { session.hold(it) }
+            return true
+        }
+
+        private fun tileAt(
+            x: Float,
+            y: Float,
+        ): GridPoint? {
             camera.unproject(touch.set(x, y, 0f))
             val col = floor(touch.x / FarmRenderer.TILE).toInt()
             val row = GameState.GRID_SIZE - 1 - floor(touch.y / FarmRenderer.TILE).toInt()
-            if (col in 0 until GameState.GRID_SIZE &&
-                row in 0 until GameState.GRID_SIZE
-            ) {
-                session.touch(GridPoint(row, col))
-            }
-            return true
+            return GridPoint(
+                row,
+                col,
+            ).takeIf { col in 0 until GameState.GRID_SIZE && row in 0 until GameState.GRID_SIZE }
         }
 
         override fun pan(
