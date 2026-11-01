@@ -6,6 +6,9 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.hunter.stockfarmer.core.catalog.Building
 import com.hunter.stockfarmer.core.catalog.Crop
 import com.hunter.stockfarmer.core.catalog.Decoration
+import com.hunter.stockfarmer.core.catalog.FenceColor
+import com.hunter.stockfarmer.core.catalog.FenceConnections
+import com.hunter.stockfarmer.core.catalog.FencePlacement
 import com.hunter.stockfarmer.core.catalog.WaterStyle
 import com.hunter.stockfarmer.core.model.GameState
 import com.hunter.stockfarmer.core.model.GridPoint
@@ -23,15 +26,10 @@ import kotlin.math.min
  */
 class FarmRenderer(
     private val textures: TextureLibrary,
+    private val sources: List<StandingSource> = emptyList(),
 ) {
     private val standing = ArrayList<Standing>()
     private val timelines = HashMap<Plot, GrowthTimelines>()
-
-    /** One thing standing on the map, drawn when its turn in the back to front order comes. */
-    private class Standing(
-        val bottomEdge: Float,
-        val draw: () -> Unit,
-    )
 
     fun draw(
         batch: SpriteBatch,
@@ -45,7 +43,9 @@ class FarmRenderer(
         collectTrees(batch, state)
         collectRocks(batch, state)
         collectDecorations(batch, state)
+        collectFences(batch, state)
         collectCrops(batch, state, now)
+        sources.forEach { it.collect(batch, state, now, standing) }
         standing.sortBy { it.bottomEdge }
         standing.forEach { it.draw() }
     }
@@ -165,6 +165,37 @@ class FarmRenderer(
         }
     }
 
+    /** Each fence tile is a three by three grid of small pictures: its own piece in the middle and arms toward its joined neighbors. */
+    private fun collectFences(
+        batch: SpriteBatch,
+        state: GameState,
+    ) {
+        val spacing = TILE / 3
+        val size = spacing * FENCE_STRETCH
+        for ((point, colorID) in state.fences) {
+            val color = FenceColor.named(colorID) ?: FenceColor.starter
+            val connections = FenceConnections(point, state.fences)
+            val centerX = (point.col + 0.5f) * TILE
+            val centerY = worldY(point.row) + TILE / 2
+            val placements = connections.arms + connections.centerPieces.map { FencePlacement(it, 0, 0) }
+            standing +=
+                Standing(point.row + 1f + FENCE_OVER) {
+                    for (placement in placements) {
+                        val texture =
+                            textures.texture(
+                                "decorations/${color.folder}",
+                                "fence-${placement.piece.rawValue}",
+                                season = state.season,
+                            )
+                        texture?.let {
+                            val ground = centerY - placement.row * spacing - spacing / 2
+                            batch.draw(it, centerX + placement.column * spacing - size / 2, ground, size, size)
+                        }
+                    }
+                }
+        }
+    }
+
     private fun collectCrops(
         batch: SpriteBatch,
         state: GameState,
@@ -254,6 +285,8 @@ class FarmRenderer(
         private const val NEAR_HALF = 0.0006f
         private const val TREE_OVER = 0.0008f
         private const val FIT_IN_SQUARE = 0.95f
+        private const val FENCE_STRETCH = 1.5f
+        private const val FENCE_OVER = 0.0001f
 
         /** The world y of the bottom edge of a map row; rows count down the map while world y counts up. */
         fun worldY(row: Int): Float = (GameState.GRID_SIZE - 1 - row) * TILE

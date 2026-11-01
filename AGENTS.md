@@ -35,3 +35,5 @@ An exact Android remake of the iOS game at `../stock-farmer-ios` (frozen referen
 ## Models and tools
 
 Opus plans and decides architecture; Sonnet ports and builds. Codex is for independent read-only review of a finished slice and for overflow work. Start a fresh session per slice and keep context small.
+
+When handing work to Codex, run it as `codex exec -m gpt-6.1-sol` (workspace-write sandbox, one git worktree and branch per slice). The exception is a planning task, which keeps the stronger planning model (`gpt-6-astra` at high reasoning). Codex slices must not push; review and merge each branch only after `spotlessCheck`, `:core:test` and `:app:assembleDebug` pass.
