@@ -1,6 +1,6 @@
 # Current state
 
-Stock Farmer is a farming game with a live stock market. Kotlin, Jetpack Compose for screens, libGDX for the farm. The iOS repo (`../stock-farmer-ios`) is the behavior spec. See `AGENTS.md`, `docs/DEVELOPMENT.md`, `docs/CONVENTIONS.md` and `docs/FEATURES.md`.
+Stock Farmer is a farming game with a live stock market. Kotlin, Jetpack Compose for screens, libGDX for the farm. The iOS repo (`../stock-farmer-ios`) is the spec for gameplay, visuals and sound; Android internals (rendering, threading, caching, persistence) follow modern Android practice and may differ for performance and hardware. See `AGENTS.md`, `docs/DEVELOPMENT.md`, `docs/CONVENTIONS.md` and `docs/FEATURES.md`.
 
 ## Gate
 

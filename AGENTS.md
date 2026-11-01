@@ -4,7 +4,9 @@ Shared instructions for Claude, Codex and other coding agents. Start with `docs/
 
 ## What this is
 
-An exact Android remake of the iOS game at `../stock-farmer-ios` (frozen reference commit `d01e7bb`). Gameplay, mechanics, balance and graphics match it. The iOS Swift code and its tests are the spec; the Android code never invents behavior. Android saves are separate from iOS saves and need no compatibility.
+An Android remake of the iOS game at `../stock-farmer-ios` (frozen reference commit `d01e7bb`). Gameplay, mechanics, balance, visuals and sound match it; the iOS Swift code and its tests are the spec for what the player sees and experiences. Check whether iOS already has a feature before building it, and port it rather than inventing it. Android never invents gameplay.
+
+How Android does it underneath is its own. Rendering, threading, caching, persistence, audio, input and lifecycle may differ from iOS wherever Android's performance and hardware call for it, as long as the player-visible result is the same. Build those parts the modern Android way: current Jetpack and Kotlin practice (coroutines and Flow, Compose state hoisting, lifecycle-aware components, WorkManager, Material guidance for system bars and edge-to-edge), measured performance work, and no iOS idioms carried over for their own sake. Android saves are separate from iOS saves and need no compatibility.
 
 ## Stack
 
@@ -29,7 +31,8 @@ An exact Android remake of the iOS game at `../stock-farmer-ios` (frozen referen
 - Names carry the meaning. Comment only to say why, briefly.
 - Minimum change per request; no drive-by refactors. Delete replaced code and tests.
 - Rules live in `core`, never in composables or the renderer. UI presents state and forwards intent. Old-save migrations from the iOS app are not ported: a new app has no old saves.
-- Numbers: Swift `Int` is 64-bit, so use `Long` where values can exceed 32 bits (prices reach 100 billion cents). Keep `Double` arithmetic and rounding identical to the Swift.
+- Numbers: Swift `Int` is 64-bit, so use `Long` where values can exceed 32 bits (prices reach 100 billion cents). Keep `Double` arithmetic and rounding in game rules identical to the Swift, so balance matches.
+- Performance work (culling, caching, batching, background threads, texture atlases) is welcome in `app`, but it must not change what the player sees or the rules. Measure before and after, and cover the logic with tests.
 - `GameState` is a mutable object owned by one `GameEngine`; `GameState.copy()` is a deep copy, so a preview runs on `engine.copy()` and never touches the real farm. Value types inside it (plots, animals, buildings) are immutable data classes. Maps that feed derived indexes (buildings, trees, decorations) change only through `GameState`'s put and remove methods.
 - Use fixed times and a seeded generator in tests. Never rely on wall-clock or system randomness in rules tests.
 - Add a dependency only when the current slice needs it.
