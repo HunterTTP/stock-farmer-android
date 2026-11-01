@@ -48,8 +48,8 @@ class PetEngineTest {
 
     private fun engineWithPet(at: GridPoint? = null): GameEngine {
         val engine = GameEngine()
-        // Animals only wander by day and out of the rain, so the clock is set to noon whenever the test runs.
-        engine.setTimeOfDay(12 * 60.0, Instant.now())
+        // Animals only wander by day and out of the rain, so the clock is set to noon at the fixed test time.
+        engine.setTimeOfDay(12 * 60.0, now)
         engine.state.putBuilding(house, "petHouse")
         engine.state.pets[house] = Pet(breed = "grey", name = "Cat", position = at ?: GridPoint(21, 20))
         return engine
