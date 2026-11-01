@@ -1,13 +1,18 @@
 package com.hunter.stockfarmer.ui.screens
 
 import android.text.format.DateUtils
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -16,7 +21,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.hunter.stockfarmer.core.model.compactDurationText
 import com.hunter.stockfarmer.core.model.dollars
@@ -26,7 +36,10 @@ import com.hunter.stockfarmer.core.persistence.SaveSlots
 import com.hunter.stockfarmer.game.FarmSlots
 import com.hunter.stockfarmer.game.GameSession
 import com.hunter.stockfarmer.game.SavedGames
+import com.hunter.stockfarmer.ui.theme.HudMaterialTheme
+import com.hunter.stockfarmer.ui.theme.HudType
 import com.hunter.stockfarmer.ui.theme.Theme
+import com.hunter.stockfarmer.ui.theme.glassCard
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
@@ -69,7 +82,7 @@ fun SaveSlotsScreen(
         val saved = games
         saved?.slots?.filterNotNull()?.forEach { info ->
             SlotCard(
-                info,
+                info = info,
                 isActive = info.slot == saved.active,
                 onLoad = {
                     farms.switchTo(info.slot)
@@ -85,87 +98,153 @@ fun SaveSlotsScreen(
         }
         val empty = saved?.slots?.indexOfFirst { it == null } ?: -1
         if (saved != null && empty >= 0) {
-            Button(
+            PillButton(
+                title = "New Game",
+                fill = Theme.accent,
+                text = Theme.onAccent,
                 onClick = {
                     name = SaveSlots.defaultName(empty)
                     prompt = NamePrompt.NewGame(empty)
                 },
-                modifier = Modifier.fillMaxWidth(),
-            ) { Text("New Game") }
+            )
         } else if (saved != null) {
-            Text("You can keep up to ${SaveSlots.COUNT} games. Delete one to start another.")
+            Text(
+                text = "You can keep up to ${SaveSlots.COUNT} games. Delete one to start another.",
+                style = HudType.subheadline,
+                color = Theme.textSecondary,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth(),
+            )
         }
         Text(
-            "Your game saves by itself, and switching games saves the one you leave.",
-            style = MaterialTheme.typography.bodySmall,
+            text = "Your game saves by itself, and switching games saves the one you leave.",
+            style = HudType.caption,
+            color = Theme.textSecondary,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
         )
     }
 
     prompt?.let { open ->
         val renaming = open is NamePrompt.Rename
-        AlertDialog(
-            onDismissRequest = { prompt = null },
-            title = { Text(if (renaming) "Rename game" else "Name your new game") },
-            text = { OutlinedTextField(name, { name = it }, label = { Text("Name") }, singleLine = true) },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        prompt = null
-                        if (renaming) {
-                            farms.rename(open.slot, name) { refresh() }
-                        } else {
-                            farms.startNew(open.slot, name)
-                            onClose()
-                        }
-                    },
-                ) { Text(if (renaming) "Save" else "Start") }
-            },
-            dismissButton = { TextButton(onClick = { prompt = null }) { Text("Cancel") } },
-        )
+        HudMaterialTheme {
+            AlertDialog(
+                onDismissRequest = { prompt = null },
+                title = {
+                    Text(
+                        text = if (renaming) "Rename game" else "Name your new game",
+                        style = HudType.title3.copy(fontWeight = FontWeight.Bold),
+                        color = Theme.textPrimary,
+                    )
+                },
+                text = { OutlinedTextField(name, { name = it }, label = { Text("Name") }, singleLine = true) },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            prompt = null
+                            if (renaming) {
+                                farms.rename(open.slot, name) { refresh() }
+                            } else {
+                                farms.startNew(open.slot, name)
+                                onClose()
+                            }
+                        },
+                    ) {
+                        Text(
+                            text = if (renaming) "Save" else "Start",
+                            style = HudType.headline,
+                            color = Theme.accent,
+                        )
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { prompt = null }) {
+                        Text("Cancel", style = HudType.subheadline, color = Theme.textSecondary)
+                    }
+                },
+            )
+        }
     }
     deleting?.let { info ->
-        AlertDialog(
-            onDismissRequest = { deleting = null },
-            title = { Text("Delete \"${info.name}\"?") },
-            text = { Text("This can't be undone.") },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        deleting = null
-                        farms.delete(info.slot) { refresh() }
-                    },
-                ) { Text("Delete") }
-            },
-            dismissButton = { TextButton(onClick = { deleting = null }) { Text("Cancel") } },
-        )
+        HudMaterialTheme {
+            AlertDialog(
+                onDismissRequest = { deleting = null },
+                title = {
+                    Text(
+                        text = "Delete \"${info.name}\"?",
+                        style = HudType.title3.copy(fontWeight = FontWeight.Bold),
+                        color = Theme.textPrimary,
+                    )
+                },
+                text = {
+                    Text(
+                        text = "This can't be undone.",
+                        style = HudType.subheadline,
+                        color = Theme.textSecondary,
+                    )
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            deleting = null
+                            farms.delete(info.slot) { refresh() }
+                        },
+                    ) {
+                        Text("Delete", style = HudType.headline, color = Theme.danger)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { deleting = null }) {
+                        Text("Cancel", style = HudType.subheadline, color = Theme.textSecondary)
+                    }
+                },
+            )
+        }
     }
     restoring?.let { (info, backups) ->
-        AlertDialog(
-            onDismissRequest = { restoring = null },
-            title = { Text("Restore \"${info.name}\"") },
-            text = {
-                Text(
-                    if (backups.isEmpty()) {
-                        "No backups yet. They appear as the game saves."
-                    } else {
-                        "The game as it is now is kept as a backup, so you can undo this."
-                    },
-                )
-            },
-            confirmButton = {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    backups.forEach { backup ->
-                        TextButton(
-                            onClick = {
-                                restoring = null
-                                farms.restore(backup) { refresh() }
+        HudMaterialTheme {
+            AlertDialog(
+                onDismissRequest = { restoring = null },
+                title = {
+                    Text(
+                        text = "Restore \"${info.name}\"",
+                        style = HudType.title3.copy(fontWeight = FontWeight.Bold),
+                        color = Theme.textPrimary,
+                    )
+                },
+                text = {
+                    Text(
+                        text =
+                            if (backups.isEmpty()) {
+                                "No backups yet. They appear as the game saves."
+                            } else {
+                                "The game as it is now is kept as a backup, so you can undo this."
                             },
-                        ) { Text(backupTitle(backup)) }
+                        style = HudType.subheadline,
+                        color = Theme.textSecondary,
+                    )
+                },
+                confirmButton = {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        backups.forEach { backup ->
+                            TextButton(
+                                onClick = {
+                                    restoring = null
+                                    farms.restore(backup) { refresh() }
+                                },
+                            ) {
+                                Text(backupTitle(backup), style = HudType.subheadline, color = Theme.accent)
+                            }
+                        }
                     }
-                }
-            },
-            dismissButton = { TextButton(onClick = { restoring = null }) { Text("Cancel") } },
-        )
+                },
+                dismissButton = {
+                    TextButton(onClick = { restoring = null }) {
+                        Text("Cancel", style = HudType.subheadline, color = Theme.textSecondary)
+                    }
+                },
+            )
+        }
     }
 }
 
@@ -178,21 +257,105 @@ private fun SlotCard(
     onRestore: () -> Unit,
     onDelete: () -> Unit,
 ) {
-    ScreenCard {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text(info.name, style = MaterialTheme.typography.titleMedium)
-            if (isActive) Text("Playing", color = Theme.accent)
+    Column(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .glassCard(16.dp, tint = if (isActive) Theme.accent else null)
+                .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = info.name,
+                style = HudType.title3.copy(fontWeight = FontWeight.Bold),
+                color = Theme.textPrimary,
+                maxLines = 1,
+                modifier = Modifier.weight(1f, fill = false),
+            )
+            if (isActive) {
+                Box(
+                    modifier =
+                        Modifier
+                            .background(Theme.accent, CircleShape)
+                            .padding(horizontal = 10.dp, vertical = 4.dp),
+                ) {
+                    Text(
+                        text = "Playing",
+                        style = HudType.caption.copy(fontWeight = FontWeight.Bold),
+                        color = Theme.onAccent,
+                    )
+                }
+            }
         }
-        Figure("Level", "${info.level}", Theme.gold)
-        Figure("Money", info.money.dollars, Theme.accent)
-        Figure("Play time", info.playTime.compactDurationText)
-        Figure("Last played", relativeTime(info.lastPlayed.toEpochMilli()))
-        if (!isActive) Button(onClick = onLoad, modifier = Modifier.fillMaxWidth()) { Text("Load") }
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedButton(onClick = onRename) { Text("Rename") }
-            OutlinedButton(onClick = onRestore) { Text("Restore Backup") }
-            if (!isActive) OutlinedButton(onClick = onDelete) { Text("Delete") }
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            SlotDetailRow("Level", "${info.level}", Theme.xp)
+            SlotDetailRow("Money", info.money.dollars, Theme.money)
+            SlotDetailRow("Play time", info.playTime.compactDurationText, Theme.textPrimary)
+            SlotDetailRow("Last played", relativeTime(info.lastPlayed.toEpochMilli()), Theme.textPrimary)
         }
+        if (!isActive) {
+            PillButton(
+                title = "Load",
+                fill = Theme.accent,
+                text = Theme.onAccent,
+                onClick = onLoad,
+            )
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            SlotActionButton("Rename", Theme.textPrimary, Modifier.weight(1f), onRename)
+            SlotActionButton("Restore Backup", Theme.textPrimary, Modifier.weight(1f), onRestore)
+            if (!isActive) {
+                SlotActionButton("Delete", Theme.danger, Modifier.weight(1f), onDelete)
+            }
+        }
+    }
+}
+
+@Composable
+private fun SlotDetailRow(
+    title: String,
+    value: String,
+    valueColor: Color,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(title, style = HudType.subheadline, color = Theme.textSecondary)
+        Text(value, style = HudType.subheadline.copy(fontWeight = FontWeight.SemiBold), color = valueColor)
+    }
+}
+
+@Composable
+private fun SlotActionButton(
+    title: String,
+    textColor: Color,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+) {
+    Box(
+        modifier =
+            modifier
+                .height(36.dp)
+                .background(Color.White.copy(alpha = 0.12f), RoundedCornerShape(10.dp))
+                .clickable(role = Role.Button, onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = title,
+            style = HudType.subheadline.copy(fontWeight = FontWeight.SemiBold),
+            color = textColor,
+            maxLines = 1,
+        )
     }
 }
 

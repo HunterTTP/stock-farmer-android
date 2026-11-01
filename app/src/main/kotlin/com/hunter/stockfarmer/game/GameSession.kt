@@ -1,5 +1,6 @@
 package com.hunter.stockfarmer.game
 
+import com.hunter.stockfarmer.core.catalog.HarvestTool
 import com.hunter.stockfarmer.core.model.DaySummary
 import com.hunter.stockfarmer.core.model.GameState
 import com.hunter.stockfarmer.core.model.GridPoint
@@ -45,6 +46,18 @@ class GameSession(
 
     fun announce(summary: DaySummary) {
         days.tryEmit(summary)
+    }
+
+    private val toastsFlow = MutableSharedFlow<ToastMessage>(extraBufferCapacity = EVENT_BUFFER)
+
+    /** Short messages shown over the farm or inside sheets. */
+    val toasts: SharedFlow<ToastMessage> = toastsFlow.asSharedFlow()
+
+    fun showToast(
+        message: String,
+        tool: HarvestTool? = null,
+    ) {
+        toastsFlow.tryEmit(ToastMessage(message, tool))
     }
 
     /** The fish on the line while the fishing game is open; null otherwise. */

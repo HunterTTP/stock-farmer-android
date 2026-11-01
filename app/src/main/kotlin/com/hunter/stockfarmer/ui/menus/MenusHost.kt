@@ -2,12 +2,15 @@
 
 package com.hunter.stockfarmer.ui.menus
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
@@ -32,12 +35,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.hunter.stockfarmer.core.model.Lesson
 import com.hunter.stockfarmer.core.model.ShopItem
+import com.hunter.stockfarmer.core.rules.currentLesson
+import com.hunter.stockfarmer.core.rules.learn
 import com.hunter.stockfarmer.game.GameSession
 import com.hunter.stockfarmer.ui.theme.ChoiceRow
 import com.hunter.stockfarmer.ui.theme.HudChoice
@@ -45,7 +52,10 @@ import com.hunter.stockfarmer.ui.theme.HudSheet
 import com.hunter.stockfarmer.ui.theme.HudType
 import com.hunter.stockfarmer.ui.theme.MoneyBadge
 import com.hunter.stockfarmer.ui.theme.Theme
+import com.hunter.stockfarmer.ui.theme.ToastView
 import com.hunter.stockfarmer.ui.theme.categoryCard
+import com.hunter.stockfarmer.ui.theme.glassCard
+import com.hunter.stockfarmer.ui.theme.lessonPulse
 import com.hunter.stockfarmer.ui.theme.newDot
 import kotlinx.coroutines.delay
 
@@ -55,12 +65,28 @@ fun MenusHost(
     session: GameSession,
     openMenu: Menu,
     onClose: () -> Unit,
+    onToast: (String) -> Unit = {},
 ) {
     var state by remember(session, openMenu) { mutableStateOf(session.menuState(openMenu)) }
     var message by remember(session, openMenu) { mutableStateOf<String?>(null) }
     var transaction by remember(session, openMenu) { mutableStateOf<StorageTransaction?>(null) }
     var detail by remember(session, openMenu) { mutableStateOf<ItemScreen?>(null) }
+    var toastText by remember(session) { mutableStateOf<String?>(null) }
     val loader = rememberMenuAssetLoader()
+
+    LaunchedEffect(openMenu) {
+        if (openMenu == Menu.Storage) {
+            session.act { it.learn(Lesson.openStorage) }
+            state = session.menuState(openMenu)
+        }
+    }
+    LaunchedEffect(session) {
+        session.toasts.collect { toast ->
+            toastText = toast.text
+            delay(toast.durationMillis)
+            if (toastText == toast.text) toastText = null
+        }
+    }
     LaunchedEffect(session, openMenu) {
         while (true) {
             state = session.menuState(openMenu)
@@ -76,15 +102,46 @@ fun MenusHost(
         MenusHost(session, screen, onClose = { detail = null }, onSelected = onClose)
         return
     }
-    HudSheet(onDismiss = onClose) {
+
+    val isStorage = openMenu == Menu.Storage
+    val pulsesClose = isStorage && state.currentLesson == Lesson.closeStorage
+    val closeWithLesson = {
+        val completed =
+            session.act {
+                if (isStorage && it.currentLesson == Lesson.closeStorage) {
+                    it.learn(Lesson.closeStorage)
+                    true
+                } else {
+                    false
+                }
+            }
+        if (completed) {
+            val msg = "Have fun building your farm!"
+            onToast(msg)
+            session.showToast(msg)
+        }
+        onClose()
+    }
+
+    HudSheet(onDismiss = closeWithLesson) {
         Column(Modifier.fillMaxHeight()) {
+            ToastView(message = toastText, modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 8.dp))
             MenuHeader(openMenu, state)
             if (openMenu == Menu.Storage) {
                 StorageMenuScreen(
                     state = state,
                     loader = loader,
                     onChoose = choose,
-                    onTransact = { transaction = it },
+                    onTransact = { action ->
+                        if (action.sell) {
+                            val isLesson = state.stored.firstOrNull { it.item == action.item }?.isLesson == true
+                            if (isLesson) {
+                                session.act { it.learn(Lesson.sellItem) }
+                                state = session.menuState(openMenu)
+                            }
+                        }
+                        transaction = action
+                    },
                     modifier = Modifier.weight(1f),
                 )
             } else {
@@ -98,8 +155,18 @@ fun MenusHost(
                     )
                 }
             }
-            TextButton(onClick = onClose, modifier = Modifier.fillMaxWidth().padding(8.dp)) {
-                Text("Close")
+            Box(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .lessonPulse(pulsesClose)
+                        .glassCard(16.dp)
+                        .clickable(role = Role.Button, onClick = closeWithLesson)
+                        .heightIn(min = 52.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text("Close", style = HudType.headline, color = Theme.textPrimary)
             }
         }
     }
@@ -109,6 +176,7 @@ fun MenusHost(
             transaction = action,
             stored = state.stored.firstOrNull { it.item == action.item }?.count ?: 0,
             loader = loader,
+            currentLesson = state.currentLesson,
             onDismiss = { transaction = null },
             onConfirm = { quantity ->
                 message = session.act { MenuActions.transact(it, action.item, quantity, action.sell) }

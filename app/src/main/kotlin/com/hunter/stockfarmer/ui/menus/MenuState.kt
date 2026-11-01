@@ -10,13 +10,16 @@ import com.hunter.stockfarmer.core.catalog.TreeSpecies
 import com.hunter.stockfarmer.core.catalog.UnlockOrder
 import com.hunter.stockfarmer.core.catalog.WaterStyle
 import com.hunter.stockfarmer.core.model.GameState
+import com.hunter.stockfarmer.core.model.Lesson
 import com.hunter.stockfarmer.core.model.ShopItem
 import com.hunter.stockfarmer.core.model.compactDollars
 import com.hunter.stockfarmer.core.model.dollars
 import com.hunter.stockfarmer.core.rules.GameEngine
+import com.hunter.stockfarmer.core.rules.currentLesson
 import com.hunter.stockfarmer.core.rules.equippedItem
 import com.hunter.stockfarmer.core.rules.hasReachedPlacementLimit
 import com.hunter.stockfarmer.core.rules.isEquipped
+import com.hunter.stockfarmer.core.rules.itemToLearnSellingWith
 import com.hunter.stockfarmer.core.rules.name
 import com.hunter.stockfarmer.core.rules.placedOnMap
 import com.hunter.stockfarmer.core.rules.placementLimit
@@ -61,6 +64,7 @@ internal data class StoredRow(
     val count: Int,
     val picture: MenuPicture,
     val selected: Boolean,
+    val isLesson: Boolean = false,
 ) {
     val countText: String get() = "×${MenuNumbers.count(count)}"
 }
@@ -73,6 +77,7 @@ internal data class MenuState(
     val stored: List<StoredRow>,
     val used: Int,
     val capacity: Int,
+    val currentLesson: Lesson? = null,
 ) {
     val capacityText: String get() = "${MenuNumbers.count(used)} / ${MenuNumbers.count(capacity)}"
     val capacityProgress: Float get() = (used.toFloat() / capacity.coerceAtLeast(1)).coerceIn(0f, 1f)
@@ -83,9 +88,12 @@ internal data class MenuState(
             menu: Menu,
         ): MenuState {
             val engine = GameEngine(state)
+            val lesson = engine.currentLesson
+            val itemToLearn = engine.itemToLearnSellingWith
             val rows =
                 engine.storedItems.map { (item, count) ->
-                    StoredRow(item, count, MenuPictures.stored(item), engine.isEquipped(item))
+                    val isLesson = lesson == Lesson.sellItem && item == itemToLearn
+                    StoredRow(item, count, MenuPictures.stored(item), engine.isEquipped(item), isLesson = isLesson)
                 }
             val catalog = MenuCatalog(engine)
             val sections =
@@ -154,6 +162,7 @@ internal data class MenuState(
                 stored = rows,
                 used = engine.storedCount,
                 capacity = engine.storageCapacity,
+                currentLesson = lesson,
             )
         }
     }

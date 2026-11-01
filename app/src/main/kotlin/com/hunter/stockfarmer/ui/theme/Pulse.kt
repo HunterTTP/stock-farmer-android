@@ -81,6 +81,13 @@ fun Modifier.pulsing(
         }.scale(if (reduceMotion) 1f else 1 + Pulse.SWELL_SCALE * swell)
 }
 
+/** Highlights targets during the first-time tutorial walk through. */
+@Composable
+fun Modifier.lessonPulse(
+    isOn: Boolean,
+    keepsPlace: Boolean = true,
+): Modifier = pulsing(isOn, keepsPlace)
+
 /** A short line of teaching shown beside what it points at. */
 @Composable
 fun LessonBubble(
