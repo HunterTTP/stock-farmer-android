@@ -4,17 +4,17 @@ Reference: iOS repo at commit `d01e7bb` (`../stock-farmer-ios`). Port convention
 
 ## Core port status (Swift `StockFarmerCore` -> `core`)
 
-State: `main` builds, `spotlessCheck` is clean and 993 tests pass. The whole rules engine and the persistence layer are ported.
+State: `main` builds, `spotlessCheck` is clean and 1005 tests pass. The whole rules engine and the persistence layer are ported.
 
 Done:
 
 - Foundations: `GridPoint`, `Money` formatting, `util` (Swift-faithful random, rounding, instant math, serializers), `GameStateJson` (save and load, rebuilds derived indexes).
 - Catalog, model, rules, feedback, presentation, market and persistence leaves, and the whole `GameEngine` (every `GameEngine+*.swift` extension as Kotlin extension functions in `rules/Engine*.kt`, plus `FishingContest`, world generation, wild growth, tool strokes and the timelapse schedule).
-- Tests ported: all Swift gameplay test files except the ones listed under "Not started" (993 Kotlin tests), covering economy, growth, crops, seasons, storage, shop, unlocks, buildings, landscape, decorations, animals, fish, tractor, quests, stocks, workshops, trees, rocks, ore, wind, career, persistence and sound cues. Old-save migration tests are left out on purpose.
+- Tests ported: all Swift gameplay test files except the ones listed under "Not started" (1005 Kotlin tests), covering economy, growth, crops, seasons, storage, shop, unlocks, buildings, landscape, decorations, animals, fish, tractor, quests, stocks, workshops, trees, rocks, ore, wind, career, persistence and sound cues. Old-save migration tests are left out on purpose.
 
 Not started:
 
-1. Still to port: Presentation `FarmRenderChanges`; the `SoundAssetTests` check (needs the audio assets copied in first); the legacy Retired* tests (migrations, skipped); a few tractor cases (edge-of-map and solid-obstacle driving, mid-step cancel, single-row lane).
+1. Still to port: Presentation `FarmRenderChanges`; the `SoundAssetTests` check (needs the audio assets copied in first); the legacy Retired* tests (migrations, skipped).
 2. Ported tests that failed pointed at real behavior differences and were fixed; keep porting this way.
 3. Swift behavior that depends on exact random draws (seeded tests) may need the generator mapping checked: `util/RandomSource.kt` follows Swift's documented algorithms but could not be compared against a Swift toolchain here.
 
