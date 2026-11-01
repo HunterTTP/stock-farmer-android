@@ -20,6 +20,12 @@ android {
         ndk { abiFilters += nativeAbis }
     }
 
+    packaging {
+        jniLibs {
+            useLegacyPackaging = false
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true

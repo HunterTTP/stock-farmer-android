@@ -4,18 +4,19 @@ package com.hunter.stockfarmer.ui.sheets
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.hunter.stockfarmer.core.catalog.ChickenVariant
@@ -35,6 +36,8 @@ import com.hunter.stockfarmer.ui.theme.ChoiceRow
 import com.hunter.stockfarmer.ui.theme.HudChoice
 import com.hunter.stockfarmer.ui.theme.HudSheet
 import com.hunter.stockfarmer.ui.theme.HudType
+import com.hunter.stockfarmer.ui.theme.PillButton
+import com.hunter.stockfarmer.ui.theme.PillRole
 import com.hunter.stockfarmer.ui.theme.Theme
 import com.hunter.stockfarmer.ui.theme.categoryCard
 import kotlinx.coroutines.delay
@@ -102,7 +105,15 @@ fun ChickAppearanceScreen(
             val variant = choice.variant
             val pick = { choose(SheetAction.NextChick(variant?.id)) }
             if (variant == null) {
-                TextButton(pick, Modifier.fillMaxWidth().categoryCard(choice.selected)) {
+                Box(
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .categoryCard(choice.selected)
+                            .clickable(onClick = pick)
+                            .padding(vertical = 12.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
                     Text("Random Hen", style = HudType.headline, color = Theme.textPrimary)
                 }
             } else {
@@ -175,9 +186,17 @@ private fun BuildingChoiceScreen(
         if (result.refusal == null) onClose()
     }
     HudSheet(onDismiss = onClose) {
-        Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp)) {
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = 20.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             Text(title, Modifier.weight(1f), style = HudType.headline)
-            TextButton(onClose) { Text("Back") }
+            PillButton(
+                title = "Back",
+                onClick = onClose,
+                role = PillRole.neutral,
+            )
         }
         BarScrollView(Modifier.weight(1f)) {
             Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) { content(choose) }

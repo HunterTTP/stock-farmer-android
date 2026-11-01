@@ -9,8 +9,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -59,6 +57,8 @@ import com.hunter.stockfarmer.ui.theme.DetailStat
 import com.hunter.stockfarmer.ui.theme.EffectsCard
 import com.hunter.stockfarmer.ui.theme.HudType
 import com.hunter.stockfarmer.ui.theme.LevelRequirementNotice
+import com.hunter.stockfarmer.ui.theme.PillButton
+import com.hunter.stockfarmer.ui.theme.PillRole
 import com.hunter.stockfarmer.ui.theme.Requirement
 import com.hunter.stockfarmer.ui.theme.Theme
 import com.hunter.stockfarmer.ui.theme.categoryCard
@@ -325,19 +325,17 @@ fun ToolUpgradeScreen(
                 if (level != null) {
                     LevelRequirementNotice(level)
                 } else {
-                    Button(
+                    PillButton(
+                        title = "Upgrade · ${upgrade.cost.dollars}",
                         onClick = {
                             val result = session.upgradeTool(tool)
                             if (result.bought) onBought(result.message) else onMessage(result.message)
                         },
-                        modifier =
-                            Modifier
-                                .fillMaxWidth()
-                                .heightIn(min = 52.dp)
-                                .alpha(if (state.affordable) 1f else 0.4f),
-                        colors = ButtonDefaults.buttonColors(containerColor = Theme.xp),
-                        shape = RoundedCornerShape(16.dp),
-                    ) { Text("Upgrade · ${upgrade.cost.dollars}", style = HudType.headline) }
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
+                        role = PillRole.accent,
+                        enabled = state.affordable,
+                        cornerRadius = 16.dp,
+                    )
                 }
             }
         }

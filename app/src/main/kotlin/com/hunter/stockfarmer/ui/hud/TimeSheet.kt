@@ -39,6 +39,8 @@ import com.hunter.stockfarmer.core.rules.skipNewDayInProgress
 import com.hunter.stockfarmer.game.GameSession
 import com.hunter.stockfarmer.ui.theme.HudSheet
 import com.hunter.stockfarmer.ui.theme.HudType
+import com.hunter.stockfarmer.ui.theme.PillButton
+import com.hunter.stockfarmer.ui.theme.PillRole
 import com.hunter.stockfarmer.ui.theme.Theme
 import com.hunter.stockfarmer.ui.theme.categoryCard
 import kotlinx.coroutines.delay
@@ -142,11 +144,21 @@ fun TimeSheet(
             Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
-            BasicText(
-                "Time",
+            Row(
                 Modifier.fillMaxWidth(),
-                style = HudType.headline.copy(color = Theme.textPrimary, textAlign = TextAlign.Center),
-            )
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                BasicText(
+                    "Time",
+                    style = HudType.headline.copy(color = Theme.textPrimary),
+                )
+                PillButton(
+                    title = "Close",
+                    onClick = onDismiss,
+                    role = PillRole.neutral,
+                )
+            }
             val sky = TimeSky.color(minute)
             Box(
                 Modifier
