@@ -8,6 +8,7 @@ import com.hunter.stockfarmer.core.rules.GameEvent
 import com.hunter.stockfarmer.core.rules.newGame
 import com.hunter.stockfarmer.core.util.SystemRandomSource
 import com.hunter.stockfarmer.ui.fishing.FishingCast
+import com.hunter.stockfarmer.ui.sheets.SheetTarget
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -43,6 +44,9 @@ class GameSession(
 
     /** The fish on the line while the fishing game is open; null otherwise. */
     val casts = MutableStateFlow<FishingCast?>(null)
+
+    /** The building, animal or fish whose sheet is open; null when none is. */
+    val sheets = MutableStateFlow<SheetTarget?>(null)
 
     /** Asks the farm for a picture of the whole map. */
     val photos = PhotoRequests()

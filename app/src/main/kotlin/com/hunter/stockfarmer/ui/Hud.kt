@@ -63,6 +63,7 @@ import com.hunter.stockfarmer.ui.screens.QuestReward
 import com.hunter.stockfarmer.ui.screens.SettingsScreen
 import com.hunter.stockfarmer.ui.screens.SoundCenterScreenAudio
 import com.hunter.stockfarmer.ui.screens.StockMarketScreen
+import com.hunter.stockfarmer.ui.sheets.SheetHost
 import kotlinx.coroutines.delay
 import kotlin.concurrent.thread
 
@@ -137,6 +138,7 @@ fun Hud(
         }
     }
     val cast by session.casts.collectAsState()
+    val sheet by session.sheets.collectAsState()
     LaunchedEffect(session) { session.newDays.collect { daySummary = it } }
     LaunchedEffect(session) {
         session.events.collect { events ->
@@ -185,6 +187,9 @@ fun Hud(
         }
         levelUnlocks?.let { unlocks ->
             Overlay { LevelUpScreen(session, onClose = { levelUnlocks = null }, unlocks = unlocks) }
+        }
+        sheet?.let { open ->
+            Overlay { SheetHost(session, open, onClose = { session.sheets.value = null }) }
         }
         cast?.let { hooked ->
             FishingOverlay(session, hooked, onFinish = { events ->

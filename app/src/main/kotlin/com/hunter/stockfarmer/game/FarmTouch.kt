@@ -18,6 +18,7 @@ import com.hunter.stockfarmer.core.rules.movePlacement
 import com.hunter.stockfarmer.core.rules.nudgePlacement
 import com.hunter.stockfarmer.core.rules.placementRejection
 import com.hunter.stockfarmer.ui.fishing.FishingCast
+import com.hunter.stockfarmer.ui.sheets.SheetTargets
 import java.time.Instant
 
 /** What a touch on a tile does: carry a thing being placed there, start placing the selected one, or use the tool. */
@@ -29,6 +30,10 @@ fun GameSession.touch(
         when {
             engine.isPlacing -> {
                 engine.movePlacement(point)
+                emptyList()
+            }
+
+            SheetTargets.at(engine, point)?.also { sheets.value = it } != null -> {
                 emptyList()
             }
 
