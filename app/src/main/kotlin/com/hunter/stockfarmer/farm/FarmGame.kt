@@ -2,6 +2,7 @@ package com.hunter.stockfarmer.farm
 
 import com.badlogic.gdx.ApplicationAdapter
 import com.badlogic.gdx.Gdx
+import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
@@ -9,6 +10,8 @@ import com.badlogic.gdx.input.GestureDetector
 import com.badlogic.gdx.math.Vector3
 import com.hunter.stockfarmer.core.model.GameState
 import com.hunter.stockfarmer.core.model.GridPoint
+import com.hunter.stockfarmer.core.rules.DayNightCycle
+import com.hunter.stockfarmer.core.rules.minuteOfDay
 import com.hunter.stockfarmer.game.GameSession
 import com.hunter.stockfarmer.game.preview
 import com.hunter.stockfarmer.game.touch
@@ -85,7 +88,23 @@ class FarmGame(
         val now = Instant.now()
         session.read { renderer.draw(batch, it, now) }
         session.preview(now)?.let { renderer.drawPreview(batch, textures, it) }
+        drawNightTint(now)
         batch.end()
+    }
+
+    /** Darkens the whole view toward night by how dark the farm's clock says it is. */
+    private fun drawNightTint(now: Instant) {
+        val darkness = session.act { DayNightCycle.darkness(it.minuteOfDay(now)) }
+        if (darkness <= 0.0) return
+        batch.color = Color(NIGHT_RED, NIGHT_GREEN, NIGHT_BLUE, (darkness * NIGHT_STRENGTH).toFloat())
+        batch.draw(
+            textures.white,
+            camera.position.x - camera.viewportWidth * camera.zoom / 2,
+            camera.position.y - camera.viewportHeight * camera.zoom / 2,
+            camera.viewportWidth * camera.zoom,
+            camera.viewportHeight * camera.zoom,
+        )
+        batch.color = Color.WHITE
     }
 
     override fun dispose() {
@@ -141,5 +160,9 @@ class FarmGame(
     private companion object {
         const val INITIAL_VISIBLE_TILES = 8f
         const val MIN_ZOOM = 0.25f
+        const val NIGHT_RED = 0.04f
+        const val NIGHT_GREEN = 0.06f
+        const val NIGHT_BLUE = 0.22f
+        const val NIGHT_STRENGTH = 0.6
     }
 }
