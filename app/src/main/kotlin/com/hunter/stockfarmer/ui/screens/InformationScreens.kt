@@ -27,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.hunter.stockfarmer.core.model.ChangelogDay
+import com.hunter.stockfarmer.game.GameSession
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.time.Instant
@@ -36,9 +37,12 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 @Composable
-fun PrivacyScreen(onClose: () -> Unit) {
+fun PrivacyScreen(
+    session: GameSession,
+    onClose: () -> Unit,
+) {
     val policy by rememberInformationAsset("Privacy.md")
-    ScreenLayout("Privacy", onClose) {
+    ScreenLayout("Privacy", session, onClose) {
         SelectionContainer {
             Text(
                 policy?.getOrElse {
@@ -50,11 +54,14 @@ fun PrivacyScreen(onClose: () -> Unit) {
 }
 
 @Composable
-fun ChangelogScreen(onClose: () -> Unit) {
+fun ChangelogScreen(
+    session: GameSession,
+    onClose: () -> Unit,
+) {
     val text by rememberInformationAsset("Changelog.md")
     val days = remember(text) { text?.mapCatching(ScreenInformation::changelog) }
     var state by remember(days) { mutableStateOf(ChangelogState(days?.getOrNull().orEmpty())) }
-    ScreenLayout("Changelog", onClose, scrollKey = state.page) {
+    ScreenLayout("Changelog", session, onClose) {
         when {
             days == null -> {
                 Text("Loading…")

@@ -48,6 +48,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import com.hunter.stockfarmer.core.presentation.LaunchSequence
+import com.hunter.stockfarmer.ui.theme.HudMaterialTheme
+import com.hunter.stockfarmer.ui.theme.Theme
 import kotlin.math.hypot
 
 /** Advance stages from actual loader/renderer readiness. Keep the farm underneath until onComplete. */
@@ -92,7 +94,7 @@ fun LaunchScreen(
 ) {
     if (sequence.isComplete) return
     val presentation = LaunchPresentation.from(sequence, saveError)
-    ScreenTheme {
+    HudMaterialTheme {
         BoxWithConstraints(
             Modifier
                 .fillMaxSize()
@@ -112,7 +114,7 @@ fun LaunchScreen(
                             }
                         clipPath(hole, ClipOp.Difference) { this@drawWithContent.drawContent() }
                     }
-                }.background(Color(0xFF242424))
+                }.background(Theme.launchBackground)
                 .pointerInput(Unit) {
                     awaitPointerEventScope {
                         while (true) awaitPointerEvent().changes.forEach { it.consume() }
@@ -128,7 +130,7 @@ fun LaunchScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(22.dp),
             ) {
-                ScreenIcon(ScreenArt("images/AppIcon.png"), symbol = "", modifier = Modifier.size(iconWidth))
+                ScreenIcon(ScreenArt("images/AppIcon.png"), symbol = "", size = iconWidth)
                 if (presentation.error != null) {
                     Column(
                         Modifier.widthIn(max = 388.dp).padding(horizontal = 24.dp),
@@ -162,7 +164,7 @@ fun LaunchScreen(
                             Modifier
                                 .width(maxOf(6.dp, iconWidth * sequence.displayedProgress.toFloat()))
                                 .height(6.dp)
-                                .background(FarmGreen, CircleShape),
+                                .background(Theme.accent, CircleShape),
                         )
                     }
                     Text(

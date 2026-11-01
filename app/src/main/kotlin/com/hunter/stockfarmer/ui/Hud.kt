@@ -233,15 +233,15 @@ fun Hud(
                         }
 
                         HudScreen.Performance -> {
-                            PerformanceScreen(performance, close, recordingContext = { "Stock Farmer" })
+                            PerformanceScreen(session, performance, close, recordingContext = { "Stock Farmer" })
                         }
 
                         HudScreen.Changelog -> {
-                            ChangelogScreen(close)
+                            ChangelogScreen(session, close)
                         }
 
                         HudScreen.Privacy -> {
-                            PrivacyScreen(close)
+                            PrivacyScreen(session, close)
                         }
 
                         HudScreen.Settings -> {

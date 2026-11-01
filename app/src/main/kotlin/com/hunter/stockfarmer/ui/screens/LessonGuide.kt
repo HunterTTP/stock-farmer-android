@@ -24,6 +24,8 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.hunter.stockfarmer.ui.theme.HudMaterialTheme
+import com.hunter.stockfarmer.ui.theme.Theme
 import kotlin.math.cos
 
 /** Place above the tool circle; the owner uses state.pulses and the targets to highlight its existing controls. */
@@ -33,7 +35,7 @@ fun LessonGuide(
     modifier: Modifier = Modifier,
 ) {
     val message = state.message ?: return
-    ScreenTheme {
+    HudMaterialTheme {
         Text(
             message,
             modifier
@@ -75,7 +77,7 @@ fun Modifier.lessonPulse(
         scaleX = if (reduceMotion) 1f else 1 + 0.05f * amount
         scaleY = scaleX
         shadowElevation = 7.dp.toPx() * amount
-        ambientShadowColor = FarmGold.copy(alpha = 0.8f * amount)
+        ambientShadowColor = Theme.gold.copy(alpha = 0.8f * amount)
         spotShadowColor = ambientShadowColor
     }
 }

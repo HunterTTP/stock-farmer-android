@@ -18,9 +18,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.hunter.stockfarmer.game.GameSession
+import com.hunter.stockfarmer.ui.theme.Theme
 
 @Composable
 fun PerformanceScreen(
+    session: GameSession,
     monitor: PerformanceMonitor,
     onClose: () -> Unit,
     recordingContext: () -> String,
@@ -32,11 +35,15 @@ fun PerformanceScreen(
         monitor.setVisible(true)
         onDispose { monitor.setVisible(false) }
     }
-    ScreenLayout("Performance", onClose) {
+    ScreenLayout("Performance", session, onClose) {
         PerformanceLiveStats(state)
         ScreenCard {
             if (state.isRecording) {
-                Figure(if (state.isActive) "Recording" else "Recording paused", "${number(state.elapsed)} s", FarmGold)
+                Figure(
+                    if (state.isActive) "Recording" else "Recording paused",
+                    "${number(state.elapsed)} s",
+                    Theme.gold,
+                )
                 Text("Play as usual, then return here to stop and see the report. Inactive time is excluded.")
                 Button(onClick = monitor::stop, modifier = Modifier.fillMaxWidth()) { Text("Stop Recording") }
                 TextButton(onClick = onClose, modifier = Modifier.fillMaxWidth()) { Text("Return to Farm") }

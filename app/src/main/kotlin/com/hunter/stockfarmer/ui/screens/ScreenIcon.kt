@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.hunter.stockfarmer.ui.theme.Theme
 import kotlinx.coroutines.Dispatchers
@@ -26,6 +27,7 @@ internal fun ScreenIcon(
     art: ScreenArt?,
     symbol: String = "✦",
     collected: Boolean = true,
+    size: Dp = 48.dp,
 ) {
     val assets = LocalContext.current.assets
     val bitmap by produceState<ImageBitmap?>(null, art, assets) {
@@ -56,10 +58,10 @@ internal fun ScreenIcon(
         Image(
             it,
             contentDescription = null,
-            modifier = Modifier.size(48.dp),
+            modifier = Modifier.size(size),
             filterQuality = FilterQuality.None,
             colorFilter = if (collected) null else ColorFilter.tint(Color.Black),
             alpha = if (collected) 1f else 0.45f,
         )
-    } ?: Text(symbol, modifier = Modifier.size(48.dp), color = if (collected) Theme.accent else Color.Black)
+    } ?: Text(symbol, modifier = Modifier.size(size), color = if (collected) Theme.accent else Color.Black)
 }
