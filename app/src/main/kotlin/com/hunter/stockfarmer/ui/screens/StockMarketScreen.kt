@@ -21,6 +21,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -33,12 +34,20 @@ import com.hunter.stockfarmer.core.rules.buyShares
 import com.hunter.stockfarmer.core.rules.sellShares
 import com.hunter.stockfarmer.core.rules.upgradeHouse
 import com.hunter.stockfarmer.game.GameSession
+import com.hunter.stockfarmer.market.NetworkMonitor
+import com.hunter.stockfarmer.market.StockPolling
 import com.hunter.stockfarmer.ui.theme.HudMaterialTheme
 import com.hunter.stockfarmer.ui.theme.Theme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.time.Instant
 import com.hunter.stockfarmer.market.StockQuoteProvider as YahooQuotes
+
+@Composable
+private fun rememberIsOnline(): Boolean {
+    val monitor = NetworkMonitor.of(LocalContext.current)
+    return monitor.isOnline.collectAsState().value
+}
 
 private val defaultStockQuotes = YahooQuotes()
 
@@ -52,7 +61,7 @@ fun StockMarketScreen(
     session: GameSession,
     onClose: () -> Unit,
     provider: StockQuoteProvider = defaultStockQuotes,
-    online: Boolean = true,
+    online: Boolean = rememberIsOnline(),
     onEvents: (List<GameEvent>) -> Unit = {},
 ) {
     val controller = remember(session, provider) { StockMarketController(session, provider) }
@@ -79,10 +88,7 @@ fun StockMarketScreen(
                 controller.pullIfDue(reportsFailure)
                 reportsFailure = false
                 val wait =
-                    session.read {
-                        StockMarketRules.secondsUntilPull(it.lastStockPullAt, Instant.now()).coerceAtLeast(1.0) +
-                            if (it.holdings.isEmpty()) 4 else 0
-                    }
+                    session.read { StockPolling.waitSeconds(it.lastStockPullAt, Instant.now(), it.holdings.isEmpty()) }
                 delay((wait * 1000).toLong())
             }
         }
