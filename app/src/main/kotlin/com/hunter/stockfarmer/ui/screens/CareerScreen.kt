@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import com.hunter.stockfarmer.core.model.ValueSample
 import com.hunter.stockfarmer.core.rules.CareerSeries
 import com.hunter.stockfarmer.game.GameSession
+import com.hunter.stockfarmer.ui.theme.Theme
 
 @Composable
 fun CareerScreen(
@@ -135,7 +136,7 @@ fun CareerScreen(
                 ScreenCard {
                     TextButton(
                         onClick = { series = CareerSeries.XP },
-                    ) { Text("Level ${state.level} ›", color = FarmPurple) }
+                    ) { Text("Level ${state.level} ›", color = Theme.xp) }
                     Text(state.xpProgress)
                     LinearProgressIndicator(progress = { state.levelFraction })
                     Figure("Time Played", state.time)
@@ -156,7 +157,7 @@ fun CareerScreen(
                     }
                 }
                 ScreenCard {
-                    Figure("Perfection", "${state.perfection}%", FarmGold)
+                    Figure("Perfection", "${state.perfection}%", Theme.gold)
                     LinearProgressIndicator(progress = { state.collected.toFloat() / state.total.coerceAtLeast(1) })
                     Text("${state.collected} of ${state.total} completed")
                 }
@@ -176,7 +177,7 @@ private val CareerSeries.title: String get() =
 private fun CareerTile(entry: CareerEntry) {
     ScreenCard {
         ScreenIcon(entry.art, entry.symbol, entry.collected)
-        Text(entry.name, color = if (entry.collected) FarmGreen else MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(entry.name, color = if (entry.collected) Theme.accent else MaterialTheme.colorScheme.onSurfaceVariant)
         Text(
             if (entry.collected) entry.detail ?: "Collected ✓" else "Not yet collected",
             style = MaterialTheme.typography.labelSmall,
@@ -215,11 +216,11 @@ private fun CareerChart(
                         path.lineTo(point.x * size.width, point.y * size.height)
                     }
                 }
-                drawPath(path, FarmPurple, style = Stroke(width = 2.5.dp.toPx()))
+                drawPath(path, Theme.xp, style = Stroke(width = 2.5.dp.toPx()))
                 path.lineTo(size.width, size.height)
                 path.lineTo(0f, size.height)
                 path.close()
-                drawPath(path, Brush.verticalGradient(listOf(FarmPurple.copy(alpha = 0.3f), Color.Transparent)))
+                drawPath(path, Brush.verticalGradient(listOf(Theme.xp.copy(alpha = 0.3f), Color.Transparent)))
             }
             Figure("0", chart.endTime)
         }

@@ -25,6 +25,7 @@ import com.hunter.stockfarmer.core.rules.replaceQuest
 import com.hunter.stockfarmer.core.rules.upgradeMarketStand
 import com.hunter.stockfarmer.core.util.SystemRandomSource
 import com.hunter.stockfarmer.game.GameSession
+import com.hunter.stockfarmer.ui.theme.Theme
 import kotlinx.coroutines.delay
 import java.time.Instant
 import java.util.UUID
@@ -105,7 +106,7 @@ fun MarketQuestSection(
         message?.let { Text(it) }
         state.quests.forEach { quest ->
             ScreenCard {
-                Text(quest.reward, color = FarmPurple, style = MaterialTheme.typography.titleMedium)
+                Text(quest.reward, color = Theme.xp, style = MaterialTheme.typography.titleMedium)
                 quest.objectives.forEach { objective ->
                     ScreenIcon(objective.art, objective.symbol)
                     Text(objective.title)

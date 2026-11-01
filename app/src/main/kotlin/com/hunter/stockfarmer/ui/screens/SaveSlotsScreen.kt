@@ -26,6 +26,7 @@ import com.hunter.stockfarmer.core.persistence.SaveSlots
 import com.hunter.stockfarmer.game.FarmSlots
 import com.hunter.stockfarmer.game.GameSession
 import com.hunter.stockfarmer.game.SavedGames
+import com.hunter.stockfarmer.ui.theme.Theme
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
@@ -174,10 +175,10 @@ private fun SlotCard(
     ScreenCard {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Text(info.name, style = MaterialTheme.typography.titleMedium)
-            if (isActive) Text("Playing", color = FarmGreen)
+            if (isActive) Text("Playing", color = Theme.accent)
         }
-        Figure("Level", "${info.level}", FarmGold)
-        Figure("Money", info.money.dollars, FarmGreen)
+        Figure("Level", "${info.level}", Theme.gold)
+        Figure("Money", info.money.dollars, Theme.accent)
         Figure("Play time", info.playTime.compactDurationText)
         Figure("Last played", relativeTime(info.lastPlayed.toEpochMilli()))
         if (!isActive) Button(onClick = onLoad, modifier = Modifier.fillMaxWidth()) { Text("Load") }

@@ -23,6 +23,8 @@ import androidx.compose.ui.unit.dp
 import com.hunter.stockfarmer.core.model.DaySummary
 import com.hunter.stockfarmer.core.rules.LevelUnlocks
 import com.hunter.stockfarmer.game.GameSession
+import com.hunter.stockfarmer.ui.theme.HudMaterialTheme
+import com.hunter.stockfarmer.ui.theme.Theme
 import kotlinx.coroutines.delay
 
 @Composable
@@ -40,7 +42,7 @@ fun LevelUpScreen(
     ScreenLayout(title, session, onClose, closeLabel = "Continue") {
         unlocks.sections().forEach { section ->
             ScreenCard {
-                Text(section.title, style = MaterialTheme.typography.titleMedium, color = FarmPurple)
+                Text(section.title, style = MaterialTheme.typography.titleMedium, color = Theme.xp)
                 section.rows.forEach { Text(it) }
             }
         }
@@ -60,7 +62,7 @@ fun DaySummaryBanner(
         delay(12_000)
         onClose()
     }
-    ScreenTheme {
+    HudMaterialTheme {
         Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.2f)), contentAlignment = Alignment.Center) {
             Column(Modifier.widthIn(max = 360.dp).padding(16.dp)) {
                 ScreenCard {
@@ -73,9 +75,9 @@ fun DaySummaryBanner(
                             Modifier.heightIn(max = 260.dp).verticalScroll(rememberScrollState()),
                             verticalArrangement = Arrangement.spacedBy(6.dp),
                         ) {
-                            state.rows.forEach { (name, earnings) -> Figure(name, earnings, FarmGreen) }
+                            state.rows.forEach { (name, earnings) -> Figure(name, earnings, Theme.accent) }
                         }
-                        Figure("Total", state.total, FarmGreen)
+                        Figure("Total", state.total, Theme.accent)
                     }
                     Button(onClick = onClose) { Text("Close") }
                 }
@@ -95,7 +97,7 @@ fun QuestBanner(
         delay(4000)
         onClose()
     }
-    ScreenTheme {
+    HudMaterialTheme {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Column(Modifier.widthIn(max = 360.dp).padding(16.dp)) { QuestRewardCard(rewards) }
         }
@@ -111,7 +113,7 @@ internal fun QuestRewardCard(rewards: List<QuestReward>) {
         )
         rewards.forEach {
             Text(it.summary)
-            if (it.xp > 0) Text("+${ScreenFormat.number(it.xp.toLong())} XP", color = FarmPurple)
+            if (it.xp > 0) Text("+${ScreenFormat.number(it.xp.toLong())} XP", color = Theme.xp)
         }
     }
 }

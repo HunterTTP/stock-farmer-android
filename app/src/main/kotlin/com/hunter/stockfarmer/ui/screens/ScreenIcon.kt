@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.hunter.stockfarmer.ui.theme.Theme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -60,5 +61,5 @@ internal fun ScreenIcon(
             colorFilter = if (collected) null else ColorFilter.tint(Color.Black),
             alpha = if (collected) 1f else 0.45f,
         )
-    } ?: Text(symbol, modifier = Modifier.size(48.dp), color = if (collected) FarmGreen else Color.Black)
+    } ?: Text(symbol, modifier = Modifier.size(48.dp), color = if (collected) Theme.accent else Color.Black)
 }

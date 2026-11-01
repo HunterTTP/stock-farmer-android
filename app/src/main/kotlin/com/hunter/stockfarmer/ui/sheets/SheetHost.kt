@@ -38,8 +38,8 @@ import com.hunter.stockfarmer.core.rules.GameEngine
 import com.hunter.stockfarmer.game.GameSession
 import com.hunter.stockfarmer.ui.screens.ScreenArt
 import com.hunter.stockfarmer.ui.screens.ScreenIcon
-import com.hunter.stockfarmer.ui.screens.ScreenTheme
 import com.hunter.stockfarmer.ui.screens.StockMarketScreen
+import com.hunter.stockfarmer.ui.theme.HudMaterialTheme
 import kotlinx.coroutines.delay
 import java.time.Instant
 
@@ -83,7 +83,7 @@ fun SheetHost(
         onDismissRequest = { if (current != target) current = target else onClose() },
         properties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
-        ScreenTheme {
+        HudMaterialTheme {
             Surface(
                 modifier = Modifier.widthIn(max = 560.dp).fillMaxWidth(0.96f).fillMaxHeight(0.92f),
                 shape = MaterialTheme.shapes.extraLarge,

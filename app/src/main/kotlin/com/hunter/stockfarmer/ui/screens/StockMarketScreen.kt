@@ -33,6 +33,8 @@ import com.hunter.stockfarmer.core.rules.buyShares
 import com.hunter.stockfarmer.core.rules.sellShares
 import com.hunter.stockfarmer.core.rules.upgradeHouse
 import com.hunter.stockfarmer.game.GameSession
+import com.hunter.stockfarmer.ui.theme.HudMaterialTheme
+import com.hunter.stockfarmer.ui.theme.Theme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.time.Instant
@@ -99,12 +101,12 @@ fun StockMarketScreen(
             if (rewards.isNotEmpty()) QuestRewardCard(rewards)
             ScreenCard {
                 Figure("Stocks Owned", state.slots)
-                Figure("Portfolio Value", state.portfolioValue, FarmGreen)
-                Figure("Performance %", state.performance, if (state.gainCents < 0) FarmRed else FarmGreen)
+                Figure("Portfolio Value", state.portfolioValue, Theme.accent)
+                Figure("Performance %", state.performance, if (state.gainCents < 0) Theme.spend else Theme.accent)
                 Figure(
                     "Performance $",
                     ScreenFormat.signedMoney(state.gainCents),
-                    if (state.gainCents < 0) FarmRed else FarmGreen,
+                    if (state.gainCents < 0) Theme.spend else Theme.accent,
                 )
             }
             if (state.rows.none { it.holding != null }) Text("You don't own any stocks yet. Search for a ticker below.")
@@ -118,11 +120,11 @@ fun StockMarketScreen(
             Button(onClick = { scope.launch { controller.search(search) } }, enabled = !prices.loading) {
                 Text(if (prices.loading) "Getting prices…" else "Search")
             }
-            prices.message?.let { Text(it, color = FarmRed) }
+            prices.message?.let { Text(it, color = Theme.spend) }
             TemporaryMessage(message) { message = null }
             state.rows.forEach { row ->
                 ScreenCard {
-                    Figure(row.quote.ticker, row.price, FarmGreen)
+                    Figure(row.quote.ticker, row.price, Theme.accent)
                     row.dayChange?.let { Text(it) }
                     row.holding?.let { holding ->
                         Text("${ScreenFormat.number(holding.shares)} shares · worth ${row.worth}")
@@ -188,7 +190,7 @@ private fun StockTradeDialog(
     val quantity = quantityText.toLongOrNull() ?: 0L
     val preview = session.act { StockTradeState.from(it, row, buying, quantity, Instant.now()) }
     val verb = if (buying) "Buy" else "Sell"
-    ScreenTheme {
+    HudMaterialTheme {
         AlertDialog(
             onDismissRequest = onDismiss,
             title = { Text("$verb ${row.quote.ticker}") },
@@ -212,7 +214,7 @@ private fun StockTradeDialog(
                     Figure("Total", preview.total)
                     Figure("Profit / loss", preview.profit ?: "—")
                     if (buying) Text("Buying shares does not realize a profit or loss.")
-                    (failure ?: preview.rejection)?.let { Text(it, color = FarmRed) }
+                    (failure ?: preview.rejection)?.let { Text(it, color = Theme.spend) }
                 }
             },
             confirmButton = {

@@ -24,6 +24,7 @@ import com.hunter.stockfarmer.audio.SoundCenter
 import com.hunter.stockfarmer.audio.SoundSettings
 import com.hunter.stockfarmer.core.model.ChangelogDay
 import com.hunter.stockfarmer.game.GameSession
+import com.hunter.stockfarmer.ui.theme.Theme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -160,7 +161,7 @@ fun SettingsScreen(
             Text("Changelog", style = MaterialTheme.typography.titleMedium)
             information?.error?.let { Text(it) }
             information?.changelog?.forEach { day ->
-                Text(day.date, style = MaterialTheme.typography.titleSmall, color = FarmPurple)
+                Text(day.date, style = MaterialTheme.typography.titleSmall, color = Theme.xp)
                 day.lines.forEach { Text("• $it") }
             }
         }
