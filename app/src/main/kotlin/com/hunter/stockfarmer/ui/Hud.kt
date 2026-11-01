@@ -47,6 +47,7 @@ import com.hunter.stockfarmer.core.rules.select
 import com.hunter.stockfarmer.core.rules.selectDecorating
 import com.hunter.stockfarmer.core.rules.selectFertilizer
 import com.hunter.stockfarmer.core.rules.selectTerrain
+import com.hunter.stockfarmer.game.FarmSlots
 import com.hunter.stockfarmer.game.GameSession
 import com.hunter.stockfarmer.game.cancelPlacement
 import com.hunter.stockfarmer.game.confirmPlacement
@@ -60,6 +61,7 @@ import com.hunter.stockfarmer.ui.screens.LocalScreenAudio
 import com.hunter.stockfarmer.ui.screens.MarketQuestScreen
 import com.hunter.stockfarmer.ui.screens.QuestBanner
 import com.hunter.stockfarmer.ui.screens.QuestReward
+import com.hunter.stockfarmer.ui.screens.SaveSlotsScreen
 import com.hunter.stockfarmer.ui.screens.SettingsScreen
 import com.hunter.stockfarmer.ui.screens.SoundCenterScreenAudio
 import com.hunter.stockfarmer.ui.screens.StockMarketScreen
@@ -112,6 +114,7 @@ private enum class HudScreen(
     Quests("Quests"),
     Stocks("Stocks"),
     Career("Career"),
+    Farms("Farms"),
     Settings("Settings"),
 }
 
@@ -122,6 +125,7 @@ private val TOOL_CIRCLE_BOTTOM = 132.dp
 fun Hud(
     session: GameSession,
     sound: SoundCenter,
+    farms: FarmSlots,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -180,6 +184,7 @@ fun Hud(
                         HudScreen.Quests -> MarketQuestScreen(session, close)
                         HudScreen.Stocks -> StockMarketScreen(session, close)
                         HudScreen.Career -> CareerScreen(session, close)
+                        HudScreen.Farms -> SaveSlotsScreen(session, farms, close)
                         HudScreen.Settings -> SettingsScreen(session, close)
                     }
                 }

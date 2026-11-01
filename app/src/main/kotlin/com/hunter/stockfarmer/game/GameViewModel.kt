@@ -28,6 +28,7 @@ class GameViewModel(
             onState = { state -> main.post { persistenceState = state } },
         )
     val session get() = persistence.session
+    val farms = FarmSlots(persistence, main)
     val notificationPolicy = NotificationPermissionPolicy()
     private val tick = GameTick(persistence.session)
 

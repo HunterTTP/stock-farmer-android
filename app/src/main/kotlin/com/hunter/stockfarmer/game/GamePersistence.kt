@@ -4,13 +4,21 @@ import com.hunter.stockfarmer.core.persistence.FarmStartup
 import com.hunter.stockfarmer.core.persistence.NewerSaveVersionException
 import com.hunter.stockfarmer.core.persistence.SaveBackup
 import com.hunter.stockfarmer.core.persistence.SaveCoordinator
+import com.hunter.stockfarmer.core.persistence.SaveSlotInfo
 import com.hunter.stockfarmer.core.persistence.SaveSlots
 import com.hunter.stockfarmer.core.rules.GameEngine
 import com.hunter.stockfarmer.core.rules.holdClockWhileAway
 import com.hunter.stockfarmer.core.rules.markSaved
+import com.hunter.stockfarmer.core.rules.newGame
 import com.hunter.stockfarmer.core.util.RandomSource
 import com.hunter.stockfarmer.core.util.SystemRandomSource
 import java.time.Instant
+
+/** The saved games, by slot (null where nothing is saved), and the slot being played. */
+data class SavedGames(
+    val slots: List<SaveSlotInfo?>,
+    val active: Int,
+)
 
 data class PersistenceState(
     val isLoading: Boolean = true,
@@ -57,6 +65,81 @@ class GamePersistence(
         scheduler.execute {
             if (!closed && !state.isReady && backup in state.backups) load(backup)
         }
+
+    /** The saved games and which one is being played, for the load screen. */
+    fun slots(done: (SavedGames) -> Unit) =
+        scheduler.execute {
+            if (!closed) done(saver.whenIdle { SavedGames(it.slots(), it.activeSlot) })
+        }
+
+    fun backups(
+        slot: Int,
+        done: (List<SaveBackup>) -> Unit,
+    ) = scheduler.execute {
+        if (!closed) done(saver.whenIdle { it.backups(slot) })
+    }
+
+    /** Leaves the farm being played, saved, for another saved game. */
+    fun switchTo(target: Int) = changeFarm { it.setActive(target) }
+
+    /** Starts a new farm under a name in a slot, replacing anything saved there. */
+    fun startNew(
+        target: Int,
+        name: String,
+    ) = changeFarm {
+        it.create(target, name, newGame(random, now()), now())
+        it.setActive(target)
+    }
+
+    fun rename(
+        target: Int,
+        name: String,
+        done: () -> Unit,
+    ) = changeSlots(done) { it.rename(target, name) }
+
+    /** The farm being played cannot be deleted. */
+    fun delete(
+        target: Int,
+        done: () -> Unit,
+    ) = changeSlots(done) { if (target != slot) it.delete(target) }
+
+    /** Brings a backup back as its slot's farm; the farm it replaces stays as the latest backup. */
+    fun restoreSaved(
+        backup: SaveBackup,
+        done: () -> Unit,
+    ) = if (backup.slot ==
+        slot
+    ) {
+        changeFarm { it.restore(backup, now()) }
+    } else {
+        changeSlots(done) { it.restore(backup, now()) }
+    }
+
+    private fun changeFarm(change: (SaveSlots) -> Unit) =
+        scheduler.execute {
+            if (closed || !state.isReady) return@execute
+            save(flush = true)
+            try {
+                saver.whenIdle(change)
+            } catch (_: Exception) {
+                publish(state.copy(error = SLOT_ERROR))
+                return@execute
+            }
+            load()
+        }
+
+    private fun changeSlots(
+        done: () -> Unit,
+        change: (SaveSlots) -> Unit,
+    ) = scheduler.execute {
+        if (closed) return@execute
+        try {
+            saver.whenIdle(change)
+        } catch (_: Exception) {
+            publish(state.copy(error = SLOT_ERROR))
+        }
+        done()
+    }
 
     fun resume() =
         scheduler.execute {
@@ -173,5 +256,6 @@ class GamePersistence(
         const val AUTOSAVE_INTERVAL_MS = 1_000L
         const val SAVE_DEBOUNCE_MS = 250L
         private const val SAVE_ERROR = "Your latest changes could not be saved. Please retry before leaving this farm."
+        private const val SLOT_ERROR = "The farm could not be changed. Please try again."
     }
 }

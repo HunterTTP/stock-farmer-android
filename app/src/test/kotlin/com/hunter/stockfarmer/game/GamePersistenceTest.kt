@@ -182,6 +182,41 @@ class GamePersistenceTest {
     }
 
     @Test
+    fun `a new farm saves the one being left and then becomes the active farm`() {
+        start()
+        persistence.resume()
+        scheduler.runCurrent()
+        persistence.session.act { it.state.money = 777.0 }
+        persistence.startNew(2, "Second")
+        scheduler.runCurrent()
+        assertEquals(777.0, slots.load(0)?.money)
+        assertEquals(2, slots.activeSlot)
+        assertEquals("Second", slots.slots()[2]?.name)
+        assertTrue(status.isReady)
+        assertTrue(persistence.session.read { it.money != 777.0 })
+    }
+
+    @Test
+    fun `switching loads the other farm and the farm in play cannot be deleted`() {
+        start()
+        persistence.resume()
+        scheduler.runCurrent()
+        persistence.session.act { it.state.money = 321.0 }
+        persistence.startNew(1, "Other")
+        scheduler.runCurrent()
+        persistence.switchTo(0)
+        scheduler.runCurrent()
+        assertEquals(321.0, persistence.session.read { it.money })
+        var deleted = 0
+        persistence.delete(0) { deleted++ }
+        persistence.delete(1) { deleted++ }
+        scheduler.runCurrent()
+        assertEquals(2, deleted)
+        assertNotNull(slots.slots()[0])
+        assertNull(slots.slots()[1])
+    }
+
+    @Test
     fun `pause cancels a pending debounce and write failure can be retried`() {
         start()
         persistence.resume()
