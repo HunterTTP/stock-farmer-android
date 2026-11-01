@@ -11,6 +11,7 @@ import com.badlogic.gdx.math.Vector3
 import com.hunter.stockfarmer.core.model.GameState
 import com.hunter.stockfarmer.core.model.GridPoint
 import com.hunter.stockfarmer.core.rules.DayNightCycle
+import com.hunter.stockfarmer.core.rules.advanceTractor
 import com.hunter.stockfarmer.core.rules.minuteOfDay
 import com.hunter.stockfarmer.game.GameSession
 import com.hunter.stockfarmer.game.preview
@@ -33,7 +34,7 @@ class FarmGame(
     override fun create() {
         batch = SpriteBatch()
         textures = TextureLibrary()
-        renderer = FarmRenderer(textures)
+        renderer = FarmRenderer(textures, listOf(TractorLayer(textures)))
         Gdx.input.inputProcessor = GestureDetector(Gestures())
         placeCamera()
     }
@@ -86,10 +87,17 @@ class FarmGame(
         batch.projectionMatrix = camera.combined
         batch.begin()
         val now = Instant.now()
+        driveTractor(now)
         session.read { renderer.draw(batch, it, now) }
         session.preview(now)?.let { renderer.drawPreview(batch, textures, it) }
         drawNightTint(now)
         batch.end()
+    }
+
+    /** Lets a running tractor move on by the time since the last frame. */
+    private fun driveTractor(now: Instant) {
+        val elapsed = Gdx.graphics.deltaTime.toDouble()
+        session.act { engine -> if (engine.state.tractorRun != null) engine.advanceTractor(elapsed, true, now) }
     }
 
     /** Darkens the whole view toward night by how dark the farm's clock says it is. */
