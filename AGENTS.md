@@ -22,7 +22,7 @@ How Android does it underneath is its own. Rendering, threading, caching, persis
 4. Run `./gradlew spotlessApply` to format, then `./gradlew spotlessCheck :core:test :app:testDebugUnitTest :app:assembleDebug :app:lintDebug`. Resolve failures before committing. Never claim an unrun check passed.
 5. Every change ships with its tests. All tests must pass and the app must build before a commit; never commit a red build.
 6. Commit in meaningful pieces with clear messages, then `git push` to `main` as each piece of work completes. Never commit signing material or secrets.
-7. Never test on a device (no adb, installs, logcat or running the app) unless the user asks in that request. This is a hard rule for every agent, and a standing instruction to deploy does not lift it. When asked to deploy, install on each connected phone and tablet (`adb devices`, then `./gradlew installDebug` with `ANDROID_SERIAL`) and skip a device that is not connected.
+7. Installing the debug build on a connected phone or tablet is allowed (`adb devices`, then `./gradlew installDebug` with `ANDROID_SERIAL`; skip a device that is not connected). Never test on a device or act on its screen unless the user asks in that request: no launching the app, taps or other input, screenshots, screen recording, instrumented tests or logcat. This is a hard rule for every agent.
 8. Keep `docs/FEATURES.md` current.
 
 ## Code
