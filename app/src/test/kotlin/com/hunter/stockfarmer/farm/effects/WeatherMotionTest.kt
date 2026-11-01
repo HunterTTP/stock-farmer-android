@@ -1,6 +1,7 @@
 package com.hunter.stockfarmer.farm.effects
 
 import com.hunter.stockfarmer.core.catalog.WaterStyle
+import com.hunter.stockfarmer.core.rules.Season
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -8,6 +9,28 @@ import org.junit.jupiter.api.Test
 import java.time.Instant
 
 internal class WeatherMotionTest {
+    @Test
+    fun `season sky keeps reference components without eight bit quantization and snow has a solid center`() {
+        assertEquals(SkyColor(0.07f, 0.09f, 0.07f), Season.spring.skyRGB())
+        assertEquals(SkyColor(0.09f, 0.065f, 0.035f), Season.fall.skyRGB())
+        assertEquals(SkyColor(0.04f, 0.06f, 0.12f), Season.winter.skyRGB())
+        assertEquals(1.0, snowAlpha(0.0))
+        assertEquals(1.0, snowAlpha(0.35))
+        assertEquals(0.5, snowAlpha(0.675), 1e-9)
+        assertEquals(0.0, snowAlpha(1.0))
+    }
+
+    @Test
+    fun `weather tolerates small rain changes but always stops at zero and samples wind once per second`() {
+        val weather = WeatherPresentation()
+        val now = Instant.EPOCH
+        assertEquals(WeatherLook(0.5, false, true), weather.update(now, 0.5, false, true))
+        assertEquals(WeatherLook(0.5, false, true), weather.update(now.plusMillis(500), 0.501, false, false))
+        assertEquals(WeatherLook(0.501, true, false), weather.update(now.plusSeconds(1), 0.501, true, false))
+        weather.update(now.plusSeconds(2), 0.001, true, false)
+        assertEquals(0.0, weather.update(now.plusSeconds(3), 0.0, true, false).amount)
+    }
+
     @Test
     fun `ambient time stops on first frame and limits resume jumps`() {
         val clock = EffectClock()

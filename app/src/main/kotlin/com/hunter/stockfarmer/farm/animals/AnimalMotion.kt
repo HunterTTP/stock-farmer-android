@@ -81,15 +81,23 @@ internal class AnimalAnimation(
     private var facing: Facing? = null
     private var clips = emptyList<AnimationClip>()
     private var began = 0.0
+    private var initialDelay = random.nextDouble(0.0, 2.0)
+
+    fun restart() {
+        clips = emptyList()
+        initialDelay = 0.0
+    }
 
     fun frame(
         look: AnimalSprites,
         pose: AnimalPose,
     ): SheetFrame {
         if (pose.walking) {
+            initialDelay = 0.0
             clips = emptyList()
             return look.walk(pose.facing).frame(pose.elapsed)
         }
+        if (pose.elapsed < initialDelay) return look.standing(pose.facing)
         if (look != sprites || pose.facing != facing || clips.isEmpty() || pose.elapsed < began) {
             sprites = look
             facing = pose.facing

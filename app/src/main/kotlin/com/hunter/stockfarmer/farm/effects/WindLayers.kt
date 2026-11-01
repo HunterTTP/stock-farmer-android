@@ -46,7 +46,7 @@ class WindLayer(
             if (age < 0) continue
             val row = floor((WORLD - wisp.start.y) / TILE).toFloat()
             out +=
-                Standing(row + 1 + 0.0009f) {
+                Standing(row + 1 + 0.9f) {
                     batch.preserve {
                         for (index in wisp.points.indices) {
                             batch.setColor(1f, 1f, 1f, WindWisp.alpha(age, index, wisp.strength).toFloat())

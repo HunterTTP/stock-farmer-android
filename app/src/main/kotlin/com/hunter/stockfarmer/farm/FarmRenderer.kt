@@ -17,7 +17,6 @@ import com.hunter.stockfarmer.core.rules.FruitTreePhase
 import com.hunter.stockfarmer.core.rules.GrowthConditions
 import com.hunter.stockfarmer.core.rules.GrowthTimelines
 import com.hunter.stockfarmer.core.rules.saturatedFarmland
-import com.hunter.stockfarmer.game.PlacementPreview
 import java.time.Instant
 import kotlin.math.min
 
@@ -32,6 +31,11 @@ class FarmRenderer(
 ) {
     private val standing = ArrayList<Standing>()
     private val timelines = HashMap<Plot, GrowthTimelines>()
+    private val terrain = TerrainTextures(textures)
+    val growth = GrowthReveal()
+    var gridShown = true
+    var cameraScale = 1f
+    var maxCameraScale = 1f
 
     fun draw(
         batch: SpriteBatch,
@@ -40,11 +44,14 @@ class FarmRenderer(
     ) {
         val season = state.season
         drawGround(batch, state, season)
+        if (gridShown) drawGrid(batch, textures, cameraScale, maxCameraScale)
+        drawFertilizer(batch, state)
         groundEffects?.invoke(batch, state, now)
         standing.clear()
+        growth.prune(state.trees.keys, state.rocks.keys, now)
         collectBuildings(batch, state)
-        collectTrees(batch, state)
-        collectRocks(batch, state)
+        collectTrees(batch, state, now)
+        collectRocks(batch, state, now)
         collectDecorations(batch, state)
         collectFences(batch, state)
         collectCrops(batch, state, now)
@@ -72,8 +79,8 @@ class FarmRenderer(
             texture?.let { batch.draw(it, point.col * TILE, worldY(point.row), TILE, TILE) }
         }
         for ((point, cover) in state.groundCover) {
-            textures
-                .texture("terrain", cover.assetName, "jpg", smooth = true)
+            terrain
+                .cover(cover)
                 ?.let { batch.draw(it, point.col * TILE, worldY(point.row), TILE, TILE) }
         }
         for ((point, style) in state.water) {
@@ -105,6 +112,7 @@ class FarmRenderer(
     private fun collectTrees(
         batch: SpriteBatch,
         state: GameState,
+        now: Instant,
     ) {
         for ((origin, placed) in state.trees) {
             val tree = placed.tree
@@ -113,9 +121,15 @@ class FarmRenderer(
             val width = texture.width * scale
             val x = (origin.col + tree.side / 2f) * TILE - width / 2
             val y = worldY(origin.row + tree.side - 1)
+            val height = texture.height * scale
+            val depth = (origin.row + tree.side).toFloat() + TREE_OVER
+            val alpha = growth.collect(batch, textures, origin, true, now, depth, x, y, width, height, standing)
             standing +=
-                Standing((origin.row + tree.side).toFloat() + TREE_OVER) {
-                    batch.draw(texture, x, y, width, texture.height * scale)
+                Standing(depth) {
+                    val old = batch.packedColor
+                    batch.setColor(1f, 1f, 1f, alpha)
+                    batch.draw(texture, x, y, width, height)
+                    batch.packedColor = old
                 }
         }
     }
@@ -123,20 +137,23 @@ class FarmRenderer(
     private fun collectRocks(
         batch: SpriteBatch,
         state: GameState,
+        now: Instant,
     ) {
         for ((point, size) in state.rocks) {
             val texture = textures.texture("rocks", size.assetName, season = state.season) ?: continue
             val scale = TILE / PIXELS_PER_TILE * size.spriteScale.toFloat()
             val width = texture.width * scale
+            val height = texture.height * scale
+            val x = (point.col + 0.5f) * TILE - width / 2
+            val y = worldY(point.row)
+            val depth = point.row + 1f
+            val alpha = growth.collect(batch, textures, point, false, now, depth, x, y, width, height, standing)
             standing +=
-                Standing(point.row + 1f) {
-                    batch.draw(
-                        texture,
-                        (point.col + 0.5f) * TILE - width / 2,
-                        worldY(point.row),
-                        width,
-                        texture.height * scale,
-                    )
+                Standing(depth) {
+                    val old = batch.packedColor
+                    batch.setColor(1f, 1f, 1f, alpha)
+                    batch.draw(texture, x, y, width, height)
+                    batch.packedColor = old
                 }
         }
     }
@@ -272,6 +289,27 @@ class FarmRenderer(
         return texture.width * scale to texture.height * scale
     }
 
+    private fun drawFertilizer(
+        batch: SpriteBatch,
+        state: GameState,
+    ) {
+        val texture = textures.texture("tools", "fertilizer") ?: return
+        val side = TILE / 2 * 0.7f
+        for (tile in state.fertilized) {
+            for (row in 0..1) {
+                for (col in 0..1) {
+                    batch.draw(
+                        texture,
+                        (tile.col + 0.25f + col * 0.5f) * TILE - side / 2,
+                        worldY(tile.row) + (0.25f + row * 0.5f) * TILE - side / 2,
+                        side,
+                        side,
+                    )
+                }
+            }
+        }
+    }
+
     private fun waterColor(style: WaterStyle): Color =
         when (style) {
             WaterStyle.deep -> Color(0.13f, 0.38f, 0.62f, 1f)
@@ -285,35 +323,15 @@ class FarmRenderer(
         const val WORLD = GameState.GRID_SIZE * TILE
         private const val PIXELS_PER_TILE = 48f
         private const val QUADRANTS = 4
-        private const val NEAR_HALF = 0.0006f
-        private const val TREE_OVER = 0.0008f
+
+        // Standing uses rows rather than SpriteKit's thousandths, so its local depth offsets scale with the rows.
+        private const val NEAR_HALF = 0.6f
+        private const val TREE_OVER = 0.8f
         private const val FIT_IN_SQUARE = 0.95f
         private const val FENCE_STRETCH = 1.5f
-        private const val FENCE_OVER = 0.0001f
+        private const val FENCE_OVER = 0.1f
 
         /** The world y of the bottom edge of a map row; rows count down the map while world y counts up. */
         fun worldY(row: Int): Float = (GameState.GRID_SIZE - 1 - row) * TILE
     }
 }
-
-/** Draws where the thing being placed would go: its tiles tinted green when it can be put there and red when it cannot. */
-fun FarmRenderer.drawPreview(
-    batch: SpriteBatch,
-    textures: TextureLibrary,
-    preview: PlacementPreview,
-) {
-    batch.color = if (preview.canPlace) PREVIEW_OK else PREVIEW_BLOCKED
-    for (tile in preview.footprint) {
-        batch.draw(
-            textures.white,
-            tile.col * FarmRenderer.TILE,
-            FarmRenderer.worldY(tile.row),
-            FarmRenderer.TILE,
-            FarmRenderer.TILE,
-        )
-    }
-    batch.color = Color.WHITE
-}
-
-private val PREVIEW_OK = Color(0.2f, 0.85f, 0.3f, 0.45f)
-private val PREVIEW_BLOCKED = Color(0.9f, 0.2f, 0.2f, 0.45f)

@@ -80,7 +80,13 @@ internal data class AnimalSprites(
                 if (!duck && !(kind == AnimalKind.CHICKEN && baby) && random.nextBoolean()) {
                     parts +=
                         if (kind == AnimalKind.CHICKEN) {
-                            AnimationClip(3, facing.ordinal * 2, 2, 0.6, random.nextInt(3, 8))
+                            AnimationClip(
+                                3,
+                                facing.ordinal * 2,
+                                2,
+                                0.6,
+                                maxOf(1, (random.nextDouble(4.0, 9.0) / 1.2).toInt()),
+                            )
                         } else {
                             AnimationClip(if (sheared) 7 else 3, facing.ordinal * 6, 6, 0.3, random.nextInt(2, 5))
                         }

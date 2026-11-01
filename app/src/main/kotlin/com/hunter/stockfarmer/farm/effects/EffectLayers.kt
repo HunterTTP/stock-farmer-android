@@ -47,7 +47,10 @@ class EffectLayers internal constructor(
 }
 
 /** Construct once on the GL thread. All effect textures are owned and disposed by [textures]. */
-fun effectLayers(textures: TextureLibrary): EffectLayers {
+fun effectLayers(
+    textures: TextureLibrary,
+    foreground: List<EffectOverlay> = emptyList(),
+): EffectLayers {
     val fireflies = FireflyLayer(textures)
     val butterflies = ButterflyLayer(textures)
     val wind = WindLayer(textures)
@@ -68,8 +71,7 @@ fun effectLayers(textures: TextureLibrary): EffectLayers {
                 RainLayer(textures),
                 fireflies.halos,
                 BuildingGlowLayer(textures),
-                fireworks,
-            ),
+            ) + foreground + fireworks,
         butterflies = butterflies,
         fireworks = fireworks,
         shadows = shadows,

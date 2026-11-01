@@ -23,6 +23,7 @@ import com.hunter.stockfarmer.farm.effects.EffectPhase
 import com.hunter.stockfarmer.farm.effects.effectLayers
 import com.hunter.stockfarmer.game.GameSession
 import com.hunter.stockfarmer.game.ViewSnapshot
+import com.hunter.stockfarmer.game.animalGestures
 import com.hunter.stockfarmer.game.hold
 import com.hunter.stockfarmer.game.preview
 import com.hunter.stockfarmer.game.touch
@@ -42,19 +43,37 @@ class FarmGame(
     private lateinit var farmPhoto: FarmPhoto
     private val camera = OrthographicCamera()
     private val touch = Vector3()
+    private val tilePreview = TilePreview()
+
+    fun flashPreview(
+        points: List<GridPoint>,
+        allowed: Boolean,
+        now: Instant = Instant.now(),
+    ) {
+        Gdx.app.postRunnable { tilePreview.flash(points, allowed, now) }
+    }
+
+    fun revealGrowth(
+        trees: Set<GridPoint>,
+        rocks: Set<GridPoint>,
+        now: Instant = Instant.now(),
+    ) {
+        Gdx.app.postRunnable { session.read { renderer.growth.reveal(trees, rocks, it.season, now) } }
+    }
 
     override fun create() {
         batch = SpriteBatch()
         textures = TextureLibrary()
-        effects = effectLayers(textures)
+        val tractor = TractorLayer(textures)
+        effects = effectLayers(textures, foreground = listOf(tractor))
         renderer =
             FarmRenderer(
                 textures,
-                listOf(TractorLayer(textures)) + animalSources(textures) + effects.sources,
+                listOf(tractor) + animalSources(textures, session.animalGestures) + effects.sources,
                 groundEffects = { batch, state, now -> effects.draw(EffectPhase.GROUND, batch, state, now, camera) },
             )
         Gdx.input.inputProcessor = GestureDetector(Gestures())
-        farmPhoto = FarmPhoto(renderer, batch)
+        farmPhoto = FarmPhoto(renderer, batch, foreground = tractor::drawLoad)
         session.photos.handler = { request, done ->
             Gdx.app.postRunnable {
                 val png =
@@ -119,6 +138,10 @@ class FarmGame(
         batch.begin()
         val now = Instant.now()
         driveTractor(now)
+        session.act { session.animalGestures.advance(it, now) }
+        val screenScale = camera.zoom * Gdx.graphics.density
+        renderer.cameraScale = screenScale
+        renderer.maxCameraScale = maxZoom() * Gdx.graphics.density
         session.read {
             effects.draw(EffectPhase.BACKGROUND, batch, it, now, camera)
             renderer.draw(batch, it, now)
@@ -127,7 +150,7 @@ class FarmGame(
         drawNightTint(now)
         session.read { effects.draw(EffectPhase.AFTER_TINT, batch, it, now, camera) }
         celebrateBuildings(now)
-        session.preview(now)?.let { renderer.drawPreview(batch, textures, it) }
+        tilePreview.draw(batch, textures, session.preview(now), now, screenScale)
         batch.end()
     }
 

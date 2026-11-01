@@ -1,5 +1,6 @@
 package com.hunter.stockfarmer.farm.effects
 
+import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
@@ -10,6 +11,7 @@ import com.hunter.stockfarmer.core.rules.Weather
 import com.hunter.stockfarmer.core.rules.Wind
 import com.hunter.stockfarmer.farm.TextureLibrary
 import java.time.Instant
+import kotlin.math.hypot
 import kotlin.math.max
 import kotlin.math.roundToInt
 
@@ -19,6 +21,7 @@ class RainLayer(
     override val phase = EffectPhase.AFTER_TINT
     private val motion = RainMotion()
     private val clock = EffectClock()
+    private val presentation = WeatherPresentation()
 
     override fun draw(
         batch: SpriteBatch,
@@ -27,20 +30,33 @@ class RainLayer(
         camera: OrthographicCamera,
     ) {
         val seconds = clock.advance(now)
-        val snow = state.season == Season.winter
+        val density =
+            Gdx.graphics.density
+                .coerceAtLeast(0.1f)
+                .toDouble()
+        val look =
+            presentation.update(
+                now,
+                rain(state, now),
+                state.season == Season.winter,
+                Wind.pushesRight(now, state.clockOffset),
+            )
+        val snow = look.snow
         val drops =
             motion.update(
                 seconds,
-                rain(state, now),
+                look.amount,
                 snow,
-                Wind.pushesRight(now, state.clockOffset),
-                camera.viewportWidth.toDouble(),
-                camera.viewportHeight.toDouble(),
+                look.pushesRight,
+                camera.viewportWidth / density,
+                camera.viewportHeight / density,
             )
         if (drops.isEmpty()) return
         val texture =
             if (snow) {
-                textures.glow()
+                textures.generated("effects/snow", 8, 8, smooth = true) { x, y ->
+                    rgba(255, 255, 255, (snowAlpha(hypot(x + 0.5 - 4, y + 0.5 - 4) / 4) * 255).roundToInt())
+                }
             } else {
                 textures.generated("effects/rain", 3, 28) { _, y ->
                     rgba(
@@ -56,7 +72,7 @@ class RainLayer(
                 }
             }
         val view = camera.view()
-        val zoom = camera.zoom.toDouble()
+        val zoom = camera.zoom * density
         batch.preserve {
             for (drop in drops) {
                 batch.setColor(if (snow) 1f else 0.3f, if (snow) 1f else 0.6f, 1f, drop.alpha.toFloat())
@@ -135,7 +151,7 @@ class SeasonSky(
         val view = camera.view()
         val color = state.season.skyRGB()
         batch.preserve {
-            batch.setColor(color.red / 255f, color.green / 255f, color.blue / 255f, 1f)
+            batch.setColor(color.red, color.green, color.blue, 1f)
             batch.draw(
                 textures.white,
                 view.left.toFloat(),

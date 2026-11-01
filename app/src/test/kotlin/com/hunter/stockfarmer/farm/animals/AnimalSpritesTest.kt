@@ -22,6 +22,55 @@ internal class AnimalSpritesTest {
     private val point = GridPoint(10, 10)
 
     @Test
+    fun `cat rest includes sitting wagging sleep and reversed return with reference timings`() {
+        val cat = AnimalSprites.pet(Pet(breed = Cat.starter.id, name = "Cat", position = point))
+        val plans = (0..100).map { cat.rest(3, Facing.RIGHT, Random(it)) }
+        val sleepy = plans.first { plan -> plan.any { it.row == 7 } }
+        assertEquals(listOf(1, 3, 5, 4, 7, 3), sleepy.map { it.row })
+        assertEquals(listOf(0.45, 0.2, 0.3, 0.6, 0.8, 0.2), sleepy.map { it.frameTime })
+        assertTrue(sleepy.last().reversed)
+        assertTrue(sleepy[0].loops in 4..8)
+        assertTrue(sleepy[2].loops in 2..4)
+        assertTrue(sleepy[3].loops in 2..4)
+        assertTrue(sleepy[4].loops in 3..6)
+        assertTrue(plans.any { it.size == 1 })
+    }
+
+    @Test
+    fun `dogs sniff but never use unused bark run or sleep rows in the farm`() {
+        val dog = AnimalSprites.pet(Pet(PetSpecies.dog, Dog.all.first().id, "Dog", point))
+        val plans = (0..100).map { dog.rest(2, Facing.LEFT, Random(it)) }
+        assertTrue(plans.any { it.size == 2 })
+        for (plan in plans) {
+            assertEquals(2, plan.first().row)
+            assertEquals(12, plan.first().firstColumn)
+            assertEquals(0.3, plan.first().frameTime)
+            assertTrue(plan.first().loops in 3..6)
+            plan.drop(1).forEach { sniff ->
+                assertEquals(8, sniff.row)
+                assertEquals(0.2, sniff.frameTime)
+                assertTrue(sniff.loops in 2..4)
+            }
+        }
+    }
+
+    @Test
+    fun `hen lying loops follow the reference continuous four to nine second draw`() {
+        val hen = AnimalSprites.chicken(Chicken(0, "hen-white", "Hen", point, hatchedAt = Instant.EPOCH), now)
+        repeat(100) { seed ->
+            val random = Random(seed)
+            random.nextDouble(1.0, 2.0)
+            val lies = random.nextBoolean()
+            val plan = hen.rest(1, Facing.DOWN, Random(seed))
+            assertEquals(if (lies) 2 else 1, plan.size)
+            if (lies) {
+                val cycles = (random.nextDouble(4.0, 9.0) / 1.2).toInt()
+                assertEquals(AnimationClip(3, 6, 2, 0.6, cycles), plan.last())
+            }
+        }
+    }
+
+    @Test
     fun `directional frames use right up left down sheet order`() {
         val hen = AnimalSprites.chicken(Chicken(0, "hen-brown", "Hen", point, hatchedAt = Instant.EPOCH), now)
         for (facing in Facing.entries) {

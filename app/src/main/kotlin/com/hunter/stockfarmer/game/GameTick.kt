@@ -54,7 +54,7 @@ class GameTick(
             events += engine.eatFavoriteCrops(now)
             engine.growTrees(now)
             engine.beginNewDayIfDue(now)?.let { session.announce(it) }
-            walkAnimals(engine, now, random)
+            walkAnimals(engine, now, random, session.animalGestures::isNudging)
             events.filter { it !is GameEvent.Hatched && it !is GameEvent.Born }
         }
 
@@ -68,6 +68,7 @@ internal fun walkAnimals(
     engine: GameEngine,
     now: Instant,
     random: RandomSource,
+    isNudging: (AnimalRef) -> Boolean = { false },
 ) {
     val state = engine.state
     val animals =
@@ -75,6 +76,7 @@ internal fun walkAnimals(
             state.coops.flatMap { (coop, value) -> value.chickens.map { AnimalRef.Chicken(coop, it.id) } } +
             state.herds.flatMap { (home, herd) -> herd.animals.map { AnimalRef.Livestock(home, it.id) } }
     for (animal in animals) {
+        if (isNudging(animal)) continue
         if (random.nextUnit() > STEP_CHANCE) continue
         engine.wanderDirection(animal, now, random)?.let { engine.move(animal, it) }
     }

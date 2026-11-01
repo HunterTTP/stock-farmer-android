@@ -9,6 +9,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.glutils.FrameBuffer
 import com.badlogic.gdx.utils.ScreenUtils
 import com.hunter.stockfarmer.core.model.GameState
+import com.hunter.stockfarmer.farm.effects.skyRGB
 import java.io.ByteArrayOutputStream
 import java.time.Instant
 
@@ -16,6 +17,7 @@ import java.time.Instant
 class FarmPhoto(
     private val renderer: FarmRenderer,
     private val batch: SpriteBatch,
+    private val foreground: ((SpriteBatch, GameState, Instant) -> Unit)? = null,
 ) {
     /** The PNG of the map with a margin of sky around it, [pixels] on a side, or null if the device ran out of memory. */
     fun render(
@@ -43,13 +45,19 @@ class FarmPhoto(
                 update()
             }
         val target = FrameBuffer(Pixmap.Format.RGBA8888, pixels, pixels, false)
+        val oldScale = renderer.cameraScale
+        val oldMax = renderer.maxCameraScale
         try {
             target.begin()
-            Gdx.gl.glClearColor(SKY_RED, SKY_GREEN, SKY_BLUE, 1f)
+            val sky = state.season.skyRGB()
+            Gdx.gl.glClearColor(sky.red, sky.green, sky.blue, 1f)
             Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT)
             batch.projectionMatrix = camera.combined
             batch.begin()
+            renderer.cameraScale = side / pixels
+            renderer.maxCameraScale = Float.MAX_VALUE
             renderer.draw(batch, state, now)
+            foreground?.invoke(batch, state, now)
             batch.end()
             val picture = ScreenUtils.getFrameBufferPixmap(0, 0, pixels, pixels)
             target.end()
@@ -65,14 +73,13 @@ class FarmPhoto(
                 picture.dispose()
             }
         } finally {
+            renderer.cameraScale = oldScale
+            renderer.maxCameraScale = oldMax
             target.dispose()
         }
     }
 
     private companion object {
         const val MARGIN_TILES = 2
-        const val SKY_RED = 0.42f
-        const val SKY_GREEN = 0.68f
-        const val SKY_BLUE = 0.85f
     }
 }

@@ -5,6 +5,9 @@ import com.hunter.stockfarmer.core.rules.Weather
 import com.hunter.stockfarmer.core.util.RandomSource
 import com.hunter.stockfarmer.core.util.SystemRandomSource
 import com.hunter.stockfarmer.core.util.nextDouble
+import com.hunter.stockfarmer.core.util.secondsSince
+import java.time.Instant
+import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.cos
 import kotlin.math.sin
@@ -91,9 +94,45 @@ internal class RainMotion(
     val count get() = drops.size
 }
 
-internal fun Season.skyRGB(): RGB =
+internal data class SkyColor(
+    val red: Float,
+    val green: Float,
+    val blue: Float,
+)
+
+internal fun Season.skyRGB(): SkyColor =
     when (this) {
-        Season.spring -> RGB(18, 23, 18)
-        Season.fall -> RGB(23, 17, 9)
-        Season.winter -> RGB(10, 15, 31)
+        Season.spring -> SkyColor(0.07f, 0.09f, 0.07f)
+        Season.fall -> SkyColor(0.09f, 0.065f, 0.035f)
+        Season.winter -> SkyColor(0.04f, 0.06f, 0.12f)
     }
+
+internal fun snowAlpha(radius: Double): Double = if (radius <= 0.35) 1.0 else ((1 - radius) / 0.65).coerceIn(0.0, 1.0)
+
+internal data class WeatherLook(
+    val amount: Double,
+    val snow: Boolean,
+    val pushesRight: Boolean,
+)
+
+/** Mirrors WeatherScene's rain tolerance and once-a-second wind sampling. */
+internal class WeatherPresentation {
+    private var look = WeatherLook(-1.0, false, false)
+    private var windAt: Instant? = null
+
+    fun update(
+        now: Instant,
+        amount: Double,
+        snow: Boolean,
+        pushesRight: Boolean,
+    ): WeatherLook {
+        if (windAt == null || now.secondsSince(windAt!!) >= 1) {
+            windAt = now
+            look = look.copy(pushesRight = pushesRight)
+        }
+        if (abs(amount - look.amount) > 0.002 || (amount == 0.0) != (look.amount == 0.0) || snow != look.snow) {
+            look = look.copy(amount = amount, snow = snow)
+        }
+        return look
+    }
+}
