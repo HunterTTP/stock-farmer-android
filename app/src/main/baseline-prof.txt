@@ -1,0 +1,16 @@
+# Startup path: MainActivity.onCreate builds the GameViewModel/GameSession, hosts FarmFragment (libGDX),
+# FarmGame builds the scene, and the Compose Hud overlays it. HudKt is the file-level class of ui/Hud.kt.
+HSPLcom/hunter/stockfarmer/MainActivity;->*(**)**
+HSPLcom/hunter/stockfarmer/game/GameViewModel;->*(**)**
+HSPLcom/hunter/stockfarmer/game/GameSession;->*(**)**
+HSPLcom/hunter/stockfarmer/farm/FarmFragment;->*(**)**
+HSPLcom/hunter/stockfarmer/farm/FarmGame;->*(**)**
+HSPLcom/hunter/stockfarmer/farm/FarmCamera;->*(**)**
+HSPLcom/hunter/stockfarmer/ui/HudKt;->*(**)**
+Lcom/hunter/stockfarmer/MainActivity;
+Lcom/hunter/stockfarmer/game/GameViewModel;
+Lcom/hunter/stockfarmer/game/GameSession;
+Lcom/hunter/stockfarmer/farm/FarmFragment;
+Lcom/hunter/stockfarmer/farm/FarmGame;
+Lcom/hunter/stockfarmer/farm/FarmCamera;
+Lcom/hunter/stockfarmer/ui/HudKt;
