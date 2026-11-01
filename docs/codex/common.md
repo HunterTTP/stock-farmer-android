@@ -1,7 +1,0 @@
-You are working in a git worktree of the Stock Farmer Android app (Kotlin, Jetpack Compose, libGDX), a remake of the iOS game at ../stock-farmer-ios (reference commit d01e7bb; Swift sources under ../stock-farmer-ios/StockFarmer/Sources/StockFarmer and ../stock-farmer-ios/StockFarmer/Core). Read AGENTS.md and docs/PORTING.md first and follow them: clean code, SOLID, DRY, KISS, YAGNI, match surrounding style, ktlint via Spotless (120 columns).
-The pure game rules live in the `core` module (package com.hunter.stockfarmer.core); the Android app is in `app`. Do not change `core` behavior; you may add to `core` only if a tiny, tested addition is truly needed.
-Build and check from the worktree root with:
-  export JAVA_HOME="C:\Program Files\Eclipse Adoptium\jdk-25.0.4.7-hotspot"; ./gradlew --offline spotlessApply spotlessCheck :core:test :app:assembleDebug --no-daemon
-Everything must build, spotlessCheck must be clean and all core tests must pass before you finish. There is no emulator or phone: write pure logic so it can be unit tested on the JVM (add JUnit 5 tests where sensible under app/src/test or core), keep Android-only glue thin. Never claim a check passed that you did not run.
-Do NOT try to commit or touch git at all: the sandbox blocks it; leave your work uncommitted and I will review and commit it. Run the build commands without the --offline flag if a dependency is missing.
-Finish with a short report: what you built, files touched, what you could not verify.

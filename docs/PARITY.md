@@ -1,90 +1,42 @@
 # Parity checklist
 
 Reference: iOS repo at commit `d01e7bb` (`../stock-farmer-ios`). Port conventions are in [PORTING.md](PORTING.md).
-Mark code/test completion with passing tests; app runtime and visual verification needs Android Emulator evidence
-after all code porting and unit-test slices are complete.
 
 ## Testing order and physical-device restriction
 
-1. Complete all code porting and unit tests, with both `:core:test` and `:app:testDebugUnitTest` passing.
-2. Then test in the **Android Emulator**, recording runtime and visual evidence per feature. A prepared AVD does
-   not mean emulator testing has begun or passed.
-
-**Physical on-device testing (Lenovo tablet): DO NOT RUN unless the user explicitly asks.** Do not install,
-launch, inspect logs or otherwise access `192.168.1.109:37725` or `adb-HA2KYQBP*`. Completion of code, unit tests
-or emulator testing does not authorize physical-device testing. This order overrides older device-testing
-directions in other project docs. Target the emulator serial explicitly for every ADB command.
+1. All code porting and unit tests are complete and passing (`:core:test` = 1,319 tests, `:app:testDebugUnitTest` = 580 tests; 1,899 total).
+2. Next step: test in the **Android Emulator** (`StockFarmerTablet` AVD), recording runtime and visual evidence per feature.
+3. **Physical on-device testing (Lenovo tablet): DO NOT RUN unless the user explicitly asks.** Do not install, launch, inspect logs or otherwise access `192.168.1.109:37725` or `adb-HA2KYQBP*`. Target the emulator serial explicitly (`-s emulator-5554`) for every ADB command.
 
 ## Core port status (Swift `StockFarmerCore` -> `core`)
 
-State: `main` builds, `spotlessCheck` is clean and 1,248 core tests pass. The whole rules engine and the persistence layer are ported.
+State: `main` builds, `spotlessCheck` is clean and **1,319 core tests pass** (100% of all 1,221 Swift test cases across all 132 non-migration `StockFarmerCoreTests` suites mapped and verified by `node tools/audit-ios-core-tests.mjs`).
 
-Done:
-
-- Foundations: `GridPoint`, `Money` formatting, `util` (Swift-faithful random, rounding, instant math, serializers), `GameStateJson` (save and load, rebuilds derived indexes).
+- Foundations: `GridPoint`, `Money` formatting, `util` (Swift-faithful random, rounding, instant math, serializers), `GameStateJson` and `GameStateDecoding` (save and load, rebuilds derived indexes).
 - Catalog, model, rules, feedback, presentation, market and persistence leaves, and the whole `GameEngine` (every `GameEngine+*.swift` extension as Kotlin extension functions in `rules/Engine*.kt`, plus `FishingContest`, world generation, wild growth, tool strokes and the timelapse schedule).
-- Tests ported: all Swift gameplay test files except the ones listed under "Not started" (1,248 Kotlin tests, including the engine-level fish, rod, pet, dog, chicken, tree, rock, fence, shelter, stock, season, ground cover and home upgrade tests added by the core parity audit), covering economy, growth, crops, seasons, storage, shop, unlocks, buildings, landscape, decorations, animals, fish, tractor, quests, stocks, workshops, trees, rocks, ore, wind, career, persistence and sound cues. Old-save migration tests are left out on purpose.
+- Intentional deviations from Swift: old-save migrations (`Retired*Tests`) are not ported (a new app has no old saves); `Date` is `Instant`, `Int` is `Long` where values can pass 2^31; `GameState` is a mutable object with a deep `copy()` instead of a Swift value type (see `AGENTS.md`).
 
-Not started:
+## App port status (`StockFarmer` -> `app`)
 
-1. Still to port: the legacy Retired* tests (migrations, skipped).
-2. Ported tests that failed pointed at real behavior differences and were fixed; keep porting this way.
-3. Swift behavior that depends on exact random draws (seeded tests) may need the generator mapping checked: `util/RandomSource.kt` follows Swift's documented algorithms but could not be compared against a Swift toolchain here.
+State: `main` builds, `spotlessCheck` is clean, **580 app unit tests pass**, and the debug APK builds cleanly (85 MB, 16 KB uncompressed native library alignment verified by `NativeAlignmentTest`).
 
-Deviations from the Swift, on purpose: old-save migrations are not ported (a new app has no old saves); `Date` is `Instant`, `Int` is `Long` where values can pass 2^31; `GameState` is a mutable object with a deep `copy()` instead of a Swift value type (see AGENTS.md); the market-quest and tractor-save upgrade paths for old saves are dropped.
-
-## App
-
-The app builds; runtime and visual verification remain pending. What is done, in flight and next is in
-[HANDOFF.md](HANDOFF.md); this file keeps the per-feature parity rows. Pending runtime checks below are for the
-Android Emulator after code porting and unit tests finish; physical-device checks require an explicit user request.
-
-## Slices
-
-| Feature | Rules (core) | UI | Verified |
+| Feature | Rules (`core`) | App / UI (`app`) | Status |
 |---|---|---|---|
-| Plant, grow, Scythe harvest, Storage sale, save and relaunch (first slice) | yes, tested | no | no |
-| App save/load: active slot, backup recovery, autosave, pause/stop, clock on reopen | existing core rules; JVM integration tests added | wired, including load/save errors and backup recovery | emulator verification pending |
-| Build/decorate/terrain/storage | core + app tests (`StorageLessonTest`) | HUD-themed Compose host with Storage tutorial progression, `lessonPulse` highlights and completion toast; wired into HUD | emulator pending |
-| Stock quotes: ConnectivityManager monitor, tested polling interval, offline notice | existing core rules; StockPolling JUnit tests | wired in StockMarketScreen | emulator pending |
-| Stock market screen on HUD theme: summary card, rows, Buy Stock search flow, trade sheet and MarketQuestSection | existing core rules; JVM state and upgrade tests | HUD-themed trade sheet with `QuantityControls` (slider, steppers, direct entry, Max), House/Market Stand `BuildingUpgradeScreen` navigation, and HUD-styled `MarketQuestSection` | emulator pending |
-| Career screen on HUD theme: level ring, square cards, collection rows and tiles, charts | existing core rules; JVM collection and chart tick tests | done: section tints, entry name colors, HUD filter pills and 4-tick X/Y chart axes match iOS | emulator pending |
-| Launcher icon (mipmaps, adaptive icon) and per-farm ambience reset | n/a | done | emulator pending |
-| Fishing mini-game | existing core contest/catch rules; app JVM session tests | Compose Canvas overlay and HUD-themed panels/pill buttons; wired into tap, HUD and tick | emulator pending; quest-complete sound at meter fill and "swam away" toast wired in `Hud`. iOS has no cast state machine, tension bar, speed options, share/save or frame cap, so none exist here |
-| Timelapse capture and playback | existing core schedule/store/playback; app JVM orchestration and timing tests | HUD-themed recorder, history/settings screen, clear confirmation dialog and full-screen player; wired (MainActivity capture loop, Timelapse HUD route) | emulator pending; see [TIMELAPSE.md](TIMELAPSE.md) |
-| Performance, changelog, privacy, lesson guide, launch | existing core metrics/lessons/launch sequence; app JVM presentation, recorder and `GameTick` lesson tests | wired: LaunchScreen (with renderer stages and failed-state farm picker), LessonGuide + pulse + `GameTick.learnWheatIsRipe`, HUD-themed Performance/Changelog/Privacy screens, renderer `PerformanceMonitor` subsystem instrumentation and sprite count | emulator pending |
-| HUD visual primitives (`ui.theme`): palette, glass panels, sheet chrome, scale, pulse, scroll bar, new dot, quantity, detail, choice list, placement, toast | n/a | Compose primitives; real HUD pending; `ScreenTheme` replaced by the ported palette | JVM tests for scale, pulse, scroll bar, quantity, palette; emulator pending |
-| Item, tool upgrade, building and animal menus; persisted unlock dots | existing core rules and saved seen keys; app JVM builders/action and 16 KB APK native alignment tests | HUD-themed detail pages, tool upgrades, Next Chick/Recipes navigation, pet summon, animal naming, `TimeSheet` close pill; HUD entry points wired | emulator pending; see [ITEM_SCREENS.md](ITEM_SCREENS.md) |
-| Reward flights, ambience, animal voices, ready chime | existing core chatter, triggers, sound and growth rules; app JVM tests | HUD-themed Compose reward overlay (`hudPanel`, `RewardKind.color`) and tick-driven audio driver; wired in MainActivity and FarmGame (fireworks on first building, butterfly net on Bucket tap) | emulator pending; see [AMBIENCE_REWARDS.md](AMBIENCE_REWARDS.md) |
-| Farm visuals: paths, grid, preview, fertilizer, growth reveal, produce badges, animal reactions and weather corrections | core unchanged; JVM presentation, gesture and `FarmAssetCoverageTest` tests | libGDX layers with 96 px/tile tree/rock scaling, full-workshop art, dairy/oven animations, seasonal building textures, animal sheet callback and growth/flash hooks | Spotless clean; 1,019 core and 374 app tests pass; debug APK builds; emulator pending |
-| In-game HUD (`ui/hud`): status panels, tool circle drag, tool ring, dropdown chips and lists, placement buttons, banner placement, toasts, Time sheet, save status | n/a (feedback text mapping in `game/Feedback`) | ported from iOS `GameView` with `ToolsSheet`, `ToolRoute` stack, `PlacementDestroy`, unlock dots, `LessonGuide` and `HudSheet` wrapping | JVM tests for gesture, ring layout, wrapping, palette, route stack, banners, feedback; emulator pending |
-| Farm gestures, scene interactions, weather overlay, tractor and wild growth drivers | existing core rules; JVM touch, hold, tool-drag, tractor, wild-growth and scene-interaction tests | wired in `FarmGame`, `MainActivity` and `GameTick` with placement rejections, cancel-move footprint flash, bucket butterfly drag, new-day chime and tractor pickup audio | 1,019 core and 398 app tests pass; emulator pending |
-| Farm layer geometry audit: anchors, px/tile, depth order, fences, tractor, shadow casters, weathercock | n/a | `StandingLayout` holds the tree/rock (96 px/tile), decoration/building/crop (48) boxes and the fence draw order (lower pictures in front, middle over its line); tractor wheels turn once per 1.2 s tile and the body bobs from a `TractorMovement` clock; a driving tractor leaves its home without a shadow; weathercocks flip with each wind gust (`WeathercockTurn`). Trees lean their tips in gusts (`TreeLean`: 25-60% of the trees, 3-7.5% of width, 1.3 s out and 1.5 s back, swept across the map; their shadows stay still as in iOS); a building, fruit tree, decoration or tree being moved is left out of its old spot and its shadow (`MovingOrigins`); the farm photo draws the rain tint, torch glow and rain/snow like iOS (the 0.1 s of fireflies and butterflies in the iOS photo have not yet faded in, so none are drawn) and never shows a move in progress or a leaning tree | `StandingLayoutTest`, `TractorMovementTest`, `WeathercockTurnTest`, `ShadowCastersTest`, `TreeLeanTest`, `MovingOriginsTest`; Spotless clean, 424 app tests pass, debug APK builds; emulator pending |
-| GameViewModel, GameSession, lifecycle and SFX drivers audit | n/a | `GameTick` does nothing while the app is away (iOS pauses the scene) and restarts its clocks on return; `GamePersistence.resume` holds the clock before ticking again; play time counts a whole gap up to 5 s as on iOS; rain and winter snow are noted for Career; the day summary banner follows the chime by `NightPulse.SUMMARY_MINUTE - minute` seconds (`GameSession.dayBegins` carries the chime, `newDays` the summary); `NightChime` retries a dropped midnight chime while the music is hushed and hushes only for the night this session rang; the all-crops-ready message is an in-game toast, not a system Toast. Known gaps outside this slice: no level-up fireworks (`FarmGame` drains only building celebrations), level-up sheet does not wait for the quest banner (`Hud`), a farm switch resets `ReadyChime` to not-ready instead of the field state (`AmbienceDriver`), `TimeSheet` does not stop or reset the chime, no reeling or confirm/photo-saved haptics | `GameTickTest`, `NightChimeTest`; emulator pending |
-
-Save/load uses `LocalSaveFileSystem` under the app's private `filesDir/Farms`. `FarmStartup` prepares the active farm on a worker; failed loads block play and preserve the original until the player explicitly restores a backup. The app snapshots through `GameSession.act`, debounces timer saves, flushes on pause/stop through the disk worker, and holds the farm clock while away. JVM tests cover startup, active-slot selection, backup restoration, corrupt/newer saves, snapshot isolation, lifecycle clocks, and failed-write retry. Emulator relaunch, rotation, backgrounding, and storage-failure UI remain unverified; wait for code porting and unit tests to finish.
-
-`MenusHost(session, openMenu, onClose)` presents the requested menu and refreshes immutable presentation snapshots.
-Catalog rows show item art, money and material costs, placement limits and level locks, with building styles,
-decoration sizes, fence colors, tree colors and water styles. Selections go through `GameSession.act` and return
-to the farm on success; refusals display `Rejection.message`. Storage supports selecting stored items, selling,
-trashing and releasing, with quantity controls and core sale totals. JVM tests cover catalog ordering and variants,
-snapshot isolation, capacity, locks, engine selections, transactions and bundled picture assets. HUD, activity,
-farm and session wiring are outside this slice; emulator layout and interaction remain unverified.
+| Plant, grow, Scythe harvest, Storage sale, save and relaunch | Tested | Wired end-to-end (`FarmGame`, `Hud`, `StorageMenuScreen`, `GamePersistence`) | Emulator verification next |
+| App save/load: active slot, backup recovery, autosave, pause/stop, clock on reopen | Tested | Wired (`GamePersistence`, `FarmSlots`, `SaveSlotsScreen`, `LaunchScreen` failed-state farm picker) | Emulator verification next |
+| Build, decorate, terrain, seeds, animals, trees & storage menus | Tested | `MenusHost`, `CatalogModels`, `StorageMenuScreen` with tutorial progression, `lessonPulse` & completion toast | Emulator verification next |
+| Stock quotes & Stock Market screen | Tested | `StockMarketSession`, `YahooStockQuoteClient`, `NetworkMonitor`, `StockMarketScreen`, trade sheet (`QuantityControls`) & House upgrade link | Emulator verification next |
+| Market Quest board & section | Tested | `MarketQuestScreen` and `MarketQuestSection` with objective artwork, progress bars, replacement controls & Market Stand upgrade link | Emulator verification next |
+| Career screen | Tested | Level ring, stat cards, 9 searchable collections with iOS filter dropdown menu, and 4-tick X/Y charts | Emulator verification next |
+| Fishing mini-game | Tested | `FishingOverlay`, `FishingSession`, `FishingCast`, quest-complete sound on catch, swam-away toast & reel/catch haptics | Emulator verification next |
+| Timelapse capture and playback | Tested | `TimelapseRecorder`, `TimelapseStore`, `TimelapseScreen`, `TimelapseViewer` (pauses `GameTick` while open) | Emulator verification next |
+| Performance, changelog, privacy, lesson guide & launch screens | Tested | `LaunchScreen`, `LessonGuide`, `PerformanceScreen` (with subsystem timings & sprite count), `ChangelogScreen`, `PrivacyScreen` | Emulator verification next |
+| HUD visual primitives & in-game HUD | Tested | `StatusHud`, `ToolBar`, `ToolRing`, `ToolCircle`, `ToolsSheet`, `PlacementButtons`, `TimeSheet`, `SaveStatusView`, `HudTextField`/`HudSearchField` | Emulator verification next |
+| Item detail, tool upgrade, building & animal sheets | Tested | `ItemDetailScreens`, `BuildingSections`, `AnimalSection`, `BuildingChoiceScreens`, `SheetHost`, persisted unlock dots | Emulator verification next |
+| Reward flights, audio, ambience, animal voices, chimes & haptics | Tested | `RewardFlights`, `SoundCenter`, `MusicPlayer`, `AmbienceDriver`, `AnimalVoices`, `ReadyChime`, `NightChime`, `Haptics` | Emulator verification next |
+| Settings (Sound, Graphics, Gameplay) | Tested | `SettingsScreen`, `PlaySettings`, `PlaySettingsScreens` wired to `Hud` and `FarmGame` (`isDynamicShadowsEnabled`, `shadowIntensity`, `isGridShown`, `toolReach`) | Emulator verification next |
+| Farm renderer, layers, weather & photo capture | Tested | `FarmRenderer`, `StandingLayout` (96 px/tile trees/rocks, 48 px/tile buildings/decorations/crops), `TreeLean`, `WeathercockTurn`, `TractorMovement`, `MovingOrigins`, `EffectLayers`, `ShadowLayer`, `FarmPhoto` | Emulator verification next |
 
 ## Assets
 
-`app/src/main/assets/images` is a straight copy of the iOS `Images` folder. `app/src/main/assets/audio` comes from `node tools/convert-audio.mjs <iOS Resources/Audio> app/src/main/assets/audio`: the Core Audio and WAV effects become OGG Vorbis (quality 4; run `npm install` in `tools` once for the encoder, a tool-time dependency only) and the music is copied as is. `AudioAssetsTest` reads each clip's length from its Ogg headers (`OggClip`). The effects went from 34 MB to 5.7 MB and the debug APK from 116 MB to 85 MB; the rest is music.
-
-Weather/ambient effects: app layers and pure JVM motion tests are implemented under `farm/effects`; integration is intentionally pending. See [FARM_EFFECTS.md](FARM_EFFECTS.md) for exact renderer/scene hooks, event APIs and verification limits. Includes rain/snow and rain tint, seasonal space sky, fall leaves, wind wisps, fireflies, butterflies (including released/resting behavior), building door lights, midnight pulse, water shimmer/glow and drop palettes, fireworks, and cached sun shadows. Existing FarmGame night tint is reused. No emulator verification yet; static grass matches the frozen reference.
-
-## HUD sheets and music parity pass
-
-- Search and name fields use `HudTextField` / `HudSearchField` (Career, Changelog, Save Slots name prompt); no `OutlinedTextField` remains. The page chrome Close button (`ScreenLayout`) is a `PillButton`, the building sheet close and timelapse close, play and pause are icon buttons as on iOS. Material `AlertDialog` stays for iOS `.alert` prompts.
-- Stock Market: summary card chart icon and divider, offline notice Wi-Fi icon, and iOS value weights.
-- Sound page: five sliders titled as iOS ("Interface"), a rounded percent, a sample sound on release, the song row (name and skip icon) only while music is up, skip plays the toggle sound, and "Reset to Defaults" asks first. The Music and Sound effects switches are gone (iOS has none).
-- `MusicPlayer` and `AmbienceDriver` already match `MusicPlayer.swift` and `AmbientPlayer.swift` (season change restarts the track, midnight hush fades 2 s only for the current night's chime, skip advances the season's playlist); one deliberate difference: a track that finishes while paused advances rather than replaying.
-- Sound page rows carry the SF Symbol stand-ins of iOS `AudioChannel.systemImage` (music.note, speaker.wave.2.fill, leaf.fill, pawprint.fill, cloud.rain.fill), drawn in `HudIcons`.
-- Career collection pages use iOS's filter menu: a `line.3.horizontal.decrease.circle` icon beside the "N of M collected" title, filled and accent-colored while a filter is on, opening a menu of All, Collected and Not yet with the current choice marked. The filter chips are gone.
-- Settings has the Graphics and Gameplay pages iOS has at `d01e7bb` (the only settings routes besides Sound): Graphics holds Dynamic Shadows (off by default) with an intensity slider shown while on, Grid Lines, Show Money and Show Level; Gameplay holds Tool Offset (0 to 200 pt, default 16). Both end in a confirmed "Reset to Defaults". State is `PlaySettings`, stored in the `play` preferences under the iOS keys. Show Money, Show Level and Tool Offset already drive the HUD (`Hud.kt`).
-- Not done: Grid Lines, Dynamic Shadows and shadow intensity are saved but not yet applied to the renderer, the farm photo or the timelapse frames (`FarmRenderer.gridShown` and the shadow layer are set from `farm/*` and `MainActivity`, which this branch may not touch); the main Settings links have no leading icons.
+`app/src/main/assets/images` is a straight copy of the iOS `Images` folder (verified by `FarmAssetCoverageTest` and `MenuPicturesTest`). `app/src/main/assets/audio` comes from `node tools/convert-audio.mjs <iOS Resources/Audio> app/src/main/assets/audio`: sound effects are OGG Vorbis (`OggS`) and music tracks are copied as-is (verified by `AudioAssetsTest` and `SoundAssetTest`).
