@@ -3,15 +3,14 @@
 package com.hunter.stockfarmer.ui.sheets
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -21,6 +20,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -37,6 +37,8 @@ import com.hunter.stockfarmer.ui.screens.ScreenArt
 import com.hunter.stockfarmer.ui.screens.ScreenIcon
 import com.hunter.stockfarmer.ui.screens.StockMarketScreen
 import com.hunter.stockfarmer.ui.theme.BarScrollView
+import com.hunter.stockfarmer.ui.theme.HudIcon
+import com.hunter.stockfarmer.ui.theme.HudIcons
 import com.hunter.stockfarmer.ui.theme.HudMaterialTheme
 import com.hunter.stockfarmer.ui.theme.HudSheet
 import com.hunter.stockfarmer.ui.theme.HudType
@@ -141,7 +143,13 @@ fun SheetHost(
                 Modifier.weight(1f),
                 style = HudType.headline,
             )
-            TextButton(onClose) { Text("Close") }
+            HudIcon(
+                HudIcons.xmarkCircleFill,
+                Theme.textSecondary,
+                Modifier.clickable(role = Role.Button, onClick = onClose),
+                size = 28.dp,
+                contentDescription = "Close",
+            )
         }
         BarScrollView(Modifier.weight(1f)) {
             Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {

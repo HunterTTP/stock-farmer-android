@@ -9,6 +9,7 @@ import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,11 +19,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -34,6 +37,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
@@ -46,6 +50,7 @@ import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -58,7 +63,11 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.hunter.stockfarmer.core.persistence.TimelapseArchive
 import com.hunter.stockfarmer.core.presentation.TimelapsePlayback
 import com.hunter.stockfarmer.core.rules.DayNightCycle
+import com.hunter.stockfarmer.ui.theme.HudIcon
+import com.hunter.stockfarmer.ui.theme.HudIcons
 import com.hunter.stockfarmer.ui.theme.HudMaterialTheme
+import com.hunter.stockfarmer.ui.theme.HudType
+import com.hunter.stockfarmer.ui.theme.Theme
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.isActive
@@ -205,7 +214,15 @@ fun TimelapseViewer(
                 }
                 Column(Modifier.fillMaxSize().safeDrawingPadding().padding(16.dp)) {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                        TextButton(onClick = ::close, enabled = !closing) { Text("Close timelapse") }
+                        Box(
+                            Modifier
+                                .size(44.dp)
+                                .background(Color.Black.copy(alpha = 0.6f), CircleShape)
+                                .clickable(enabled = !closing, role = Role.Button, onClick = ::close),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            HudIcon(HudIcons.xmark, Color.White, size = 16.dp, contentDescription = "Close timelapse")
+                        }
                     }
                     Spacer(Modifier.weight(1f))
                     PlaybackControls(
@@ -246,21 +263,30 @@ private fun PlaybackControls(
         Modifier.background(Color.Black.copy(alpha = 0.7f), RoundedCornerShape(16.dp)).padding(12.dp),
     ) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            TextButton(
-                onClick = onToggle,
-                modifier =
-                    Modifier.semantics {
-                        contentDescription = if (playback.isPlaying) "Pause timelapse" else "Play timelapse"
-                    },
-                enabled = enabled && count > 1,
+            val canToggle = enabled && count > 1
+            Box(
+                Modifier
+                    .size(44.dp)
+                    .alpha(if (canToggle) 1f else 0.4f)
+                    .clickable(enabled = canToggle, role = Role.Button, onClick = onToggle),
+                contentAlignment = Alignment.Center,
             ) {
-                Text(if (playback.isPlaying) "Pause" else "Play")
+                HudIcon(
+                    if (playback.isPlaying) HudIcons.pauseFill else HudIcons.playFill,
+                    Color.White,
+                    size = 20.dp,
+                    contentDescription = if (playback.isPlaying) "Pause timelapse" else "Play timelapse",
+                )
             }
             archive.frames.getOrNull(playback.index)?.let { frame ->
-                Text("Day ${frame.day} · ${DayNightCycle.clockText(frame.minute.toDouble())}", color = Color.White)
+                Text(
+                    "Day ${frame.day} · ${DayNightCycle.clockText(frame.minute.toDouble())}",
+                    color = Color.White,
+                    style = HudType.subheadline,
+                )
             }
             Spacer(Modifier.weight(1f))
-            Text("${if (count == 0) 0 else playback.index + 1} / $count", color = Color.White)
+            Text("${if (count == 0) 0 else playback.index + 1} / $count", color = Color.White, style = HudType.caption)
         }
         Slider(
             value = playback.index.toFloat(),
@@ -273,6 +299,7 @@ private fun PlaybackControls(
                 Modifier.semantics {
                     contentDescription = "Timelapse timeline, screenshot ${playback.index + 1} of $count"
                 },
+            colors = SliderDefaults.colors(thumbColor = Theme.accent, activeTrackColor = Theme.accent),
         )
     }
 }

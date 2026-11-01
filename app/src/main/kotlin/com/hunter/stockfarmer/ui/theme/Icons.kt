@@ -160,6 +160,106 @@ object HudIcons {
             }
         }
 
+    val chartLineUptrend =
+        icon("chart.line.uptrend.xyaxis") {
+            stroked(2f) {
+                moveTo(3f, 3.5f)
+                lineTo(3f, 20f)
+                lineTo(21f, 20f)
+            }
+            stroked(2.2f) {
+                moveTo(6.5f, 15.5f)
+                lineTo(11f, 10.5f)
+                lineTo(14f, 13.5f)
+                lineTo(20f, 6.5f)
+                moveTo(15.5f, 6.5f)
+                lineTo(20f, 6.5f)
+                lineTo(20f, 11f)
+            }
+        }
+
+    val wifiSlash =
+        icon("wifi.slash") {
+            stroked(2f) {
+                moveTo(2.5f, 9.2f)
+                arcTo(14f, 14f, 0f, false, true, 8.2f, 5.7f)
+                moveTo(21.5f, 9.2f)
+                arcTo(14f, 14f, 0f, false, false, 15.8f, 5.7f)
+                moveTo(5.6f, 12.8f)
+                arcTo(9.5f, 9.5f, 0f, false, true, 8.6f, 10.8f)
+                moveTo(18.4f, 12.8f)
+                arcTo(9.5f, 9.5f, 0f, false, false, 15.4f, 10.8f)
+                moveTo(9f, 16.2f)
+                arcTo(4.8f, 4.8f, 0f, false, true, 11f, 15f)
+                moveTo(15f, 16.2f)
+                arcTo(4.8f, 4.8f, 0f, false, false, 13f, 15f)
+                moveTo(3.5f, 3.5f)
+                lineTo(20.5f, 20.5f)
+            }
+            filled { circle(12f, 19.4f, 1.5f) }
+        }
+
+    val magnifyingglass =
+        icon("magnifyingglass") {
+            stroked(2.2f) {
+                circle(10.5f, 10.5f, 6.5f)
+                moveTo(15.4f, 15.4f)
+                lineTo(20.5f, 20.5f)
+            }
+        }
+
+    val xmarkCircleFill =
+        icon("xmark.circle.fill") {
+            filled(PathFillType.EvenOdd) {
+                circle(12f, 12f, 10f)
+                polygon(
+                    listOf(
+                        8.1f to 9.5f,
+                        9.5f to 8.1f,
+                        12f to 10.6f,
+                        14.5f to 8.1f,
+                        15.9f to 9.5f,
+                        13.4f to 12f,
+                        15.9f to 14.5f,
+                        14.5f to 15.9f,
+                        12f to 13.4f,
+                        9.5f to 15.9f,
+                        8.1f to 14.5f,
+                        10.6f to 12f,
+                    ),
+                )
+            }
+        }
+
+    val forwardFill =
+        icon("forward.fill") {
+            filled {
+                polygon(listOf(2.5f to 5.5f, 12f to 12f, 2.5f to 18.5f))
+                polygon(listOf(12f to 5.5f, 21.5f to 12f, 12f to 18.5f))
+            }
+        }
+
+    val xmark =
+        icon("xmark") {
+            stroked(3f) {
+                moveTo(5.5f, 5.5f)
+                lineTo(18.5f, 18.5f)
+                moveTo(18.5f, 5.5f)
+                lineTo(5.5f, 18.5f)
+            }
+        }
+
+    val playFill =
+        icon("play.fill") { filled { polygon(listOf(6f to 3.5f, 20f to 12f, 6f to 20.5f)) } }
+
+    val pauseFill =
+        icon("pause.fill") {
+            filled {
+                polygon(listOf(5f to 3.5f, 10f to 3.5f, 10f to 20.5f, 5f to 20.5f))
+                polygon(listOf(14f to 3.5f, 19f to 3.5f, 19f to 20.5f, 14f to 20.5f))
+            }
+        }
+
     val sparkle =
         icon("sparkle") {
             filled {

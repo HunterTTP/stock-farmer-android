@@ -11,8 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -36,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import com.hunter.stockfarmer.core.model.ValueSample
 import com.hunter.stockfarmer.core.rules.CareerSeries
 import com.hunter.stockfarmer.game.GameSession
+import com.hunter.stockfarmer.ui.theme.HudSearchField
 import com.hunter.stockfarmer.ui.theme.HudType
 import com.hunter.stockfarmer.ui.theme.Theme
 import com.hunter.stockfarmer.ui.theme.glassCard
@@ -201,37 +200,7 @@ private fun CollectionPage(
             style = HudType.title3.copy(fontWeight = FontWeight.ExtraBold),
         )
         ProgressBar(collected, total, Theme.accent)
-        OutlinedTextField(
-            value = query,
-            onValueChange = { query = it },
-            placeholder = { Text("Search", color = Theme.textSecondary, style = HudType.body) },
-            singleLine = true,
-            shape = RoundedCornerShape(12.dp),
-            modifier = Modifier.fillMaxWidth(),
-            colors =
-                OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = Theme.textPrimary,
-                    unfocusedTextColor = Theme.textPrimary,
-                    focusedBorderColor = Theme.accent,
-                    unfocusedBorderColor = Color.White.copy(alpha = 0.18f),
-                    focusedContainerColor = Theme.glassFill,
-                    unfocusedContainerColor = Theme.glassFill,
-                    cursorColor = Theme.accent,
-                ),
-            trailingIcon =
-                if (query.isNotEmpty()) {
-                    {
-                        Text(
-                            "✕",
-                            Modifier.clickable(role = Role.Button) { query = "" }.padding(8.dp),
-                            color = Theme.textSecondary,
-                            style = HudType.footnote,
-                        )
-                    }
-                } else {
-                    null
-                },
-        )
+        HudSearchField(query, { query = it })
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             CareerFilter.entries.forEach {
                 CareerFilterChip(

@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -39,6 +38,7 @@ import com.hunter.stockfarmer.core.model.dollars
 import com.hunter.stockfarmer.game.GameSession
 import com.hunter.stockfarmer.ui.theme.HudMaterialTheme
 import com.hunter.stockfarmer.ui.theme.HudType
+import com.hunter.stockfarmer.ui.theme.PillButton
 import com.hunter.stockfarmer.ui.theme.Theme
 import com.hunter.stockfarmer.ui.theme.categoryCard
 import com.hunter.stockfarmer.ui.theme.glassCard
@@ -75,7 +75,7 @@ internal fun ScreenLayout(
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                     content = content,
                 )
-                Button(onClick = onClose, modifier = Modifier.fillMaxWidth()) { Text(closeLabel) }
+                PillButton(closeLabel, onClick = onClose, modifier = Modifier.fillMaxWidth())
             }
         }
     }

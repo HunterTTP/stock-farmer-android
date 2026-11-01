@@ -8,10 +8,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicText
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -28,13 +29,18 @@ import androidx.compose.ui.unit.dp
 import com.hunter.stockfarmer.audio.AudioChannel
 import com.hunter.stockfarmer.audio.SoundCenter
 import com.hunter.stockfarmer.audio.SoundSettings
+import com.hunter.stockfarmer.core.feedback.SoundCue
 import com.hunter.stockfarmer.game.GameSession
 import com.hunter.stockfarmer.ui.hud.ToolRoute
+import com.hunter.stockfarmer.ui.theme.HudIcon
+import com.hunter.stockfarmer.ui.theme.HudIcons
+import com.hunter.stockfarmer.ui.theme.HudMaterialTheme
 import com.hunter.stockfarmer.ui.theme.HudType
 import com.hunter.stockfarmer.ui.theme.PillButton
 import com.hunter.stockfarmer.ui.theme.PillRole
 import com.hunter.stockfarmer.ui.theme.Theme
 import com.hunter.stockfarmer.ui.theme.glassCard
+import kotlin.math.roundToInt
 
 interface ScreenAudio {
     val settings: SoundSettings
@@ -46,6 +52,8 @@ interface ScreenAudio {
     )
 
     fun skipMusic() = Unit
+
+    fun playSample(channel: AudioChannel) = Unit
 }
 
 class SoundCenterScreenAudio(
@@ -59,7 +67,19 @@ class SoundCenterScreenAudio(
         level: Double,
     ) = center.setVolume(channel, level)
 
-    override fun skipMusic() = center.skipMusic()
+    override fun skipMusic() {
+        center.skipMusic()
+        center.play(SoundCue.toggleOn)
+    }
+
+    override fun playSample(channel: AudioChannel) {
+        when (channel) {
+            AudioChannel.`interface` -> SoundCue.selectItem
+            AudioChannel.farm -> SoundCue.placeGround
+            AudioChannel.animals -> SoundCue.henCluck
+            AudioChannel.music, AudioChannel.ambience -> null
+        }?.let { center.play(it) }
+    }
 }
 
 /** Supply the activity's audio facade here for immediate volume and soundtrack controls. */
@@ -167,78 +187,113 @@ fun SoundSettingsScreen(
         AudioChannel.entries.filter { settings[it] != next[it] }.forEach { audio.setVolume(it, next[it]) }
         settings = next
     }
+    var confirmsReset by remember { mutableStateOf(false) }
     ScreenLayout("Sound", session, onClose) {
-        Column(
-            Modifier
-                .fillMaxWidth()
-                .glassCard(14.dp)
-                .padding(vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-        ) {
-            SettingSwitch("Music", controls.musicEnabled) {
-                controls.toggleMusic(it)
-                applyControls()
-            }
-            SettingSwitch("Sound effects", controls.effectsEnabled) {
-                controls.toggleEffects(it)
-                applyControls()
-            }
+        Column(Modifier.fillMaxWidth().glassCard(14.dp)) {
             AudioChannel.entries.forEach { channel ->
-                val title =
-                    when (channel) {
-                        AudioChannel.music -> "Music"
-                        AudioChannel.`interface` -> "Menus"
-                        AudioChannel.farm -> "Farm"
-                        AudioChannel.animals -> "Animals"
-                        AudioChannel.ambience -> "Ambience"
-                    }
                 VolumeRow(
-                    title = title,
+                    title = channel.title,
                     value = settings[channel].toFloat(),
                     onValueChange = {
                         controls.setLevel(channel, it.toDouble())
                         applyControls()
                     },
+                    onRelease = { audio.playSample(channel) },
                 )
-            }
-            track?.let {
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 14.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    BasicText(
-                        "Now playing: $it",
-                        Modifier.weight(1f),
-                        style = HudType.subheadline.copy(color = Theme.textSecondary),
-                    )
-                    PillButton(
-                        title = "Next song",
-                        onClick = audio::skipMusic,
-                        role = PillRole.neutral,
-                    )
+                if (channel == AudioChannel.music && settings[channel] > 0) {
+                    track?.let { SongRow(it, audio::skipMusic) }
                 }
             }
         }
         PillButton(
-            title = "Reset sound",
-            onClick = {
-                controls.reset()
-                applyControls()
-            },
+            title = "Reset to Defaults",
+            onClick = { confirmsReset = true },
             modifier = Modifier.fillMaxWidth(),
             role = PillRole.neutral,
         )
     }
+    if (confirmsReset) {
+        HudMaterialTheme {
+            AlertDialog(
+                onDismissRequest = { confirmsReset = false },
+                title = {
+                    Text(
+                        "Reset Sound to defaults?",
+                        style = HudType.title3.copy(fontWeight = FontWeight.Bold),
+                        color = Theme.textPrimary,
+                    )
+                },
+                text = {
+                    Text(
+                        "Your sound settings go back to how the game first came.",
+                        style = HudType.subheadline,
+                        color = Theme.textSecondary,
+                    )
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            confirmsReset = false
+                            controls.reset()
+                            applyControls()
+                        },
+                    ) { Text("Reset", style = HudType.headline, color = Theme.danger) }
+                },
+                dismissButton = {
+                    TextButton(onClick = { confirmsReset = false }) {
+                        Text("Cancel", style = HudType.subheadline, color = Theme.textSecondary)
+                    }
+                },
+            )
+        }
+    }
 }
+
+/** The song playing, with a button to move on to the next. */
+@Composable
+private fun SongRow(
+    song: String,
+    onSkip: () -> Unit,
+) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .padding(start = 14.dp, end = 14.dp, bottom = 10.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        BasicText(
+            song,
+            Modifier.weight(1f),
+            style = HudType.subheadline.copy(color = Theme.textSecondary),
+            maxLines = 1,
+        )
+        HudIcon(
+            HudIcons.forwardFill,
+            Theme.accent,
+            Modifier.clickable(role = Role.Button, onClick = onSkip),
+            size = 20.dp,
+            contentDescription = "Skip Song",
+        )
+    }
+}
+
+private val AudioChannel.title: String
+    get() =
+        when (this) {
+            AudioChannel.music -> "Music"
+            AudioChannel.`interface` -> "Interface"
+            AudioChannel.farm -> "Farm"
+            AudioChannel.animals -> "Animals"
+            AudioChannel.ambience -> "Ambience"
+        }
 
 @Composable
 private fun VolumeRow(
     title: String,
     value: Float,
     onValueChange: (Float) -> Unit,
+    onRelease: () -> Unit,
 ) {
     Column(
         Modifier
@@ -256,51 +311,19 @@ private fun VolumeRow(
                 style = HudType.headline.copy(color = Theme.textPrimary),
             )
             BasicText(
-                "${(value * 100).toInt()}%",
+                "${(value * 100).roundToInt()}%",
                 style = HudType.subheadline.copy(color = Theme.textSecondary),
             )
         }
         Slider(
             value = value,
             onValueChange = onValueChange,
+            onValueChangeFinished = onRelease,
             colors =
                 SliderDefaults.colors(
                     thumbColor = Theme.accent,
                     activeTrackColor = Theme.accent,
                     inactiveTrackColor = Theme.accent.copy(alpha = 0.24f),
-                ),
-        )
-    }
-}
-
-@Composable
-private fun SettingSwitch(
-    title: String,
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
-) {
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 14.dp, vertical = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        BasicText(
-            title,
-            Modifier.weight(1f),
-            style = HudType.headline.copy(color = Theme.textPrimary),
-        )
-        Switch(
-            checked = checked,
-            onCheckedChange = onCheckedChange,
-            colors =
-                SwitchDefaults.colors(
-                    checkedThumbColor = Theme.onAccent,
-                    checkedTrackColor = Theme.accent,
-                    uncheckedThumbColor = Theme.textSecondary,
-                    uncheckedTrackColor = Theme.glassFill,
-                    uncheckedBorderColor = Theme.panelBorder,
                 ),
         )
     }

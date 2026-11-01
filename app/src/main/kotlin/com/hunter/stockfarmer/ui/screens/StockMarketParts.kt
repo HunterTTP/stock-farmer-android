@@ -20,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -27,6 +28,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.hunter.stockfarmer.core.model.dollars
 import com.hunter.stockfarmer.core.rules.StockMarketRules
+import com.hunter.stockfarmer.ui.theme.HudIcon
+import com.hunter.stockfarmer.ui.theme.HudIcons
 import com.hunter.stockfarmer.ui.theme.HudTextField
 import com.hunter.stockfarmer.ui.theme.HudType
 import com.hunter.stockfarmer.ui.theme.Theme
@@ -38,17 +41,34 @@ internal fun SummaryCard(state: StockMarketState) {
     val gainColor = if (state.gainCents < 0) Theme.spend else Theme.accent
     val color = if (state.hasCost) gainColor else Theme.textPrimary
     Column(Modifier.fillMaxWidth().categoryCard(false), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-        Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("Stocks Owned", color = Theme.textSecondary, style = HudType.caption)
-            Text(
-                state.slots,
-                color = Theme.textPrimary,
-                style = HudType.headline.copy(fontWeight = FontWeight.ExtraBold),
-            )
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(14.dp, Alignment.CenterHorizontally),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            HudIcon(HudIcons.chartLineUptrend, Color.White, size = 34.dp)
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
+                Text("Stocks Owned", color = Theme.textSecondary, style = HudType.caption)
+                Text(
+                    state.slots,
+                    color = Theme.textPrimary,
+                    style = HudType.headline.copy(fontWeight = FontWeight.ExtraBold),
+                )
+            }
         }
-        SummaryRow("Portfolio Value", state.portfolioValue, Theme.textPrimary)
+        Box(Modifier.fillMaxWidth().height(1.dp).background(Color.White.copy(alpha = 0.15f)))
+        SummaryRow("Portfolio Value", state.portfolioValue, Theme.textPrimary, FontWeight.ExtraBold)
         val arrow = if (state.gainCents >= 0) "▲" else "▼"
-        SummaryRow("Performance %", if (state.hasCost) "${state.performance} $arrow" else state.performance, color)
+        SummaryRow(
+            "Performance %",
+            if (state.hasCost) "${state.performance} $arrow" else state.performance,
+            color,
+            FontWeight.Bold,
+            HudType.subheadline,
+        )
         SummaryRow("Performance $", if (state.hasCost) ScreenFormat.signedMoney(state.gainCents) else "$0", color)
     }
 }
@@ -58,10 +78,12 @@ private fun SummaryRow(
     title: String,
     value: String,
     color: Color,
+    weight: FontWeight = FontWeight.Bold,
+    style: TextStyle = HudType.headline,
 ) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(title, Modifier.weight(1f), color = Theme.textSecondary, style = HudType.subheadline, maxLines = 1)
-        Text(value, color = color, style = HudType.headline.copy(fontWeight = FontWeight.Bold), maxLines = 1)
+        Text(value, color = color, style = style.copy(fontWeight = weight), maxLines = 1)
     }
 }
 
@@ -246,6 +268,7 @@ internal fun OfflineNotice() {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
+        HudIcon(HudIcons.wifiSlash, Theme.textSecondary, size = 54.dp)
         Text(
             "No internet connection",
             color = Theme.textPrimary,

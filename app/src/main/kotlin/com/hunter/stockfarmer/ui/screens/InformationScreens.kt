@@ -11,7 +11,6 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DateRangePicker
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDateRangePickerState
@@ -29,6 +28,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.hunter.stockfarmer.core.model.ChangelogDay
 import com.hunter.stockfarmer.game.GameSession
+import com.hunter.stockfarmer.ui.theme.HudSearchField
 import com.hunter.stockfarmer.ui.theme.HudType
 import com.hunter.stockfarmer.ui.theme.PillButton
 import com.hunter.stockfarmer.ui.theme.PillRole
@@ -111,23 +111,7 @@ private fun ChangelogContent(
     onChange: (ChangelogState) -> Unit,
 ) {
     var showsCalendar by remember { mutableStateOf(false) }
-    OutlinedTextField(
-        value = state.query,
-        onValueChange = { onChange(state.search(it)) },
-        modifier = Modifier.fillMaxWidth(),
-        label = { Text("Search", style = HudType.subheadline, color = Theme.textSecondary) },
-        singleLine = true,
-        trailingIcon = {
-            if (state.query.isNotEmpty()) {
-                Text(
-                    "Clear",
-                    style = HudType.subheadline,
-                    color = Theme.textSecondary,
-                    modifier = Modifier.clickable { onChange(state.search("")) }.padding(8.dp),
-                )
-            }
-        },
-    )
+    HudSearchField(state.query, { onChange(state.search(it)) }, Modifier.fillMaxWidth())
     PillButton(
         title = if (state.picked.isEmpty()) "Choose days" else "Choose days · Filtered",
         onClick = { showsCalendar = true },

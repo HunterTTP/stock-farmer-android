@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -37,6 +36,7 @@ import com.hunter.stockfarmer.game.FarmSlots
 import com.hunter.stockfarmer.game.GameSession
 import com.hunter.stockfarmer.game.SavedGames
 import com.hunter.stockfarmer.ui.theme.HudMaterialTheme
+import com.hunter.stockfarmer.ui.theme.HudTextField
 import com.hunter.stockfarmer.ui.theme.HudType
 import com.hunter.stockfarmer.ui.theme.Theme
 import com.hunter.stockfarmer.ui.theme.glassCard
@@ -137,7 +137,7 @@ fun SaveSlotsScreen(
                         color = Theme.textPrimary,
                     )
                 },
-                text = { OutlinedTextField(name, { name = it }, label = { Text("Name") }, singleLine = true) },
+                text = { HudTextField(name, { name = it }, "Name") },
                 confirmButton = {
                     TextButton(
                         onClick = {
