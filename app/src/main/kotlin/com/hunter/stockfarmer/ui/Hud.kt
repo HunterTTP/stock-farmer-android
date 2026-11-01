@@ -24,6 +24,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -49,6 +50,7 @@ import com.hunter.stockfarmer.core.rules.selectTerrain
 import com.hunter.stockfarmer.game.GameSession
 import com.hunter.stockfarmer.game.cancelPlacement
 import com.hunter.stockfarmer.game.confirmPlacement
+import com.hunter.stockfarmer.ui.fishing.FishingOverlay
 import com.hunter.stockfarmer.ui.menus.Menu
 import com.hunter.stockfarmer.ui.menus.MenusHost
 import com.hunter.stockfarmer.ui.screens.CareerScreen
@@ -134,6 +136,7 @@ fun Hud(
             delay(REFRESH_MILLIS)
         }
     }
+    val cast by session.casts.collectAsState()
     LaunchedEffect(session) { session.newDays.collect { daySummary = it } }
     LaunchedEffect(session) {
         session.events.collect { events ->
@@ -182,6 +185,12 @@ fun Hud(
         }
         levelUnlocks?.let { unlocks ->
             Overlay { LevelUpScreen(session, onClose = { levelUnlocks = null }, unlocks = unlocks) }
+        }
+        cast?.let { hooked ->
+            FishingOverlay(session, hooked, onFinish = { events ->
+                session.publish(events)
+                session.casts.value = null
+            })
         }
         QuestBanner(session, onClose = { rewards = emptyList() }, rewards = rewards)
         DaySummaryBanner(session, onClose = { daySummary = null }, summary = daySummary)

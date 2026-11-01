@@ -17,6 +17,7 @@ import com.hunter.stockfarmer.core.rules.isSprinklerSelected
 import com.hunter.stockfarmer.core.rules.movePlacement
 import com.hunter.stockfarmer.core.rules.nudgePlacement
 import com.hunter.stockfarmer.core.rules.placementRejection
+import com.hunter.stockfarmer.ui.fishing.FishingCast
 import java.time.Instant
 
 /** What a touch on a tile does: carry a thing being placed there, start placing the selected one, or use the tool. */
@@ -36,10 +37,17 @@ fun GameSession.touch(
             }
 
             else -> {
-                engine.useTool(point, now)
+                engine.useTool(point, now).also { hookFish(engine, it) }
             }
         }
     }.let { publish(it) }
+
+private fun GameSession.hookFish(
+    engine: GameEngine,
+    events: List<GameEvent>,
+) {
+    if (casts.value == null) FishingCast.start(engine, events)?.let { casts.value = it }
+}
 
 internal fun GameEngine.startsPlacing(point: GridPoint): Boolean =
     when {
