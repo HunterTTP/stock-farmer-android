@@ -75,6 +75,31 @@ class QuestBoardStateTest {
     }
 
     @Test
+    fun `stock counts stay literal while reward XP uses grouping and progress is bounded`() {
+        val engine = GameEngine(GameState())
+        val quest =
+            MarketQuest(
+                UUID(0, 2),
+                listOf(QuestObjective(QuestGoal.StockProfit, 1_000_000_000, 1_000_000_000)),
+                12345,
+            )
+        val card = QuestCardState.from(quest, engine)
+        assertEquals("12,345 XP", card.reward)
+        assertEquals("1000000000/1000000000", card.objectives.single().progress)
+        assertEquals(1f, card.objectives.single().fraction)
+        assertTrue(card.complete)
+        val overTarget = quest.copy(objectives = listOf(QuestObjective(QuestGoal.PlantTrees, 1, 2)))
+        assertEquals(
+            1f,
+            QuestCardState
+                .from(overTarget, engine)
+                .objectives
+                .single()
+                .fraction,
+        )
+    }
+
+    @Test
     fun `reward banner includes only actual completed quest events in event order`() {
         val rewards =
             QuestReward.from(
