@@ -28,6 +28,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.badlogic.gdx.backends.android.AndroidFragmentApplication
 import com.hunter.stockfarmer.audio.SoundCenter
+import com.hunter.stockfarmer.core.feedback.HapticCue
 import com.hunter.stockfarmer.core.model.GameState
 import com.hunter.stockfarmer.core.rules.GameEvent
 import com.hunter.stockfarmer.core.rules.NightPulse
@@ -35,6 +36,7 @@ import com.hunter.stockfarmer.core.rules.minuteOfDay
 import com.hunter.stockfarmer.farm.FarmFragment
 import com.hunter.stockfarmer.farm.FarmRenderer
 import com.hunter.stockfarmer.game.GameViewModel
+import com.hunter.stockfarmer.haptics.Haptics
 import com.hunter.stockfarmer.notifications.FieldReadyNotificationPermission
 import com.hunter.stockfarmer.notifications.FieldReadyNotifier
 import com.hunter.stockfarmer.notifications.WorkManagerFieldReadyScheduler
@@ -48,12 +50,14 @@ class MainActivity :
     AndroidFragmentApplication.Callbacks {
     private val model: GameViewModel by viewModels()
     private lateinit var sound: SoundCenter
+    private lateinit var haptics: Haptics
     private lateinit var notifications: FieldReadyNotificationPermission
     private lateinit var fieldReady: FieldReadyNotifier
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         sound = SoundCenter(this)
+        haptics = Haptics(window.decorView)
         notifications = FieldReadyNotificationPermission(this, model.notificationPolicy)
         fieldReady = FieldReadyNotifier(WorkManagerFieldReadyScheduler(applicationContext))
         lifecycle.addObserver(sound)
@@ -105,6 +109,7 @@ class MainActivity :
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
                     session.events.collect { events ->
+                        HapticCue.cue(events)?.let(haptics::play)
                         if (events.any { it is GameEvent.Planted }) notifications.requestIfNeeded(hasCrops = true)
                         sound.react(
                             events,
