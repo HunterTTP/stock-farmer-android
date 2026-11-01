@@ -8,14 +8,21 @@ internal fun drawGrid(
     textures: TextureLibrary,
     scale: Float,
     maxScale: Float,
+    view: ViewBounds = ViewBounds.EVERYTHING,
 ) {
+    val alpha = VisualTiming.gridAlpha(scale, maxScale)
+    if (alpha <= 0f) return
     val old = batch.packedColor
-    batch.setColor(0.12f, 0.12f, 0.12f, 0.9f * VisualTiming.gridAlpha(scale, maxScale))
+    batch.setColor(0.12f, 0.12f, 0.12f, 0.9f * alpha)
     val half = scale / 2
     for (index in 0..GameState.GRID_SIZE) {
         val offset = index * FarmRenderer.TILE
-        batch.draw(textures.white, offset - half, 0f, scale, FarmRenderer.WORLD)
-        batch.draw(textures.white, 0f, offset - half, FarmRenderer.WORLD, scale)
+        if (view.sees(offset - half, 0f, scale, FarmRenderer.WORLD)) {
+            batch.draw(textures.white, offset - half, 0f, scale, FarmRenderer.WORLD)
+        }
+        if (view.sees(0f, offset - half, FarmRenderer.WORLD, scale)) {
+            batch.draw(textures.white, 0f, offset - half, FarmRenderer.WORLD, scale)
+        }
     }
     batch.packedColor = old
 }

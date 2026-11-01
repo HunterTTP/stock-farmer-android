@@ -74,7 +74,7 @@ class FarmRenderer(
         val season = state.season
         measure(PerformanceWork.structure) {
             drawGround(batch, state, season)
-            if (gridShown) drawGrid(batch, textures, cameraScale, maxCameraScale)
+            if (gridShown) drawGrid(batch, textures, cameraScale, maxCameraScale, view)
             drawFertilizer(batch, state)
         }
         ground?.invoke(batch, state, now)
@@ -106,7 +106,8 @@ class FarmRenderer(
     ) {
         val grass = textures.texture("terrain", "grass", "jpg", season, smooth = true)
         val farmland = textures.texture("terrain", "farmland", "jpg", smooth = true)
-        val saturatedTiles = state.saturatedFarmland
+        // Finding the watered farmland scans the whole map, so a farm with none skips it.
+        val saturatedTiles = if (state.farmland.isEmpty()) emptySet() else state.saturatedFarmland
         val saturated = textures.texture("terrain", "farmland_saturated", "jpg", smooth = true)
         if (grass != null) {
             for (row in view.rows) {
