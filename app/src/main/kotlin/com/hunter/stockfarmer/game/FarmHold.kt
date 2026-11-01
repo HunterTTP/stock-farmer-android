@@ -24,8 +24,14 @@ class Confirmation(
     val title: String,
     val message: String,
     val confirmTitle: String,
+    val alternative: Alternative? = null,
     val action: () -> Unit,
-)
+) {
+    class Alternative(
+        val title: String,
+        val action: () -> Unit,
+    )
+}
 
 /**
  * Holding a finger on a building, a fruit tree, a decoration or a tree picks it up to be moved; holding one on crops
@@ -77,6 +83,7 @@ private fun GameSession.askToDestroy(
 ): List<GameEvent> {
     val crops = engine.cropsToDestroy(point)
     if (crops.isNotEmpty()) {
+        sceneFeedback.flash(crops, false, now)
         val plants = engine.plantCount(crops)
         val remaining = crops.mapNotNull { engine.remainingGrowTime(it, now) }.maxOrNull() ?: 0.0
         val label = if (plants == 1) "Grow time remaining" else "Longest grow time remaining"
@@ -89,6 +96,7 @@ private fun GameSession.askToDestroy(
             ) { publish(act { it.destroyCrops(crops) }) }
     } else {
         engine.fertilizerToDestroy(point)?.let { tile ->
+            sceneFeedback.flash(listOf(tile), false, now)
             confirmations.value =
                 Confirmation("Destroy fertilizer?", "No money will be returned.", "Destroy") {
                     publish(act { it.destroyFertilizer(tile) })

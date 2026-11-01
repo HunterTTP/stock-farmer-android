@@ -11,7 +11,6 @@ import com.hunter.stockfarmer.core.model.GameState
 import com.hunter.stockfarmer.core.model.GridPoint
 import com.hunter.stockfarmer.core.model.PlayMode
 import com.hunter.stockfarmer.core.rules.DayNightCycle
-import com.hunter.stockfarmer.core.rules.advanceTractor
 import com.hunter.stockfarmer.core.rules.catchButterfly
 import com.hunter.stockfarmer.core.rules.containsRejection
 import com.hunter.stockfarmer.core.rules.minuteOfDay
@@ -20,11 +19,13 @@ import com.hunter.stockfarmer.farm.effects.EffectLayers
 import com.hunter.stockfarmer.farm.effects.EffectPhase
 import com.hunter.stockfarmer.farm.effects.effectLayers
 import com.hunter.stockfarmer.game.GameSession
+import com.hunter.stockfarmer.game.PlacementDrag
 import com.hunter.stockfarmer.game.ViewSnapshot
 import com.hunter.stockfarmer.game.animalGestures
 import com.hunter.stockfarmer.game.hold
 import com.hunter.stockfarmer.game.preview
 import com.hunter.stockfarmer.game.touch
+import com.hunter.stockfarmer.game.touchAnimalAt
 import kotlinx.coroutines.flow.update
 import java.time.Instant
 import kotlin.math.floor
@@ -43,6 +44,7 @@ class FarmGame(
     private val camera = OrthographicCamera()
     private val touch = Vector3()
     private val tilePreview = TilePreview()
+    private val placementDrag = PlacementDrag(session)
 
     fun flashPreview(
         points: List<GridPoint>,
@@ -64,14 +66,15 @@ class FarmGame(
         batch = CountingSpriteBatch()
         textures = TextureLibrary()
         val tractor = TractorLayer(textures)
-        effects = effectLayers(textures, foreground = listOf(tractor))
+        effects = effectLayers(textures, foreground = listOf(tractor), precipitation = false)
         renderer =
             FarmRenderer(
                 textures,
                 listOf(tractor) + animalSources(textures, session.animalGestures) + effects.sources,
                 groundEffects = { batch, state, now -> effects.draw(EffectPhase.GROUND, batch, state, now, camera) },
             )
-        Gdx.input.inputProcessor = GestureDetector(Gestures())
+        Gdx.input.inputProcessor = GestureDetector(20f, 0.4f, 0.35f, 0.15f, Gestures())
+        session.sceneFeedback.catchButterfly = ::catchButterfly
         farmPhoto = FarmPhoto(renderer, batch, textures, effects.photo, foreground = tractor::drawLoad)
         session.photos.handler = { request, done ->
             Gdx.app.postRunnable {
@@ -140,7 +143,15 @@ class FarmGame(
         batch.begin()
         val now = Instant.now()
         driveTractor(now)
-        session.act { session.animalGestures.advance(it, now) }
+        session.act {
+            session.animalGestures.advance(it, now)
+            if (session.isActive && !session.isSaveBlocked) session.wildGrowth.advance(it, now)
+        }
+        session.sceneFeedback.drainFlashes().forEach { tilePreview.flash(it.tiles, it.allowed, it.at) }
+        session.sceneFeedback.drainInteractions().forEach { renderer.interactions.interact(it) }
+        session.read { state ->
+            session.wildGrowth.drain().forEach { renderer.growth.reveal(it.trees, it.rocks, state.season, it.at) }
+        }
         val screenScale = camera.zoom * Gdx.graphics.density
         renderer.cameraScale = screenScale
         renderer.maxCameraScale = maxZoom() * Gdx.graphics.density
@@ -165,13 +176,15 @@ class FarmGame(
     }
 
     /** With the Bucket in hand, a tap on a flying butterfly catches it instead of using the tool. */
-    private fun catchButterfly(tile: GridPoint): Boolean {
-        if (!session.read { it.mode == PlayMode.harvest && it.harvestTool == HarvestTool.bucket }) return false
-        val target = effects.butterflies.catchable(tile) ?: return false
-        val events = session.act { it.catchButterfly(target.wings, target.releasedID, tile, Instant.now()) }
-        session.publish(events)
+    private fun catchButterfly(
+        tile: GridPoint,
+        now: Instant,
+    ): List<com.hunter.stockfarmer.core.rules.GameEvent> {
+        if (!session.read { it.mode == PlayMode.harvest && it.harvestTool == HarvestTool.bucket }) return emptyList()
+        val target = effects.butterflies.catchable(tile) ?: return emptyList()
+        val events = session.act { it.catchButterfly(target.wings, target.releasedID, tile, now) }
         if (!events.containsRejection) effects.butterflies.remove(target)
-        return true
+        return events
     }
 
     /** Tells the sound side where the camera is looking. */
@@ -192,8 +205,17 @@ class FarmGame(
 
     /** Lets a running tractor move on by the time since the last frame. */
     private fun driveTractor(now: Instant) {
-        val elapsed = Gdx.graphics.deltaTime.toDouble()
-        session.act { engine -> if (engine.state.tractorRun != null) engine.advanceTractor(elapsed, true, now) }
+        session.publish(
+            session.act { engine ->
+                session.tractor.advance(
+                    engine,
+                    Gdx.graphics.deltaTime.toDouble(),
+                    session.isActive,
+                    session.isSaveBlocked,
+                    now,
+                )
+            },
+        )
     }
 
     /** Darkens the whole view toward night by how dark the farm's clock says it is. */
@@ -206,6 +228,7 @@ class FarmGame(
         session.photos.handler = null
         session.view.isSceneBuilt = false
         session.view.framesDrawn = 0
+        session.sceneFeedback.catchButterfly = null
         batch.dispose()
         textures.dispose()
     }
@@ -218,6 +241,7 @@ class FarmGame(
             button: Int,
         ): Boolean {
             session.farmTouches.update { it + 1 }
+            if (pointer == 0) placementDrag.begin(tileAt(x, y))
             return false
         }
 
@@ -227,7 +251,8 @@ class FarmGame(
             count: Int,
             button: Int,
         ): Boolean {
-            tileAt(x, y)?.let { if (!catchButterfly(it)) session.touch(it) }
+            val tile = tileAt(x, y)
+            if (!session.touchAnimalAt(touch.x, touch.y)) tile?.let { session.touch(it) }
             return true
         }
 
@@ -235,7 +260,8 @@ class FarmGame(
             x: Float,
             y: Float,
         ): Boolean {
-            tileAt(x, y)?.let { session.hold(it) }
+            val tile = tileAt(x, y)
+            if (!session.touchAnimalAt(touch.x, touch.y)) tile?.let { session.hold(it) }
             return true
         }
 
@@ -258,9 +284,24 @@ class FarmGame(
             deltaX: Float,
             deltaY: Float,
         ): Boolean {
+            if (placementDrag.move(tileAt(x, y))) return true
             camera.position.add(-deltaX * camera.zoom, deltaY * camera.zoom, 0f)
             keepOnMap()
             return true
+        }
+
+        override fun panStop(
+            x: Float,
+            y: Float,
+            pointer: Int,
+            button: Int,
+        ): Boolean {
+            placementDrag.end()
+            return true
+        }
+
+        override fun pinchStop() {
+            placementDrag.end()
         }
 
         private var zoomAtStart = 1f

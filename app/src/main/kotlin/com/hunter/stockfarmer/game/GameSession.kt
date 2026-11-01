@@ -63,6 +63,14 @@ class GameSession(
     /** Fireworks waiting for the farm scene to draw them. */
     val celebrations = FarmCelebrations()
 
+    val sceneFeedback = FarmSceneFeedback()
+    val wildGrowth = WildGrowthDriver()
+    val tractor = TractorDriver()
+
+    @Volatile var isActive = true
+
+    @Volatile var isSaveBlocked = false
+
     /** Tells everyone listening what just happened; nothing is sent for an empty batch. */
     fun publish(batch: List<GameEvent>): List<GameEvent> = batch.also { if (it.isNotEmpty()) published.tryEmit(it) }
 

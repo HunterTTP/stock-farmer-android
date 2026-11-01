@@ -1,10 +1,14 @@
 package com.hunter.stockfarmer.game
 
 import com.hunter.stockfarmer.core.model.GridPoint
+import com.hunter.stockfarmer.core.model.PlayMode
 import com.hunter.stockfarmer.core.rules.AnimalRef
 import com.hunter.stockfarmer.core.rules.GameEngine
+import com.hunter.stockfarmer.core.rules.GameEvent
 import com.hunter.stockfarmer.core.rules.move
+import com.hunter.stockfarmer.core.rules.name
 import com.hunter.stockfarmer.core.rules.position
+import com.hunter.stockfarmer.core.rules.readyProduce
 import com.hunter.stockfarmer.core.rules.wanderDirection
 import com.hunter.stockfarmer.core.util.RandomSource
 import com.hunter.stockfarmer.core.util.SystemRandomSource
@@ -15,6 +19,7 @@ import com.hunter.stockfarmer.farm.animals.AnimalHitTarget
 import com.hunter.stockfarmer.farm.animals.AnimalReaction
 import com.hunter.stockfarmer.farm.animals.animalReaction
 import com.hunter.stockfarmer.ui.sheets.AnimalInteraction
+import com.hunter.stockfarmer.ui.sheets.SheetTarget
 import java.time.Instant
 import java.util.WeakHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
@@ -112,3 +117,21 @@ fun GameSession.interactWithAnimal(
     val gesture = if (interaction == AnimalInteraction.PET) AnimalGesture.PET else AnimalGesture.NUDGE
     animalGestures.interact(animal, gesture, Instant.now())
 }
+
+/** A farm tap opens the options; only the matching implement collects ready produce instead. */
+internal fun GameSession.interactWithAnimal(
+    animal: AnimalRef,
+    now: Instant,
+): List<GameEvent> =
+    act { engine ->
+        if (engine.name(animal) == null) return@act emptyList()
+        val point = engine.position(animal) ?: return@act emptyList()
+        if (engine.state.mode == PlayMode.harvest &&
+            engine.readyProduce(point, now)?.second == engine.state.harvestTool
+        ) {
+            flash(listOf(point), engine.useTool(point, now), now)
+        } else {
+            sheets.value = SheetTarget.Animal(animal)
+            emptyList()
+        }
+    }

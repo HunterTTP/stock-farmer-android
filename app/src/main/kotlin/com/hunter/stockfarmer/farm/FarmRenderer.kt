@@ -3,6 +3,7 @@ package com.hunter.stockfarmer.farm
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
+import com.badlogic.gdx.graphics.g2d.TextureRegion
 import com.hunter.stockfarmer.core.catalog.Building
 import com.hunter.stockfarmer.core.catalog.Crop
 import com.hunter.stockfarmer.core.catalog.Decoration
@@ -16,7 +17,9 @@ import com.hunter.stockfarmer.core.model.Plot
 import com.hunter.stockfarmer.core.rules.FruitTreePhase
 import com.hunter.stockfarmer.core.rules.GrowthConditions
 import com.hunter.stockfarmer.core.rules.GrowthTimelines
+import com.hunter.stockfarmer.core.rules.Season
 import com.hunter.stockfarmer.core.rules.saturatedFarmland
+import com.hunter.stockfarmer.game.SceneInteractions
 import java.time.Instant
 import kotlin.math.min
 
@@ -33,6 +36,7 @@ class FarmRenderer(
     private val timelines = HashMap<Plot, GrowthTimelines>()
     private val terrain = TerrainTextures(textures)
     val growth = GrowthReveal()
+    val interactions = SceneInteractions()
     var gridShown = true
     var cameraScale = 1f
     var maxCameraScale = 1f
@@ -50,10 +54,10 @@ class FarmRenderer(
         ground?.invoke(batch, state, now)
         standing.clear()
         growth.prune(state.trees.keys, state.rocks.keys, now)
-        collectBuildings(batch, state)
+        collectBuildings(batch, state, now)
         collectTrees(batch, state, now)
         collectRocks(batch, state, now)
-        collectDecorations(batch, state)
+        collectDecorations(batch, state, now)
         collectFences(batch, state)
         collectCrops(batch, state, now)
         sources.forEach { it.collect(batch, state, now, standing) }
@@ -94,9 +98,11 @@ class FarmRenderer(
     private fun collectBuildings(
         batch: SpriteBatch,
         state: GameState,
+        now: Instant,
     ) {
         for (placed in state.placedBuildings) {
             val building: Building = placed.building
+            if (building.id == "tractor1") continue
             val texture = textures.texture("buildings", building.assetName) ?: continue
             val box = fit(texture, building.width * TILE, building.height * TILE)
             val footprintLeft = placed.origin.col * TILE
@@ -106,6 +112,16 @@ class FarmRenderer(
             standing +=
                 Standing((placed.origin.row + building.height).toFloat()) {
                     batch.draw(texture, x, y, box.first, box.second)
+                    if (building.assetName == "silo_tower") {
+                        val index = interactions.door(placed.origin, now)
+                        val sheet = textures.texture("motion", "siloDoor")
+                        if (index != null && sheet != null) {
+                            val scale = box.second / 672
+                            val frameWidth = sheet.width / 14
+                            val door = TextureRegion(sheet, index * frameWidth, 0, frameWidth, sheet.height)
+                            batch.draw(door, x + box.first / 2 - 24 * scale, y, 48 * scale, 96 * scale)
+                        }
+                    }
                 }
         }
     }
@@ -162,6 +178,7 @@ class FarmRenderer(
     private fun collectDecorations(
         batch: SpriteBatch,
         state: GameState,
+        now: Instant,
     ) {
         for ((origin, placed) in state.decorations) {
             val decoration = Decoration.named(placed.decorationID) ?: continue
@@ -181,7 +198,24 @@ class FarmRenderer(
             val y = if (stands) feet else feet + decoration.height * TILE / 2 - height / 2
             standing +=
                 Standing((origin.row + decoration.height).toFloat()) {
-                    batch.draw(texture, x, y, width, height)
+                    val motion = interactions.decoration(origin, placed, state.season, now)
+                    val sheet = motion?.let { textures.texture("motion", it.name) }
+                    if (motion != null && sheet != null) {
+                        val frameWidth = sheet.width / motion.count
+                        val frame = TextureRegion(sheet, motion.frame * frameWidth, 0, frameWidth, sheet.height)
+                        val animatedWidth = motion.width * scale
+                        val animatedHeight = motion.height * scale
+                        val center = x + width / 2 + if (motion.name == "well") 24 * scale else 0f
+                        batch.draw(frame, center - animatedWidth / 2, y, animatedWidth, animatedHeight)
+                    } else {
+                        val rotation =
+                            if (state.season == Season.winter) {
+                                interactions.winterRotation(origin, placed, now)
+                            } else {
+                                0f
+                            }
+                        batch.draw(TextureRegion(texture), x, y, width / 2, 0f, width, height, 1f, 1f, rotation)
+                    }
                 }
         }
     }

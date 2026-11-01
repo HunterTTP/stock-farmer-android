@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -46,6 +45,7 @@ import com.hunter.stockfarmer.core.rules.NightPulse
 import com.hunter.stockfarmer.core.rules.minuteOfDay
 import com.hunter.stockfarmer.farm.FarmFragment
 import com.hunter.stockfarmer.farm.FarmRenderer
+import com.hunter.stockfarmer.farm.FarmWeather
 import com.hunter.stockfarmer.game.GameViewModel
 import com.hunter.stockfarmer.haptics.Haptics
 import com.hunter.stockfarmer.notifications.FieldReadyNotificationPermission
@@ -97,19 +97,21 @@ class MainActivity :
                         FarmHost()
                         val recorder = rememberTimelapseRecorder(model.session)
                         TimelapseCapture(recorder, ready = persistence.error == null)
-                        RewardFlightsHost(model.session) {
-                            CompositionLocalProvider(LocalTimelapseRecorder provides recorder) {
-                                Hud(
-                                    model.session,
-                                    sound,
-                                    model.farms,
-                                    model.performance,
-                                    Modifier.fillMaxSize(),
-                                    saveError = persistence.error,
-                                    onRetrySave = model::retry,
-                                )
+                        FarmWeather(model.session) {
+                            RewardFlightsHost(model.session) {
+                                CompositionLocalProvider(LocalTimelapseRecorder provides recorder) {
+                                    Hud(
+                                        model.session,
+                                        sound,
+                                        model.farms,
+                                        model.performance,
+                                        Modifier.fillMaxSize(),
+                                        saveError = persistence.error,
+                                        onRetrySave = model::retry,
+                                    )
+                                }
+                                RewardFlights(model.session, Modifier.fillMaxSize())
                             }
-                            RewardFlights(model.session, Modifier.fillMaxSize())
                         }
                     }
                     LaunchedEffect(persistence.isReady) {

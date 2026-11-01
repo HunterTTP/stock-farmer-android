@@ -11,14 +11,20 @@ import com.hunter.stockfarmer.core.rules.beginPlacingSelectedDecoration
 import com.hunter.stockfarmer.core.rules.buildingPlacement
 import com.hunter.stockfarmer.core.rules.cancelPlacement
 import com.hunter.stockfarmer.core.rules.confirmPlacement
+import com.hunter.stockfarmer.core.rules.containsRejection
+import com.hunter.stockfarmer.core.rules.isChopping
 import com.hunter.stockfarmer.core.rules.isFruitTreeSelected
 import com.hunter.stockfarmer.core.rules.isPlacing
 import com.hunter.stockfarmer.core.rules.isPlacingFirstOfItsKind
 import com.hunter.stockfarmer.core.rules.isSprinklerSelected
+import com.hunter.stockfarmer.core.rules.liftTool
 import com.hunter.stockfarmer.core.rules.movePlacement
 import com.hunter.stockfarmer.core.rules.nudgePlacement
 import com.hunter.stockfarmer.core.rules.placementRejection
+import com.hunter.stockfarmer.core.rules.tapCrop
+import com.hunter.stockfarmer.farm.animals.animalAtTouch
 import com.hunter.stockfarmer.ui.fishing.FishingCast
+import com.hunter.stockfarmer.ui.sheets.SheetTarget
 import com.hunter.stockfarmer.ui.sheets.SheetTargets
 import java.time.Instant
 
@@ -29,26 +35,60 @@ fun GameSession.touch(
 ): List<GameEvent> =
     act { engine ->
         when {
-            engine.isPlacing -> {
-                engine.movePlacement(point)
-                emptyList()
-            }
-
-            SheetTargets.at(engine, point)?.also { sheets.value = it } != null -> {
-                emptyList()
-            }
-
-            engine.startsPlacing(point) -> {
-                emptyList()
-            }
-
-            else -> {
-                engine.useTool(point, now).also { hookFish(engine, it) }
-            }
+            engine.isPlacing -> emptyList()
+            else -> tapTile(engine, point, now)
         }
     }.let { publish(it) }
 
-private fun GameSession.hookFish(
+private fun GameSession.tapTile(
+    engine: GameEngine,
+    point: GridPoint,
+    now: Instant,
+): List<GameEvent> {
+    val target = SheetTargets.at(engine, point)
+    if (target is SheetTarget.Building) return openBuilding(engine, target.origin, point, now)
+    if (askAboutLandscape(engine, point, now)) return emptyList()
+    toolGuidance(engine, point, now)?.let { return it }
+    val butterflies = sceneFeedback.catchButterfly?.invoke(point, now).orEmpty()
+    if (butterflies.isNotEmpty()) return flash(listOf(point), butterflies, now)
+    val crops = engine.tapCrop(point, now)
+    if (crops.isNotEmpty()) return toolFlash(engine, point, crops, now)
+    if (target is SheetTarget.Animal) return interactWithAnimal(target.animal, now)
+    if (engine.startsPlacing(point)) return emptyList()
+    return engine.useTool(point, now).also {
+        engine.liftTool()
+        hookFish(engine, it)
+        if (it.isNotEmpty()) toolFlash(engine, point, it, now)
+    }
+}
+
+internal fun GameSession.flash(
+    tiles: List<GridPoint>,
+    events: List<GameEvent>,
+    now: Instant,
+): List<GameEvent> = events.also { sceneFeedback.flash(tiles, !events.containsRejection, now) }
+
+private fun GameSession.toolFlash(
+    engine: GameEngine,
+    point: GridPoint,
+    events: List<GameEvent>,
+    now: Instant,
+): List<GameEvent> = events.also { if (!engine.isChopping) flash(listOf(point), it, now) }
+
+/** Scene hit testing uses the interpolated center, before tile-based actions, including for a hold. */
+fun GameSession.touchAnimalAt(
+    x: Float,
+    y: Float,
+    now: Instant = Instant.now(),
+): Boolean =
+    act { engine ->
+        if (engine.isPlacing) return@act false
+        val animal = animalAtTouch(x, y, animalGestures.targets) ?: return@act false
+        publish(interactWithAnimal(animal, now))
+        true
+    }
+
+internal fun GameSession.hookFish(
     engine: GameEngine,
     events: List<GameEvent>,
 ) {

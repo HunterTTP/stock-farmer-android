@@ -31,6 +31,8 @@ import androidx.compose.ui.unit.dp
 import com.hunter.stockfarmer.core.rules.DayNightCycle
 import com.hunter.stockfarmer.core.rules.Season
 import com.hunter.stockfarmer.core.rules.Weather
+import com.hunter.stockfarmer.farm.LocalFarmWeather
+import com.hunter.stockfarmer.farm.drawFarmWeather
 import com.hunter.stockfarmer.game.GameSession
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -72,6 +74,7 @@ internal fun FishingCanvas(
             )
         }
     val clip = remember { Path() }
+    val weather = LocalFarmWeather.current
     Canvas(modifier) {
         clip.reset()
         val radius = hypot(size.width, size.height) / 2 * reveal
@@ -136,6 +139,7 @@ internal fun FishingCanvas(
                 }
             }
             drawRect(sky.tint, blendMode = BlendMode.Multiply)
+            drawFarmWeather(weather.value)
         }
         if (reveal >= 1f && fishing.progress < 1 && !fishing.isFinished) {
             val rod = fishing.rod

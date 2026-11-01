@@ -145,6 +145,7 @@ class GamePersistence(
         scheduler.execute {
             if (closed || active) return@execute
             active = true
+            session.isActive = state.isReady
             if (state.isReady) {
                 holdClock()
                 requestSave()
@@ -157,9 +158,11 @@ class GamePersistence(
         scheduler.execute {
             if (closed) return@execute
             active = false
+            session.isActive = false
             cancelTimer?.invoke()
             cancelTimer = null
             if (state.isReady) {
+                session.act { session.wildGrowth.advance(it, now(), finishing = true) }
                 if (leftAt == null) leftAt = now()
                 save(flush = true)
             }
@@ -174,7 +177,15 @@ class GamePersistence(
                     FarmStartup(slots, now(), random)
                 }
             slot = startup.slot
-            session.act { it.state = startup.engine.state }
+            session.act {
+                it.state = startup.engine.state
+                session.wildGrowth.clear()
+                session.tractor.clear()
+                session.sceneFeedback.clear()
+                session.casts.value = null
+                session.sheets.value = null
+                session.confirmations.value = null
+            }
             leftAt = startup.preparedAt
             if (active) holdClock()
             publish(PersistenceState(isLoading = false, isReady = true))
@@ -239,6 +250,8 @@ class GamePersistence(
 
     private fun publish(value: PersistenceState) {
         state = value
+        session.isSaveBlocked = !value.isReady || value.error != null
+        session.isActive = active && value.isReady
         onState(value)
     }
 

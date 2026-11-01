@@ -43,7 +43,14 @@ class GameTick(
             val events =
                 (engine.updateCoops(now, random) + engine.updateHerds(now, random)).toMutableList()
             engine.layEggs(interval, now, random)
-            engine.updateFish(now, using = random)
+            engine.updateFish(
+                now,
+                onTheLine =
+                    session.casts.value
+                        ?.let { setOf(it.pond) }
+                        .orEmpty(),
+                using = random,
+            )
             val dwell = mutableMapOf<GridPoint, Double>()
             for ((house, pet) in engine.state.pets) {
                 if (engine.state.plots[pet.position] == null) continue
@@ -53,7 +60,20 @@ class GameTick(
             petDwell = dwell
             events += engine.eatFavoriteCrops(now)
             engine.growTrees(now)
-            engine.beginNewDayIfDue(now)?.let { session.announce(it) }
+            engine.beginNewDayIfDue(now)?.let {
+                val view = session.view.snapshot
+                val middle = com.hunter.stockfarmer.core.model.GameState.GRID_SIZE / 2.0
+                session.wildGrowth.advance(engine, now, finishing = true)
+                session.wildGrowth.begin(
+                    engine,
+                    engine.state.lastNewDayNight!!,
+                    view?.let { com.hunter.stockfarmer.core.model.GameState.GRID_SIZE - it.centerY / 100.0 } ?: middle,
+                    view?.let { it.centerX / 100.0 } ?: middle,
+                    random,
+                )
+                session.announce(it)
+            }
+            session.wildGrowth.advance(engine, now)
             walkAnimals(engine, now, random, session.animalGestures::isNudging)
             events.filter { it !is GameEvent.Hatched && it !is GameEvent.Born }
         }

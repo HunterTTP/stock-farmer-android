@@ -51,6 +51,7 @@ class EffectLayers internal constructor(
 fun effectLayers(
     textures: TextureLibrary,
     foreground: List<EffectOverlay> = emptyList(),
+    precipitation: Boolean = true,
 ): EffectLayers {
     val fireflies = FireflyLayer(textures)
     val butterflies = ButterflyLayer(textures)
@@ -69,10 +70,9 @@ fun effectLayers(
                 wind,
                 LeafLayer(textures, wind.motion),
                 RainTint(textures),
-                RainLayer(textures),
                 fireflies.halos,
                 BuildingGlowLayer(textures),
-            ) + foreground + fireworks,
+            ) + (if (precipitation) listOf(RainLayer(textures)) else emptyList()) + foreground + fireworks,
         butterflies = butterflies,
         fireworks = fireworks,
         shadows = shadows,
