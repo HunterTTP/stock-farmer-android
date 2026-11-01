@@ -75,6 +75,14 @@ class FishingSessionTest {
     }
 
     @Test
+    fun `a given up fish is named in the swam away toast and the batch is empty`() {
+        val engine = engine()
+        val fishing = start(engine)
+        assertEquals("The ${kind.name} swam away", fishing.cast.swamAwayMessage)
+        assertTrue(fishing.giveUp(engine, now).isEmpty())
+    }
+
+    @Test
     fun `refused or stale hooks cannot start a contest or consume the hint`() {
         val engine = engine()
         assertNull(FishingCast.start(engine, engine.castRod(GridPoint(0, 0))))

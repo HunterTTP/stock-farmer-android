@@ -55,8 +55,8 @@ so its natural lifetime cannot expire mid-contest. The current `GameTick` does n
 that integration is deliberately left to the owner. Other fish and the farm clock continue normally.
 Keep any shared rain/snow layer above the fishing water, as on iOS; this slice draws water shimmer,
 night glow and the reference's night/rain/snow tints. It does not replace shared precipitation or audio owners.
-Completion events use the existing gameplay sound handling; the iOS quest-complete sound at meter fill
-needs the owner's audio integration. Android reeling/success haptics are supplied locally.
+Completion events use the existing gameplay sound handling; the iOS quest-complete sound at meter fill plays through `onCaught`,
+which `Hud` wires to `SoundCue.questComplete`. Android reeling/success haptics are supplied locally.
 
 ## Contest behavior
 
@@ -72,7 +72,7 @@ needs the owner's audio integration. Android reeling/success haptics are supplie
   Full storage preserves the catch for Sell or another Store attempt. The rod's auto-sell setting is ignored.
 - Give up/Back during play calls `loseFish(cast.pond, now)` and schedules the normal respawn delay.
   Back after catching attempts Store and remains open if storage is full. An empty completion batch can show
-  the reference's toast, `The ${cast.kind.name} swam away`, in the owner's feedback UI.
+  the reference's toast; `Hud` shows `cast.swamAwayMessage` for it.
 
 ## Verification
 

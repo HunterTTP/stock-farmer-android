@@ -25,6 +25,9 @@ data class FishingCast private constructor(
     val showsHint: Boolean,
 ) {
     val sizeFactor: Double get() = kind.sizeFactor(weight)
+
+    /** The toast shown when the player gives the fish up. */
+    val swamAwayMessage: String get() = "The ${kind.name} swam away"
     val picturePath: String get() = "images/animals/Fish/${kind.assetName}.png"
 
     companion object {

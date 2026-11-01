@@ -35,8 +35,10 @@ import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
@@ -78,6 +80,7 @@ import java.util.Locale
 fun FishingOverlay(
     session: GameSession,
     cast: FishingCast,
+    onCaught: () -> Unit = {},
     onFinish: (List<GameEvent>) -> Unit,
 ) {
     val density = LocalDensity.current
@@ -104,6 +107,7 @@ fun FishingOverlay(
         var seconds by remember(fishing) { mutableDoubleStateOf(0.0) }
         var caughtAt by remember(fishing) { mutableDoubleStateOf(0.0) }
         val finish by rememberUpdatedState(onFinish)
+        val caughtSound by rememberUpdatedState(onCaught)
         val owner = LocalLifecycleOwner.current
         val haptics = LocalHapticFeedback.current
         val caught = fishing.progress >= 1
@@ -157,6 +161,7 @@ fun FishingOverlay(
                         val before = fishing.progress
                         if (fishing.advance(elapsed)) {
                             caughtAt = seconds
+                            caughtSound()
                             haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                         } else if (fishing.progress > before && seconds - lastPulse >= 0.14 - 0.10 * fishing.progress) {
                             lastPulse = seconds
@@ -286,6 +291,14 @@ private fun CatchMeter(
                     cornerRadius = radius,
                 )
             }
+            val inset = 0.5.dp.toPx()
+            drawRoundRect(
+                Theme.panelBorder,
+                topLeft = Offset(inset, inset),
+                size = Size(size.width - 2 * inset, size.height - 2 * inset),
+                cornerRadius = radius,
+                style = Stroke(1.dp.toPx()),
+            )
         }
         BasicText(
             cast.kind.rarity.displayName,

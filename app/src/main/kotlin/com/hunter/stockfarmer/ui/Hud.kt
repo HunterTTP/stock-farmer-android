@@ -231,10 +231,18 @@ fun Hud(
                 )
             }
             cast?.let { hooked ->
-                FishingOverlay(session, hooked, onFinish = { events ->
-                    session.publish(events)
-                    session.casts.value = null
-                })
+                FishingOverlay(
+                    session,
+                    hooked,
+                    onCaught = { sound.play(SoundCue.questComplete) },
+                    onFinish = { events ->
+                        session.publish(events)
+                        if (events.isEmpty()) {
+                            session.showToast(hooked.swamAwayMessage, durationMillis = Feedback.TOAST_MILLIS)
+                        }
+                        session.casts.value = null
+                    },
+                )
             }
             ToastBanner(session, toast) { toast = null }
             QuestBanner(session, onClose = { rewards = emptyList() }, rewards = rewards)

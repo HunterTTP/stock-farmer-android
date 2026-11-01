@@ -246,7 +246,14 @@ private fun PlaybackControls(
         Modifier.background(Color.Black.copy(alpha = 0.7f), RoundedCornerShape(16.dp)).padding(12.dp),
     ) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            TextButton(onClick = onToggle, enabled = enabled && count > 1) {
+            TextButton(
+                onClick = onToggle,
+                modifier =
+                    Modifier.semantics {
+                        contentDescription = if (playback.isPlaying) "Pause timelapse" else "Play timelapse"
+                    },
+                enabled = enabled && count > 1,
+            ) {
                 Text(if (playback.isPlaying) "Pause" else "Play")
             }
             archive.frames.getOrNull(playback.index)?.let { frame ->
