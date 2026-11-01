@@ -29,11 +29,15 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.badlogic.gdx.backends.android.AndroidFragmentApplication
 import com.hunter.stockfarmer.audio.SoundCenter
 import com.hunter.stockfarmer.core.model.GameState
+import com.hunter.stockfarmer.core.rules.GameEvent
 import com.hunter.stockfarmer.core.rules.NightPulse
 import com.hunter.stockfarmer.core.rules.minuteOfDay
 import com.hunter.stockfarmer.farm.FarmFragment
 import com.hunter.stockfarmer.farm.FarmRenderer
 import com.hunter.stockfarmer.game.GameViewModel
+import com.hunter.stockfarmer.notifications.FieldReadyNotificationPermission
+import com.hunter.stockfarmer.notifications.FieldReadyNotifier
+import com.hunter.stockfarmer.notifications.WorkManagerFieldReadyScheduler
 import com.hunter.stockfarmer.ui.Hud
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -44,10 +48,14 @@ class MainActivity :
     AndroidFragmentApplication.Callbacks {
     private val model: GameViewModel by viewModels()
     private lateinit var sound: SoundCenter
+    private lateinit var notifications: FieldReadyNotificationPermission
+    private lateinit var fieldReady: FieldReadyNotifier
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         sound = SoundCenter(this)
+        notifications = FieldReadyNotificationPermission(this, model.notificationPolicy)
+        fieldReady = FieldReadyNotifier(WorkManagerFieldReadyScheduler(applicationContext))
         lifecycle.addObserver(sound)
         listenForSound()
         // Compose creates the host after loading; a restored fragment still refers to the old host's view ID.
@@ -97,6 +105,7 @@ class MainActivity :
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
                     session.events.collect { events ->
+                        if (events.any { it is GameEvent.Planted }) notifications.requestIfNeeded(hasCrops = true)
                         sound.react(
                             events,
                             landscapeTool = session.read { it.selectedLandscape },
@@ -127,6 +136,8 @@ class MainActivity :
     override fun onResume() {
         super.onResume()
         model.resume()
+        fieldReady.onActive()
+        notifications.requestIfNeeded(model.session.read { it.plots.isNotEmpty() })
     }
 
     override fun onPause() {
@@ -135,6 +146,8 @@ class MainActivity :
     }
 
     override fun onStop() {
+        // Readiness is worked out before the pause holds the farm's clock, as on iOS.
+        model.session.act { fieldReady.onBackground(it, Instant.now()) }
         model.pause()
         super.onStop()
     }
