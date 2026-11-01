@@ -25,6 +25,7 @@ $env:JAVA_HOME = "C:\Program Files\Eclipse Adoptium\jdk-25.0.4.7-hotspot"
 ## Open items
 
 - **Panning stops at the farm edge** (reported from a device run). The camera center is clamped to the farm square, as on iOS, so the edge should reach screen center. The code and its test agree, so the cause is not yet known. Reproduce with the zoom level and the tool or placement mode active, and check whether a drag is being taken by tile placement (`FarmGame` `pan` tries `placementDrag` first).
+- **Saves written before the audit may not load.** The old-save migrations were removed (a new app has no old saves) and the save decoder rejects unknown keys, so a test save from an earlier debug build (for example one with a tractor run in progress) can fail to load and offer the backup flow. Start a new farm on devices that ran earlier builds.
 - **Music is 55 MB** of the assets; re-encoding would change how it sounds, so it needs a decision.
 - **ABIs:** three are bundled; dropping `armeabi-v7a` would shrink the APK but exclude old 32-bit devices.
 - **Not done:** texture atlases (860 separate PNGs), exact-time field-ready reminders (needs a permission decision), audio focus for effects, the engine lock held during draw, `OldTargetApi`.
