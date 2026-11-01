@@ -1,32 +1,37 @@
 package com.hunter.stockfarmer.ui.screens
 
 import android.content.Context
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.BasicText
 import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.hunter.stockfarmer.audio.AudioChannel
 import com.hunter.stockfarmer.audio.SoundCenter
 import com.hunter.stockfarmer.audio.SoundSettings
-import com.hunter.stockfarmer.core.model.ChangelogDay
 import com.hunter.stockfarmer.game.GameSession
+import com.hunter.stockfarmer.ui.hud.ToolRoute
+import com.hunter.stockfarmer.ui.theme.HudType
 import com.hunter.stockfarmer.ui.theme.Theme
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import com.hunter.stockfarmer.ui.theme.glassCard
 
 interface ScreenAudio {
     val settings: SoundSettings
@@ -77,14 +82,73 @@ private class PreferenceScreenAudio(
     }
 }
 
-private data class InformationText(
-    val privacy: String,
-    val changelog: List<ChangelogDay>,
-    val error: String? = null,
-)
+private const val SOURCE_CODE_URL = "https://github.com/HunterTTP/stock-farmer-android"
 
+/** The Settings page of the tools sheet: farm photo and links to the pages under it (iOS `SettingsScreen` main page). */
 @Composable
 fun SettingsScreen(
+    session: GameSession,
+    onOpen: (ToolRoute) -> Unit,
+    onPhoto: () -> Unit,
+    isRecording: Boolean,
+    onClose: () -> Unit,
+) {
+    ScreenLayout("Settings", session, onClose) {
+        ScreenLink("Screenshot Farm", onClick = onPhoto)
+        ScreenLink("Timelapse") { onOpen(ToolRoute.Timelapse) }
+        ScreenLink("Load Game") { onOpen(ToolRoute.LoadGame) }
+        ScreenLink("Sound") { onOpen(ToolRoute.SoundSettings) }
+        ScreenLink("Performance", badge = if (isRecording) "Recording" else null) { onOpen(ToolRoute.Performance) }
+        ScreenLink("About") { onOpen(ToolRoute.About) }
+    }
+}
+
+/** Where the game's code lives, and its changelog and privacy policy. */
+@Composable
+fun AboutScreen(
+    session: GameSession,
+    onOpen: (ToolRoute) -> Unit,
+    onClose: () -> Unit,
+) {
+    val uri = LocalUriHandler.current
+    ScreenLayout("About", session, onClose) {
+        ScreenLink("Changelog") { onOpen(ToolRoute.Changelog) }
+        ScreenLink("Source Code") { uri.openUri(SOURCE_CODE_URL) }
+        ScreenLink("Privacy") { onOpen(ToolRoute.Privacy) }
+    }
+}
+
+@Composable
+private fun ScreenLink(
+    title: String,
+    badge: String? = null,
+    onClick: () -> Unit,
+) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .glassCard(14.dp)
+            .clickable(role = Role.Button, onClick = onClick)
+            .padding(14.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        BasicText(
+            title,
+            Modifier.weight(1f),
+            style = HudType.headline.copy(color = Theme.textPrimary),
+        )
+        badge?.let { BasicText(it, style = HudType.subheadline.copy(color = Theme.spend)) }
+        BasicText(
+            "›",
+            style = HudType.headline.copy(fontWeight = FontWeight.Bold, color = Theme.textSecondary),
+        )
+    }
+}
+
+/** Volume sliders per channel, with the music switch and the song playing (iOS `SettingsScreen` sound page). */
+@Composable
+fun SoundSettingsScreen(
     session: GameSession,
     onClose: () -> Unit,
 ) {
@@ -94,33 +158,14 @@ fun SettingsScreen(
     val controls = remember(audio) { SoundControls(audio.settings) }
     var settings by remember(audio) { mutableStateOf(controls.settings) }
     val track by rememberScreenState(audio) { audio.trackName }
-    val information by produceState<InformationText?>(null, context.assets) {
-        value =
-            withContext(Dispatchers.IO) {
-                runCatching {
-                    val privacy =
-                        context.assets
-                            .open("information/Privacy.md")
-                            .bufferedReader()
-                            .use { it.readText() }
-                    val changelog =
-                        context.assets
-                            .open("information/Changelog.md")
-                            .bufferedReader()
-                            .use { it.readText() }
-                    InformationText(privacy, ScreenInformation.changelog(changelog))
-                }.getOrElse { InformationText("", emptyList(), "Couldn't load app information") }
-            }
-    }
 
     fun applyControls() {
         val next = controls.settings
         AudioChannel.entries.filter { settings[it] != next[it] }.forEach { audio.setVolume(it, next[it]) }
         settings = next
     }
-    ScreenLayout("Settings", session, onClose) {
+    ScreenLayout("Sound", session, onClose) {
         ScreenCard {
-            Text("Sound", style = MaterialTheme.typography.titleMedium)
             SettingSwitch("Music", controls.musicEnabled) {
                 controls.toggleMusic(it)
                 applyControls()
@@ -151,18 +196,6 @@ fun SettingsScreen(
             track?.let {
                 Text("Now playing: $it")
                 Button(onClick = audio::skipMusic) { Text("Next song") }
-            }
-        }
-        ScreenCard {
-            Text("Privacy", style = MaterialTheme.typography.titleMedium)
-            Text(information?.privacy ?: "Loading…")
-        }
-        ScreenCard {
-            Text("Changelog", style = MaterialTheme.typography.titleMedium)
-            information?.error?.let { Text(it) }
-            information?.changelog?.forEach { day ->
-                Text(day.date, style = MaterialTheme.typography.titleSmall, color = Theme.xp)
-                day.lines.forEach { Text("• $it") }
             }
         }
     }

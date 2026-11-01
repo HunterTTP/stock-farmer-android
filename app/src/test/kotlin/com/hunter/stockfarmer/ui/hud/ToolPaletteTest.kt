@@ -3,9 +3,13 @@ package com.hunter.stockfarmer.ui.hud
 import com.hunter.stockfarmer.core.catalog.Crop
 import com.hunter.stockfarmer.core.catalog.HarvestTool
 import com.hunter.stockfarmer.core.model.GameState
+import com.hunter.stockfarmer.core.model.Lesson
+import com.hunter.stockfarmer.core.model.ShopItem
 import com.hunter.stockfarmer.core.rules.GameEngine
+import com.hunter.stockfarmer.core.rules.LevelRules
 import com.hunter.stockfarmer.core.rules.Rejection
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -83,5 +87,31 @@ class ToolPaletteTest {
     fun `stock counts read like iOS`() {
         assertEquals(" (x1,200)", ToolPalette.stockSuffix(1200))
         assertEquals(" (x0)", ToolPalette.stockSuffix(0))
+    }
+
+    @Test
+    fun `palette choices carry detail and upgrade routes and mark seeds seen when picked`() {
+        val state =
+            GameState().apply {
+                xp = LevelRules.xpToReach(8)
+                lessonsLearned.addAll(Lesson.entries)
+            }
+        val engine = GameEngine(state)
+        val plant = ToolPalette.dropdowns(state, HudTool.Planting).single()
+        assertTrue(plant.hasNew)
+        val wheat = plant.choices.first()
+        assertEquals(ToolRoute.Item(ShopItem.Seed(Crop.starter.id)), wheat.detail)
+        assertTrue(wheat.isNew)
+        ToolPalette.perform(engine, PaletteAction.Seed(Crop.starter))
+        val afterPick = ToolPalette.dropdowns(state, HudTool.Planting).single()
+        assertFalse(afterPick.choices.first().isNew)
+
+        val harvest = ToolPalette.dropdowns(state, HudTool.Harvest).first()
+        val scythe = harvest.choices.first()
+        assertEquals(ToolRoute.HarvestToolDetail(HarvestTool.scythe), scythe.detail)
+        assertEquals(ToolRoute.ToolUpgrade(HarvestTool.scythe), scythe.upgrade)
+
+        val terrain = ToolPalette.dropdowns(state, HudTool.Terrain).first()
+        assertEquals(ToolRoute.Eraser, terrain.choices.first { it.id == "grass" }.detail)
     }
 }

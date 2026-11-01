@@ -95,8 +95,8 @@ internal fun ToolBar(
     modifier: Modifier = Modifier,
     /** Bumped by the caller whenever a sheet or screen opens, which closes the ring and list. */
     closeRequests: Int = 0,
-    /** Slot for the unlock-dot slice. */
-    newTools: Set<HudTool> = emptySet(),
+    newTools: Set<HudTool> = hud.newTools,
+    onOpenRoute: (ToolRoute) -> Unit = {},
     onDraggingChanged: (Boolean) -> Unit = {},
 ) {
     val scale = LocalHudScale.current
@@ -144,8 +144,18 @@ internal fun ToolBar(
                     ChoiceList(
                         choices = shown.choices.map { choice(session, it, loader) },
                         onPick = { openDropdown = null },
-                        onInfo = {},
-                        onUpgrade = {},
+                        onInfo = { picked ->
+                            shown.choices
+                                .firstOrNull { it.id == picked.id }
+                                ?.detail
+                                ?.let(onOpenRoute)
+                        },
+                        onUpgrade = { picked ->
+                            shown.choices
+                                .firstOrNull { it.id == picked.id }
+                                ?.upgrade
+                                ?.let(onOpenRoute)
+                        },
                         modifier =
                             Modifier
                                 .padding(end = (PHONE_LEADING_NUDGE * scale).dp)
@@ -371,8 +381,11 @@ private fun choice(
         priceLine = priceLine(choice, loader),
         isSelected = choice.isSelected,
         isLocked = choice.requiredLevel != null,
+        isNew = choice.isNew,
         isAffordable = choice.isAffordable,
         isAtLimit = choice.isAtLimit,
+        hasInfo = choice.detail != null,
+        hasUpgrade = choice.upgrade != null,
     )
 
 private fun priceLine(

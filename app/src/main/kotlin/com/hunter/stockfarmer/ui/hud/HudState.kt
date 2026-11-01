@@ -6,7 +6,10 @@ import com.hunter.stockfarmer.core.rules.isPlacing
 import com.hunter.stockfarmer.core.rules.storageCapacity
 import com.hunter.stockfarmer.core.rules.storedCount
 import com.hunter.stockfarmer.game.GameSession
+import com.hunter.stockfarmer.game.canDestroyWhilePlacing
 import com.hunter.stockfarmer.ui.menus.MenuPicture
+import com.hunter.stockfarmer.ui.menus.UnlockCategory
+import com.hunter.stockfarmer.ui.menus.hasNewItems
 import com.hunter.stockfarmer.ui.screens.LessonGuideState
 
 /** What the heads-up display shows, read from the game a few times a second. */
@@ -16,10 +19,13 @@ internal data class HudState(
     val isPlacing: Boolean,
     /** What Place will charge for a new building, or null when it is free or something already standing is being moved. */
     val placementCost: Double?,
+    /** Whether what is being placed already stands on the farm, so Destroy is offered. */
+    val canDestroy: Boolean,
     val tool: HudTool,
     val toolPicture: MenuPicture,
     val circleTool: ToolCircleTool,
     val dropdowns: List<ToolDropdown>,
+    val newTools: Set<HudTool>,
     val storage: String,
     val lesson: LessonGuideState,
 )
@@ -35,6 +41,7 @@ internal fun GameSession.hud(reach: Float = ToolCircleMetrics.DEFAULT_REACH): Hu
             money = state.money,
             xp = state.xp,
             isPlacing = engine.isPlacing,
+            canDestroy = engine.canDestroyWhilePlacing,
             placementCost = placement?.takeIf { it.replacing == null && it.building.cost > 0 }?.building?.cost,
             tool = tool,
             toolPicture = ToolPalette.picture(state, tool),
@@ -46,6 +53,14 @@ internal fun GameSession.hud(reach: Float = ToolCircleMetrics.DEFAULT_REACH): Hu
                     reach = reach,
                 ),
             dropdowns = ToolPalette.dropdowns(state, tool),
+            newTools =
+                buildSet {
+                    if (engine.hasNewItems(UnlockCategory.PLANT)) add(HudTool.Planting)
+                    if (engine.hasNewItems(UnlockCategory.FERTILIZE)) add(HudTool.Tilling)
+                    if (engine.hasNewItems(UnlockCategory.TERRAIN)) add(HudTool.Terrain)
+                    if (engine.hasNewItems(UnlockCategory.BUILD)) add(HudTool.Building)
+                    if (engine.hasNewItems(UnlockCategory.DECORATE)) add(HudTool.Decorating)
+                },
             storage = "${StatusText.count(engine.storedCount)} of ${StatusText.count(engine.storageCapacity)}",
             lesson = LessonGuideState.from(state),
         )

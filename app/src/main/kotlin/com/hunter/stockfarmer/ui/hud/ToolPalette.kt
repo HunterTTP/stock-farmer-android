@@ -14,6 +14,7 @@ import com.hunter.stockfarmer.core.rules.equippedStock
 import com.hunter.stockfarmer.core.rules.isSelling
 import com.hunter.stockfarmer.core.rules.level
 import com.hunter.stockfarmer.core.rules.name
+import com.hunter.stockfarmer.core.rules.offersUpgrade
 import com.hunter.stockfarmer.core.rules.price
 import com.hunter.stockfarmer.core.rules.requiredLevel
 import com.hunter.stockfarmer.core.rules.select
@@ -27,6 +28,11 @@ import com.hunter.stockfarmer.ui.menus.MenuPictures
 import com.hunter.stockfarmer.ui.menus.MenuPrice
 import com.hunter.stockfarmer.ui.menus.MenuSelection
 import com.hunter.stockfarmer.ui.menus.MenuState
+import com.hunter.stockfarmer.ui.menus.UnlockCategory
+import com.hunter.stockfarmer.ui.menus.hasNewItems
+import com.hunter.stockfarmer.ui.menus.isNew
+import com.hunter.stockfarmer.ui.menus.markSeen
+import com.hunter.stockfarmer.ui.menus.shopItem
 import com.hunter.stockfarmer.ui.screens.LessonGuideState
 import java.util.Locale
 
@@ -71,6 +77,9 @@ internal data class ToolChoice(
     val toolLevel: Int? = null,
     /** Swells to point the first-time walk through at this choice. */
     val pulses: Boolean = false,
+    val isNew: Boolean = false,
+    val detail: ToolRoute? = null,
+    val upgrade: ToolRoute? = null,
 )
 
 /** A dropdown beside the tool circle: what is chosen now, and the small list it opens to change it. */
@@ -147,8 +156,12 @@ internal object ToolPalette {
             }
 
             is PaletteAction.Seed -> {
-                val needed = engine.requiredLevel(ShopItem.Seed(action.crop.id))
-                if (needed == null) engine.select(action.crop)
+                val item = ShopItem.Seed(action.crop.id)
+                val needed = engine.requiredLevel(item)
+                if (needed == null) {
+                    engine.select(action.crop)
+                    engine.markSeen(item)
+                }
                 needed?.let { Rejection.NeedLevel(it) }
             }
 
@@ -187,9 +200,18 @@ internal object ToolPalette {
                     isSelected = isPlanting && crop == engine.selectedCrop,
                     requiredLevel = needed,
                     isAffordable = engine.state.money >= engine.price(item),
+                    isNew = engine.isNew(item),
+                    detail = ToolRoute.Item(item),
                 )
             }
-        return listOf(ToolDropdown("Plant", engine.name(ShopItem.Seed(engine.selectedCrop.id)), choices))
+        return listOf(
+            ToolDropdown(
+                "Plant",
+                engine.name(ShopItem.Seed(engine.selectedCrop.id)),
+                choices,
+                hasNew = engine.hasNewItems(UnlockCategory.PLANT),
+            ),
+        )
     }
 
     private fun harvest(engine: GameEngine): List<ToolDropdown> {
@@ -208,6 +230,8 @@ internal object ToolPalette {
                     levelText = "Level $level",
                     toolLevel = level,
                     pulses = tool == HarvestTool.scythe && needsScythe,
+                    detail = ToolRoute.HarvestToolDetail(tool),
+                    upgrade = ToolRoute.ToolUpgrade(tool).takeIf { engine.offersUpgrade(tool) },
                 )
             }
         val destination =
@@ -261,11 +285,20 @@ internal object ToolPalette {
                 picture = fertilizerPicture,
                 isSelected = state.mode == PlayMode.fertilize,
                 isAffordable = state.money >= engine.price(ShopItem.Fertilizer),
+                detail = ToolRoute.Item(ShopItem.Fertilizer),
             )
         val choices = listOf(fertilizer) + sprinklers.map { it.toToolChoice() }
         val held = choices.firstOrNull { it.isSelected } ?: fertilizer
         val stock = if (held === fertilizer) null else engine.equippedStock
-        return listOf(ToolDropdown("Fertilize", held.title, choices, stock))
+        return listOf(
+            ToolDropdown(
+                "Fertilize",
+                held.title,
+                choices,
+                stock,
+                hasNew = engine.hasNewItems(UnlockCategory.FERTILIZE),
+            ),
+        )
     }
 
     /** The Terrain, Build and Decorate lists come from the menus the screen already has, with their variants as more dropdowns. */
@@ -289,6 +322,7 @@ internal object ToolPalette {
                 selected?.title ?: choices.firstOrNull()?.title.orEmpty(),
                 choices.map { it.toToolChoice() },
                 stock,
+                hasNew = choices.any { it.isNew },
             )
         val variants = selected?.variants.orEmpty()
         if (selected == null || variants.isEmpty()) return listOf(main)
@@ -314,5 +348,10 @@ internal object ToolPalette {
             requiredLevel = requiredLevel,
             isAffordable = affordable,
             isAtLimit = atLimit,
+            isNew = isNew,
+            detail =
+                selection.shopItem?.let(
+                    ToolRoute::Item,
+                ) ?: ToolRoute.Eraser.takeIf { selection == MenuSelection.Grass },
         )
 }

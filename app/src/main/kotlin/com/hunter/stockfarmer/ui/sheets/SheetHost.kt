@@ -2,6 +2,7 @@
 
 package com.hunter.stockfarmer.ui.sheets
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -78,17 +79,26 @@ fun SheetHost(
         val origin = building.placed.origin
         when (page) {
             BuildingPage.CHICK -> {
-                ChickAppearanceScreen(session, origin) { page = null }
+                HudSheet(onDismiss = onClose) {
+                    BackHandler { page = null }
+                    ChickAppearanceScreen(session, origin) { page = null }
+                }
                 return
             }
 
             BuildingPage.RECIPES -> {
-                WorkshopRecipeScreen(session, origin) { page = null }
+                HudSheet(onDismiss = onClose) {
+                    BackHandler { page = null }
+                    WorkshopRecipeScreen(session, origin) { page = null }
+                }
                 return
             }
 
             BuildingPage.UPGRADE -> {
-                BuildingUpgradeScreen(session, { page = null }, origin, { session.publish(it) })
+                HudSheet(onDismiss = onClose) {
+                    BackHandler { page = null }
+                    BuildingUpgradeScreen(session, { page = null }, origin, { session.publish(it) })
+                }
                 return
             }
 
@@ -97,7 +107,9 @@ fun SheetHost(
             }
         }
         if (building.placed.building.isHouse) {
-            StockMarketScreen(session, onClose, onEvents = { session.publish(it) })
+            HudSheet(onDismiss = onClose) {
+                StockMarketScreen(session, onClose, onEvents = { session.publish(it) })
+            }
             return
         }
     }
