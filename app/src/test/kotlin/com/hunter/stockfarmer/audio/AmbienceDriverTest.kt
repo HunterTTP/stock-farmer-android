@@ -110,6 +110,34 @@ class AmbienceDriverTest {
         assertEquals(1, h.played.count { it.first == SoundCue.allCropsReady })
         h.driver.clear()
         h.tick(3)
-        assertEquals(2, h.messages.size)
+        assertEquals(1, h.messages.size)
+    }
+
+    @Test fun `loading an already ripe field is silent until it becomes ready again`() {
+        val h = Harness()
+        h.state = h.state!!.copy(isWholeFieldReady = true, readyCrops = listOf(ReadyCrop("beetroot", "Beetroot")))
+        h.tick(0)
+        assertTrue(h.messages.isEmpty())
+        h.state = h.state!!.copy(isWholeFieldReady = false, readyCrops = emptyList())
+        h.tick(1)
+        h.state = h.state!!.copy(isWholeFieldReady = true, readyCrops = listOf(ReadyCrop("beetroot", "Beetroot")))
+        h.tick(2)
+        assertEquals(listOf("All crops ready to harvest!"), h.messages)
+    }
+
+    @Test fun `switching farms waits for a snapshot and forgets the previous crop groups`() {
+        val h = Harness()
+        h.tick(0)
+        h.state = h.state!!.copy(readyCrops = listOf(ReadyCrop("beetroot", "Beetroot")))
+        h.tick(1)
+        h.driver.clear()
+        h.state = null
+        h.tick(2)
+        h.state = AmbienceSnapshot(0.0, false, 0.0, readyCrops = listOf(ReadyCrop("carrot", "Carrot")))
+        h.tick(3)
+        assertEquals(listOf("Beetroot is ready to harvest!"), h.messages)
+        h.state = h.state!!.copy(isWholeFieldReady = true)
+        h.tick(4)
+        assertEquals("All crops ready to harvest!", h.messages.last())
     }
 }

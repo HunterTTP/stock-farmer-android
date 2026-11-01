@@ -57,8 +57,23 @@ internal data class PulseTile(
 
 internal class PulseMotion {
     private var day: Int? = null
+    private var followsSession = false
+    private var night: Int? = null
+    private var revision: Long? = null
     var origin = Point(GameState.GRID_SIZE / 2.0, GameState.GRID_SIZE / 2.0)
         private set
+
+    fun sync(
+        night: Int?,
+        revision: Long,
+    ) {
+        followsSession = true
+        this.night = night
+        if (this.revision != revision) {
+            this.revision = revision
+            day = null
+        }
+    }
 
     fun tiles(
         state: GameState,
@@ -66,6 +81,7 @@ internal class PulseMotion {
         center: Point,
     ): List<PulseTile> {
         val wave = NightPulse.wave(now, state.clockOffset) ?: return emptyList()
+        if (followsSession && wave.day != night) return emptyList()
         if (day != wave.day) {
             day = wave.day
             origin = center

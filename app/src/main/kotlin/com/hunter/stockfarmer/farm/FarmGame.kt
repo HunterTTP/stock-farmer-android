@@ -17,6 +17,7 @@ import com.hunter.stockfarmer.core.rules.minuteOfDay
 import com.hunter.stockfarmer.farm.animals.animalSources
 import com.hunter.stockfarmer.farm.effects.EffectLayers
 import com.hunter.stockfarmer.farm.effects.EffectPhase
+import com.hunter.stockfarmer.farm.effects.FireworkArea
 import com.hunter.stockfarmer.farm.effects.effectLayers
 import com.hunter.stockfarmer.game.GameSession
 import com.hunter.stockfarmer.game.PlacementDrag
@@ -186,13 +187,14 @@ class FarmGame(
             renderer.cameraScale = screenScale
             renderer.maxCameraScale = maxZoom() * Gdx.graphics.density
             session.read {
+                effects.nightPulse.sync(session.nightPulse, session.nightPulseRevision)
                 effects.draw(EffectPhase.BACKGROUND, batch, it, now, camera)
                 renderer.draw(batch, it, now)
                 effects.draw(EffectPhase.BEFORE_TINT, batch, it, now, camera)
             }
             measure(PerformanceWork.night) { drawNightTint(now) }
             session.read { effects.draw(EffectPhase.AFTER_TINT, batch, it, now, camera) }
-            celebrateBuildings(now)
+            celebrate(now)
             measure(PerformanceWork.preview) {
                 tilePreview.draw(batch, textures, session.preview(now), now, screenScale)
             }
@@ -203,9 +205,11 @@ class FarmGame(
     }
 
     /** Sets off the fireworks the game side asked for since the last frame. */
-    private fun celebrateBuildings(now: Instant) {
+    private fun celebrate(now: Instant) {
         val darkness = session.act { DayNightCycle.darkness(it.minuteOfDay(now)) }.coerceAtLeast(0.0)
         session.celebrations.drain { effects.fireworks.celebrateAround(it.origin, it.width, it.height, darkness) }
+        val ground = session.view.snapshot?.fireworkGround() ?: return
+        session.celebrations.drainAcross { effects.fireworks.celebrateAcross(ground, darkness) }
     }
 
     /** With the Bucket in hand, a tap on a flying butterfly catches it instead of using the tool. */
@@ -358,4 +362,11 @@ class FarmGame(
         const val INITIAL_VISIBLE_TILES = 8f
         const val MIN_ZOOM = 0.25f
     }
+}
+
+/** The lower sixty percent of the camera view leaves room for the bursts overhead, as on iOS. */
+internal fun ViewSnapshot.fireworkGround(): FireworkArea {
+    val width = widthPixels * worldPerPixel.toDouble()
+    val height = heightPixels * worldPerPixel.toDouble()
+    return FireworkArea(centerX - width / 2, centerY - height / 2, width, height * 0.6)
 }

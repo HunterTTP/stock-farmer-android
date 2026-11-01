@@ -78,4 +78,4 @@ fun GameSession.ambienceDriver(
         updateRain = sound::updateRain,
         play = sound::play,
         onReady = onReady,
-    )
+    ).also { onNightEnded = { sound.stop(SoundCue.nightPulse) } }

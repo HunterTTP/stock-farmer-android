@@ -8,6 +8,18 @@ class ReadyChimeTest {
     private val beet = ReadyCrop("beetroot", "Beetroot")
     private val carrot = ReadyCrop("carrot", "Carrot")
 
+    @Test fun `seeding readiness silences a loaded ripe field and clears crop group history`() {
+        val chime = ReadyChime(initialAllReady = true)
+        assertNull(chime.update(true, listOf(beet)))
+        chime.update(false, emptyList())
+        assertEquals("All crops ready to harvest!", chime.update(true, listOf(beet)))
+        chime.clear(initialAllReady = true)
+        assertNull(chime.update(true, listOf(carrot)))
+        chime.clear(initialAllReady = false)
+        assertNull(chime.update(false, listOf(beet)))
+        assertEquals("Carrot is ready to harvest!", chime.update(false, listOf(beet, carrot)))
+    }
+
     @Test fun `first partial field is silent but a whole ready field announces once`() {
         val chime = ReadyChime()
         assertNull(chime.update(false, listOf(beet)))

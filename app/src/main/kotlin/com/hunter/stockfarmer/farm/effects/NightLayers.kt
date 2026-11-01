@@ -43,6 +43,11 @@ class NightPulseLayer(
     private val motion = PulseMotion()
     private val patterns = List(6) { pattern -> (0 until 144).shuffled(Random(pattern)).take(7).toSet() }
 
+    fun sync(
+        night: Int?,
+        revision: Long,
+    ) = motion.sync(night, revision)
+
     override fun draw(
         batch: SpriteBatch,
         state: GameState,

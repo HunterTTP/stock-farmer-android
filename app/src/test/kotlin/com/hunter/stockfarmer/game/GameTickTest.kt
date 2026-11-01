@@ -10,7 +10,10 @@ import com.hunter.stockfarmer.core.rules.NightPulse
 import com.hunter.stockfarmer.core.rules.Season
 import com.hunter.stockfarmer.core.rules.currentLesson
 import com.hunter.stockfarmer.core.rules.select
+import com.hunter.stockfarmer.core.util.RandomSource
 import com.hunter.stockfarmer.core.util.advancedBy
+import com.hunter.stockfarmer.ui.hud.TimePreset
+import com.hunter.stockfarmer.ui.hud.setTime
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.launch
@@ -21,6 +24,7 @@ import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.time.Instant
+import java.util.Random
 
 class GameTickTest {
     private val planted = Instant.ofEpochSecond(100)
@@ -157,6 +161,17 @@ class GameTickTest {
                 assertEquals(1, received.size)
                 otherTick.tick(minuteOne.advancedBy(9.0))
             }
+        assertEquals(1, summaries.size)
+    }
+
+    @Test
+    fun `changing the time ends the pulse but leaves an already scheduled summary as on iOS`() {
+        val session = GameSession(GameEngine())
+        val tick = GameTick(session, RandomSource(Random(42)::nextLong)).apply { tick(midnight.minusSeconds(1)) }
+        tick.tick(midnight.plusSeconds(1))
+        session.setTime(TimePreset.Morning, midnight.plusSeconds(2))
+
+        val summaries = collecting(session.newDays) { tick.tick(midnight.plusSeconds(9)) }
         assertEquals(1, summaries.size)
     }
 

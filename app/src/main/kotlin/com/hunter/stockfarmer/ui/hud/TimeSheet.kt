@@ -70,6 +70,7 @@ fun GameSession.setTime(
     preset: TimePreset,
     now: Instant = Instant.now(),
 ) = act { engine ->
+    endNight(now)
     if (preset == TimePreset.Midnight) {
         engine.setTimeToMidnight(now)
     } else {

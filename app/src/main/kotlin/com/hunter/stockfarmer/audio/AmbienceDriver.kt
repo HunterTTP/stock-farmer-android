@@ -30,15 +30,21 @@ class AmbienceDriver(
     private var birds = RandomMomentTrigger(80.0)
     private val animals = AnimalVoices(animalRandom)
     private val ready = ReadyChime()
+    private var needsReadyBaseline = true
 
     fun clear() {
         birds = RandomMomentTrigger(80.0)
         animals.clear()
         ready.clear()
+        needsReadyBaseline = true
     }
 
     fun tick(now: Instant) {
         val state = snapshot(now) ?: return
+        if (needsReadyBaseline) {
+            ready.clear(initialAllReady = state.isWholeFieldReady)
+            needsReadyBaseline = false
+        }
         val seconds = now.epochSecond + now.nano / 1_000_000_000.0
         updateRain(Weather.eased(state.rain), state.isSnowing)
         val (next, due) = birds.isDue(seconds, birdRandom)

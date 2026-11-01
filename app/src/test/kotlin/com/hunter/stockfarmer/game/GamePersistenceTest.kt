@@ -1,10 +1,15 @@
 package com.hunter.stockfarmer.game
 
+import com.hunter.stockfarmer.audio.AmbienceDriver
+import com.hunter.stockfarmer.audio.ambienceSnapshot
+import com.hunter.stockfarmer.core.feedback.SoundCue
 import com.hunter.stockfarmer.core.model.GameState
+import com.hunter.stockfarmer.core.model.GridPoint
 import com.hunter.stockfarmer.core.model.Plot
 import com.hunter.stockfarmer.core.persistence.LocalSaveFileSystem
 import com.hunter.stockfarmer.core.persistence.SaveFileSystem
 import com.hunter.stockfarmer.core.persistence.SaveSlots
+import com.hunter.stockfarmer.core.rules.GameEvent
 import com.hunter.stockfarmer.core.util.RandomSource
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertArrayEquals
@@ -52,6 +57,59 @@ class GamePersistenceTest {
             persistence.close()
             scheduler.runCurrent()
         }
+    }
+
+    @Test
+    fun `switching to a ripe saved farm is silent and clears the old farm's celebrations and pulse`() {
+        val tile = GridPoint(24, 24)
+        val ripeFarm =
+            GameState().apply {
+                farmland = mutableSetOf(tile)
+                plots[tile] = Plot("wheat", scheduler.now.minusSeconds(1_000))
+            }
+        slots.save(ripeFarm, 1, scheduler.now)
+        start()
+        val session = persistence.session
+        val cues = mutableListOf<SoundCue>()
+        val messages = mutableListOf<String>()
+        val random = Random(42)
+        val ambience =
+            AmbienceDriver(
+                snapshot = session::ambienceSnapshot,
+                updateRain = { _, _ -> },
+                play = { cue, _ ->
+                    cues += cue
+                    true
+                },
+                onReady = { messages += it },
+                birdRandom = RandomSource(random::nextLong),
+                animalRandom = RandomSource(random::nextLong),
+            )
+        ambience.tick(scheduler.now)
+        session.celebrations.celebrate(BuildingCelebration(tile, 2, 2))
+        session.publish(listOf(GameEvent.LeveledUp(2, emptyList(), 0, 1)))
+        session.beginDay(123)
+
+        ambience.clear()
+        persistence.switchTo(1)
+        scheduler.runCurrent()
+        ambience.tick(scheduler.now)
+
+        assertTrue(status.isReady)
+        assertTrue(session.ambienceSnapshot(scheduler.now).isWholeFieldReady)
+        assertTrue(messages.isEmpty())
+        assertFalse(SoundCue.allCropsReady in cues)
+        assertNull(session.nightPulse)
+        var celebrations = 0
+        session.celebrations.drain { celebrations++ }
+        session.celebrations.drainAcross { celebrations++ }
+        assertEquals(0, celebrations)
+
+        session.act { it.state.plots[tile] = Plot("wheat", scheduler.now) }
+        ambience.tick(scheduler.now)
+        ambience.tick(scheduler.now.plusSeconds(31))
+        assertEquals(listOf("All crops ready to harvest!"), messages)
+        assertEquals(1, cues.count { it == SoundCue.allCropsReady })
     }
 
     @Test

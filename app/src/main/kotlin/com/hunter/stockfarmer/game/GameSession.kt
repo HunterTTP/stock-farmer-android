@@ -50,12 +50,33 @@ class GameSession(
 
     private val nights = MutableSharedFlow<Int?>(extraBufferCapacity = EVENT_BUFFER)
 
-    /** The night, counted in days of the farm's clock, each time a new day begins: the moment of the midnight chime. */
+    /** The night when a new day begins, or null to end the chime and its retries when the clock is set by hand. */
     val dayBegins: SharedFlow<Int?> = nights.asSharedFlow()
 
-    fun beginDay(night: Int?) {
-        nights.tryEmit(night)
-    }
+    var nightPulse: Int? = null
+        private set
+
+    var nightPulseRevision = 0L
+        private set
+
+    /** The activity's sound driver cuts short the chime as soon as the player changes the time. */
+    var onNightEnded: () -> Unit = {}
+
+    fun beginDay(night: Int?) =
+        act {
+            nightPulse = night
+            nightPulseRevision++
+            nights.tryEmit(night)
+            Unit
+        }
+
+    /** Finishes the old night's growth before moving the clock, and ends its visual and audio playback. */
+    fun endNight(now: Instant) =
+        act {
+            wildGrowth.advance(it, now, finishing = true)
+            beginDay(null)
+            onNightEnded()
+        }
 
     private val toastsFlow = MutableSharedFlow<ToastMessage>(extraBufferCapacity = EVENT_BUFFER)
 
@@ -100,7 +121,11 @@ class GameSession(
     @Volatile var isSaveBlocked = false
 
     /** Tells everyone listening what just happened; nothing is sent for an empty batch. */
-    fun publish(batch: List<GameEvent>): List<GameEvent> = batch.also { if (it.isNotEmpty()) published.tryEmit(it) }
+    fun publish(batch: List<GameEvent>): List<GameEvent> =
+        batch.also {
+            if (it.any { event -> event is GameEvent.LeveledUp }) celebrations.celebrateAcross()
+            if (it.isNotEmpty()) published.tryEmit(it)
+        }
 
     /** A tap on the farm uses the selected tool on that tile. */
     fun tap(point: GridPoint): List<GameEvent> = publish(act { it.tap(point, Instant.now()) })

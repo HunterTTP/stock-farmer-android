@@ -14,7 +14,7 @@ class NightChime(
 
     fun begin(night: Int?) {
         this.night = night
-        isPending = !ring()
+        isPending = night != null && !ring()
     }
 
     /** Whether this session rang the chime of [night], which hushes the music for it: a clock set by hand into its minutes rings nothing. */

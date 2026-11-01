@@ -6,6 +6,23 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class NightChimeTest {
+    @Test fun `ending the night abandons retries and hush until the next day begins`() {
+        var attempts = 0
+        val chime =
+            NightChime {
+                attempts++
+                false
+            }
+        chime.begin(7)
+        chime.begin(null)
+        assertFalse(chime.hushes(7))
+        chime.retry(2.0)
+        assertEquals(1, attempts)
+        chime.begin(7)
+        assertTrue(chime.hushes(7))
+        assertEquals(2, attempts)
+    }
+
     @Test fun `a chime that starts is not tried again`() {
         var rung = 0
         val chime = NightChime { rung++ >= 0 }

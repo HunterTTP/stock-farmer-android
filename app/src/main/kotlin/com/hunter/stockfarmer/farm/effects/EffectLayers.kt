@@ -36,6 +36,7 @@ class EffectLayers internal constructor(
     val overlays: List<EffectOverlay>,
     val butterflies: ButterflyLayer,
     val fireworks: FireworkLayer,
+    val nightPulse: NightPulseLayer,
     val shadows: ShadowLayer,
     val photo: PhotoEffects,
     private val monitor: PerformanceMonitor? = null,
@@ -71,6 +72,7 @@ fun effectLayers(
     val butterflies = ButterflyLayer(textures)
     val wind = WindLayer(textures, onGust)
     val fireworks = FireworkLayer(textures)
+    val nightPulse = NightPulseLayer(textures)
     val shadows = ShadowLayer(textures)
     return EffectLayers(
         sources = listOf(wind, butterflies),
@@ -78,7 +80,7 @@ fun effectLayers(
             listOf(
                 SeasonSky(textures),
                 WaterLayer(textures),
-                NightPulseLayer(textures),
+                nightPulse,
                 shadows,
                 fireflies,
                 wind,
@@ -89,6 +91,7 @@ fun effectLayers(
             ) + (if (precipitation) listOf(RainLayer(textures)) else emptyList()) + foreground + fireworks,
         butterflies = butterflies,
         fireworks = fireworks,
+        nightPulse = nightPulse,
         shadows = shadows,
         photo = PhotoEffects(textures, SeasonSky(textures), WaterLayer(textures), shadows),
         monitor = monitor,

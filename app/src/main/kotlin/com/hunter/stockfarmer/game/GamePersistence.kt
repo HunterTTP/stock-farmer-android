@@ -223,6 +223,8 @@ class GamePersistence(
                 session.wildGrowth.clear()
                 session.tractor.clear()
                 session.sceneFeedback.clear()
+                session.celebrations.clear()
+                session.beginDay(null)
                 session.casts.value = null
                 session.sheets.value = null
                 session.confirmations.value = null
