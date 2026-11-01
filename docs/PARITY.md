@@ -22,7 +22,7 @@ Deviations from the Swift, on purpose: old-save migrations are not ported (a new
 
 ## App
 
-Nothing built yet beyond the Compose shell. The SDK licenses are accepted and `./gradlew :app:assembleDebug` builds (compileSdk 37, targetSdk 36; `local.properties` holds `sdk.dir` and is git-ignored). Planned spikes before the real build: Compose with libGDX hosting, blurred menu backdrops on API 26, the 4096x4096 farm photo, libGDX native libraries on 16 KB page sizes.
+Builds and runs in code but has never been run on a device. What is done, in flight and next is in [HANDOFF.md](HANDOFF.md); this file keeps the per-feature parity rows.
 
 ## Slices
 

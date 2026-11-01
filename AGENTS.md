@@ -1,6 +1,6 @@
 # Working in this repo
 
-Shared instructions for Claude, Codex and other coding agents. Follow the user's current request when it overrides a default below.
+Shared instructions for Claude, Codex and other coding agents. Start with `docs/HANDOFF.md`: it holds the plan, current phase and next steps. Follow the user's current request when it overrides a default below.
 
 ## What this is
 

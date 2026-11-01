@@ -3,8 +3,8 @@
 ## Environment (Windows)
 
 - JDK 25 (Temurin) with `JAVA_HOME` set to it. Gradle 9.8 runs through the committed wrapper.
-- Android SDK in `%LOCALAPPDATA%\Android\Sdk` with `ANDROID_HOME` set. Install packages with `sdkmanager` after accepting licenses.
-- Real phone: enable USB debugging, then `adb devices` and authorize the computer.
+- Android SDK in `%LOCALAPPDATA%AndroidSdk`; licenses are accepted. Gradle needs `sdk.dir` in the git-ignored `local.properties` (forward slashes), which every new worktree must copy. `sdkmanager` forwards to `cmdline-toolsatestbinndroid.exe sdk install <package>`.
+- Devices: the Lenovo tablet is paired over wireless debugging (see `docs/HANDOFF.md`, "The tablet"); do not deploy until the end of development.
 
 ## Commands
 
