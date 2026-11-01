@@ -14,7 +14,7 @@ import kotlin.math.min
  */
 object NightPulse {
     /** The wave begins at midnight, when it is darkest, and rolls for this many minutes of the farm's clock. */
-    private const val LENGTH_MINUTES = 20.0
+    const val LENGTH_MINUTES = 20.0
 
     /** The chime rings for this long from midnight, as the wave sets off; the music fades out as it starts. */
     private const val CHIME_MINUTES = 10.0
