@@ -52,7 +52,7 @@ enum class TractorFacing {
     }
 }
 
-@Serializable
+@Serializable(with = TractorRunSerializer::class)
 data class TractorRun(
     val home: GridPoint,
     val cropID: String,

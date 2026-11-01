@@ -22,9 +22,52 @@ fun GameEngine.prepareQuests(
     origin: GridPoint,
     using: RandomSource,
 ) {
+    migrateQuestRewards()
+    capHarvestQuests()
     val id = state.buildings[origin] ?: return
     if (QuestRules.capacity(id) <= 0) return
     if (state.marketQuests[id] == null) fillQuestBoard(id, using) else ensureStockQuest(id, using)
+}
+
+internal fun GameEngine.capHarvestQuests() {
+    state.marketQuests.replaceAll { _, quests ->
+        quests.map { quest ->
+            quest.copy(
+                objectives =
+                    quest.objectives.map { objective ->
+                        if (objective.goal is QuestGoal.Harvest && objective.target > QuestRules.MOST_CROPS_ASKED) {
+                            objective.copy(
+                                target = QuestRules.MOST_CROPS_ASKED,
+                                progress = min(objective.progress, QuestRules.MOST_CROPS_ASKED),
+                            )
+                        } else {
+                            objective
+                        }
+                    },
+            )
+        }
+    }
+}
+
+internal fun GameEngine.migrateQuestRewards() {
+    val used =
+        state.marketQuests.values
+            .flatten()
+            .filter { it.rewardLevel != null }
+            .map { it.rewardXP }
+            .toMutableSet()
+    for (board in state.marketQuests.keys.sorted()) {
+        state.marketQuests[board] =
+            state.marketQuests.getValue(board).map { quest ->
+                if (quest.rewardLevel != null) {
+                    quest
+                } else {
+                    val reward = QuestRules.rewardXP(state.level, board == LARGE_BOARD, quest.objectives, used)
+                    used += reward
+                    quest.copy(rewardXP = reward, rewardLevel = state.level)
+                }
+            }
+    }
 }
 
 /**

@@ -34,13 +34,12 @@ class FileSaveStore(
                 .getValue("schemaVersion")
                 .jsonPrimitive.int
         if (version > CURRENT_SCHEMA_VERSION) throw NewerSaveVersionException()
-        return GameStateJson.json
-            .decodeFromString<Envelope>(data)
-            .state
-            .also {
-                it.validate()
-                it.reindex()
-            }
+        val state =
+            GameStateJson.json
+                .parseToJsonElement(data)
+                .jsonObject
+                .getValue("state")
+        return GameStateJson.decode(state.toString())
     }
 
     fun save(state: GameState) {

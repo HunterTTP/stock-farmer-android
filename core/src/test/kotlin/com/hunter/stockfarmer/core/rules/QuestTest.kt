@@ -21,6 +21,8 @@ import com.hunter.stockfarmer.core.place
 import com.hunter.stockfarmer.core.stateWith
 import com.hunter.stockfarmer.core.util.SeededRandom
 import com.hunter.stockfarmer.core.util.advancedBy
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Assertions.assertThrows
@@ -45,6 +47,53 @@ class QuestTest {
         goal: QuestGoal,
         target: Int,
     ) = MarketQuest(objectives = listOf(QuestObjective(goal, target)), rewardXP = 100, rewardLevel = 19)
+
+    @Test
+    fun `a saved harvest quest asking for more than one hundred is capped when the game opens`() {
+        val engine = engine()
+        engine.state.marketQuests["marketStand"] =
+            listOf(
+                MarketQuest(
+                    id = java.util.UUID(0, 1),
+                    objectives = listOf(QuestObjective(QuestGoal.Harvest("wheat"), 300, 250)),
+                    rewardXP = 100,
+                    rewardLevel = 19,
+                ),
+            )
+        engine.reopen(now, SeededRandom(3))
+        val objective = engine.quests(stand)[0].objectives[0]
+        assertEquals(100, objective.target)
+        assertEquals(100, objective.progress)
+    }
+
+    @Test
+    fun `old flat rewards migrate once without losing progress or IDs`() {
+        var engine = engine()
+        val original =
+            listOf(
+                quest(QuestGoal.PlantTrees, 3).copy(id = java.util.UUID(0, 1)),
+                quest(QuestGoal.Workshop("grainMachine"), 2).copy(id = java.util.UUID(0, 2)),
+            )
+        engine.state.marketQuests["marketStand"] = original
+        engine.recordQuestProgress(QuestGoal.PlantTrees)
+        val json = GameStateJson.json.parseToJsonElement(GameStateJson.encode(engine.state)) as JsonObject
+        val boards = (json["marketQuests"] as JsonObject).toMutableMap()
+        boards["marketStand"] =
+            JsonArray((boards["marketStand"] as JsonArray).map { JsonObject((it as JsonObject) - "rewardLevel") })
+        engine = GameEngine(GameStateJson.decode(JsonObject(json + ("marketQuests" to JsonObject(boards))).toString()))
+        val random = SeededRandom(1)
+        engine.prepareQuests(stand, random)
+        val migrated = engine.quests(stand)
+        assertEquals(original.map { it.id }, migrated.take(2).map { it.id })
+        assertEquals(1, migrated[0].objectives[0].progress)
+        assertNotEquals(migrated[0].rewardXP, migrated[1].rewardXP)
+        assertEquals(3, migrated.size)
+        assertTrue(migrated.all { it.rewardLevel == 19 })
+        engine.state.xp = LevelRules.xpToReach(20)
+        engine.prepareQuests(stand, random)
+        assertEquals(migrated, engine.quests(stand))
+        assertEquals(engine.state.marketQuests, GameStateJson.decode(GameStateJson.encode(engine.state)).marketQuests)
+    }
 
     private fun GameEngine.progress(
         questIndex: Int = 0,

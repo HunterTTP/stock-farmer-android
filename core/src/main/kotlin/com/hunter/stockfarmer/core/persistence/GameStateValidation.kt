@@ -207,7 +207,13 @@ private fun GameState.validateHomes() {
     ) {
         if (!valid) throw InvalidSaveException(field)
     }
-    require(buildings.keys.all(::origin) && buildings.values.all { Building.named(it) != null }, "buildings")
+    require(
+        buildings.keys.all(::origin) &&
+            buildings.values.all {
+                Building.named(it) != null || it == "trough"
+            },
+        "buildings",
+    )
     require(
         homeLevels.all { (home, level) ->
             (buildings[home] ?: "") in HomeUpgrade.buildingIDs &&
