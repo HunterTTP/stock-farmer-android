@@ -72,7 +72,6 @@ enum class SoundCue(
     pigOink(SoundCategory.animals, SoundClips("Animals", "Pig", "PigAlternate"), 0.0),
     sheepBleat(SoundCategory.animals, SoundClips("Animals", "pl_sheep_bleat"), 0.0),
     goatBleat(SoundCategory.animals, SoundClips("Animals", "Goat"), 0.0),
-    duckQuack(SoundCategory.animals, SoundClips("Animals", "Duck"), 0.0),
     rabbitSqueak(SoundCategory.animals, SoundClips("Animals", "Rabbit"), 0.0),
     donkeyBray(SoundCategory.animals, SoundClips("Animals", "Donkey"), 0.0),
     sell(SoundCategory.`interface`, SoundClips("Shop", "sell"), -4.5),
@@ -97,14 +96,13 @@ enum class SoundCue(
     internal val isRefusal: Boolean get() = this == denied || this == notEnoughMoney || this == locked
 
     companion object {
-        /** What a kind of livestock says. The goat, duck, rabbit and donkey use stand-in recordings made from the others. */
+        /** What a kind of livestock says. The goat, rabbit and donkey use stand-in recordings made from the others; the duck is silent. */
         fun voiceOfLivestock(speciesID: String): SoundCue? =
             when (speciesID) {
                 LivestockSpecies.cow.id -> cowMoo
                 LivestockSpecies.pig.id -> pigOink
                 LivestockSpecies.sheep.id -> sheepBleat
                 LivestockSpecies.goat.id -> goatBleat
-                LivestockSpecies.duck.id -> duckQuack
                 LivestockSpecies.rabbit.id -> rabbitSqueak
                 LivestockSpecies.donkey.id -> donkeyBray
                 else -> null

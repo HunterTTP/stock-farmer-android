@@ -9,6 +9,7 @@ import com.hunter.stockfarmer.core.rules.Rejection
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
@@ -94,7 +95,14 @@ class SoundCueTest {
 
     @Test
     fun `each kind of livestock has a voice`() {
-        for (species in LivestockSpecies.all) assertNotNull(SoundCue.voiceOfLivestock(species.id))
+        for (species in LivestockSpecies.all - LivestockSpecies.duck) {
+            assertNotNull(SoundCue.voiceOfLivestock(species.id))
+        }
+    }
+
+    @Test
+    fun `ducks are silent`() {
+        assertNull(SoundCue.voiceOfLivestock(LivestockSpecies.duck.id))
     }
 
     @Test
