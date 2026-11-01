@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.hunter.stockfarmer.core.model.GameState
 import com.hunter.stockfarmer.core.rules.DayNightCycle
 import com.hunter.stockfarmer.core.rules.Sun
+import com.hunter.stockfarmer.farm.MovingOrigins
 import com.hunter.stockfarmer.farm.TextureLibrary
 import com.hunter.stockfarmer.ui.screens.PerformanceWork
 import java.time.Instant
@@ -17,6 +18,9 @@ class ShadowLayer(
     override val phase = EffectPhase.GROUND
     override val work = PerformanceWork.shadows
     var enabled = true
+
+    /** Where the things being moved stand; they cast no shadow there. A still picture has none moving. */
+    var moving = MovingOrigins.NONE
     var intensity = 0.5
         set(value) {
             field = value.coerceIn(0.0, 1.0)
@@ -41,7 +45,7 @@ class ShadowLayer(
         state: GameState,
         now: Instant,
         camera: OrthographicCamera,
-    ) = draw(batch, state, now, camera, finishAll = false)
+    ) = draw(batch, state, now, camera, moving, finishAll = false)
 
     /** Draws with every shadow already cast, for a still picture. */
     fun drawFinished(
@@ -49,19 +53,20 @@ class ShadowLayer(
         state: GameState,
         now: Instant,
         camera: OrthographicCamera,
-    ) = draw(batch, state, now, camera, finishAll = true)
+    ) = draw(batch, state, now, camera, MovingOrigins.NONE, finishAll = true)
 
     private fun draw(
         batch: SpriteBatch,
         state: GameState,
         now: Instant,
         camera: OrthographicCamera,
+        leftOut: MovingOrigins,
         finishAll: Boolean,
     ) {
         val minute = DayNightCycle.minuteOfDay(now, state.clockOffset)
         val sun = Sun.shadow(minute)
         if (!enabled || intensity == 0.0 || sun.strength <= 0) return
-        val wanted = casters.collect(state)
+        val wanted = casters.collect(state, leftOut)
         val shapes = wanted.map { it.shape }.toSet()
         val sunStep = Sun.step(minute)
         val softnessStep = (intensity * 4).roundToInt()

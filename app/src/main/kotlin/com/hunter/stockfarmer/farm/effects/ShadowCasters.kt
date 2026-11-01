@@ -7,6 +7,7 @@ import com.hunter.stockfarmer.core.catalog.FenceConnections
 import com.hunter.stockfarmer.core.model.GameState
 import com.hunter.stockfarmer.core.model.GridPoint
 import com.hunter.stockfarmer.core.rules.FruitTreePhase
+import com.hunter.stockfarmer.farm.MovingOrigins
 import com.hunter.stockfarmer.farm.TextureLibrary
 
 internal data class ShadowCaster(
@@ -18,7 +19,11 @@ internal data class ShadowCaster(
 internal class ShadowCasters(
     private val textures: TextureLibrary,
 ) {
-    fun collect(state: GameState): List<ShadowCaster> =
+    /** The shadows of everything standing but the things at [moving], which are being carried to a new spot. */
+    fun collect(
+        state: GameState,
+        moving: MovingOrigins = MovingOrigins.NONE,
+    ): List<ShadowCaster> =
         buildList {
             fun foot(
                 origin: GridPoint,
@@ -38,7 +43,7 @@ internal class ShadowCasters(
                     ShadowShape(kind, texture.width * scale, texture.height * scale, "${state.season}/$folder/$name")
                 add(ShadowCaster(foot, shape, texture))
             }
-            for (placed in state.shadowCastingBuildings()) {
+            for (placed in state.shadowCastingBuildings(moving)) {
                 val building = placed.building
                 val texture = textures.texture("buildings", building.assetName, season = state.season) ?: continue
                 val scale = minOf(building.width * TILE / texture.width, building.height * TILE / texture.height)
@@ -49,6 +54,7 @@ internal class ShadowCasters(
                 add(ShadowCaster(feet, ShadowShape(ShadowKind.BUILDING, width, height)))
             }
             for ((origin, placed) in state.trees) {
+                if (origin == moving.tree) continue
                 picture(
                     "trees",
                     placed.tree.assetName(placed.color),
@@ -61,6 +67,7 @@ internal class ShadowCasters(
                 picture("rocks", size.assetName, ShadowKind.ROCK, foot(origin, 1, 1), TILE / 96 * size.spriteScale)
             }
             for ((origin, placed) in state.decorations) {
+                if (origin == moving.decoration) continue
                 val decoration = Decoration.named(placed.decorationID) ?: continue
                 if (decoration.isSprinkler) continue
                 picture(
@@ -74,6 +81,7 @@ internal class ShadowCasters(
             for ((point, plot) in state.plots) {
                 val crop = Crop.named(plot.cropID) ?: continue
                 if (!crop.isFruitTree || !plot.isAnchor(point)) continue
+                if ((plot.origin ?: point) == moving.fruitTree) continue
                 val name = crop.treeAssetName(FruitTreePhase.ripe)
                 val texture = textures.texture("crops/fruit_trees", name, season = state.season) ?: continue
                 val scale = minOf(crop.side * TILE * 0.95 / texture.width, crop.side * TILE * 0.95 / texture.height)
@@ -108,5 +116,6 @@ internal class ShadowCasters(
         }
 }
 
-/** The buildings that cast a shadow: a Tractor out driving casts its own, so the home it left casts none. */
-internal fun GameState.shadowCastingBuildings() = placedBuildings.filter { it.origin != tractorRun?.home }
+/** The buildings that cast a shadow: a Tractor out driving casts its own, so the home it left casts none, and one being moved casts none where it stood. */
+internal fun GameState.shadowCastingBuildings(moving: MovingOrigins = MovingOrigins.NONE) =
+    placedBuildings.filter { it.origin != tractorRun?.home && it.origin != moving.building }

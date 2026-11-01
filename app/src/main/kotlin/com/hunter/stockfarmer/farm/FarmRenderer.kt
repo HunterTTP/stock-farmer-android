@@ -34,6 +34,7 @@ class FarmRenderer(
     private val groundEffects: ((SpriteBatch, GameState, Instant) -> Unit)? = null,
     private val monitor: PerformanceMonitor? = null,
     private val weathercocks: WeathercockTurn = WeathercockTurn(),
+    private val treeLean: TreeLean = TreeLean(),
 ) {
     private val standing = ArrayList<Standing>()
     private val timelines = HashMap<Plot, GrowthTimelines>()
@@ -43,6 +44,12 @@ class FarmRenderer(
     var gridShown = true
     var cameraScale = 1f
     var maxCameraScale = 1f
+
+    /** Where the things being moved stand; they are left out of the scene until the move is confirmed. */
+    var moving = MovingOrigins.NONE
+
+    /** Whether a gust leans the trees; a still picture of the farm has no gust in it. */
+    var treesLean = true
 
     private fun <T> measure(
         work: PerformanceWork,
@@ -121,7 +128,7 @@ class FarmRenderer(
         val fullOrigins = state.fullBuildings(now)
         for (placed in state.placedBuildings) {
             val building: Building = placed.building
-            if (building.id == "tractor1") continue
+            if (building.id == "tractor1" || placed.origin == moving.building) continue
             val isFull = placed.origin in fullOrigins
             val assetName = if (isFull) building.fullAssetName ?: building.assetName else building.assetName
             val texture = textures.texture("buildings", assetName, season = state.season) ?: continue
@@ -186,7 +193,15 @@ class FarmRenderer(
         state: GameState,
         now: Instant,
     ) {
+        if (treeLean.isPending) {
+            treeLean.reach(
+                state.trees
+                    .filterKeys { it != moving.tree }
+                    .mapValues { (origin, placed) -> (origin.col + placed.tree.side / 2f) * TILE },
+            )
+        }
         for ((origin, placed) in state.trees) {
+            if (origin == moving.tree) continue
             val tree = placed.tree
             val texture = textures.texture("trees", tree.assetName(placed.color), season = state.season) ?: continue
             val (x, y, width, height) =
@@ -204,7 +219,15 @@ class FarmRenderer(
                 Standing(depth) {
                     val old = batch.packedColor
                     batch.setColor(1f, 1f, 1f, alpha)
-                    batch.draw(texture, x, y, width, height)
+                    treeLean.draw(
+                        batch,
+                        texture,
+                        if (treesLean) treeLean.tipBend(origin, now) else 0f,
+                        x,
+                        y,
+                        width,
+                        height,
+                    )
                     batch.packedColor = old
                 }
         }
@@ -245,6 +268,7 @@ class FarmRenderer(
         now: Instant,
     ) {
         for ((origin, placed) in state.decorations) {
+            if (origin == moving.decoration) continue
             val decoration = Decoration.named(placed.decorationID) ?: continue
             val texture =
                 textures.texture(
@@ -350,6 +374,7 @@ class FarmRenderer(
         for ((point, plot) in state.plots) {
             val crop = Crop.named(plot.cropID) ?: continue
             if (!plot.isAnchor(point)) continue
+            if ((plot.origin ?: point) == moving.fruitTree) continue
             val progress = conditions.progress(plot, crop, point, now)
             if (crop.isFruitTree) {
                 collectFruitTree(batch, plot, crop, point, progress, state.season)

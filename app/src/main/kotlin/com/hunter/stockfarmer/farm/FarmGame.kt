@@ -75,12 +75,16 @@ class FarmGame(
         textures = TextureLibrary()
         val tractor = TractorLayer(textures)
         val weathercocks = WeathercockTurn()
+        val treeLean = TreeLean()
         effects =
             effectLayers(
                 textures,
                 foreground = listOf(tractor),
                 precipitation = false,
-                onGust = weathercocks::gust,
+                onGust = { pushesRight, at ->
+                    weathercocks.gust(pushesRight, at)
+                    treeLean.gust(pushesRight, at)
+                },
                 monitor = monitor,
             )
         renderer =
@@ -89,6 +93,7 @@ class FarmGame(
                 listOf(tractor) + animalSources(textures, session.animalGestures) + effects.sources,
                 groundEffects = { batch, state, now -> effects.draw(EffectPhase.GROUND, batch, state, now, camera) },
                 weathercocks = weathercocks,
+                treeLean = treeLean,
                 monitor = monitor,
             )
         Gdx.input.inputProcessor = GestureDetector(20f, 0.4f, 0.35f, 0.15f, Gestures())
@@ -174,6 +179,9 @@ class FarmGame(
             session.read { state ->
                 session.wildGrowth.drain().forEach { renderer.growth.reveal(it.trees, it.rocks, state.season, it.at) }
             }
+            val moving = session.act { MovingOrigins.of(it) }
+            renderer.moving = moving
+            effects.shadows.moving = moving
             val screenScale = camera.zoom * Gdx.graphics.density
             renderer.cameraScale = screenScale
             renderer.maxCameraScale = maxZoom() * Gdx.graphics.density

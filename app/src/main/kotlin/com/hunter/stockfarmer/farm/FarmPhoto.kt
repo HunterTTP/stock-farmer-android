@@ -16,7 +16,8 @@ import java.time.Instant
 
 /**
  * A picture of the whole farm, drawn off screen and encoded as a PNG. Call on the graphics thread. Like the iOS photo it keeps
- * the season's sky, water, finished shadows and the night's darkness, and leaves out the effects that move with the live view.
+ * the season's sky, water, finished shadows, the night's darkness and the rain or snow of the moment, and leaves out the effects that
+ * move with the live view.
  */
 class FarmPhoto(
     private val renderer: FarmRenderer,
@@ -53,6 +54,8 @@ class FarmPhoto(
         val target = FrameBuffer(Pixmap.Format.RGBA8888, pixels, pixels, false)
         val oldScale = renderer.cameraScale
         val oldMax = renderer.maxCameraScale
+        val oldMoving = renderer.moving
+        val oldLean = renderer.treesLean
         try {
             target.begin()
             Gdx.gl.glClearColor(0f, 0f, 0f, 1f)
@@ -61,10 +64,13 @@ class FarmPhoto(
             batch.begin()
             renderer.cameraScale = side / pixels
             renderer.maxCameraScale = Float.MAX_VALUE
+            renderer.moving = MovingOrigins.NONE
+            renderer.treesLean = false
             effects.drawSky(batch, state, now, camera)
             renderer.draw(batch, state, now) { b, s, t -> effects.drawGround(b, s, t, camera) }
             foreground?.invoke(batch, state, now)
             batch.drawNightTint(textures, camera, DayNightCycle.darkness(now, state.clockOffset))
+            effects.drawWeather(batch, state, now, camera)
             batch.end()
             val picture = ScreenUtils.getFrameBufferPixmap(0, 0, pixels, pixels)
             target.end()
@@ -82,6 +88,8 @@ class FarmPhoto(
         } finally {
             renderer.cameraScale = oldScale
             renderer.maxCameraScale = oldMax
+            renderer.moving = oldMoving
+            renderer.treesLean = oldLean
             target.dispose()
         }
     }

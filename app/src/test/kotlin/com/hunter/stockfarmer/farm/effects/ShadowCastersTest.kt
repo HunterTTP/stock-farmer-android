@@ -4,6 +4,7 @@ import com.hunter.stockfarmer.core.model.GameState
 import com.hunter.stockfarmer.core.model.GridPoint
 import com.hunter.stockfarmer.core.model.TractorFacing
 import com.hunter.stockfarmer.core.model.TractorRun
+import com.hunter.stockfarmer.farm.MovingOrigins
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
@@ -28,5 +29,19 @@ internal class ShadowCastersTest {
         state.tractorRun =
             TractorRun(home = tractorHome, cropID = "wheat", position = GridPoint(30, 30), facing = TractorFacing.right)
         assertEquals(listOf(siloOrigin), state.shadowCastingBuildings().map { it.origin })
+    }
+
+    @Test
+    fun `a building being moved casts no shadow from where it stood`() {
+        assertEquals(
+            listOf(tractorHome),
+            farm().shadowCastingBuildings(MovingOrigins(building = siloOrigin)).map { it.origin },
+        )
+    }
+
+    @Test
+    fun `a moved decoration or tree at a building's tile leaves the building's shadow alone`() {
+        val moving = MovingOrigins(decoration = siloOrigin, tree = tractorHome, fruitTree = siloOrigin)
+        assertEquals(setOf(tractorHome, siloOrigin), farm().shadowCastingBuildings(moving).map { it.origin }.toSet())
     }
 }

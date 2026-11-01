@@ -90,17 +90,20 @@ fun effectLayers(
         butterflies = butterflies,
         fireworks = fireworks,
         shadows = shadows,
-        photo = PhotoEffects(SeasonSky(textures), WaterLayer(textures), shadows),
+        photo = PhotoEffects(textures, SeasonSky(textures), WaterLayer(textures), shadows),
         monitor = monitor,
     )
 }
 
 /** The effects a farm photo keeps: they follow the photo's own camera, and shadows are finished before the shot. */
 class PhotoEffects internal constructor(
+    private val textures: TextureLibrary,
     private val sky: SeasonSky,
     private val water: WaterLayer,
     private val shadows: ShadowLayer,
 ) {
+    private val rainTint = RainTint(textures)
+
     fun drawSky(
         batch: SpriteBatch,
         state: GameState,
@@ -116,6 +119,22 @@ class PhotoEffects internal constructor(
     ) {
         water.draw(batch, state, now, camera)
         shadows.drawFinished(batch, state, now, camera)
+    }
+
+    /**
+     * The rain's tint, the torches' glow and the rain or snow already falling, over the night's tint like the iOS photo. The glow
+     * and the rain start afresh, so each photo catches the sky full of drops at its first moment. The fireflies and butterflies the
+     * iOS photo runs for a tenth of a second have barely begun to fade in, so none are drawn.
+     */
+    fun drawWeather(
+        batch: SpriteBatch,
+        state: GameState,
+        now: Instant,
+        camera: OrthographicCamera,
+    ) {
+        rainTint.draw(batch, state, now, camera)
+        BuildingGlowLayer(textures).draw(batch, state, now, camera)
+        RainLayer(textures) { 1f }.draw(batch, state, now, camera)
     }
 }
 
