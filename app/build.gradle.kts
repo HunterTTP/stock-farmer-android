@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace = "com.hunter.stockfarmer"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.hunter.stockfarmer"

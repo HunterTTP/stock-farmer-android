@@ -22,7 +22,7 @@ Deviations from the Swift, on purpose: old-save migrations are not ported (a new
 
 ## App
 
-Nothing built yet beyond the Compose shell. The Android SDK licenses must be accepted (`sdkmanager --licenses`) before the `app` module builds. Planned spikes before the real build: Compose with libGDX hosting, blurred menu backdrops on API 26, the 4096x4096 farm photo, libGDX native libraries on 16 KB page sizes.
+Nothing built yet beyond the Compose shell. The SDK licenses are accepted and `./gradlew :app:assembleDebug` builds (compileSdk 37, targetSdk 36; `local.properties` holds `sdk.dir` and is git-ignored). Planned spikes before the real build: Compose with libGDX hosting, blurred menu backdrops on API 26, the 4096x4096 farm photo, libGDX native libraries on 16 KB page sizes.
 
 ## Slices
 
