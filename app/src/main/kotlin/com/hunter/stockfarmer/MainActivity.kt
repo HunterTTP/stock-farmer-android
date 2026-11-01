@@ -23,18 +23,33 @@ import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentContainerView
 import androidx.fragment.app.commit
 import androidx.fragment.app.commitNow
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.badlogic.gdx.backends.android.AndroidFragmentApplication
+import com.hunter.stockfarmer.audio.SoundCenter
+import com.hunter.stockfarmer.core.model.GameState
+import com.hunter.stockfarmer.core.rules.NightPulse
+import com.hunter.stockfarmer.core.rules.minuteOfDay
 import com.hunter.stockfarmer.farm.FarmFragment
+import com.hunter.stockfarmer.farm.FarmRenderer
 import com.hunter.stockfarmer.game.GameViewModel
 import com.hunter.stockfarmer.ui.Hud
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import java.time.Instant
 
 class MainActivity :
     FragmentActivity(),
     AndroidFragmentApplication.Callbacks {
     private val model: GameViewModel by viewModels()
+    private lateinit var sound: SoundCenter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        sound = SoundCenter(this)
+        lifecycle.addObserver(sound)
+        listenForSound()
         // Compose creates the host after loading; a restored fragment still refers to the old host's view ID.
         supportFragmentManager.findFragmentByTag(FARM_TAG)?.let { farm ->
             supportFragmentManager.commitNow { remove(farm) }
@@ -75,6 +90,40 @@ class MainActivity :
         }
     }
 
+    /** Turns what happens in the game into sound, and keeps the music in step with the farm's clock. */
+    private fun listenForSound() {
+        val session = model.session
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch {
+                    session.events.collect { events ->
+                        sound.react(
+                            events,
+                            landscapeTool = session.read { it.selectedLandscape },
+                            petSpecies = { house -> session.read { it.pets[house]?.species } },
+                            placement = { tile ->
+                                session.view.placement(tile, FarmRenderer.TILE, GameState.GRID_SIZE)
+                            },
+                        )
+                    }
+                }
+                launch {
+                    while (true) {
+                        val now = Instant.now()
+                        val (season, minute, chimed) =
+                            session.act { engine ->
+                                val minute = engine.minuteOfDay(now)
+                                val night = NightPulse.day(now, engine.state.clockOffset)
+                                Triple(engine.state.season, minute, engine.state.lastNewDayNight == night)
+                            }
+                        sound.updateMusic(season, minute, chimed)
+                        delay(MUSIC_REFRESH_MILLIS)
+                    }
+                }
+            }
+        }
+    }
+
     override fun onResume() {
         super.onResume()
         model.resume()
@@ -108,6 +157,7 @@ class MainActivity :
     override fun exit() = Unit
 
     private companion object {
+        const val MUSIC_REFRESH_MILLIS = 1_000L
         const val FARM_TAG = "farm"
     }
 }

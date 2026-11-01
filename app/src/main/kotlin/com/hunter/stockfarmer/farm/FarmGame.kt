@@ -15,6 +15,7 @@ import com.hunter.stockfarmer.core.rules.advanceTractor
 import com.hunter.stockfarmer.core.rules.minuteOfDay
 import com.hunter.stockfarmer.farm.animals.animalSources
 import com.hunter.stockfarmer.game.GameSession
+import com.hunter.stockfarmer.game.ViewSnapshot
 import com.hunter.stockfarmer.game.preview
 import com.hunter.stockfarmer.game.touch
 import java.time.Instant
@@ -85,6 +86,7 @@ class FarmGame(
         Gdx.gl.glClearColor(0.05f, 0.08f, 0.12f, 1f)
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT)
         camera.update()
+        publishView()
         batch.projectionMatrix = camera.combined
         batch.begin()
         val now = Instant.now()
@@ -94,6 +96,22 @@ class FarmGame(
         drawNightTint(now)
         batch.end()
     }
+
+    /** Tells the sound side where the camera is looking. */
+    private fun publishView() {
+        val range = maxZoom() - MIN_ZOOM
+        session.view.snapshot =
+            ViewSnapshot(
+                centerX = camera.position.x,
+                centerY = camera.position.y,
+                worldPerPixel = camera.zoom,
+                widthPixels = Gdx.graphics.width,
+                heightPixels = Gdx.graphics.height,
+                zoomFraction = if (range > 0) ((camera.zoom - MIN_ZOOM) / range).coerceIn(0f, 1f) else 0f,
+            )
+    }
+
+    private fun maxZoom() = FarmRenderer.WORLD / min(camera.viewportWidth, camera.viewportHeight)
 
     /** Lets a running tractor move on by the time since the last frame. */
     private fun driveTractor(now: Instant) {
@@ -162,8 +180,6 @@ class FarmGame(
             keepOnMap()
             return true
         }
-
-        private fun maxZoom() = FarmRenderer.WORLD / min(camera.viewportWidth, camera.viewportHeight)
     }
 
     private companion object {

@@ -6,6 +6,9 @@ import com.hunter.stockfarmer.core.rules.GameEngine
 import com.hunter.stockfarmer.core.rules.GameEvent
 import com.hunter.stockfarmer.core.rules.newGame
 import com.hunter.stockfarmer.core.util.SystemRandomSource
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import java.time.Instant
 
 /**
@@ -21,6 +24,21 @@ class GameSession(
     /** Changes the game, handing back whatever the change returns. */
     fun <T> act(change: (GameEngine) -> T): T = synchronized(engine) { change(engine) }
 
+    private val published = MutableSharedFlow<List<GameEvent>>(extraBufferCapacity = EVENT_BUFFER)
+
+    /** What happened in the game, in batches, for sound and for the screens that show news. */
+    val events: SharedFlow<List<GameEvent>> = published.asSharedFlow()
+
+    /** Where the farm camera looks, so sounds can be placed to one side or made quieter when far away. */
+    val view = FarmView()
+
+    /** Tells everyone listening what just happened; nothing is sent for an empty batch. */
+    fun publish(batch: List<GameEvent>): List<GameEvent> = batch.also { if (it.isNotEmpty()) published.tryEmit(it) }
+
     /** A tap on the farm uses the selected tool on that tile. */
-    fun tap(point: GridPoint): List<GameEvent> = act { it.tap(point, Instant.now()) }
+    fun tap(point: GridPoint): List<GameEvent> = publish(act { it.tap(point, Instant.now()) })
+
+    private companion object {
+        const val EVENT_BUFFER = 64
+    }
 }

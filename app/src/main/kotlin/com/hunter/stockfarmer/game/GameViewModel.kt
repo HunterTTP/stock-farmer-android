@@ -32,7 +32,7 @@ class GameViewModel(
     init {
         viewModelScope.launch {
             while (true) {
-                if (persistenceState.isReady) tick.tick()
+                if (persistenceState.isReady) session.publish(tick.tick())
                 delay(TICK_MILLIS)
             }
         }

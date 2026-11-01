@@ -39,7 +39,7 @@ fun GameSession.touch(
                 engine.useTool(point, now)
             }
         }
-    }
+    }.let { publish(it) }
 
 private fun GameEngine.startsPlacing(point: GridPoint): Boolean =
     when {
@@ -64,7 +64,8 @@ private fun GameEngine.startsPlacing(point: GridPoint): Boolean =
     }
 
 /** Puts down whatever is being placed, or says why it cannot be. */
-fun GameSession.confirmPlacement(now: Instant = Instant.now()): List<GameEvent> = act { it.confirmPlacement(now) }
+fun GameSession.confirmPlacement(now: Instant = Instant.now()): List<GameEvent> =
+    publish(act { it.confirmPlacement(now) })
 
 fun GameSession.cancelPlacement() = act { it.cancelPlacement() }
 
