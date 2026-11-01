@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.activityViewModels
 import com.badlogic.gdx.backends.android.AndroidFragmentApplication
 import com.hunter.stockfarmer.game.GameViewModel
+import com.hunter.stockfarmer.ui.screens.PlaySettings
 
 /** Hosts the libGDX farm so Compose can place it on screen like any other view. */
 class FarmFragment : AndroidFragmentApplication() {
@@ -16,5 +17,5 @@ class FarmFragment : AndroidFragmentApplication() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?,
-    ): View = initializeForView(FarmGame(model.session, model.performance))
+    ): View = initializeForView(FarmGame(model.session, PlaySettings.of(requireContext()), model.performance))
 }

@@ -29,6 +29,7 @@ import com.hunter.stockfarmer.game.touch
 import com.hunter.stockfarmer.game.touchAnimalAt
 import com.hunter.stockfarmer.ui.screens.PerformanceMonitor
 import com.hunter.stockfarmer.ui.screens.PerformanceWork
+import com.hunter.stockfarmer.ui.screens.PlaySettings
 import kotlinx.coroutines.flow.update
 import java.time.Instant
 import kotlin.math.floor
@@ -38,6 +39,7 @@ import kotlin.math.min
 /** The farm scene: draws the session's game and turns taps and drags into play and camera movement. */
 class FarmGame(
     private val session: GameSession,
+    private val play: PlaySettings,
     private val monitor: PerformanceMonitor? = null,
 ) : ApplicationAdapter() {
     private lateinit var batch: CountingSpriteBatch
@@ -102,6 +104,7 @@ class FarmGame(
         farmPhoto = FarmPhoto(renderer, batch, textures, effects.photo, foreground = tractor::drawLoad)
         session.photos.handler = { request, done ->
             Gdx.app.postRunnable {
+                applyGraphicsSettings()
                 val png =
                     if (request.state != null) {
                         farmPhoto.render(request.state, request.pixels, request.at ?: Instant.now())
@@ -160,6 +163,7 @@ class FarmGame(
     override fun render() {
         monitor?.frame()
         measure(PerformanceWork.scene) {
+            applyGraphicsSettings()
             Gdx.gl.glClearColor(0.05f, 0.08f, 0.12f, 1f)
             Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT)
             camera.update()
@@ -202,6 +206,13 @@ class FarmGame(
             session.view.drawnSprites = batch.sprites
             session.view.framesDrawn++
         }
+    }
+
+    /** Read on the GL thread so settings changes reach both the next frame and any photo requested before it. */
+    private fun applyGraphicsSettings() {
+        renderer.gridShown = play.isGridShown
+        effects.shadows.enabled = play.isDynamicShadowsEnabled
+        effects.shadows.intensity = play.shadowIntensity.toDouble()
     }
 
     /** Sets off the fireworks the game side asked for since the last frame. */

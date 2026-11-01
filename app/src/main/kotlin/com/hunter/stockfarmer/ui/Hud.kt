@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -73,10 +72,16 @@ import com.hunter.stockfarmer.ui.screens.QuestReward
 import com.hunter.stockfarmer.ui.screens.SoundCenterScreenAudio
 import com.hunter.stockfarmer.ui.sheets.SheetHost
 import com.hunter.stockfarmer.ui.theme.HudSheet
+import com.hunter.stockfarmer.ui.theme.PillButton
+import com.hunter.stockfarmer.ui.theme.PillRole
 import com.hunter.stockfarmer.ui.theme.PlacementButtons
 import com.hunter.stockfarmer.ui.theme.ScalesHudForTablets
+import com.hunter.stockfarmer.ui.theme.Theme
 import com.hunter.stockfarmer.ui.theme.ToastView
 import kotlinx.coroutines.delay
+
+/** This branch uses the launch background as the fill for HUD dialogs. */
+private val Theme.panelFill get() = launchBackground
 
 /**
  * The heads-up display over the farm, in the composition order of iOS `GameView`: the money and level panels on top, the
@@ -195,7 +200,7 @@ fun Hud(
                 }
             }
             if (isTimeShown) TimeSheet(session, onDismiss = { isTimeShown = false })
-            levelUnlocks?.let { unlocks ->
+            levelUnlocks?.takeIf { rewards.isEmpty() }?.let { unlocks ->
                 HudSheet(onDismiss = { levelUnlocks = null }) {
                     LevelUpScreen(session, onClose = { levelUnlocks = null }, unlocks = unlocks)
                 }
@@ -203,27 +208,34 @@ fun Hud(
             confirmation?.let { asked ->
                 AlertDialog(
                     onDismissRequest = { session.confirmations.value = null },
+                    containerColor = Theme.panelFill,
+                    titleContentColor = Theme.textPrimary,
+                    textContentColor = Theme.textSecondary,
                     title = { Text(asked.title) },
                     text = { Text(asked.message) },
                     confirmButton = {
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             asked.alternative?.let { alt ->
-                                TextButton(
+                                PillButton(
+                                    title = alt.title,
                                     onClick = {
                                         session.confirmations.value = null
                                         alt.action()
                                     },
-                                ) { Text(alt.title) }
+                                )
                             }
-                            TextButton(
+                            PillButton(
+                                role = PillRole.accent,
                                 onClick = {
                                     session.confirmations.value = null
                                     asked.action()
                                 },
-                            ) { Text(asked.confirmTitle) }
+                            ) { Text(asked.confirmTitle, color = Theme.onAccent) }
                         }
                     },
-                    dismissButton = { TextButton(onClick = { session.confirmations.value = null }) { Text("Cancel") } },
+                    dismissButton = {
+                        PillButton(title = "Cancel", onClick = { session.confirmations.value = null })
+                    },
                 )
             }
             sheet?.let { open ->
