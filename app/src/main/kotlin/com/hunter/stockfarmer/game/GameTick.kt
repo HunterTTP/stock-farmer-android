@@ -53,7 +53,7 @@ class GameTick(
             petDwell = dwell
             events += engine.eatFavoriteCrops(now)
             engine.growTrees(now)
-            engine.beginNewDayIfDue(now)
+            engine.beginNewDayIfDue(now)?.let { session.announce(it) }
             walkAnimals(engine, now, random)
             events.filter { it !is GameEvent.Hatched && it !is GameEvent.Born }
         }

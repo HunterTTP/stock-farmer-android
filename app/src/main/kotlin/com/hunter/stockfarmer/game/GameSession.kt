@@ -1,5 +1,6 @@
 package com.hunter.stockfarmer.game
 
+import com.hunter.stockfarmer.core.model.DaySummary
 import com.hunter.stockfarmer.core.model.GameState
 import com.hunter.stockfarmer.core.model.GridPoint
 import com.hunter.stockfarmer.core.rules.GameEngine
@@ -28,6 +29,15 @@ class GameSession(
 
     /** What happened in the game, in batches, for sound and for the screens that show news. */
     val events: SharedFlow<List<GameEvent>> = published.asSharedFlow()
+
+    private val days = MutableSharedFlow<DaySummary>(extraBufferCapacity = EVENT_BUFFER)
+
+    /** The day just over, with what sold in it, each time a new day begins. */
+    val newDays: SharedFlow<DaySummary> = days.asSharedFlow()
+
+    fun announce(summary: DaySummary) {
+        days.tryEmit(summary)
+    }
 
     /** Where the farm camera looks, so sounds can be placed to one side or made quieter when far away. */
     val view = FarmView()

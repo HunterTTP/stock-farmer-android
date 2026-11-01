@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import com.hunter.stockfarmer.audio.SoundCenter
 import com.hunter.stockfarmer.core.catalog.Crop
 import com.hunter.stockfarmer.core.catalog.HarvestTool
+import com.hunter.stockfarmer.core.model.DaySummary
 import com.hunter.stockfarmer.core.model.PlayMode
 import com.hunter.stockfarmer.core.model.dollars
 import com.hunter.stockfarmer.core.rules.GameEvent
@@ -46,6 +47,7 @@ import com.hunter.stockfarmer.game.confirmPlacement
 import com.hunter.stockfarmer.ui.menus.Menu
 import com.hunter.stockfarmer.ui.menus.MenusHost
 import com.hunter.stockfarmer.ui.screens.CareerScreen
+import com.hunter.stockfarmer.ui.screens.DaySummaryBanner
 import com.hunter.stockfarmer.ui.screens.LevelUpScreen
 import com.hunter.stockfarmer.ui.screens.LocalScreenAudio
 import com.hunter.stockfarmer.ui.screens.MarketQuestScreen
@@ -118,12 +120,14 @@ fun Hud(
     var screen by remember { mutableStateOf<HudScreen?>(null) }
     var levelUnlocks by remember { mutableStateOf<LevelUnlocks?>(null) }
     var rewards by remember { mutableStateOf(emptyList<QuestReward>()) }
+    var daySummary by remember { mutableStateOf<DaySummary?>(null) }
     LaunchedEffect(session) {
         while (true) {
             hud = session.hud()
             delay(REFRESH_MILLIS)
         }
     }
+    LaunchedEffect(session) { session.newDays.collect { daySummary = it } }
     LaunchedEffect(session) {
         session.events.collect { events ->
             events.filterIsInstance<GameEvent.LeveledUp>().lastOrNull()?.let {
@@ -169,6 +173,7 @@ fun Hud(
             Overlay { LevelUpScreen(session, onClose = { levelUnlocks = null }, unlocks = unlocks) }
         }
         QuestBanner(session, onClose = { rewards = emptyList() }, rewards = rewards)
+        DaySummaryBanner(session, onClose = { daySummary = null }, summary = daySummary)
     }
 }
 
