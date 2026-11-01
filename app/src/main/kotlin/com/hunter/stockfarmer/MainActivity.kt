@@ -104,8 +104,10 @@ class MainActivity :
                     var launchId by remember { mutableIntStateOf(0) }
                     var launching by remember { mutableStateOf(true) }
                     PerformanceSampling(model.performance, nodeCount = { model.session.view.drawnSprites })
+                    // The farm stays mounted through a farm switch: removing its view while the game thread is paused
+                    // leaves libGDX waiting for a pause that never completes, and it kills the process.
+                    FarmHost()
                     if (persistence.isReady) {
-                        FarmHost()
                         val recorder = rememberTimelapseRecorder(model.session)
                         TimelapseCapture(recorder, ready = persistence.error == null)
                         FarmWeather(model.session) {
