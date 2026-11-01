@@ -54,7 +54,8 @@ fun CareerScreen(
     var collection by remember { mutableStateOf<CareerCollection?>(null) }
     var series by remember { mutableStateOf<CareerSeries?>(null) }
     val title =
-        collection?.title ?: series?.let { if (it == CareerSeries.XP) "Level ${state.level}" else it.title } ?: "Career"
+        collection?.title ?: series?.let { if (it == CareerSeries.XP) "Level ${state.level}" else it.title }
+            ?: "Progress"
     val close = {
         if (collection != null || series != null) {
             collection = null
