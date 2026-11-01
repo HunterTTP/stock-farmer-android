@@ -5,7 +5,7 @@ import kotlinx.serialization.json.Json
 
 /** Reads and writes a farm as JSON. A loaded farm has its derived indexes rebuilt. */
 object GameStateJson {
-    private val json =
+    internal val json =
         Json {
             allowStructuredMapKeys = true
             encodeDefaults = true
