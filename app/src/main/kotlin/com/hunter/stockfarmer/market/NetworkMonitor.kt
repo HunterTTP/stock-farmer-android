@@ -28,6 +28,7 @@ class NetworkMonitor(
             ) = refresh()
         }
 
+    // Registered for the life of the process: this is an app-wide singleton, so there is no owner to unregister it.
     init {
         runCatching { manager?.registerDefaultNetworkCallback(callback) }
         refresh()

@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">Stock Farmer</string>
+    <string name="restore_backup">Restore %1$s backup</string>
+    <string name="field_ready_channel_name">Harvest reminders</string>
+    <string name="field_ready_channel_description">When all your crops are ready to harvest</string>
+    <string name="field_ready_text">All your crops are ready to harvest!</string>
 </resources>

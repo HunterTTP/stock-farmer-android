@@ -16,6 +16,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -76,7 +77,7 @@ fun SaveSlotsScreen(
     var deleting by remember { mutableStateOf<SaveSlotInfo?>(null) }
     var restoring by remember { mutableStateOf<Pair<SaveSlotInfo, List<SaveBackup>>?>(null) }
     val refresh = { farms.load { games = it } }
-    remember { refresh() }
+    LaunchedEffect(Unit) { refresh() }
 
     ScreenLayout("Load Game", session, onClose) {
         val saved = games

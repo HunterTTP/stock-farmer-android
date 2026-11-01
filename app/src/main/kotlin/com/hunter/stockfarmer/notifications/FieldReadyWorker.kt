@@ -11,6 +11,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.work.Worker
 import androidx.work.WorkerParameters
+import com.hunter.stockfarmer.R
 
 class FieldReadyWorker(
     context: Context,
@@ -26,8 +27,8 @@ class FieldReadyWorker(
             Notification
                 .Builder(context, CHANNEL_ID)
                 .setSmallIcon(android.R.drawable.stat_notify_more)
-                .setContentTitle("Stock Farmer")
-                .setContentText("All your crops are ready to harvest!")
+                .setContentTitle(context.getString(R.string.app_name))
+                .setContentText(context.getString(R.string.field_ready_text))
                 .setAutoCancel(true)
                 .setCategory(Notification.CATEGORY_REMINDER)
         if (launch != null) {
@@ -56,8 +57,13 @@ class FieldReadyWorker(
         private const val NOTIFICATION_ID = 1
 
         internal fun createChannel(context: Context) {
-            val channel = NotificationChannel(CHANNEL_ID, "Harvest reminders", NotificationManager.IMPORTANCE_DEFAULT)
-            channel.description = "When all your crops are ready to harvest"
+            val channel =
+                NotificationChannel(
+                    CHANNEL_ID,
+                    context.getString(R.string.field_ready_channel_name),
+                    NotificationManager.IMPORTANCE_DEFAULT,
+                )
+            channel.description = context.getString(R.string.field_ready_channel_description)
             context.getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
         }
 

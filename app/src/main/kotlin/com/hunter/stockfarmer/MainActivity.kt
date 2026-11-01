@@ -3,6 +3,7 @@ package com.hunter.stockfarmer
 import android.os.Bundle
 import android.view.View
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,6 +24,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.fragment.app.FragmentActivity
@@ -76,9 +78,11 @@ class MainActivity :
     private lateinit var haptics: Haptics
     private lateinit var notifications: FieldReadyNotificationPermission
     private lateinit var fieldReady: FieldReadyNotifier
+    private val farmContainerId = View.generateViewId()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         sound = SoundCenter(this)
         haptics = Haptics(window.decorView)
         notifications = FieldReadyNotificationPermission(this, model.notificationPolicy)
@@ -159,7 +163,7 @@ class MainActivity :
                                 Column(Modifier.align(Alignment.BottomCenter).padding(24.dp)) {
                                     persistence.backups.forEach { backup ->
                                         TextButton(onClick = { model.restore(backup) }) {
-                                            Text("Restore ${backup.kind.name} backup")
+                                            Text(stringResource(R.string.restore_backup, backup.kind.name))
                                         }
                                     }
                                 }
@@ -239,11 +243,7 @@ class MainActivity :
         notifications.requestIfNeeded(model.session.read { it.plots.isNotEmpty() })
     }
 
-    override fun onPause() {
-        model.pause()
-        super.onPause()
-    }
-
+    // The game pauses on stop, not pause: a visible but unfocused window (split screen, a dialog) keeps playing.
     override fun onStop() {
         // Readiness is worked out before the pause holds the farm's clock, as on iOS.
         model.session.act { fieldReady.onBackground(it, Instant.now()) }
@@ -257,10 +257,9 @@ class MainActivity :
             modifier = Modifier.fillMaxSize(),
             factory = { context ->
                 FragmentContainerView(context).apply {
-                    id = View.generateViewId()
-                    if (supportFragmentManager.findFragmentByTag(FARM_TAG) == null) {
-                        supportFragmentManager.commit { replace(id, FarmFragment(), FARM_TAG) }
-                    }
+                    id = farmContainerId
+                    // This view is new each time the host re-enters composition, so the farm is always put into it.
+                    supportFragmentManager.commit { replace(id, FarmFragment(), FARM_TAG) }
                 }
             },
         )

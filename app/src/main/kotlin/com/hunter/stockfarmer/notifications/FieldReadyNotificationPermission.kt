@@ -1,6 +1,7 @@
 package com.hunter.stockfarmer.notifications
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.ComponentActivity
@@ -14,6 +15,7 @@ class FieldReadyNotificationPermission(
     private val launcher = activity.registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
 
     /** Call after a successful planting, and when becoming active with existing crops. */
+    @SuppressLint("InlinedApi") // Only read once the SDK check says the permission exists.
     fun requestIfNeeded(hasCrops: Boolean) {
         val isGranted =
             Build.VERSION.SDK_INT < 33 ||
