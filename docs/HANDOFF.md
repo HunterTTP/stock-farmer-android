@@ -1,7 +1,7 @@
 # Handoff: where the project stands and what to do next
 
 Read this first in a fresh session, then `AGENTS.md`, `docs/DEVELOPMENT.md` and `docs/PARITY.md`.
-Last updated at `main` = `4fa605d` (2026-11-01).
+Last updated at `main` = `421ce7d` (2026-11-01).
 
 ## The goal
 
@@ -31,11 +31,11 @@ Standing instructions from the user:
 - **Claude Sonnet 5.5 (`claude`)**: Rate-limited (`resets 2:10pm America/New_York`); timer scheduled to bring back into rotation at reset.
 - **Codex Sol 6.1 (`codex.cmd`)**: Rate-limited (`try again at 2:54 PM`); timer scheduled to bring back into rotation at reset.
 
-## Verified state (all green on `main` = `4fa605d`)
+## Verified state (all green on `main` = `421ce7d`)
 
 ```
-./gradlew spotlessCheck :core:test :app:assembleDebug :app:testDebugUnitTest   -> BUILD SUCCESSFUL (at 4fa605d)
-core tests: 1,019, 0 failures.   app unit tests: ~350+, 0 failures.   debug APK builds (85 MB).
+./gradlew spotlessCheck :core:test :app:assembleDebug :app:testDebugUnitTest   -> BUILD SUCCESSFUL (at 421ce7d)
+core tests: 1,019, 0 failures.   app unit tests: ~355+, 0 failures.   debug APK builds (85 MB).
 ```
 
 ### Completed on `main` (`736658c`)
@@ -54,15 +54,16 @@ core tests: 1,019, 0 failures.   app unit tests: ~350+, 0 failures.   debug APK 
   - Item detail screens, tool upgrade screen & flow, chick appearance screen, workshop recipe screen, building & animal sheets, and persisted unlock dots (`736658c`)
   - Sheet navigation & HUD wiring (`ToolsSheet`, `ToolRoute`, `PlacementDestroy`, unlock dots, lesson guide, `SheetHost` HUD sheet wrapping) (`bfd14d1`)
   - Stock market trade sheet (`QuantityControls`/slider/Max, House upgrade) & `MarketQuestSection` HUD polish (`4fa605d`)
+  - Renderer `PerformanceMonitor` subsystem instrumentation & `LaunchScreen` failed-state `onChooseFarm` wiring (`421ce7d`)
 
 ## In flight right now (4 parallel slices)
 
 | Slice | Branch | Worktree | Status |
 |---|---|---|---|
-| 1. Renderer `PerformanceMonitor` subsystem instrumentation & `LaunchScreen` failed-state `onChooseFarm` wiring | `app/perf-instrumentation` | `..\stock-farmer-android-wt-perf-inst` | Running (Gemini Flash 3.8, high) |
-| 2. Storage tutorial lesson progression/pulses (`StorageMenu`) & `NoticeScreens`/`SaveSlotsScreen` HUD polish | `app/storage-notices-polish` | `..\stock-farmer-android-wt-storage-notices` | Running (Gemini Flash 3.8, high) |
-| 3. Fishing overlay, Sound settings, and Building/Animal sheet sections HUD theme polish | `app/fishing-sound-sheets-polish` | `..\stock-farmer-android-wt-sheet-nav` | Running (Gemini Flash 3.8, high) |
-| 4. `TimelapseScreen` HUD theme conversion & `CareerScreen` collection search/filter/chart axis polish | `app/timelapse-career-polish` | `..\stock-farmer-android-wt-stock-quest` | Running (Gemini Flash 3.8, high) |
+| 1. Storage tutorial lesson progression/pulses (`StorageMenu`) & `NoticeScreens`/`SaveSlotsScreen` HUD polish | `app/storage-notices-polish` | `..\stock-farmer-android-wt-storage-notices` | Running (Gemini Flash 3.8, high) |
+| 2. Fishing overlay, Sound settings, and Building/Animal sheet sections HUD theme polish | `app/fishing-sound-sheets-polish` | `..\stock-farmer-android-wt-sheet-nav` | Running (Gemini Flash 3.8, high) |
+| 3. `TimelapseScreen` HUD theme conversion & `CareerScreen` collection search/filter/chart axis polish | `app/timelapse-career-polish` | `..\stock-farmer-android-wt-stock-quest` | Running (Gemini Flash 3.8, high) |
+| 4. `GameTick` `learnWheatIsRipe` tutorial hook & `PerformanceScreen`/`InformationScreens` HUD theme polish | `app/tick-perf-info-polish` | `..\stock-farmer-android-wt-perf-inst` | Running (Gemini Flash 3.8, high) |
 
 ## Next steps, in order
 
