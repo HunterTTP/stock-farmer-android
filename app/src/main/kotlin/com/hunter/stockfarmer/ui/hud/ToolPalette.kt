@@ -142,7 +142,7 @@ internal object ToolPalette {
             HarvestTool.axe -> MenuPicture.Asset("images/tools/axe.png")
             HarvestTool.pickaxe -> MenuPicture.Asset("images/tools/pickaxe.png")
             HarvestTool.bucket -> MenuPicture.Asset("images/tools/bucket.png")
-            HarvestTool.rod -> MenuPicture.Symbol("🎣")
+            HarvestTool.rod -> MenuPicture.Asset("images/tools/rod.png")
         }
 
     /** Applies a pick. A row that is not unlocked yet only says what unlocks it. */
