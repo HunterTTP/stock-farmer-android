@@ -41,6 +41,7 @@ class GameTick(
     private val session: GameSession,
     private val random: RandomSource = SystemRandomSource,
 ) {
+    private val fishSwimming = FishSwimming(random)
     private var lastTend: Instant? = null
     private var lastPlayTick: Instant? = null
     private var petDwell = emptyMap<GridPoint, Double>()
@@ -51,6 +52,7 @@ class GameTick(
         lastTend = null
         lastPlayTick = null
         petDwell = emptyMap()
+        fishSwimming.forget()
         pendingSummary = null
     }
 
@@ -109,6 +111,7 @@ class GameTick(
             session.wildGrowth.advance(engine, now)
             engine.learnWheatIsRipe(now)
             walkAnimals(engine, now, random, session.animalGestures::isNudging)
+            fishSwimming.advance(engine, now)
             events.filter { it !is GameEvent.Hatched && it !is GameEvent.Born }
         }
 
