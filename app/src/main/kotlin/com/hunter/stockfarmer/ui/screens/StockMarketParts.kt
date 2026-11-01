@@ -14,8 +14,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -29,6 +27,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.hunter.stockfarmer.core.model.dollars
 import com.hunter.stockfarmer.core.rules.StockMarketRules
+import com.hunter.stockfarmer.ui.theme.HudTextField
 import com.hunter.stockfarmer.ui.theme.HudType
 import com.hunter.stockfarmer.ui.theme.Theme
 import com.hunter.stockfarmer.ui.theme.categoryCard
@@ -215,15 +214,13 @@ internal fun SearchCard(
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        OutlinedTextField(
+        HudTextField(
             search,
             onSearch,
-            label = { Text("Ticker, e.g. AAPL") },
-            singleLine = true,
-            keyboardOptions =
-                KeyboardOptions(capitalization = KeyboardCapitalization.Characters, imeAction = ImeAction.Search),
-            keyboardActions = KeyboardActions(onSearch = { onRun() }),
-            modifier = Modifier.weight(1f),
+            "Ticker, e.g. AAPL",
+            Modifier.weight(1f),
+            KeyboardOptions(capitalization = KeyboardCapitalization.Characters, imeAction = ImeAction.Search),
+            KeyboardActions(onSearch = { onRun() }),
         )
         Box(
             Modifier
@@ -234,7 +231,7 @@ internal fun SearchCard(
             contentAlignment = Alignment.Center,
         ) {
             Text(
-                if (loading) "Getting prices…" else "Search",
+                "Search",
                 color = Theme.accent,
                 style = HudType.subheadline.copy(fontWeight = FontWeight.Bold),
             )

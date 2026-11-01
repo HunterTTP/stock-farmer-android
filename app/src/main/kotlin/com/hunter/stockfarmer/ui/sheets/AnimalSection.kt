@@ -11,7 +11,6 @@ import androidx.compose.foundation.text.BasicText
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -27,6 +26,7 @@ import com.hunter.stockfarmer.core.catalog.DogBreed
 import com.hunter.stockfarmer.core.model.Pet
 import com.hunter.stockfarmer.core.model.PetSpecies
 import com.hunter.stockfarmer.ui.screens.ScreenIcon
+import com.hunter.stockfarmer.ui.theme.HudTextField
 import com.hunter.stockfarmer.ui.theme.HudType
 import com.hunter.stockfarmer.ui.theme.PillButton
 import com.hunter.stockfarmer.ui.theme.PillRole
@@ -54,14 +54,7 @@ internal fun AnimalMenu(
                 )
             },
             text = {
-                OutlinedTextField(
-                    name,
-                    { name = it.take(Pet.MAX_NAME_LENGTH) },
-                    label = {
-                        BasicText("Name", style = HudType.caption.copy(color = Theme.textSecondary))
-                    },
-                    singleLine = true,
-                )
+                HudTextField(name, { name = it.take(Pet.MAX_NAME_LENGTH) }, "Name")
             },
             confirmButton = {
                 PillButton(
@@ -169,14 +162,7 @@ internal fun PetChoiceForm(onConfirm: (PetChoiceState) -> Unit) {
                 choice = choice.copy(cat = it)
             }
         }
-        OutlinedTextField(
-            choice.name,
-            { choice = choice.named(it) },
-            label = {
-                BasicText("Name", style = HudType.caption.copy(color = Theme.textSecondary))
-            },
-            singleLine = true,
-        )
+        HudTextField(choice.name, { choice = choice.named(it) }, "Name")
         PillButton(
             title = "OK",
             onClick = { onConfirm(choice) },
