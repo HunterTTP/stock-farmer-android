@@ -1,35 +1,30 @@
 package com.hunter.stockfarmer.core.persistence
 
-import kotlinx.serialization.KSerializer
+import com.hunter.stockfarmer.core.util.InstantSerializer
+import com.hunter.stockfarmer.core.util.UuidSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
-import kotlinx.serialization.descriptors.PrimitiveKind
-import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
 import java.io.IOException
 import java.nio.file.Path
 import java.time.Instant
 import java.util.UUID
 import java.util.concurrent.CancellationException
-import kotlin.math.floor
-import kotlin.math.roundToLong
 
 @Serializable
 data class TimelapseFrame(
-    @Serializable(with = TimelapseUUIDSerializer::class) val id: UUID,
+    @Serializable(with = UuidSerializer::class) val id: UUID,
     val day: Int,
     val minute: Int,
-    @Serializable(with = TimelapseDateSerializer::class) val capturedAt: Instant,
+    @Serializable(with = InstantSerializer::class) val capturedAt: Instant,
     val bytes: Int,
 )
 
 @Serializable
 @ConsistentCopyVisibility
 data class TimelapseArchive private constructor(
-    @Serializable(with = TimelapseUUIDSerializer::class) val generation: UUID,
+    @Serializable(with = UuidSerializer::class) val generation: UUID,
     val lastCapturedDay: Int?,
     @SerialName("frames") private val savedFrames: List<TimelapseFrame>,
 ) {
@@ -143,34 +138,4 @@ class TimelapseStore(
     companion object {
         private val json = Json { ignoreUnknownKeys = true }
     }
-}
-
-internal object TimelapseUUIDSerializer : KSerializer<UUID> {
-    override val descriptor = PrimitiveSerialDescriptor("TimelapseUUID", PrimitiveKind.STRING)
-
-    override fun serialize(
-        encoder: Encoder,
-        value: UUID,
-    ) = encoder.encodeString(value.toString().uppercase())
-
-    override fun deserialize(decoder: Decoder): UUID = UUID.fromString(decoder.decodeString())
-}
-
-/** Foundation's default Date encoding counts seconds from 2001-01-01. */
-internal object TimelapseDateSerializer : KSerializer<Instant> {
-    override val descriptor = PrimitiveSerialDescriptor("TimelapseDate", PrimitiveKind.DOUBLE)
-
-    override fun serialize(
-        encoder: Encoder,
-        value: Instant,
-    ) = encoder.encodeDouble(value.epochSecond.toDouble() - referenceEpoch + value.nano / 1_000_000_000.0)
-
-    override fun deserialize(decoder: Decoder): Instant {
-        val seconds = decoder.decodeDouble() + referenceEpoch
-        if (!seconds.isFinite()) throw SerializationException("Invalid capture date")
-        val whole = floor(seconds)
-        return Instant.ofEpochSecond(whole.toLong(), ((seconds - whole) * 1_000_000_000).roundToLong())
-    }
-
-    private val referenceEpoch = 978_307_200.0
 }
