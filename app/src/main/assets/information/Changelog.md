@@ -1,3 +1,7 @@
+## 2026-11-01
+- Trees and rocks you place yourself give no logs or stone when you chop or break them, even with full storage, and do not
+  count as mined; only the ones that grew on their own do.
+
 ## 2026-10-22
 - Music is half as loud as it was.
 - The startup screen shows the carrot icon again, and its loading bar now fills smoothly instead of jumping and

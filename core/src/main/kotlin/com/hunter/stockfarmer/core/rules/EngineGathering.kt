@@ -92,7 +92,7 @@ internal fun GameEngine.collectEggs(
 }
 
 /**
- * The last pass over the same tree fells it and stores its logs, if they all fit. A decoration or a fence is taken down in
+ * The last pass over the same tree fells it and stores its logs, if they all fit; a tree the player planted gives none. A decoration or a fence is taken down in
  * one pass and stored.
  */
 internal fun GameEngine.chopTree(
@@ -110,8 +110,8 @@ internal fun GameEngine.chopTree(
         return emptyList()
     }
     val (origin, placed) = site
-    val logs = placed.tree.logs
-    if (!hasRoom(logs, HarvestTool.axe)) return listOf(GameEvent.Rejected(Rejection.StorageFull))
+    val logs = if (placed.isNaturallyGenerated) placed.tree.logs else 0
+    if (logs > 0 && !hasRoom(logs, HarvestTool.axe)) return listOf(GameEvent.Rejected(Rejection.StorageFull))
     val (pass, isNewHit) = advanceAxe(point, origin, placed.tree.footprint(origin))
     val total = hitsToFell(placed.tree)
     if (pass.hits < total) {
@@ -151,14 +151,16 @@ private fun GameEngine.fellDecoration(
     )
 }
 
-/** The last pass over the same rock breaks it and stores its stones, if they all fit. */
+/** The last pass over the same rock breaks it and stores its stones, if they all fit; a rock the player placed gives none. */
 internal fun GameEngine.mineRock(point: GridPoint): List<GameEvent> {
     val size = state.rocks[point]
     if (size == null) {
         chopPass?.lastTile = point
         return emptyList()
     }
-    if (!hasRoom(size.stones, HarvestTool.pickaxe)) return listOf(GameEvent.Rejected(Rejection.StorageFull))
+    val isNatural = point !in state.playerPlacedRocks
+    val stones = if (isNatural) size.stones else 0
+    if (stones > 0 && !hasRoom(stones, HarvestTool.pickaxe)) return listOf(GameEvent.Rejected(Rejection.StorageFull))
     val (pass, isNewHit) = advanceAxe(point, point, listOf(point))
     val total = hitsToBreak(size)
     if (pass.hits < total) {
@@ -167,9 +169,10 @@ internal fun GameEngine.mineRock(point: GridPoint): List<GameEvent> {
     }
     chopPass = null
     state.rocks.remove(point)
-    noteMined(size)
+    state.playerPlacedRocks.remove(point)
+    if (isNatural) noteMined(size)
     val item = size.ore?.let { StorageItem.Ore(it) } ?: StorageItem.Stone
-    val gathered = (0 until size.stones).map { gather(item, point, HarvestTool.pickaxe) }
+    val gathered = (0 until stones).map { gather(item, point, HarvestTool.pickaxe) }
     return listOf<GameEvent>(GameEvent.Mined(point, pass.hits, total, true)) + gathered
 }
 

@@ -4,4 +4,5 @@ import com.hunter.stockfarmer.core.model.GameState
 
 internal fun GameState.finishDecoding() {
     if (holdings.values.any { it.previousCloseCents == null }) lastStockPullAt = null
+    playerPlacedRocks.retainAll { it in rocks }
 }

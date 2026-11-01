@@ -78,7 +78,7 @@ class ItemInfoTest {
     @Test
     fun `rock skips the decoration refund promise and functional decorations include reach`() {
         assertEquals(
-            "Break it with the Pickaxe for 2, 4, 6 stones, by size",
+            "Break it with the Pickaxe; wild rocks give 2, 4, 6 stones by size; a rock you place gives none",
             lines(ShopItem.DecorationItem("rock")).last(),
         )
         assertFalse(lines(ShopItem.DecorationItem("rock")).any { it.contains("80%") })

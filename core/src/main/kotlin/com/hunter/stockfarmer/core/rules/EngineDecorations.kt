@@ -203,6 +203,7 @@ internal fun GameEngine.tapDecoration(
     notePlaced(decoration.id)
     if (decoration.isRock) {
         state.rocks[origin] = decoration.rockSizes[selectedDecorationSize]
+        state.playerPlacedRocks.add(origin)
     } else {
         state.putDecoration(origin, PlacedDecoration.of(decoration, selectedDecorationSize, placedAt = now))
     }

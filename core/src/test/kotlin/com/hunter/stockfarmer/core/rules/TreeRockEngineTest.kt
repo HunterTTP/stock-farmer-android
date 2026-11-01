@@ -479,4 +479,92 @@ class TreeRockEngineTest {
         val loaded = GameStateJson.decode(GameStateJson.encode(state))
         assertEquals(state.rocks, loaded.rocks)
     }
+
+    // Player-placed trees and rocks give nothing
+
+    @Test fun `a tree the player planted is felled for no logs but a natural one still gives them`() {
+        val engine =
+            GameEngine(stateWith(money = 1_000.0, xp = LevelRules.xpToReach(19), mode = PlayMode.landscape, logs = 0))
+        engine.state.selectedLandscape = LandscapeTool.tree
+        engine.tap(spot, now)
+        val planted =
+            engine.state.trees.keys
+                .single()
+        assertFalse(
+            engine.state.trees
+                .getValue(planted)
+                .isNaturallyGenerated,
+        )
+        val tree = Tree.starter
+        val wild = GridPoint(30, 30)
+        engine.state.putTree(tree.origin(wild), PlacedTree(tree, tree.species.colors[0], now))
+        engine.select(HarvestTool.axe)
+        fell(engine, spot)
+        assertTrue(
+            engine.state.trees.keys
+                .none { it == planted },
+        )
+        assertNull(engine.state.storage[StorageItem.Log.id])
+        fell(engine, wild)
+        assertEquals(tree.logs, engine.state.storage[StorageItem.Log.id])
+    }
+
+    @Test fun `a planted tree stays player planted as it grows`() {
+        val engine = GameEngine(stateWith(money = 1_000.0, xp = LevelRules.xpToReach(19), mode = PlayMode.landscape))
+        engine.state.selectedLandscape = LandscapeTool.tree
+        engine.tap(spot, now)
+        engine.growTrees(now.plusSeconds(Tree.growthInterval.toLong() * 3))
+        assertTrue(
+            engine.state.trees.values
+                .none { it.isNaturallyGenerated },
+        )
+    }
+
+    @Test fun `a rock the player placed gives no stone and does not count as mined`() {
+        val engine = rockEngine()
+        engine.state.playerPlacedRocks.add(spot)
+        repeat(RockSize.big.hitsToBreak) { pass(engine) }
+        assertTrue(engine.state.rocks.isEmpty() && engine.state.playerPlacedRocks.isEmpty())
+        assertTrue(engine.state.storage.isEmpty())
+        assertTrue(
+            engine.state.career.minedRockIDs
+                .isEmpty(),
+        )
+    }
+
+    @Test fun `a placed rock breaks even with full storage and a natural rock on its tile later still gives stone`() {
+        val engine = rockEngine()
+        engine.state.playerPlacedRocks.add(spot)
+        engine.state.storage[StorageItem.Stone.id] = engine.storageCapacity
+        repeat(RockSize.big.hitsToBreak) { pass(engine) }
+        assertTrue(engine.state.rocks.isEmpty())
+        engine.state.storage.clear()
+        engine.state.rocks[spot] = RockSize.big
+        repeat(RockSize.big.hitsToBreak) { pass(engine) }
+        assertEquals(RockSize.big.stones, engine.state.storage[StorageItem.Stone.id])
+    }
+
+    @Test fun `a placed rock marker with no rock under it is dropped on load`() {
+        val state = GameState()
+        state.playerPlacedRocks.add(spot)
+        assertTrue(GameStateJson.decode(GameStateJson.encode(state)).playerPlacedRocks.isEmpty())
+    }
+
+    @Test fun `which rocks the player placed survives a save and a copy`() {
+        val state = GameState()
+        state.rocks[spot] = RockSize.small
+        state.playerPlacedRocks.add(spot)
+        assertEquals(setOf(spot), GameStateJson.decode(GameStateJson.encode(state)).playerPlacedRocks)
+        assertEquals(setOf(spot), state.copy().playerPlacedRocks)
+    }
+
+    private fun fell(
+        engine: GameEngine,
+        point: GridPoint,
+    ) {
+        repeat(20) {
+            engine.useTool(point, now)
+            engine.liftTool()
+        }
+    }
 }

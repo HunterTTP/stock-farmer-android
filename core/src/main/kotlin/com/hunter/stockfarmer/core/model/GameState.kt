@@ -109,6 +109,9 @@ class GameState {
     /** Rocks on the map, each standing on one tile. */
     var rocks: MutableMap<GridPoint, RockSize> = mutableMapOf()
 
+    /** Tiles of rocks the player set down, which give no stone when broken; every other rock grew naturally. */
+    var playerPlacedRocks: MutableSet<GridPoint> = mutableSetOf()
+
     /** Whether the map has been given its rocks, which a new game is given when it is first opened. */
     var hasRocks: Boolean = false
     var hasOreVeins: Boolean = false
@@ -466,6 +469,7 @@ class GameState {
             copy.herds = herds.toMutableMap()
             copy.placedTrees = placedTrees.toMutableMap()
             copy.rocks = rocks.toMutableMap()
+            copy.playerPlacedRocks = playerPlacedRocks.toMutableSet()
             copy.hasRocks = hasRocks
             copy.hasOreVeins = hasOreVeins
             copy.selectedTreeID = selectedTreeID
