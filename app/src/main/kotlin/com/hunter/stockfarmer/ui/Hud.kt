@@ -68,6 +68,7 @@ import com.hunter.stockfarmer.ui.screens.SettingsScreen
 import com.hunter.stockfarmer.ui.screens.SoundCenterScreenAudio
 import com.hunter.stockfarmer.ui.screens.StockMarketScreen
 import com.hunter.stockfarmer.ui.sheets.SheetHost
+import com.hunter.stockfarmer.ui.timelapse.TimelapseScreen
 import kotlinx.coroutines.delay
 import kotlin.concurrent.thread
 
@@ -117,6 +118,7 @@ private enum class HudScreen(
     Stocks("Stocks"),
     Career("Career"),
     Farms("Farms"),
+    Timelapse("Timelapse"),
     Settings("Settings"),
 }
 
@@ -189,6 +191,7 @@ fun Hud(
                         HudScreen.Stocks -> StockMarketScreen(session, close)
                         HudScreen.Career -> CareerScreen(session, close)
                         HudScreen.Farms -> SaveSlotsScreen(session, farms, close)
+                        HudScreen.Timelapse -> TimelapseScreen(session, close)
                         HudScreen.Settings -> SettingsScreen(session, close)
                     }
                 }

@@ -15,8 +15,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.fragment.app.FragmentActivity
@@ -41,7 +44,11 @@ import com.hunter.stockfarmer.notifications.FieldReadyNotificationPermission
 import com.hunter.stockfarmer.notifications.FieldReadyNotifier
 import com.hunter.stockfarmer.notifications.WorkManagerFieldReadyScheduler
 import com.hunter.stockfarmer.ui.Hud
+import com.hunter.stockfarmer.ui.timelapse.LocalTimelapseRecorder
+import com.hunter.stockfarmer.ui.timelapse.TimelapseRecorder
+import com.hunter.stockfarmer.ui.timelapse.rememberTimelapseRecorder
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.time.Instant
 
@@ -72,7 +79,11 @@ class MainActivity :
                     val persistence = model.persistenceState
                     if (persistence.isReady) {
                         FarmHost()
-                        Hud(model.session, sound, model.farms, Modifier.fillMaxSize())
+                        val recorder = rememberTimelapseRecorder(model.session)
+                        TimelapseCapture(recorder, ready = persistence.error == null)
+                        CompositionLocalProvider(LocalTimelapseRecorder provides recorder) {
+                            Hud(model.session, sound, model.farms, Modifier.fillMaxSize())
+                        }
                         persistence.error?.let { message ->
                             AlertDialog(
                                 onDismissRequest = {},
@@ -177,5 +188,29 @@ class MainActivity :
     private companion object {
         const val MUSIC_REFRESH_MILLIS = 1_000L
         const val FARM_TAG = "farm"
+    }
+}
+
+/** Ticks the recorder once a second while the app is resumed and the farm is saveable; stops it otherwise. */
+@Composable
+private fun TimelapseCapture(
+    recorder: TimelapseRecorder,
+    ready: Boolean,
+) {
+    val owner = LocalLifecycleOwner.current
+    LaunchedEffect(recorder, owner, ready) {
+        recorder.reset()
+        if (!ready) return@LaunchedEffect
+        owner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            recorder.reset()
+            try {
+                while (isActive) {
+                    recorder.tick(Instant.now())
+                    delay(1_000)
+                }
+            } finally {
+                recorder.reset()
+            }
+        }
     }
 }

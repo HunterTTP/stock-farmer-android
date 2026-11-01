@@ -51,8 +51,16 @@ class FarmGame(
             )
         Gdx.input.inputProcessor = GestureDetector(Gestures())
         farmPhoto = FarmPhoto(renderer, batch)
-        session.photos.handler = { pixels, done ->
-            Gdx.app.postRunnable { done(session.read { farmPhoto.render(it, pixels, Instant.now()) }) }
+        session.photos.handler = { request, done ->
+            Gdx.app.postRunnable {
+                val png =
+                    if (request.state != null) {
+                        farmPhoto.render(request.state, request.pixels, request.at ?: Instant.now())
+                    } else {
+                        session.read { farmPhoto.render(it, request.pixels, Instant.now()) }
+                    }
+                done(png)
+            }
         }
         placeCamera()
     }
