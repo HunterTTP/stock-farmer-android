@@ -6,11 +6,13 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.TextAutoSize
@@ -90,6 +92,7 @@ fun MoneyHud(
             .height(52.dp)
             .hudPanel(16.dp)
             .padding(horizontal = 14.dp)
+            .wrapContentHeight(Alignment.CenterVertically)
             .semantics { contentDescription = "Money $text" },
         maxLines = 1,
         overflow = TextOverflow.Clip,
@@ -139,15 +142,14 @@ fun LevelHud(
             style = HudType.subheadline.copy(fontWeight = FontWeight.ExtraBold, color = Theme.xp),
         )
         val fraction = if (needed > 0) (earned.toFloat() / needed).coerceIn(0f, 1f) else 0f
-        androidx.compose.foundation.layout.Box(
+        Box(
             Modifier
                 .fillMaxWidth()
-                .height(
-                    4.dp,
-                ).clip(RoundedCornerShape(2.dp))
+                .height(4.dp)
+                .clip(RoundedCornerShape(2.dp))
                 .background(Theme.xp.copy(alpha = 0.25f)),
         ) {
-            androidx.compose.foundation.layout.Box(
+            Box(
                 Modifier.fillMaxWidth(fraction).height(4.dp).background(Theme.xp),
             )
         }

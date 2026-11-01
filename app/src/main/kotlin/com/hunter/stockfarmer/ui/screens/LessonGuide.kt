@@ -6,25 +6,17 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.hunter.stockfarmer.ui.theme.HudMaterialTheme
+import com.hunter.stockfarmer.ui.theme.LessonBubble
 import com.hunter.stockfarmer.ui.theme.Theme
 import kotlin.math.cos
 
@@ -35,20 +27,13 @@ fun LessonGuide(
     modifier: Modifier = Modifier,
 ) {
     val message = state.message ?: return
-    HudMaterialTheme {
-        Text(
-            message,
+    LessonBubble(
+        text = message,
+        modifier =
             modifier
                 .widthIn(max = 280.dp)
-                .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(14.dp))
-                .border(1.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(14.dp))
-                .padding(horizontal = 12.dp, vertical = 6.dp)
                 .semantics { liveRegion = LiveRegionMode.Polite },
-            color = MaterialTheme.colorScheme.onSurface,
-            style = MaterialTheme.typography.bodySmall,
-            fontWeight = FontWeight.SemiBold,
-        )
-    }
+    )
 }
 
 /** Keep the graphics layer in place as teaching changes so an in-progress tool drag keeps its pointer handler. */

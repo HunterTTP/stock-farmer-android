@@ -1,7 +1,10 @@
 package com.hunter.stockfarmer.ui.rewards
 
+import androidx.compose.ui.graphics.Color
+import com.hunter.stockfarmer.core.catalog.StorageItem
 import com.hunter.stockfarmer.core.model.GridPoint
 import com.hunter.stockfarmer.core.rules.GameEvent
+import com.hunter.stockfarmer.ui.theme.Theme
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -121,5 +124,12 @@ class RewardFlightTrackerTest {
         assertTrue(tracker.flights.isEmpty())
         assertEquals(10.0, tracker.displayedMoney(10.0))
         assertEquals(10, tracker.displayedXP(10))
+    }
+
+    @Test fun `reward kinds map to HUD theme colors`() {
+        assertEquals(Theme.spend, RewardKind.Spend(5.0).color)
+        assertEquals(Theme.money, RewardKind.Earn(10.0).color)
+        assertEquals(Theme.xp, RewardKind.XP(25).color)
+        assertEquals(Color.White, RewardKind.Item(StorageItem.Egg, 2, false).color)
     }
 }

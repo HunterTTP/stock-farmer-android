@@ -2,14 +2,13 @@ package com.hunter.stockfarmer.ui.rewards
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -38,6 +37,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -50,6 +50,8 @@ import com.hunter.stockfarmer.ui.menus.MenuAssetLoader
 import com.hunter.stockfarmer.ui.menus.MenuImage
 import com.hunter.stockfarmer.ui.menus.MenuPictures
 import com.hunter.stockfarmer.ui.menus.rememberMenuAssetLoader
+import com.hunter.stockfarmer.ui.theme.Theme
+import com.hunter.stockfarmer.ui.theme.hudPanel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.isActive
@@ -178,7 +180,7 @@ fun RewardFlights(
                     .at(
                         RewardPoint(tallyPoint.x, tallyPoint.y + (tally.rows.size - 1) * 20.0),
                         density,
-                    ).background(Color(0xDD203A26), RoundedCornerShape(16.dp))
+                    ).hudPanel(16.dp)
                     .padding(horizontal = 8.dp, vertical = 4.dp),
             ) {
                 tally.rows.forEach { row ->
@@ -225,6 +227,15 @@ private fun Modifier.at(
         translationY = (point.y * density).toFloat() - size.height / 2
     }
 
+val RewardKind.color: Color
+    get() =
+        when (this) {
+            is RewardKind.Spend -> Theme.spend
+            is RewardKind.Earn -> Theme.money
+            is RewardKind.XP -> Theme.xp
+            is RewardKind.Item -> Color.White
+        }
+
 @Composable
 private fun RewardLabel(
     kind: RewardKind,
@@ -232,14 +243,10 @@ private fun RewardLabel(
     compact: Boolean = false,
 ) {
     val density = LocalDensity.current.density
-    val color =
-        when (kind) {
-            is RewardKind.Spend -> Color(0xFFFF8585)
-            is RewardKind.Earn -> Color(0xFFFFDC63)
-            is RewardKind.XP -> Color(0xFF93D8FF)
-            is RewardKind.Item -> Color.White
-        }
-    Row(verticalAlignment = Alignment.CenterVertically) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(2.dp),
+    ) {
         if (kind is RewardKind.Item) {
             MenuImage(MenuPictures.stored(kind.item), images, Modifier.size(if (compact) 30.dp else 34.dp))
         }
@@ -252,11 +259,16 @@ private fun RewardLabel(
             }
         Text(
             text,
-            color = color,
+            color = kind.color,
             fontSize = if (compact) 18.sp else 20.sp,
             fontWeight = FontWeight.ExtraBold,
             maxLines = 1,
-            style = TextStyle(shadow = Shadow(Color.Black.copy(alpha = 0.65f), Offset(0f, 2 * density), 2 * density)),
+            style =
+                TextStyle(
+                    fontFamily = FontFamily.SansSerif,
+                    fontFeatureSettings = "tnum",
+                    shadow = Shadow(Color.Black.copy(alpha = 0.65f), Offset(0f, 2 * density), 2 * density),
+                ),
         )
     }
 }

@@ -17,9 +17,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -33,7 +31,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.ClipOp
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.graphicsLayer
@@ -49,6 +46,9 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import com.hunter.stockfarmer.core.presentation.LaunchSequence
 import com.hunter.stockfarmer.ui.theme.HudMaterialTheme
+import com.hunter.stockfarmer.ui.theme.HudType
+import com.hunter.stockfarmer.ui.theme.PillButton
+import com.hunter.stockfarmer.ui.theme.PillRole
 import com.hunter.stockfarmer.ui.theme.Theme
 import kotlin.math.hypot
 
@@ -133,18 +133,29 @@ fun LaunchScreen(
                 ScreenIcon(ScreenArt("images/AppIcon.png"), symbol = "", size = iconWidth)
                 if (presentation.error != null) {
                     Column(
-                        Modifier.widthIn(max = 388.dp).padding(horizontal = 24.dp),
+                        Modifier.widthIn(max = 340.dp).padding(horizontal = 24.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(16.dp),
                     ) {
-                        Text(
+                        BasicText(
                             presentation.error,
-                            textAlign = TextAlign.Center,
-                            color = MaterialTheme.colorScheme.onSurface,
+                            style =
+                                HudType.subheadline.copy(
+                                    color = Theme.textPrimary,
+                                    textAlign = TextAlign.Center,
+                                ),
                         )
                         Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                            Button(onClick = onRetry) { Text("Retry") }
-                            Button(onClick = onChooseFarm) { Text("Choose Farm") }
+                            PillButton(
+                                title = "Retry",
+                                onClick = onRetry,
+                                role = PillRole.accent,
+                            )
+                            PillButton(
+                                title = "Choose Farm",
+                                onClick = onChooseFarm,
+                                role = PillRole.neutral,
+                            )
                         }
                     }
                 } else {
@@ -152,8 +163,8 @@ fun LaunchScreen(
                         Modifier
                             .width(iconWidth)
                             .height(6.dp)
-                            .background(Color.White.copy(alpha = 0.09f), CircleShape)
-                            .border(1.dp, Color.White.copy(alpha = 0.15f), CircleShape)
+                            .background(Theme.glassFill, CircleShape)
+                            .border(1.dp, Theme.glassEdge, CircleShape)
                             .semantics {
                                 contentDescription = presentation.label
                                 progressBarRangeInfo =
@@ -167,12 +178,14 @@ fun LaunchScreen(
                                 .background(Theme.accent, CircleShape),
                         )
                     }
-                    Text(
+                    BasicText(
                         if (presentation.showsLoadingMessage) "Preparing your farm…" else "",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.bodyMedium,
+                        style =
+                            HudType.subheadline.copy(
+                                color = Theme.textSecondary,
+                                textAlign = TextAlign.Center,
+                            ),
                         modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.Center,
                     )
                 }
             }
