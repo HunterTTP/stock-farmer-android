@@ -90,3 +90,13 @@ fun GameEngine.beginMoving(
 fun com.hunter.stockfarmer.core.catalog.PlacedBuilding.covers(point: GridPoint): Boolean =
     point.row in origin.row until origin.row + building.height &&
         point.col in origin.col until origin.col + building.width
+
+/** Whether two games are the same in every saved part, since a game is a mutable object. */
+fun sameState(
+    first: GameState,
+    second: GameState,
+): Boolean =
+    com.hunter.stockfarmer.core.persistence.GameStateJson
+        .encode(first) ==
+        com.hunter.stockfarmer.core.persistence.GameStateJson
+            .encode(second)
