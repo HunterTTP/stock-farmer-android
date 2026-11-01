@@ -1,6 +1,5 @@
 package com.hunter.stockfarmer.ui.menus
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -24,13 +23,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -364,30 +357,6 @@ internal fun HarvestToolImage(
     modifier: Modifier = Modifier,
 ) {
     val loader = rememberMenuAssetLoader()
-    if (tool == HarvestTool.rod) {
-        Canvas(modifier) {
-            scale(size.width / 64f, size.height / 64f, pivot = Offset.Zero) {
-                val rod =
-                    Path().apply {
-                        moveTo(10f, 56f)
-                        cubicTo(25f, 36f, 31f, 14f, 43f, 8f)
-                    }
-                drawPath(rod, Color(0.22f, 0.14f, 0.08f), style = Stroke(6f, cap = StrokeCap.Round))
-                drawPath(rod, Color(0.76f, 0.49f, 0.24f), style = Stroke(3f, cap = StrokeCap.Round))
-                drawOval(Color.DarkGray, Offset(17f, 39f), Size(9f, 9f))
-                val line =
-                    Path().apply {
-                        moveTo(43f, 8f)
-                        cubicTo(61f, 18f, 54f, 30f, 54f, 48f)
-                        lineTo(54f, 53f)
-                        quadraticTo(45f, 61f, 47f, 49f)
-                    }
-                drawPath(line, Color(0.9f, 0.9f, 0.9f), style = Stroke(1.5f, cap = StrokeCap.Round))
-                drawOval(Color(1f, 0.231f, 0.188f), Offset(51f, 32f), Size(6f, 8f))
-            }
-        }
-    } else {
-        val asset = if (tool == HarvestTool.scythe) "harvester" else tool.rawValue
-        MenuImage(MenuPicture.Asset("images/tools/$asset.png"), loader, modifier)
-    }
+    val asset = if (tool == HarvestTool.scythe) "harvester" else tool.rawValue
+    MenuImage(MenuPicture.Asset("images/tools/$asset.png"), loader, modifier)
 }

@@ -279,14 +279,13 @@ class FarmAssetCoverageTest {
     fun `tool and product assets exist`() {
         assertImageFile(File(assetsRoot, "tools/fertilizer.png"), "fertilizer tool")
         for (tool in HarvestTool.entries) {
-            if (tool == HarvestTool.rod) continue
             val asset =
                 when (tool) {
                     HarvestTool.scythe -> "harvester"
                     HarvestTool.axe -> "axe"
                     HarvestTool.pickaxe -> "pickaxe"
                     HarvestTool.bucket -> "bucket"
-                    HarvestTool.rod -> error("unreachable")
+                    HarvestTool.rod -> "rod"
                 }
             assertImageFile(File(assetsRoot, "tools/$asset.png"), "tool: $tool")
         }

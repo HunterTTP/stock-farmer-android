@@ -154,8 +154,7 @@ internal object CareerCollections {
                                 "${tool.rawValue}-$it",
                                 "Level $it",
                                 engine.level(tool) >= it,
-                                art = if (tool == HarvestTool.rod) null else ScreenArt.image("tools", asset),
-                                symbol = "🎣",
+                                art = ScreenArt.image("tools", asset),
                                 nameColor = Theme.toolLevel(it),
                             )
                         }
