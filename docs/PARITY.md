@@ -30,8 +30,17 @@ Nothing built yet beyond the Compose shell. The SDK licenses are accepted and `.
 |---|---|---|---|
 | Plant, grow, Scythe harvest, Storage sale, save and relaunch (first slice) | yes, tested | no | no |
 | App save/load: active slot, backup recovery, autosave, pause/stop, clock on reopen | existing core rules; JVM integration tests added | wired, including load/save errors and backup recovery | device verification pending |
+| Build/decorate/terrain/storage | core + app tests | Compose host; HUD wiring pending | device pending |
 
 Save/load uses `LocalSaveFileSystem` under the app's private `filesDir/Farms`. `FarmStartup` prepares the active farm on a worker; failed loads block play and preserve the original until the player explicitly restores a backup. The app snapshots through `GameSession.act`, debounces timer saves, flushes on pause/stop through the disk worker, and holds the farm clock while away. JVM tests cover startup, active-slot selection, backup restoration, corrupt/newer saves, snapshot isolation, lifecycle clocks, and failed-write retry. On-device relaunch, rotation, backgrounding, and storage-failure UI remain unverified (no device available).
+
+`MenusHost(session, openMenu, onClose)` presents the requested menu and refreshes immutable presentation snapshots.
+Catalog rows show item art, money and material costs, placement limits and level locks, with building styles,
+decoration sizes, fence colors, tree colors and water styles. Selections go through `GameSession.act` and return
+to the farm on success; refusals display `Rejection.message`. Storage supports selecting stored items, selling,
+trashing and releasing, with quantity controls and core sale totals. JVM tests cover catalog ordering and variants,
+snapshot isolation, capacity, locks, engine selections, transactions and bundled picture assets. HUD, activity,
+farm and session wiring are outside this slice; on-device layout and interaction remain unverified.
 
 ## Assets
 
