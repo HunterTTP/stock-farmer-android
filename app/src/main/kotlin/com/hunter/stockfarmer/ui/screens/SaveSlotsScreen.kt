@@ -47,7 +47,13 @@ private sealed interface NamePrompt {
 /** The saved games, up to ten: start a new one, or load, rename, restore or delete a saved one. */
 @Composable
 fun SaveSlotsScreen(
-    session: GameSession,
+    farms: FarmSlots,
+    onClose: () -> Unit,
+) = SaveSlotsScreen(session = null, farms = farms, onClose = onClose)
+
+@Composable
+fun SaveSlotsScreen(
+    session: GameSession?,
     farms: FarmSlots,
     onClose: () -> Unit,
 ) {

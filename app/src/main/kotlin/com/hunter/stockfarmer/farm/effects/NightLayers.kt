@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.hunter.stockfarmer.core.model.GameState
 import com.hunter.stockfarmer.farm.FarmRenderer
 import com.hunter.stockfarmer.farm.TextureLibrary
+import com.hunter.stockfarmer.ui.screens.PerformanceWork
 import java.time.Instant
 import kotlin.random.Random
 
@@ -12,6 +13,7 @@ class BuildingGlowLayer(
     private val textures: TextureLibrary,
 ) : EffectOverlay {
     override val phase = EffectPhase.AFTER_TINT
+    override val work = PerformanceWork.night
     private val clock = EffectClock()
 
     override fun draw(
@@ -37,6 +39,7 @@ class NightPulseLayer(
     private val textures: TextureLibrary,
 ) : EffectOverlay {
     override val phase = EffectPhase.GROUND
+    override val work = PerformanceWork.night
     private val motion = PulseMotion()
     private val patterns = List(6) { pattern -> (0 until 144).shuffled(Random(pattern)).take(7).toSet() }
 

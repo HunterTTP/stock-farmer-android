@@ -150,4 +150,50 @@ class PerformanceMonitorTest {
         assertEquals("1.2", PerformanceReport.number(1.2))
         assertEquals("1.25 ms", PerformanceReport.ms(1.25))
     }
+
+    @Test
+    fun `container measurements include child subsystem work without double counting in insight`() {
+        monitor.start("Container test")
+        monitor.frame()
+        now += 0.016
+        monitor.frame()
+        monitor.measure(PerformanceWork.scene) {
+            now += 0.002
+            monitor.measure(PerformanceWork.tractor) {
+                now += 0.005
+            }
+            monitor.measure(PerformanceWork.crops) {
+                now += 0.010
+            }
+            now += 0.003
+        }
+        monitor.stop()
+        val report = monitor.snapshot.report!!
+        assertEquals(3, report.work.size)
+        assertEquals(
+            1,
+            report.work
+                .getValue(PerformanceWork.scene)
+                .count
+                .toInt(),
+        )
+        assertEquals(
+            1,
+            report.work
+                .getValue(PerformanceWork.tractor)
+                .count
+                .toInt(),
+        )
+        assertEquals(
+            1,
+            report.work
+                .getValue(PerformanceWork.crops)
+                .count
+                .toInt(),
+        )
+        assertEquals(20.0, report.work.getValue(PerformanceWork.scene).totalMilliseconds, 0.01)
+        assertEquals(5.0, report.work.getValue(PerformanceWork.tractor).totalMilliseconds, 0.01)
+        assertEquals(10.0, report.work.getValue(PerformanceWork.crops).totalMilliseconds, 0.01)
+        assertTrue(report.insight.startsWith("Crop visuals & growth used the most measured subsystem time"))
+    }
 }

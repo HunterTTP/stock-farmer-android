@@ -10,6 +10,8 @@ import com.hunter.stockfarmer.core.util.secondsSince
 import com.hunter.stockfarmer.farm.FarmRenderer
 import com.hunter.stockfarmer.farm.StandingSource
 import com.hunter.stockfarmer.farm.TextureLibrary
+import com.hunter.stockfarmer.ui.screens.PerformanceMonitor
+import com.hunter.stockfarmer.ui.screens.PerformanceWork
 import java.time.Instant
 import kotlin.math.hypot
 import kotlin.math.roundToInt
@@ -19,6 +21,7 @@ enum class EffectPhase { BACKGROUND, GROUND, BEFORE_TINT, AFTER_TINT }
 
 interface EffectOverlay {
     val phase: EffectPhase
+    val work: PerformanceWork get() = PerformanceWork.weather
 
     fun draw(
         batch: SpriteBatch,
@@ -35,6 +38,7 @@ class EffectLayers internal constructor(
     val fireworks: FireworkLayer,
     val shadows: ShadowLayer,
     val photo: PhotoEffects,
+    private val monitor: PerformanceMonitor? = null,
 ) {
     fun draw(
         phase: EffectPhase,
@@ -43,7 +47,15 @@ class EffectLayers internal constructor(
         now: Instant,
         camera: OrthographicCamera,
     ) {
-        overlays.filter { it.phase == phase }.forEach { it.draw(batch, state, now, camera) }
+        overlays.filter { it.phase == phase }.forEach { overlay ->
+            if (monitor != null) {
+                monitor.measure(overlay.work) {
+                    overlay.draw(batch, state, now, camera)
+                }
+            } else {
+                overlay.draw(batch, state, now, camera)
+            }
+        }
     }
 }
 
@@ -52,6 +64,7 @@ fun effectLayers(
     textures: TextureLibrary,
     foreground: List<EffectOverlay> = emptyList(),
     precipitation: Boolean = true,
+    monitor: PerformanceMonitor? = null,
 ): EffectLayers {
     val fireflies = FireflyLayer(textures)
     val butterflies = ButterflyLayer(textures)
@@ -77,6 +90,7 @@ fun effectLayers(
         fireworks = fireworks,
         shadows = shadows,
         photo = PhotoEffects(SeasonSky(textures), WaterLayer(textures), shadows),
+        monitor = monitor,
     )
 }
 

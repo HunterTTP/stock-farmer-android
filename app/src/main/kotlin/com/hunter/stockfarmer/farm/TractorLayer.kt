@@ -14,6 +14,7 @@ import com.hunter.stockfarmer.core.util.secondsSince
 import com.hunter.stockfarmer.farm.effects.EffectOverlay
 import com.hunter.stockfarmer.farm.effects.EffectPhase
 import com.hunter.stockfarmer.farm.effects.preserve
+import com.hunter.stockfarmer.ui.screens.PerformanceWork
 import java.time.Instant
 import kotlin.math.ceil
 
@@ -23,6 +24,7 @@ class TractorLayer(
 ) : StandingSource,
     EffectOverlay {
     override val phase = EffectPhase.AFTER_TINT
+    override val work = PerformanceWork.tractor
     private val regions = HashMap<Pair<Int, Int>, TextureRegion>()
     private val badges = ProduceBadge(textures)
     private var loadKey: String? = null

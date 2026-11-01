@@ -8,6 +8,7 @@ import com.hunter.stockfarmer.core.rules.Wind
 import com.hunter.stockfarmer.farm.Standing
 import com.hunter.stockfarmer.farm.StandingSource
 import com.hunter.stockfarmer.farm.TextureLibrary
+import com.hunter.stockfarmer.ui.screens.PerformanceWork
 import java.time.Instant
 import kotlin.math.floor
 
@@ -16,6 +17,7 @@ class WindLayer(
 ) : EffectOverlay,
     StandingSource {
     override val phase = EffectPhase.GROUND
+    override val work = PerformanceWork.weather
     internal val motion = WindMotion()
     private val clock = EffectClock()
 
@@ -63,6 +65,7 @@ class LeafLayer internal constructor(
     private val motion: WindMotion,
 ) : EffectOverlay {
     override val phase = EffectPhase.BEFORE_TINT
+    override val work = PerformanceWork.weather
 
     override fun draw(
         batch: SpriteBatch,

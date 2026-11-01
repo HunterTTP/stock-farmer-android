@@ -10,6 +10,7 @@ import com.hunter.stockfarmer.core.rules.Season
 import com.hunter.stockfarmer.core.rules.Weather
 import com.hunter.stockfarmer.core.rules.Wind
 import com.hunter.stockfarmer.farm.TextureLibrary
+import com.hunter.stockfarmer.ui.screens.PerformanceWork
 import java.time.Instant
 import kotlin.math.hypot
 import kotlin.math.max
@@ -19,6 +20,7 @@ class RainLayer(
     private val textures: TextureLibrary,
 ) : EffectOverlay {
     override val phase = EffectPhase.AFTER_TINT
+    override val work = PerformanceWork.precipitation
     private val motion = RainMotion()
     private val clock = EffectClock()
     private val presentation = WeatherPresentation()
@@ -103,6 +105,7 @@ class RainTint(
     private val textures: TextureLibrary,
 ) : EffectOverlay {
     override val phase = EffectPhase.AFTER_TINT
+    override val work = PerformanceWork.weather
 
     override fun draw(
         batch: SpriteBatch,
@@ -141,6 +144,7 @@ class SeasonSky(
     private val textures: TextureLibrary,
 ) : EffectOverlay {
     override val phase = EffectPhase.BACKGROUND
+    override val work = PerformanceWork.weather
 
     override fun draw(
         batch: SpriteBatch,

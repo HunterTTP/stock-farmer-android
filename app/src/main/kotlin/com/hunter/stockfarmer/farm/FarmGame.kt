@@ -26,6 +26,8 @@ import com.hunter.stockfarmer.game.hold
 import com.hunter.stockfarmer.game.preview
 import com.hunter.stockfarmer.game.touch
 import com.hunter.stockfarmer.game.touchAnimalAt
+import com.hunter.stockfarmer.ui.screens.PerformanceMonitor
+import com.hunter.stockfarmer.ui.screens.PerformanceWork
 import kotlinx.coroutines.flow.update
 import java.time.Instant
 import kotlin.math.floor
@@ -35,6 +37,7 @@ import kotlin.math.min
 /** The farm scene: draws the session's game and turns taps and drags into play and camera movement. */
 class FarmGame(
     private val session: GameSession,
+    private val monitor: PerformanceMonitor? = null,
 ) : ApplicationAdapter() {
     private lateinit var batch: CountingSpriteBatch
     private lateinit var textures: TextureLibrary
@@ -45,6 +48,11 @@ class FarmGame(
     private val touch = Vector3()
     private val tilePreview = TilePreview()
     private val placementDrag = PlacementDrag(session)
+
+    private fun <T> measure(
+        work: PerformanceWork,
+        action: () -> T,
+    ): T = monitor?.measure(work, action) ?: action()
 
     fun flashPreview(
         points: List<GridPoint>,
@@ -66,12 +74,13 @@ class FarmGame(
         batch = CountingSpriteBatch()
         textures = TextureLibrary()
         val tractor = TractorLayer(textures)
-        effects = effectLayers(textures, foreground = listOf(tractor), precipitation = false)
+        effects = effectLayers(textures, foreground = listOf(tractor), precipitation = false, monitor = monitor)
         renderer =
             FarmRenderer(
                 textures,
                 listOf(tractor) + animalSources(textures, session.animalGestures) + effects.sources,
                 groundEffects = { batch, state, now -> effects.draw(EffectPhase.GROUND, batch, state, now, camera) },
+                monitor = monitor,
             )
         Gdx.input.inputProcessor = GestureDetector(20f, 0.4f, 0.35f, 0.15f, Gestures())
         session.sceneFeedback.catchButterfly = ::catchButterfly
@@ -134,39 +143,46 @@ class FarmGame(
     }
 
     override fun render() {
-        Gdx.gl.glClearColor(0.05f, 0.08f, 0.12f, 1f)
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT)
-        camera.update()
-        publishView()
-        batch.projectionMatrix = camera.combined
-        batch.startCount()
-        batch.begin()
-        val now = Instant.now()
-        driveTractor(now)
-        session.act {
-            session.animalGestures.advance(it, now)
-            if (session.isActive && !session.isSaveBlocked) session.wildGrowth.advance(it, now)
+        monitor?.frame()
+        measure(PerformanceWork.scene) {
+            Gdx.gl.glClearColor(0.05f, 0.08f, 0.12f, 1f)
+            Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT)
+            camera.update()
+            publishView()
+            batch.projectionMatrix = camera.combined
+            batch.startCount()
+            batch.begin()
+            val now = Instant.now()
+            measure(PerformanceWork.tractor) { driveTractor(now) }
+            session.act {
+                measure(PerformanceWork.animals) {
+                    session.animalGestures.advance(it, now)
+                }
+                if (session.isActive && !session.isSaveBlocked) session.wildGrowth.advance(it, now)
+            }
+            session.sceneFeedback.drainFlashes().forEach { tilePreview.flash(it.tiles, it.allowed, it.at) }
+            session.sceneFeedback.drainInteractions().forEach { renderer.interactions.interact(it) }
+            session.read { state ->
+                session.wildGrowth.drain().forEach { renderer.growth.reveal(it.trees, it.rocks, state.season, it.at) }
+            }
+            val screenScale = camera.zoom * Gdx.graphics.density
+            renderer.cameraScale = screenScale
+            renderer.maxCameraScale = maxZoom() * Gdx.graphics.density
+            session.read {
+                effects.draw(EffectPhase.BACKGROUND, batch, it, now, camera)
+                renderer.draw(batch, it, now)
+                effects.draw(EffectPhase.BEFORE_TINT, batch, it, now, camera)
+            }
+            measure(PerformanceWork.night) { drawNightTint(now) }
+            session.read { effects.draw(EffectPhase.AFTER_TINT, batch, it, now, camera) }
+            celebrateBuildings(now)
+            measure(PerformanceWork.preview) {
+                tilePreview.draw(batch, textures, session.preview(now), now, screenScale)
+            }
+            batch.end()
+            session.view.drawnSprites = batch.sprites
+            session.view.framesDrawn++
         }
-        session.sceneFeedback.drainFlashes().forEach { tilePreview.flash(it.tiles, it.allowed, it.at) }
-        session.sceneFeedback.drainInteractions().forEach { renderer.interactions.interact(it) }
-        session.read { state ->
-            session.wildGrowth.drain().forEach { renderer.growth.reveal(it.trees, it.rocks, state.season, it.at) }
-        }
-        val screenScale = camera.zoom * Gdx.graphics.density
-        renderer.cameraScale = screenScale
-        renderer.maxCameraScale = maxZoom() * Gdx.graphics.density
-        session.read {
-            effects.draw(EffectPhase.BACKGROUND, batch, it, now, camera)
-            renderer.draw(batch, it, now)
-            effects.draw(EffectPhase.BEFORE_TINT, batch, it, now, camera)
-        }
-        drawNightTint(now)
-        session.read { effects.draw(EffectPhase.AFTER_TINT, batch, it, now, camera) }
-        celebrateBuildings(now)
-        tilePreview.draw(batch, textures, session.preview(now), now, screenScale)
-        batch.end()
-        session.view.drawnSprites = batch.sprites
-        session.view.framesDrawn++
     }
 
     /** Sets off the fireworks the game side asked for since the last frame. */
@@ -250,20 +266,22 @@ class FarmGame(
             y: Float,
             count: Int,
             button: Int,
-        ): Boolean {
-            val tile = tileAt(x, y)
-            if (!session.touchAnimalAt(touch.x, touch.y)) tile?.let { session.touch(it) }
-            return true
-        }
+        ): Boolean =
+            measure(PerformanceWork.tap) {
+                val tile = tileAt(x, y)
+                if (!session.touchAnimalAt(touch.x, touch.y)) tile?.let { session.touch(it) }
+                true
+            }
 
         override fun longPress(
             x: Float,
             y: Float,
-        ): Boolean {
-            val tile = tileAt(x, y)
-            if (!session.touchAnimalAt(touch.x, touch.y)) tile?.let { session.hold(it) }
-            return true
-        }
+        ): Boolean =
+            measure(PerformanceWork.tap) {
+                val tile = tileAt(x, y)
+                if (!session.touchAnimalAt(touch.x, touch.y)) tile?.let { session.hold(it) }
+                true
+            }
 
         private fun tileAt(
             x: Float,
@@ -284,7 +302,8 @@ class FarmGame(
             deltaX: Float,
             deltaY: Float,
         ): Boolean {
-            if (placementDrag.move(tileAt(x, y))) return true
+            val moved = measure(PerformanceWork.drag) { placementDrag.move(tileAt(x, y)) }
+            if (moved) return true
             camera.position.add(-deltaX * camera.zoom, deltaY * camera.zoom, 0f)
             keepOnMap()
             return true

@@ -2,6 +2,7 @@ package com.hunter.stockfarmer.farm
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.hunter.stockfarmer.core.model.GameState
+import com.hunter.stockfarmer.ui.screens.PerformanceWork
 import java.time.Instant
 
 /** One thing standing on the map, drawn when its turn comes in the back to front order. */
@@ -12,7 +13,9 @@ class Standing(
 )
 
 /** A layer of the farm (animals, the tractor, weather props) that adds what it has to the back to front pass. */
-fun interface StandingSource {
+interface StandingSource {
+    val work: PerformanceWork get() = PerformanceWork.structure
+
     fun collect(
         batch: SpriteBatch,
         state: GameState,

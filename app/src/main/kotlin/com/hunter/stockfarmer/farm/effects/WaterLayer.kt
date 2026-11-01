@@ -7,12 +7,14 @@ import com.hunter.stockfarmer.core.catalog.WaterStyle
 import com.hunter.stockfarmer.core.model.GameState
 import com.hunter.stockfarmer.farm.FarmRenderer
 import com.hunter.stockfarmer.farm.TextureLibrary
+import com.hunter.stockfarmer.ui.screens.PerformanceWork
 import java.time.Instant
 
 class WaterLayer(
     private val textures: TextureLibrary,
 ) : EffectOverlay {
     override val phase = EffectPhase.GROUND
+    override val work = PerformanceWork.weather
     private val clock = EffectClock()
 
     private data class Frame(

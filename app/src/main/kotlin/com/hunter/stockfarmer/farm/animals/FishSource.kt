@@ -9,11 +9,14 @@ import com.hunter.stockfarmer.farm.FarmRenderer
 import com.hunter.stockfarmer.farm.Standing
 import com.hunter.stockfarmer.farm.StandingSource
 import com.hunter.stockfarmer.farm.TextureLibrary
+import com.hunter.stockfarmer.ui.screens.PerformanceWork
 import java.time.Instant
 
 internal class FishSource(
     private val textures: TextureLibrary,
 ) : StandingSource {
+    override val work = PerformanceWork.animals
+
     private class Node(
         val kind: String,
         val size: Double,

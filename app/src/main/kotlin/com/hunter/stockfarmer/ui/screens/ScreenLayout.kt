@@ -47,12 +47,12 @@ import kotlinx.coroutines.delay
 @Composable
 internal fun ScreenLayout(
     title: String,
-    session: GameSession,
+    session: GameSession? = null,
     onClose: () -> Unit,
     closeLabel: String = "Close",
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    val money by rememberScreenState(session) { session.read { it.money.dollars } }
+    val money = session?.let { s -> rememberScreenState(s) { s.read { it.money.dollars } }.value }.orEmpty()
     BackHandler(onBack = onClose)
     HudMaterialTheme {
         Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background.copy(alpha = 0.97f))) {
@@ -66,7 +66,9 @@ internal fun ScreenLayout(
             ) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     Text(title, style = MaterialTheme.typography.titleLarge)
-                    Text(money, color = Theme.accent)
+                    if (money.isNotEmpty()) {
+                        Text(money, color = Theme.accent)
+                    }
                 }
                 Column(
                     Modifier.weight(1f).verticalScroll(rememberScrollState()),

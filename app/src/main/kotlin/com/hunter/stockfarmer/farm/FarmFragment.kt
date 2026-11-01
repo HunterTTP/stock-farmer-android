@@ -16,5 +16,5 @@ class FarmFragment : AndroidFragmentApplication() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?,
-    ): View = initializeForView(FarmGame(model.session))
+    ): View = initializeForView(FarmGame(model.session, model.performance))
 }

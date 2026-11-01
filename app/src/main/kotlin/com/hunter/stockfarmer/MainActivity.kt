@@ -57,6 +57,7 @@ import com.hunter.stockfarmer.ui.rewards.RewardFlightsHost
 import com.hunter.stockfarmer.ui.screens.LaunchPresentation
 import com.hunter.stockfarmer.ui.screens.LaunchScreen
 import com.hunter.stockfarmer.ui.screens.PerformanceSampling
+import com.hunter.stockfarmer.ui.screens.SaveSlotsScreen
 import com.hunter.stockfarmer.ui.timelapse.LocalTimelapseRecorder
 import com.hunter.stockfarmer.ui.timelapse.TimelapseRecorder
 import com.hunter.stockfarmer.ui.timelapse.rememberTimelapseRecorder
@@ -124,6 +125,7 @@ class MainActivity :
                         key(launchId) {
                             var isSceneBuilt by remember { mutableStateOf(false) }
                             var framesDrawn by remember { mutableIntStateOf(0) }
+                            var choosingFarm by remember { mutableStateOf(false) }
                             LaunchedEffect(Unit) {
                                 while (true) {
                                     isSceneBuilt = model.session.view.isSceneBuilt
@@ -144,6 +146,11 @@ class MainActivity :
                                 stage = stage,
                                 saveError = persistence.error,
                                 onRetry = model::retry,
+                                onChooseFarm = {
+                                    if (stage == LaunchSequence.Stage.failed) {
+                                        choosingFarm = true
+                                    }
+                                },
                                 onComplete = { launching = false },
                             )
                             if (stage == LaunchSequence.Stage.failed) {
@@ -153,6 +160,12 @@ class MainActivity :
                                             Text("Restore ${backup.kind.name} backup")
                                         }
                                     }
+                                }
+                                if (choosingFarm) {
+                                    SaveSlotsScreen(
+                                        model.farms,
+                                        onClose = { choosingFarm = false },
+                                    )
                                 }
                             }
                         }

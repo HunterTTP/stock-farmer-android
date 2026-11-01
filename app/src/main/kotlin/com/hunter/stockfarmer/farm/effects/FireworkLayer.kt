@@ -5,12 +5,14 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.hunter.stockfarmer.core.model.GameState
 import com.hunter.stockfarmer.core.model.GridPoint
 import com.hunter.stockfarmer.farm.TextureLibrary
+import com.hunter.stockfarmer.ui.screens.PerformanceWork
 import java.time.Instant
 
 class FireworkLayer(
     private val textures: TextureLibrary,
 ) : EffectOverlay {
     override val phase = EffectPhase.AFTER_TINT
+    override val work = PerformanceWork.night
     private val motion = FireworkMotion()
     private val clock = EffectClock()
 

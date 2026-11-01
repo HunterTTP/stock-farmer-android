@@ -20,6 +20,8 @@ import com.hunter.stockfarmer.core.rules.GrowthTimelines
 import com.hunter.stockfarmer.core.rules.Season
 import com.hunter.stockfarmer.core.rules.saturatedFarmland
 import com.hunter.stockfarmer.game.SceneInteractions
+import com.hunter.stockfarmer.ui.screens.PerformanceMonitor
+import com.hunter.stockfarmer.ui.screens.PerformanceWork
 import java.time.Instant
 import kotlin.math.min
 
@@ -31,6 +33,7 @@ class FarmRenderer(
     private val textures: TextureLibrary,
     private val sources: List<StandingSource> = emptyList(),
     private val groundEffects: ((SpriteBatch, GameState, Instant) -> Unit)? = null,
+    private val monitor: PerformanceMonitor? = null,
 ) {
     private val standing = ArrayList<Standing>()
     private val timelines = HashMap<Plot, GrowthTimelines>()
@@ -41,6 +44,11 @@ class FarmRenderer(
     var cameraScale = 1f
     var maxCameraScale = 1f
 
+    private fun <T> measure(
+        work: PerformanceWork,
+        action: () -> T,
+    ): T = monitor?.measure(work, action) ?: action()
+
     fun draw(
         batch: SpriteBatch,
         state: GameState,
@@ -48,19 +56,29 @@ class FarmRenderer(
         ground: ((SpriteBatch, GameState, Instant) -> Unit)? = groundEffects,
     ) {
         val season = state.season
-        drawGround(batch, state, season)
-        if (gridShown) drawGrid(batch, textures, cameraScale, maxCameraScale)
-        drawFertilizer(batch, state)
+        measure(PerformanceWork.structure) {
+            drawGround(batch, state, season)
+            if (gridShown) drawGrid(batch, textures, cameraScale, maxCameraScale)
+            drawFertilizer(batch, state)
+        }
         ground?.invoke(batch, state, now)
         standing.clear()
         growth.prune(state.trees.keys, state.rocks.keys, now)
-        collectBuildings(batch, state, now)
-        collectTrees(batch, state, now)
-        collectRocks(batch, state, now)
-        collectDecorations(batch, state, now)
-        collectFences(batch, state)
-        collectCrops(batch, state, now)
-        sources.forEach { it.collect(batch, state, now, standing) }
+        measure(PerformanceWork.structure) {
+            collectBuildings(batch, state, now)
+            collectTrees(batch, state, now)
+            collectRocks(batch, state, now)
+            collectDecorations(batch, state, now)
+            collectFences(batch, state)
+        }
+        measure(PerformanceWork.crops) {
+            collectCrops(batch, state, now)
+        }
+        sources.forEach { source ->
+            measure(source.work) {
+                source.collect(batch, state, now, standing)
+            }
+        }
         standing.sortBy { it.bottomEdge }
         standing.forEach { it.draw() }
     }

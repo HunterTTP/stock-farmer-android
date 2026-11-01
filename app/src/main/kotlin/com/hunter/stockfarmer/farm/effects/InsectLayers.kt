@@ -10,6 +10,7 @@ import com.hunter.stockfarmer.core.rules.Butterflies
 import com.hunter.stockfarmer.farm.Standing
 import com.hunter.stockfarmer.farm.StandingSource
 import com.hunter.stockfarmer.farm.TextureLibrary
+import com.hunter.stockfarmer.ui.screens.PerformanceWork
 import java.time.Instant
 import java.util.UUID
 
@@ -17,6 +18,7 @@ class FireflyLayer(
     private val textures: TextureLibrary,
 ) : EffectOverlay {
     override val phase = EffectPhase.GROUND
+    override val work = PerformanceWork.wildlife
     private val clock = EffectClock()
     private val population = FireflyPopulation()
     var onSighting: (() -> Unit)?
@@ -38,6 +40,7 @@ class FireflyLayer(
     val halos: EffectOverlay =
         object : EffectOverlay {
             override val phase = EffectPhase.AFTER_TINT
+            override val work = PerformanceWork.wildlife
 
             override fun draw(
                 batch: SpriteBatch,
@@ -70,6 +73,8 @@ class FireflyLayer(
 class ButterflyLayer(
     private val textures: TextureLibrary,
 ) : StandingSource {
+    override val work = PerformanceWork.wildlife
+
     class Catchable internal constructor(
         val wings: Butterflies.Wings,
         val releasedID: UUID?,

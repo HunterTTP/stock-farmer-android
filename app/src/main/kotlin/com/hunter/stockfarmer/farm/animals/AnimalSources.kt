@@ -18,6 +18,7 @@ import com.hunter.stockfarmer.farm.TextureLibrary
 import com.hunter.stockfarmer.farm.VisualTiming
 import com.hunter.stockfarmer.farm.label
 import com.hunter.stockfarmer.game.AnimalSceneGestures
+import com.hunter.stockfarmer.ui.screens.PerformanceWork
 import java.time.Instant
 import kotlin.math.sqrt
 
@@ -31,6 +32,8 @@ private class AnimalSource(
     private val textures: TextureLibrary,
     private val gestures: AnimalSceneGestures?,
 ) : StandingSource {
+    override val work = PerformanceWork.animals
+
     private data class Node(
         val look: AnimalSprites,
         val motion: AnimalMotion,
