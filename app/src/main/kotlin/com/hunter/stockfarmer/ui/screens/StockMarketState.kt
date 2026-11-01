@@ -20,32 +20,23 @@ import com.hunter.stockfarmer.core.rules.sellShares
 import com.hunter.stockfarmer.core.rules.stockSlotLimit
 import com.hunter.stockfarmer.core.rules.updatePrices
 import com.hunter.stockfarmer.game.GameSession
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.ensureActive
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import com.hunter.stockfarmer.market.StockMarketSession
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.time.Instant
+import com.hunter.stockfarmer.market.MarketPrices as DomainMarketPrices
 
-internal data class MarketPrices(
-    val quotes: Map<String, StockQuote> = emptyMap(),
-    val selected: String? = null,
-    val message: String? = null,
-    val loading: Boolean = false,
-)
+internal typealias MarketPrices = DomainMarketPrices
 
 /** Owns one visit's searches. Owned tickers always use the engine's shared five-minute pull gate. */
 internal class StockMarketController(
     private val session: GameSession,
     private val provider: StockQuoteProvider,
     private val now: () -> Instant = Instant::now,
+    val market: StockMarketSession = StockMarketSession(provider, now),
 ) {
-    private val mutablePrices = MutableStateFlow(MarketPrices())
-    val prices = mutablePrices.asStateFlow()
-    private val fetchedAt = mutableMapOf<String, Instant>()
+    val prices: StateFlow<MarketPrices> get() = market.marketPrices
     private val requests = Mutex()
 
     suspend fun pullIfDue(reportsFailure: Boolean = false) =
@@ -57,70 +48,26 @@ internal class StockMarketController(
         requests.withLock {
             val ticker = StockMarketRules.normalizedTicker(text)
             if (ticker == null) {
-                mutablePrices.update { it.copy(message = StockQuoteError.invalidTicker.message) }
+                market.search(text, now())
                 return@withLock
             }
             if (session.read { ticker in it.holdings }) {
                 pullOwned(true)
-                mutablePrices.update { it.copy(selected = ticker, message = null) }
-            } else if (prices.value.quotes[ticker] != null && !StockMarketRules.isPullDue(fetchedAt[ticker], now())) {
-                mutablePrices.update { it.copy(selected = ticker, message = null) }
+                market.select(ticker)
             } else {
-                val quotes = fetch(listOf(ticker), true)
-                if (quotes.isNotEmpty()) mutablePrices.update { it.copy(selected = ticker) }
+                market.search(text, now())
             }
         }
 
     private suspend fun pullOwned(reportsFailure: Boolean) {
-        currentCoroutineContext().ensureActive()
         val time = now()
         val tickers =
             session.act { engine ->
                 if (engine.claimStockPull(time)) engine.holdings.map { it.ticker } else emptyList()
             }
         if (tickers.isEmpty()) return
-        val quotes = fetch(tickers, reportsFailure)
-        currentCoroutineContext().ensureActive()
+        val quotes = market.pull(tickers, time, reportsFailure)
         session.act { it.updatePrices(quotes, time) }
-    }
-
-    private suspend fun fetch(
-        tickers: List<String>,
-        reportsFailure: Boolean,
-    ): List<StockQuote> {
-        mutablePrices.update { it.copy(loading = true) }
-        try {
-            val quotes = mutableListOf<StockQuote>()
-            var failure: String? = null
-            for (ticker in tickers) {
-                try {
-                    quotes += provider.quote(ticker)
-                } catch (cancelled: CancellationException) {
-                    throw cancelled
-                } catch (error: StockQuoteException) {
-                    if (failure == null) failure = error.error.message
-                } catch (_: Exception) {
-                    if (failure == null) failure = StockQuoteError.network.message
-                }
-            }
-            currentCoroutineContext().ensureActive()
-            val time = now()
-            quotes.forEach { fetchedAt[it.ticker] = time }
-            mutablePrices.update { old ->
-                old.copy(
-                    quotes = old.quotes + quotes.associateBy { it.ticker },
-                    message =
-                        if (reportsFailure || failure == null) {
-                            if (failure != null && quotes.isNotEmpty()) "Some prices couldn't be refreshed" else failure
-                        } else {
-                            old.message
-                        },
-                )
-            }
-            return quotes
-        } finally {
-            mutablePrices.update { it.copy(loading = false) }
-        }
     }
 }
 

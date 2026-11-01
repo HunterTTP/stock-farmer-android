@@ -10,6 +10,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.hunter.stockfarmer.core.persistence.SaveBackup
 import com.hunter.stockfarmer.core.persistence.SaveSlots
+import com.hunter.stockfarmer.core.persistence.TimelapseStore
 import com.hunter.stockfarmer.notifications.NotificationPermissionPolicy
 import com.hunter.stockfarmer.ui.screens.PerformanceMonitor
 import kotlinx.coroutines.delay
@@ -26,6 +27,7 @@ class GameViewModel(
     private val persistence =
         GamePersistence(
             SaveSlots(application.filesDir.toPath().resolve("Farms")),
+            timelapseStore = TimelapseStore(application.filesDir.toPath().resolve("Timelapse")),
             onState = { state -> main.post { persistenceState = state } },
         )
     val session get() = persistence.session

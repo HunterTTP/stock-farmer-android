@@ -68,7 +68,7 @@ class StockQuoteProvider(
                         200 -> connection.inputStream
 
                         // Yahoo explains unknown tickers in its 404 JSON body.
-                        404 -> connection.errorStream
+                        404 -> connection.errorStream ?: runCatching { connection.inputStream }.getOrNull()
 
                         else -> throw StockQuoteException(StockQuoteError.network)
                     } ?: throw StockQuoteException(StockQuoteError.unavailable)

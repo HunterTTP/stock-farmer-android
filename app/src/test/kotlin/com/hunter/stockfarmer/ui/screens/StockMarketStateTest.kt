@@ -10,6 +10,7 @@ import com.hunter.stockfarmer.core.rules.GameEngine
 import com.hunter.stockfarmer.core.rules.StockMarketRules
 import com.hunter.stockfarmer.core.rules.buyShares
 import com.hunter.stockfarmer.game.GameSession
+import com.hunter.stockfarmer.market.MarketPrices
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancelAndJoin

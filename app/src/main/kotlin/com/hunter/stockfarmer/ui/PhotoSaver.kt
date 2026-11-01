@@ -14,9 +14,7 @@ object PhotoSaver {
         png: ByteArray,
     ): Boolean =
         runCatching {
-            if (Build.VERSION.SDK_INT >=
-                Build.VERSION_CODES.Q
-            ) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 saveToGallery(context, png)
             } else {
                 saveToAppFolder(context, png)
@@ -27,15 +25,27 @@ object PhotoSaver {
         context: Context,
         png: ByteArray,
     ) {
+        val nowSeconds = System.currentTimeMillis() / 1000
         val values =
             ContentValues().apply {
                 put(MediaStore.Images.Media.DISPLAY_NAME, "Stock Farmer.png")
                 put(MediaStore.Images.Media.MIME_TYPE, "image/png")
                 put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/Stock Farmer")
+                put(MediaStore.Images.Media.IS_PENDING, 1)
+                put(MediaStore.Images.Media.DATE_ADDED, nowSeconds)
+                put(MediaStore.Images.Media.DATE_TAKEN, System.currentTimeMillis())
             }
         val resolver = context.contentResolver
         val uri = checkNotNull(resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values))
-        checkNotNull(resolver.openOutputStream(uri)).use { it.write(png) }
+        try {
+            checkNotNull(resolver.openOutputStream(uri)).use { it.write(png) }
+            values.clear()
+            values.put(MediaStore.Images.Media.IS_PENDING, 0)
+            resolver.update(uri, values, null, null)
+        } catch (error: Exception) {
+            resolver.delete(uri, null, null)
+            throw error
+        }
     }
 
     /** Before Android 10 writing to the shared gallery needs a storage permission, so the picture goes to the app's folder. */
@@ -43,7 +53,8 @@ object PhotoSaver {
         context: Context,
         png: ByteArray,
     ) {
-        val folder = checkNotNull(context.getExternalFilesDir("Pictures"))
+        val folder = context.getExternalFilesDir("Pictures") ?: File(context.filesDir, "Pictures")
+        folder.mkdirs()
         File(folder, "Stock Farmer.png").writeBytes(png)
     }
 }

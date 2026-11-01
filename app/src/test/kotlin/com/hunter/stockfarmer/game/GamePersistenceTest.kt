@@ -237,6 +237,51 @@ class GamePersistenceTest {
         assertEquals(writes, files.gameWrites)
     }
 
+    @Test
+    fun `switching and starting new farm is permitted when current farm failed to open`() {
+        val file = directory.resolve("slot-1.json")
+        Files.writeString(file, "corrupt")
+        slots.save(GameState().apply { money = 888.0 }, 1, scheduler.now)
+        start()
+        assertFalse(status.isReady)
+        assertNotNull(status.error)
+
+        persistence.switchTo(1)
+        scheduler.runCurrent()
+        assertTrue(status.isReady)
+        assertNull(status.error)
+        assertEquals(888.0, persistence.session.read { it.money })
+        assertEquals(1, slots.activeSlot)
+    }
+
+    @Test
+    fun `starting a new farm is permitted when active farm failed to open`() {
+        val file = directory.resolve("slot-1.json")
+        Files.writeString(file, "corrupt")
+        start()
+        assertFalse(status.isReady)
+
+        persistence.startNew(2, "Brand New")
+        scheduler.runCurrent()
+        assertTrue(status.isReady)
+        assertNull(status.error)
+        assertEquals(2, slots.activeSlot)
+        assertEquals("Brand New", slots.slots()[2]?.name)
+    }
+
+    @Test
+    fun `restoring active slot invokes completion callback`() {
+        slots.save(GameState().apply { money = 100.0 }, 0, scheduler.now)
+        slots.save(GameState().apply { money = 200.0 }, 0, scheduler.now)
+        start()
+        val backup = slots.backups(0).first()
+        var completed = false
+        persistence.restoreSaved(backup) { completed = true }
+        scheduler.runCurrent()
+        assertTrue(completed)
+        assertEquals(100.0, persistence.session.read { it.money })
+    }
+
     private class TestSaveFiles : SaveFileSystem by LocalSaveFileSystem() {
         private val local = LocalSaveFileSystem()
         var failWrites = false

@@ -6,6 +6,7 @@ import com.hunter.stockfarmer.core.persistence.SaveBackup
 import com.hunter.stockfarmer.core.persistence.SaveCoordinator
 import com.hunter.stockfarmer.core.persistence.SaveSlotInfo
 import com.hunter.stockfarmer.core.persistence.SaveSlots
+import com.hunter.stockfarmer.core.persistence.TimelapseStore
 import com.hunter.stockfarmer.core.rules.GameEngine
 import com.hunter.stockfarmer.core.rules.holdClockWhileAway
 import com.hunter.stockfarmer.core.rules.markSaved
@@ -34,6 +35,7 @@ class GamePersistence(
     private val scheduler: SaveScheduler = BackgroundSaveScheduler(),
     private val now: () -> Instant = Instant::now,
     private val random: RandomSource = SystemRandomSource,
+    private val timelapseStore: TimelapseStore? = null,
     private val onState: (PersistenceState) -> Unit = {},
 ) : AutoCloseable {
     val session = GameSession(GameEngine())
@@ -81,53 +83,89 @@ class GamePersistence(
     }
 
     /** Leaves the farm being played, saved, for another saved game. */
-    fun switchTo(target: Int) = changeFarm { it.setActive(target) }
+    fun switchTo(target: Int) =
+        if (target in 0 until SaveSlots.COUNT) {
+            changeFarm { it.setActive(target) }
+        } else {
+            Unit
+        }
 
     /** Starts a new farm under a name in a slot, replacing anything saved there. */
     fun startNew(
         target: Int,
         name: String,
-    ) = changeFarm {
-        it.create(target, name, newGame(random, now()), now())
-        it.setActive(target)
+    ) = if (target in 0 until SaveSlots.COUNT) {
+        changeFarm {
+            val previousHistory = runCatching { it.load(target)?.timelapse?.historyID }.getOrNull()
+            it.create(target, name, newGame(random, now()), now())
+            it.setActive(target)
+            previousHistory?.let { id -> runCatching { timelapseStore?.remove(id) } }
+        }
+    } else {
+        Unit
     }
 
     fun rename(
         target: Int,
         name: String,
         done: () -> Unit,
-    ) = changeSlots(done) { it.rename(target, name) }
+    ) = if (target in 0 until SaveSlots.COUNT) {
+        changeSlots(done) { it.rename(target, name) }
+    } else {
+        done()
+    }
 
     /** The farm being played cannot be deleted. */
     fun delete(
         target: Int,
         done: () -> Unit,
-    ) = changeSlots(done) { if (target != slot) it.delete(target) }
+    ) = if (target in 0 until SaveSlots.COUNT && target != slot) {
+        changeSlots(done) {
+            val previousHistory = runCatching { it.load(target)?.timelapse?.historyID }.getOrNull()
+            it.delete(target)
+            previousHistory?.let { id -> runCatching { timelapseStore?.remove(id) } }
+        }
+    } else {
+        done()
+    }
 
     /** Brings a backup back as its slot's farm; the farm it replaces stays as the latest backup. */
     fun restoreSaved(
         backup: SaveBackup,
         done: () -> Unit,
-    ) = if (backup.slot ==
-        slot
-    ) {
-        changeFarm { it.restore(backup, now()) }
+    ) = if (backup.slot in 0 until SaveSlots.COUNT) {
+        if (backup.slot == slot) {
+            changeFarm(saveFirst = false, done = done) { it.restore(backup, now()) }
+        } else {
+            changeSlots(done) { it.restore(backup, now()) }
+        }
     } else {
-        changeSlots(done) { it.restore(backup, now()) }
+        done()
     }
 
-    private fun changeFarm(change: (SaveSlots) -> Unit) =
-        scheduler.execute {
-            if (closed || !state.isReady) return@execute
+    private fun changeFarm(
+        saveFirst: Boolean = true,
+        done: (() -> Unit)? = null,
+        change: (SaveSlots) -> Unit,
+    ) = scheduler.execute {
+        if (closed) return@execute
+        if (saveFirst && state.isReady) {
             save(flush = true)
-            try {
-                saver.whenIdle(change)
-            } catch (_: Exception) {
-                publish(state.copy(error = SLOT_ERROR))
+            if (state.error != null) {
+                done?.invoke()
                 return@execute
             }
-            load()
         }
+        try {
+            saver.whenIdle(change)
+        } catch (_: Exception) {
+            publish(state.copy(error = SLOT_ERROR))
+            done?.invoke()
+            return@execute
+        }
+        load()
+        done?.invoke()
+    }
 
     private fun changeSlots(
         done: () -> Unit,

@@ -29,12 +29,12 @@ class NetworkMonitor(
         }
 
     init {
-        runCatching { manager.registerDefaultNetworkCallback(callback) }
+        runCatching { manager?.registerDefaultNetworkCallback(callback) }
         refresh()
     }
 
     private fun refresh() {
-        val capabilities = manager.getNetworkCapabilities(manager.activeNetwork)
+        val capabilities = manager?.let { it.getNetworkCapabilities(it.activeNetwork) }
         mutableOnline.value = capabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
     }
 

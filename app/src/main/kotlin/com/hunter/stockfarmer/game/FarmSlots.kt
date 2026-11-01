@@ -6,14 +6,19 @@ import com.hunter.stockfarmer.core.persistence.SaveBackup
 /** The saved farms as the screens use them: every answer arrives on the main thread. */
 class FarmSlots(
     private val persistence: GamePersistence,
-    private val main: Handler,
+    private val post: (Runnable) -> Boolean,
 ) {
-    fun load(done: (SavedGames) -> Unit) = persistence.slots { games -> main.post { done(games) } }
+    constructor(
+        persistence: GamePersistence,
+        main: Handler,
+    ) : this(persistence, main::post)
+
+    fun load(done: (SavedGames) -> Unit) = persistence.slots { games -> post { done(games) } }
 
     fun backups(
         slot: Int,
         done: (List<SaveBackup>) -> Unit,
-    ) = persistence.backups(slot) { backups -> main.post { done(backups) } }
+    ) = persistence.backups(slot) { backups -> post { done(backups) } }
 
     fun switchTo(slot: Int) = persistence.switchTo(slot)
 
@@ -26,15 +31,15 @@ class FarmSlots(
         slot: Int,
         name: String,
         done: () -> Unit,
-    ) = persistence.rename(slot, name) { main.post(done) }
+    ) = persistence.rename(slot, name) { post(done) }
 
     fun delete(
         slot: Int,
         done: () -> Unit,
-    ) = persistence.delete(slot) { main.post(done) }
+    ) = persistence.delete(slot) { post(done) }
 
     fun restore(
         backup: SaveBackup,
         done: () -> Unit,
-    ) = persistence.restoreSaved(backup) { main.post(done) }
+    ) = persistence.restoreSaved(backup) { post(done) }
 }
