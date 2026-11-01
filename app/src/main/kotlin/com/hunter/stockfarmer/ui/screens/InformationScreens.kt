@@ -1,19 +1,19 @@
 package com.hunter.stockfarmer.ui.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.material3.Button
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DateRangePicker
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDateRangePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
@@ -23,11 +23,17 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.hunter.stockfarmer.core.model.ChangelogDay
 import com.hunter.stockfarmer.game.GameSession
+import com.hunter.stockfarmer.ui.theme.HudType
+import com.hunter.stockfarmer.ui.theme.PillButton
+import com.hunter.stockfarmer.ui.theme.PillRole
+import com.hunter.stockfarmer.ui.theme.Theme
+import com.hunter.stockfarmer.ui.theme.glassCard
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.time.Instant
@@ -44,11 +50,21 @@ fun PrivacyScreen(
     val policy by rememberInformationAsset("Privacy.md")
     ScreenLayout("Privacy", session, onClose) {
         SelectionContainer {
-            Text(
-                policy?.getOrElse {
-                    "Privacy information could not be opened. Please try reopening the app."
-                } ?: "Loading…",
-            )
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .glassCard(16.dp)
+                    .padding(16.dp),
+            ) {
+                Text(
+                    text =
+                        policy?.getOrElse {
+                            "Privacy information could not be opened. Please try reopening the app."
+                        } ?: "Loading…",
+                    style = HudType.body,
+                    color = Theme.textPrimary,
+                )
+            }
         }
     }
 }
@@ -64,12 +80,21 @@ fun ChangelogScreen(
     ScreenLayout("Changelog", session, onClose) {
         when {
             days == null -> {
-                Text("Loading…")
+                Text("Loading…", style = HudType.subheadline, color = Theme.textSecondary)
             }
 
             days.isFailure -> {
-                ScreenCard {
-                    Text("The changelog could not be opened. Please try reopening the app.")
+                Column(
+                    Modifier
+                        .fillMaxWidth()
+                        .glassCard(14.dp)
+                        .padding(14.dp),
+                ) {
+                    Text(
+                        "The changelog could not be opened. Please try reopening the app.",
+                        style = HudType.subheadline,
+                        color = Theme.textSecondary,
+                    )
                 }
             }
 
@@ -90,45 +115,115 @@ private fun ChangelogContent(
         value = state.query,
         onValueChange = { onChange(state.search(it)) },
         modifier = Modifier.fillMaxWidth(),
-        label = { Text("Search") },
+        label = { Text("Search", style = HudType.subheadline, color = Theme.textSecondary) },
         singleLine = true,
         trailingIcon = {
-            if (state.query.isNotEmpty()) TextButton(onClick = { onChange(state.search("")) }) { Text("Clear search") }
+            if (state.query.isNotEmpty()) {
+                Text(
+                    "Clear",
+                    style = HudType.subheadline,
+                    color = Theme.textSecondary,
+                    modifier = Modifier.clickable { onChange(state.search("")) }.padding(8.dp),
+                )
+            }
         },
     )
-    TextButton(onClick = { showsCalendar = true }) {
-        Text(if (state.picked.isEmpty()) "Choose days" else "Choose days · Filtered")
+    PillButton(
+        title = if (state.picked.isEmpty()) "Choose days" else "Choose days · Filtered",
+        onClick = { showsCalendar = true },
+        modifier = Modifier.fillMaxWidth(),
+        role = if (state.picked.isEmpty()) PillRole.neutral else PillRole.accent,
+    )
+    if (state.shown.isEmpty()) {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .glassCard(14.dp)
+                .padding(14.dp),
+        ) {
+            Text("Nothing matches.", style = HudType.subheadline, color = Theme.textSecondary)
+        }
     }
-    if (state.shown.isEmpty()) ScreenCard { Text("Nothing matches.") }
     state.shown.forEach { day ->
         key(day.date) {
-            ScreenCard {
-                val expanded = state.isExpanded(day.date)
-                val title =
-                    remember(day.date) {
-                        runCatching {
-                            LocalDate
-                                .parse(day.date)
-                                .format(DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy", Locale.getDefault()))
-                        }.getOrDefault(day.date)
-                    }
-                TextButton(onClick = { onChange(state.toggle(day.date)) }, modifier = Modifier.fillMaxWidth()) {
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text(title, Modifier.weight(1f), style = MaterialTheme.typography.titleMedium)
-                        Text(if (expanded) "▾" else "▸")
+            val expanded = state.isExpanded(day.date)
+            val title =
+                remember(day.date) {
+                    runCatching {
+                        LocalDate
+                            .parse(day.date)
+                            .format(DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy", Locale.getDefault()))
+                    }.getOrDefault(day.date)
+                }
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .glassCard(14.dp)
+                    .padding(14.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .clickable { onChange(state.toggle(day.date)) },
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        title,
+                        Modifier.weight(1f),
+                        style = HudType.headline,
+                        color = Theme.textPrimary,
+                    )
+                    Text(
+                        if (expanded) "▾" else "▸",
+                        style = HudType.subheadline,
+                        color = Theme.textSecondary,
+                    )
+                }
+                if (expanded) {
+                    day.lines.forEach { line ->
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.Top,
+                        ) {
+                            Text("•", style = HudType.subheadline, color = Theme.accent)
+                            Text(
+                                line,
+                                Modifier.weight(1f),
+                                style = HudType.subheadline,
+                                color = Theme.textPrimary,
+                            )
+                        }
                     }
                 }
-                if (expanded) day.lines.forEach { Text("• $it") }
             }
         }
     }
     if (state.pageCount > 1) {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Button(onClick = { onChange(state.goToPage(state.page - 1)) }, enabled = state.page > 0) { Text("Newer") }
-            Text("Page ${state.page + 1} of ${state.pageCount}")
-            Button(onClick = { onChange(state.goToPage(state.page + 1)) }, enabled = state.page < state.pageCount - 1) {
-                Text("Older")
-            }
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            PillButton(
+                title = "Newer",
+                onClick = { onChange(state.goToPage(state.page - 1)) },
+                role = PillRole.neutral,
+                enabled = state.page > 0,
+            )
+            Text(
+                "Page ${state.page + 1} of ${state.pageCount}",
+                style = HudType.subheadline,
+                color = Theme.textSecondary,
+            )
+            PillButton(
+                title = "Older",
+                onClick = { onChange(state.goToPage(state.page + 1)) },
+                role = PillRole.neutral,
+                enabled = state.page < state.pageCount - 1,
+            )
         }
     }
     if (showsCalendar) {
@@ -166,18 +261,44 @@ private fun ChangelogCalendar(
     DatePickerDialog(
         onDismissRequest = onDismiss,
         confirmButton = {
-            TextButton(onClick = {
-                onPick(
-                    listOfNotNull(calendar.selectedStartDateMillis, calendar.selectedEndDateMillis)
-                        .map { Instant.ofEpochMilli(it).atOffset(ZoneOffset.UTC).toLocalDate() }
-                        .toSet(),
-                )
-            }) { Text("Done") }
+            PillButton(
+                title = "Done",
+                onClick = {
+                    onPick(
+                        listOfNotNull(calendar.selectedStartDateMillis, calendar.selectedEndDateMillis)
+                            .map { Instant.ofEpochMilli(it).atOffset(ZoneOffset.UTC).toLocalDate() }
+                            .toSet(),
+                    )
+                },
+                role = PillRole.accent,
+            )
         },
-        dismissButton = { TextButton(onClick = { onPick(emptySet()) }) { Text("Show All Days") } },
+        dismissButton = {
+            PillButton(
+                title = "Show All Days",
+                onClick = { onPick(emptySet()) },
+                role = PillRole.neutral,
+            )
+        },
     ) {
-        Text("Tap a day, or two days to see everything between them.")
-        DateRangePicker(calendar, modifier = Modifier.heightIn(max = 500.dp), title = { Text("Choose Days") })
+        Text(
+            "Tap a day, or two days to see everything between them.",
+            style = HudType.footnote,
+            color = Theme.textSecondary,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+        )
+        DateRangePicker(
+            calendar,
+            modifier = Modifier.heightIn(max = 500.dp),
+            title = {
+                Text(
+                    "Choose Days",
+                    style = HudType.headline,
+                    color = Theme.textPrimary,
+                    modifier = Modifier.padding(start = 16.dp, top = 16.dp),
+                )
+            },
+        )
     }
 }
 

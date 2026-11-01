@@ -9,6 +9,7 @@ import com.hunter.stockfarmer.core.rules.beginNewDayIfDue
 import com.hunter.stockfarmer.core.rules.eatFavoriteCrops
 import com.hunter.stockfarmer.core.rules.growTrees
 import com.hunter.stockfarmer.core.rules.layEggs
+import com.hunter.stockfarmer.core.rules.learnWheatIsRipe
 import com.hunter.stockfarmer.core.rules.move
 import com.hunter.stockfarmer.core.rules.petTendsCrop
 import com.hunter.stockfarmer.core.rules.updateCoops
@@ -74,6 +75,7 @@ class GameTick(
                 session.announce(it)
             }
             session.wildGrowth.advance(engine, now)
+            engine.learnWheatIsRipe(now)
             walkAnimals(engine, now, random, session.animalGestures::isNudging)
             events.filter { it !is GameEvent.Hatched && it !is GameEvent.Born }
         }
