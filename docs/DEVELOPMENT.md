@@ -12,5 +12,5 @@
 
 ```powershell
 $env:JAVA_HOME = "C:\Program Files\Eclipse Adoptium\jdk-25.0.4.7-hotspot"
-.\gradlew.bat spotlessApply spotlessCheck :core:test :app:assembleDebug :app:testDebugUnitTest --no-daemon --offline
+.\gradlew.bat spotlessApply spotlessCheck :core:test :app:testDebugUnitTest :app:assembleDebug :app:lintDebug --continue --console=plain
 ```

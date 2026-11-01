@@ -1,6 +1,6 @@
 # Working in this repo
 
-Shared instructions for Claude, Codex and other coding agents. Start with `docs/HANDOFF.md`: it holds the plan, current phase and next steps. Follow the user's current request when it overrides a default below.
+Shared instructions for Claude, Codex and other coding agents. Start with `docs/HANDOFF.md`: it holds the current state and the remaining steps. Follow the user's current request when it overrides a default below.
 
 ## What this is
 
@@ -9,17 +9,17 @@ An exact Android remake of the iOS game at `../stock-farmer-ios` (frozen referen
 ## Stack
 
 - `core`: pure Kotlin/JVM, no Android imports. Catalog, rules, persistence, sound and drag policies. `GameEngine` is an immutable value; preview an action by running it on a copy.
-- `app`: single-activity Android app. Jetpack Compose for menus and HUD, libGDX for the farm, Media3 for music.
+- `app`: single-activity Android app. Jetpack Compose for menus and HUD, libGDX for the farm, MediaPlayer for music, SoundPool for effects.
 - Gradle Kotlin DSL with a version catalog (`gradle/libs.versions.toml`). Build JDK 25. minSdk 26, targetSdk 36.
 
 ## Workflow
 
-1. Read `docs/DEVELOPMENT.md` and the relevant row of `docs/PARITY.md`, then the iOS source and tests for the feature.
+1. Read `docs/DEVELOPMENT.md` and the feature in `docs/FEATURES.md`, then the iOS source and tests. Code style and number rules are in `docs/CONVENTIONS.md`.
 2. Work in vertical slices: a feature's rules, tests and UI land together.
-3. Rules go test-first in `core`. Port the iOS tests with the rules; match behavior, not file names.
-4. Run `./gradlew spotlessApply` to format, then `./gradlew spotlessCheck :core:test`, then `./gradlew :app:assembleDebug` for app changes. Resolve failures before committing. Never claim an unrun check passed.
+3. Rules go test-first in `core`. Write tests that mirror the iOS tests' behavior.
+4. Run `./gradlew spotlessApply` to format, then `./gradlew spotlessCheck :core:test :app:testDebugUnitTest :app:assembleDebug :app:lintDebug`. Resolve failures before committing. Never claim an unrun check passed.
 5. Commit in meaningful pieces with clear messages, and `git push` as each piece of work completes. Never commit signing material or secrets.
-6. Keep `docs/PARITY.md` current.
+6. Keep `docs/FEATURES.md` current.
 
 ## Code
 

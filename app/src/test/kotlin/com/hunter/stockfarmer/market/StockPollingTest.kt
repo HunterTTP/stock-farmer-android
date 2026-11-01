@@ -27,4 +27,16 @@ class StockPollingTest {
     fun `a pull stamped in the future does not hold polling off`() {
         assertEquals(1.0, StockPolling.waitSeconds(base.plusSeconds(100), base, false), 1e-6)
     }
+
+    @Test
+    fun `polling keeps five minute spacing over weekends and uses the idle four second backoff`() {
+        assertEquals(300.0, StockPolling.waitSeconds(base, base, false))
+        assertEquals(304.0, StockPolling.waitSeconds(base, base, true))
+        assertEquals(1.5, StockPolling.waitSeconds(base, base.plusMillis(298_500), false))
+        assertEquals(5.5, StockPolling.waitSeconds(base, base.plusMillis(298_500), true))
+        for (last in listOf(null, base.minusSeconds(300), base.plusSeconds(1))) {
+            assertEquals(1.0, StockPolling.waitSeconds(last, base, false))
+            assertEquals(5.0, StockPolling.waitSeconds(last, base, true))
+        }
+    }
 }
