@@ -1,0 +1,58 @@
+package com.hunter.stockfarmer.game
+
+import com.hunter.stockfarmer.core.model.GridPoint
+import com.hunter.stockfarmer.core.rules.GameEvent
+import com.hunter.stockfarmer.core.rules.addPlayTime
+import com.hunter.stockfarmer.core.rules.beginNewDayIfDue
+import com.hunter.stockfarmer.core.rules.eatFavoriteCrops
+import com.hunter.stockfarmer.core.rules.growTrees
+import com.hunter.stockfarmer.core.rules.layEggs
+import com.hunter.stockfarmer.core.rules.petTendsCrop
+import com.hunter.stockfarmer.core.rules.updateCoops
+import com.hunter.stockfarmer.core.rules.updateFish
+import com.hunter.stockfarmer.core.rules.updateHerds
+import com.hunter.stockfarmer.core.util.RandomSource
+import com.hunter.stockfarmer.core.util.SystemRandomSource
+import com.hunter.stockfarmer.core.util.secondsSince
+import java.time.Instant
+import kotlin.math.min
+
+/**
+ * What happens in the game as time goes by, once a second: chicks hatch and calves are born, hens lay, fish come and go,
+ * pets ripen the crops they stand on, animals graze, trees grow and the day turns over at midnight.
+ */
+class GameTick(
+    private val session: GameSession,
+    private val random: RandomSource = SystemRandomSource,
+) {
+    private var lastTend: Instant? = null
+    private var petDwell = emptyMap<GridPoint, Double>()
+
+    /** Runs one step for the moment [now] and says what happened that the player should be told about. */
+    fun tick(now: Instant = Instant.now()): List<GameEvent> =
+        session.act { engine ->
+            val interval = min(MOST_INTERVAL, lastTend?.let { now.secondsSince(it) } ?: 0.0)
+            lastTend = now
+            if (interval <= 0) return@act emptyList()
+            engine.addPlayTime(interval)
+            val events =
+                (engine.updateCoops(now, random) + engine.updateHerds(now, random)).toMutableList()
+            engine.layEggs(interval, now, random)
+            engine.updateFish(now, using = random)
+            val dwell = mutableMapOf<GridPoint, Double>()
+            for ((house, pet) in engine.state.pets) {
+                if (engine.state.plots[pet.position] == null) continue
+                dwell[house] = (petDwell[house] ?: 0.0) + interval
+                events += engine.petTendsCrop(house, dwell.getValue(house), interval, now, random)
+            }
+            petDwell = dwell
+            events += engine.eatFavoriteCrops(now)
+            engine.growTrees(now)
+            engine.beginNewDayIfDue(now)
+            events.filter { it !is GameEvent.Hatched && it !is GameEvent.Born }
+        }
+
+    private companion object {
+        const val MOST_INTERVAL = 2.0
+    }
+}
