@@ -11,6 +11,7 @@ import androidx.lifecycle.viewModelScope
 import com.hunter.stockfarmer.core.persistence.SaveBackup
 import com.hunter.stockfarmer.core.persistence.SaveSlots
 import com.hunter.stockfarmer.notifications.NotificationPermissionPolicy
+import com.hunter.stockfarmer.ui.screens.PerformanceMonitor
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -29,6 +30,7 @@ class GameViewModel(
         )
     val session get() = persistence.session
     val farms = FarmSlots(persistence, main)
+    val performance = PerformanceMonitor()
     val notificationPolicy = NotificationPermissionPolicy()
     private val tick = GameTick(persistence.session)
 

@@ -66,7 +66,14 @@ import com.hunter.stockfarmer.ui.screens.LocalScreenAudio
 import com.hunter.stockfarmer.ui.screens.MarketQuestScreen
 import com.hunter.stockfarmer.ui.screens.QuestBanner
 import com.hunter.stockfarmer.ui.screens.QuestReward
+import com.hunter.stockfarmer.ui.screens.ChangelogScreen
+import com.hunter.stockfarmer.ui.screens.LessonGuide
+import com.hunter.stockfarmer.ui.screens.LessonGuideState
+import com.hunter.stockfarmer.ui.screens.PerformanceMonitor
+import com.hunter.stockfarmer.ui.screens.PerformanceScreen
+import com.hunter.stockfarmer.ui.screens.PrivacyScreen
 import com.hunter.stockfarmer.ui.screens.SaveSlotsScreen
+import com.hunter.stockfarmer.ui.screens.lessonPulse
 import com.hunter.stockfarmer.ui.screens.SettingsScreen
 import com.hunter.stockfarmer.ui.screens.SoundCenterScreenAudio
 import com.hunter.stockfarmer.ui.screens.StockMarketScreen
@@ -124,6 +131,9 @@ private enum class HudScreen(
     Career("Career"),
     Farms("Farms"),
     Timelapse("Timelapse"),
+    Performance("Performance"),
+    Changelog("Changelog"),
+    Privacy("Privacy"),
     Settings("Settings"),
 }
 
@@ -135,10 +145,12 @@ fun Hud(
     session: GameSession,
     sound: SoundCenter,
     farms: FarmSlots,
+    performance: PerformanceMonitor,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
     var hud by remember { mutableStateOf(session.hud()) }
+    var lesson by remember { mutableStateOf(session.read { LessonGuideState.from(it) }) }
     var menu by remember { mutableStateOf<Menu?>(null) }
     var screen by remember { mutableStateOf<HudScreen?>(null) }
     var levelUnlocks by remember { mutableStateOf<LevelUnlocks?>(null) }
@@ -147,6 +159,7 @@ fun Hud(
     LaunchedEffect(session) {
         while (true) {
             hud = session.hud()
+            lesson = session.read { LessonGuideState.from(it) }
             delay(REFRESH_MILLIS)
         }
     }
@@ -180,10 +193,17 @@ fun Hud(
                 ToolBar(session, hud, onMenu = { menu = it })
             }
         }
+        LessonGuide(
+            lesson,
+            Modifier.align(Alignment.BottomEnd).padding(end = 16.dp, bottom = TOOL_CIRCLE_BOTTOM + 96.dp),
+        )
         ToolCircle(
             session,
             hud.toolLabel,
-            Modifier.align(Alignment.BottomEnd).padding(end = 16.dp, bottom = TOOL_CIRCLE_BOTTOM),
+            Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = 16.dp, bottom = TOOL_CIRCLE_BOTTOM)
+                .lessonPulse(lesson.pulses),
         )
         menu?.let { open -> Overlay { MenusHost(session, open, onClose = { menu = null }) } }
         screen?.let { open ->
@@ -197,6 +217,10 @@ fun Hud(
                         HudScreen.Career -> CareerScreen(session, close)
                         HudScreen.Farms -> SaveSlotsScreen(session, farms, close)
                         HudScreen.Timelapse -> TimelapseScreen(session, close)
+                        HudScreen.Performance ->
+                            PerformanceScreen(performance, close, recordingContext = { "Stock Farmer" })
+                        HudScreen.Changelog -> ChangelogScreen(close)
+                        HudScreen.Privacy -> PrivacyScreen(close)
                         HudScreen.Settings -> SettingsScreen(session, close)
                     }
                 }

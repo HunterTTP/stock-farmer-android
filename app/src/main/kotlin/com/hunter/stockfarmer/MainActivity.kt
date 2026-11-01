@@ -10,14 +10,18 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLifecycleOwner
@@ -45,9 +49,12 @@ import com.hunter.stockfarmer.haptics.Haptics
 import com.hunter.stockfarmer.notifications.FieldReadyNotificationPermission
 import com.hunter.stockfarmer.notifications.FieldReadyNotifier
 import com.hunter.stockfarmer.notifications.WorkManagerFieldReadyScheduler
+import com.hunter.stockfarmer.core.presentation.LaunchSequence
 import com.hunter.stockfarmer.ui.Hud
 import com.hunter.stockfarmer.ui.rewards.RewardFlights
 import com.hunter.stockfarmer.ui.rewards.RewardFlightsHost
+import com.hunter.stockfarmer.ui.screens.LaunchScreen
+import com.hunter.stockfarmer.ui.screens.PerformanceSampling
 import com.hunter.stockfarmer.ui.timelapse.LocalTimelapseRecorder
 import com.hunter.stockfarmer.ui.timelapse.TimelapseRecorder
 import com.hunter.stockfarmer.ui.timelapse.rememberTimelapseRecorder
@@ -81,13 +88,16 @@ class MainActivity :
             MaterialTheme {
                 Box(Modifier.fillMaxSize()) {
                     val persistence = model.persistenceState
+                    var launchId by remember { mutableIntStateOf(0) }
+                    var launching by remember { mutableStateOf(true) }
+                    PerformanceSampling(model.performance, nodeCount = { 0 })
                     if (persistence.isReady) {
                         FarmHost()
                         val recorder = rememberTimelapseRecorder(model.session)
                         TimelapseCapture(recorder, ready = persistence.error == null)
                         RewardFlightsHost(model.session) {
                             CompositionLocalProvider(LocalTimelapseRecorder provides recorder) {
-                                Hud(model.session, sound, model.farms, Modifier.fillMaxSize())
+                                Hud(model.session, sound, model.farms, model.performance, Modifier.fillMaxSize())
                             }
                             RewardFlights(model.session, Modifier.fillMaxSize())
                         }
@@ -99,17 +109,33 @@ class MainActivity :
                                 confirmButton = { TextButton(onClick = model::retry) { Text("Retry") } },
                             )
                         }
-                    } else {
-                        Column(Modifier.align(Alignment.Center).padding(24.dp)) {
-                            if (persistence.isLoading) {
-                                CircularProgressIndicator()
-                                Text("Opening your farm…")
-                            } else {
-                                Text(persistence.error.orEmpty())
-                                Button(onClick = model::retry) { Text("Retry") }
-                                persistence.backups.forEach { backup ->
-                                    TextButton(onClick = { model.restore(backup) }) {
-                                        Text("Restore ${backup.kind.name} backup")
+                    }
+                    LaunchedEffect(persistence.isReady) {
+                        if (!persistence.isReady && !launching) {
+                            launchId++
+                            launching = true
+                        }
+                    }
+                    if (launching || !persistence.isReady) {
+                        key(launchId) {
+                            val stage =
+                                when {
+                                    persistence.isReady -> LaunchSequence.Stage.ready
+                                    persistence.isLoading -> LaunchSequence.Stage.loadingFarm
+                                    else -> LaunchSequence.Stage.failed
+                                }
+                            LaunchScreen(
+                                stage = stage,
+                                saveError = persistence.error,
+                                onRetry = model::retry,
+                                onComplete = { launching = false },
+                            )
+                            if (stage == LaunchSequence.Stage.failed) {
+                                Column(Modifier.align(Alignment.BottomCenter).padding(24.dp)) {
+                                    persistence.backups.forEach { backup ->
+                                        TextButton(onClick = { model.restore(backup) }) {
+                                            Text("Restore ${backup.kind.name} backup")
+                                        }
                                     }
                                 }
                             }

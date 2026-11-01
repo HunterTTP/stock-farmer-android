@@ -11,6 +11,11 @@ Reference: iOS `d01e7bb`. These composables take `session: GameSession` and `onC
 - `QuestBanner`: pass `QuestReward.from(events)` for completed quests.
 - `SettingsScreen`: persisted audio channels, mute switches, privacy and the reference changelog.
 
+Remaining full screens (`PerformanceScreen`, `ChangelogScreen`, `PrivacyScreen`, `LessonGuide`, `LaunchScreen`)
+and their exact host/renderer/lifecycle connections are documented in
+[FULL_SCREENS.md](../../../../../../../../../docs/FULL_SCREENS.md).
+Save slots are implemented by a separate slice.
+
 No HUD, activity, game-session, view-model, farm or menu files are changed. Core behavior is unchanged.
 
 ## Connecting to `ui/Hud.kt`
