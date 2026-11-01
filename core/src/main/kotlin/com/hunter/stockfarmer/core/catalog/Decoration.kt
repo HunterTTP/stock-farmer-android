@@ -152,7 +152,9 @@ data class Decoration(
                 )
         }
 
-        fun named(id: String): Decoration? = all.firstOrNull { it.id == id }
+        fun named(id: String): Decoration? = byID[id]
+
+        private val byID: Map<String, Decoration> by lazy { all.associateBy { it.id } }
 
         val shopChoices: List<Decoration> by lazy {
             UnlockOrder.sorted(all.filter { it.offeredSizes.isNotEmpty() }) { it.unlockLevel }

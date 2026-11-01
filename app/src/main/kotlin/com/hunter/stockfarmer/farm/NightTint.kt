@@ -16,7 +16,7 @@ fun SpriteBatch.drawNightTint(
     darkness: Double,
 ) {
     if (darkness <= 0.0) return
-    color = Color(NIGHT_RED, NIGHT_GREEN, NIGHT_BLUE, (darkness * NIGHT_STRENGTH).toFloat())
+    setColor(NIGHT_RED, NIGHT_GREEN, NIGHT_BLUE, (darkness * NIGHT_STRENGTH).toFloat())
     draw(
         textures.white,
         camera.position.x - camera.viewportWidth * camera.zoom / 2,

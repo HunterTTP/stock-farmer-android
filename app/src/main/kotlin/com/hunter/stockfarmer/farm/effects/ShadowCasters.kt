@@ -7,6 +7,7 @@ import com.hunter.stockfarmer.core.catalog.FenceConnections
 import com.hunter.stockfarmer.core.model.GameState
 import com.hunter.stockfarmer.core.model.GridPoint
 import com.hunter.stockfarmer.core.rules.FruitTreePhase
+import com.hunter.stockfarmer.core.rules.Season
 import com.hunter.stockfarmer.farm.MovingOrigins
 import com.hunter.stockfarmer.farm.TextureLibrary
 
@@ -19,6 +20,9 @@ internal data class ShadowCaster(
 internal class ShadowCasters(
     private val textures: TextureLibrary,
 ) {
+    // A picture's key is built once, not for every caster every frame.
+    private val imageKeys = Array(Season.entries.size) { HashMap<String, HashMap<String, String>>() }
+
     /** The shadows of everything standing but the things at [moving], which are being carried to a new spot. */
     fun collect(
         state: GameState,
@@ -39,8 +43,12 @@ internal class ShadowCasters(
                 scale: Double,
             ) {
                 val texture = textures.texture(folder, name, season = state.season) ?: return
-                val shape =
-                    ShadowShape(kind, texture.width * scale, texture.height * scale, "${state.season}/$folder/$name")
+                val image =
+                    imageKeys[state.season.ordinal]
+                        .getOrPut(folder) {
+                            HashMap()
+                        }.getOrPut(name) { "${state.season}/$folder/$name" }
+                val shape = ShadowShape(kind, texture.width * scale, texture.height * scale, image)
                 add(ShadowCaster(foot, shape, texture))
             }
             for (placed in state.shadowCastingBuildings(moving)) {
