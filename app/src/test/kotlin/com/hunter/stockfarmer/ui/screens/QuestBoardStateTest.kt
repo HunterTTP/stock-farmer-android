@@ -18,6 +18,29 @@ import java.time.Instant
 import java.util.UUID
 
 class QuestBoardStateTest {
+    @Test
+    fun `banner rewards preserve maximum and zero XP without merging repeated summaries`() {
+        val rewards =
+            QuestReward.from(
+                listOf(
+                    GameEvent.QuestCompleted(Int.MAX_VALUE, "Harvest wheat"),
+                    GameEvent.QuestCompleted(0, "Harvest wheat"),
+                    GameEvent.QuestCompleted(1234, "Plant trees"),
+                ),
+            )
+        assertEquals(
+            listOf(
+                QuestReward("Harvest wheat", Int.MAX_VALUE),
+                QuestReward("Harvest wheat", 0),
+                QuestReward("Plant trees", 1234),
+            ),
+            rewards,
+        )
+        assertEquals("2,147,483,647", ScreenFormat.number(rewards.first().xp.toLong()))
+        assertEquals("1,234", ScreenFormat.number(rewards.last().xp.toLong()))
+        assertTrue(QuestReward.from(emptyList()).isEmpty())
+    }
+
     private val now = Instant.ofEpochSecond(30_000_000)
     private val origin = GridPoint(10, 10)
 

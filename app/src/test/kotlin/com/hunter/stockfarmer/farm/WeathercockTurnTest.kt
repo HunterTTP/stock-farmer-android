@@ -11,6 +11,43 @@ internal class WeathercockTurnTest {
     private val start = Instant.ofEpochSecond(1_000)
 
     @Test
+    fun `a repeated wind direction does not turn a settled weathercock`() {
+        val turn = WeathercockTurn()
+        turn.scaleX(origin, 0f, start)
+        turn.gust(true, start)
+        for (millis in listOf(-1L, 0L, 250L, 500L, 2000L)) {
+            assertEquals(1f, turn.scaleX(origin, 0f, start.plusMillis(millis)))
+        }
+    }
+
+    @Test
+    fun `a reversing gust starts from the interrupted turn and waits for its sweep`() {
+        val width = GameState.GRID_SIZE * FarmRenderer.TILE
+        val turn = WeathercockTurn()
+        turn.scaleX(origin, width, start)
+        turn.gust(false, start)
+        assertEquals(0f, turn.scaleX(origin, width, start.plusMillis(250)), 1e-6f)
+        turn.gust(true, start.plusMillis(250))
+        assertEquals(0f, turn.scaleX(origin, width, start.plusMillis(1750)), 1e-6f)
+        assertEquals(0.5f, turn.scaleX(origin, width, start.plusMillis(2000)), 1e-6f)
+        assertEquals(1f, turn.scaleX(origin, width, start.plusMillis(2250)))
+    }
+
+    @Test
+    fun `weathercocks at opposite edges turn independently as the gust reaches them`() {
+        val width = GameState.GRID_SIZE * FarmRenderer.TILE
+        val other = GridPoint(10, GameState.GRID_SIZE - 1)
+        val turn = WeathercockTurn()
+        turn.scaleX(origin, 0f, start)
+        turn.scaleX(other, width, start)
+        turn.gust(false, start)
+        assertEquals(1f, turn.scaleX(origin, 0f, start.plusMillis(250)))
+        assertEquals(0f, turn.scaleX(other, width, start.plusMillis(250)), 1e-6f)
+        assertEquals(-1f, turn.scaleX(other, width, start.plusMillis(1750)))
+        assertEquals(0f, turn.scaleX(origin, 0f, start.plusMillis(1750)), 1e-6f)
+    }
+
+    @Test
     fun `a weathercock is drawn as is until a gust has blown`() {
         assertEquals(1f, WeathercockTurn().scaleX(origin, 0f, start))
     }

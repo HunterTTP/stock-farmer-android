@@ -28,6 +28,42 @@ internal class TreeLeanTest {
     private fun lean() = TreeLean(SeededRandom(7))
 
     @Test
+    fun `reaching without a pending gust leaves an active lean unchanged`() {
+        val lean = lean()
+        lean.gust(true, start)
+        lean.reach(mapOf(tree to 0f))
+        val peak = lean.tipBend(tree, start.plusMillis(1300))
+        lean.reach(emptyMap())
+        assertEquals(peak, lean.tipBend(tree, start.plusMillis(1300)))
+    }
+
+    @Test
+    fun `an empty gust consumes the pending request and clears previous leans`() {
+        val lean = lean()
+        lean.gust(true, start)
+        lean.reach(mapOf(tree to 0f))
+        assertTrue(lean.tipBend(tree, start.plusMillis(1300)) > 0f)
+        lean.gust(false, start.plusSeconds(1))
+        lean.reach(emptyMap())
+        assertFalse(lean.isPending)
+        assertEquals(0f, lean.tipBend(tree, start.plusMillis(1300)))
+        lean.reach(mapOf(tree to 0f))
+        assertEquals(0f, lean.tipBend(tree, start.plusMillis(2800)))
+    }
+
+    @Test
+    fun `latest pending gust wins and expired lean cannot revive on clock rollback`() {
+        val lean = lean()
+        lean.gust(true, start)
+        lean.gust(false, start.plusSeconds(1))
+        lean.reach(mapOf(tree to width))
+        assertEquals(0f, lean.tipBend(tree, start), 1e-6f)
+        assertTrue(lean.tipBend(tree, start.plusMillis(2300)) < 0f)
+        assertEquals(0f, lean.tipBend(tree, start.plusMillis(3800)))
+        assertEquals(0f, lean.tipBend(tree, start.plusMillis(2300)))
+    }
+
+    @Test
     fun `a tree leans for 1_3 seconds then straightens over 1_5 more`() {
         assertEquals(0f, TreeLean.swing(0.0))
         assertEquals(0.5f, TreeLean.swing(0.65), 1e-6f)

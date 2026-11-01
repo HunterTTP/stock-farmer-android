@@ -19,6 +19,50 @@ import java.io.File
 
 class CareerCollectionStateTest {
     @Test
+    fun `switching filters partitions search matches and leaves the original collection intact`() {
+        val section =
+            CareerSection(
+                "Pine Trees",
+                listOf(
+                    CareerEntry("a", "Small Green", true, detail = "Blue"),
+                    CareerEntry("b", "Huge Green", false),
+                    CareerEntry("c", "Small Blue", true),
+                ),
+                Theme.accent,
+            )
+        assertEquals(listOf("All", "Collected", "Not yet"), CareerFilter.entries.map { it.title })
+        val expected =
+            mapOf(
+                CareerFilter.ALL to listOf("a", "b"),
+                CareerFilter.COLLECTED to listOf("a"),
+                CareerFilter.LOCKED to listOf("b"),
+            )
+        for ((filter, ids) in expected) {
+            val result = requireNotNull(section.filtered("  GREEN   pInE  ", filter))
+            assertEquals(ids, result.entries.map { it.id })
+            assertEquals(section.title, result.title)
+            assertEquals(section.tint, result.tint)
+        }
+        assertEquals(3, section.entries.size)
+        assertEquals(2, section.collected)
+        assertEquals(listOf("c"), section.filtered("blue", CareerFilter.ALL)?.entries?.map { it.id })
+        assertNull(section.filtered("green blue", CareerFilter.ALL))
+    }
+
+    @Test
+    fun `empty queries preserve entry order and empty collections vanish for every filter`() {
+        val entries = listOf(CareerEntry("z", "Z", false), CareerEntry("a", "A", true))
+        val section = CareerSection("Items", entries)
+        assertEquals(section, section.filtered("", CareerFilter.ALL))
+        assertEquals(section, section.filtered("    ", CareerFilter.ALL))
+        for (filter in CareerFilter.entries) {
+            assertNull(CareerSection("Empty", emptyList()).filtered("", filter))
+        }
+        assertNull(section.filtered("missing", CareerFilter.COLLECTED))
+        assertEquals(listOf(entries[1]), section.filtered("ITEMS items", CareerFilter.COLLECTED)?.entries)
+    }
+
+    @Test
     fun `collections use catalog order and include uncollected items and every home upgrade`() {
         val engine = GameEngine(GameState())
         engine.state.career.plantedCropIDs += Crop.all[2].id

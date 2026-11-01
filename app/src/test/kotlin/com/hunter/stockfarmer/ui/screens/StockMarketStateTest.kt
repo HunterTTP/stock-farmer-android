@@ -5,6 +5,7 @@ import com.hunter.stockfarmer.core.market.StockQuoteException
 import com.hunter.stockfarmer.core.market.StockQuoteProvider
 import com.hunter.stockfarmer.core.model.GameState
 import com.hunter.stockfarmer.core.model.GridPoint
+import com.hunter.stockfarmer.core.model.Holding
 import com.hunter.stockfarmer.core.model.StockQuote
 import com.hunter.stockfarmer.core.rules.GameEngine
 import com.hunter.stockfarmer.core.rules.StockMarketRules
@@ -25,6 +26,163 @@ import org.junit.jupiter.api.Test
 import java.time.Instant
 
 class StockMarketStateTest {
+    @Test
+    fun `buy maximum respects remaining share capacity even with ample cash`() {
+        val engine = GameEngine(GameState().apply { money = 100000000000.0 })
+        engine.state.holdings["AAPL"] = Holding("AAPL", StockMarketRules.MAX_SHARES - 1, 1000, 1000, now)
+        val row = StockRowState(quote(), engine.state.holdings["AAPL"], 1000)
+        val preview = StockTradeState.from(engine, row, true, 1, now)
+        assertEquals(1L, preview.maximum)
+        assertNull(preview.rejection)
+        assertNotNull(StockTradeState.from(engine, row, true, 2, now).rejection)
+        engine.state.holdings["AAPL"] =
+            engine.state.holdings
+                .getValue("AAPL")
+                .copy(shares = StockMarketRules.MAX_SHARES)
+        assertEquals(0L, StockTradeState.from(engine, row, true, 1, now).maximum)
+    }
+
+    @Test
+    fun `empty and selected only portfolios have no cost or performance`() {
+        val engine = GameEngine(GameState())
+        val empty = StockMarketState.from(engine, MarketPrices(), now)
+        assertTrue(empty.rows.isEmpty())
+        assertEquals("0/5", empty.slots)
+        assertEquals("$0", empty.portfolioValue)
+        assertEquals("0%", empty.performance)
+        assertEquals(0L, empty.gainCents)
+        assertFalse(empty.hasCost)
+        assertNull(empty.houseOrigin)
+        assertNull(empty.upgrade)
+        val selected = StockMarketState.from(engine, MarketPrices(mapOf("AAPL" to quote()), "AAPL"), now)
+        assertEquals(1, selected.rows.size)
+        assertNull(selected.rows.single().worth)
+        assertEquals(empty.portfolioValue, selected.portfolioValue)
+        assertEquals(empty.slots, selected.slots)
+        assertTrue(StockMarketState.from(engine, MarketPrices(selected = "MISSING"), now).rows.isEmpty())
+    }
+
+    @Test
+    fun `row formatting uses the displayed price and omits unavailable day changes`() {
+        val row = StockRowState(quote(cents = 1000), null, 1125)
+        assertEquals("$11.25", row.price)
+        assertEquals("+25.00%", row.dayChange)
+        assertNull(row.worth)
+        assertEquals("-50.00%", row.copy(priceCents = 450).dayChange)
+        assertEquals("+0.00%", row.copy(priceCents = 900).dayChange)
+        assertNull(row.copy(quote = quote().copy(previousCloseCents = null)).dayChange)
+        assertNull(row.copy(quote = quote().copy(previousCloseCents = 0)).dayChange)
+    }
+
+    @Test
+    fun `selected owned ticker appears once and offline snapshot retains saved values`() {
+        val engine = GameEngine(GameState().apply { money = 100.0 })
+        engine.buyShares(quote(), 3, now = now)
+        val saved = StockMarketState.from(engine, MarketPrices(), now)
+        val failed =
+            StockMarketState.from(
+                engine,
+                MarketPrices(selected = "AAPL", message = StockQuoteError.network.message),
+                now,
+            )
+        assertEquals(saved, failed)
+        assertEquals("$30", failed.rows.single().worth)
+    }
+
+    @Test
+    fun `trade maximum floors affordable shares and refuses quantity above it`() {
+        val engine = GameEngine(GameState().apply { money = 24.99 })
+        val row = StockRowState(quote(), null, 1000)
+        val allowed = StockTradeState.from(engine, row, true, 2, now)
+        assertEquals(2L, allowed.maximum)
+        assertEquals("$20", allowed.total)
+        assertNull(allowed.rejection)
+        assertNotNull(StockTradeState.from(engine, row, true, 3, now).rejection)
+        for (price in listOf(0L, -1L)) {
+            val invalid = StockTradeState.from(engine, row.copy(priceCents = price), true, 1, now)
+            assertEquals(0L, invalid.maximum)
+        }
+        assertNotNull(StockTradeState.from(engine, row.copy(priceCents = -1), true, 1, now).rejection)
+        engine.state.money = 9.99
+        assertEquals(0L, StockTradeState.from(engine, row, true, 1, now).maximum)
+    }
+
+    @Test
+    fun `sell maximum reads current holdings and loss formatting preserves cents`() {
+        val engine = GameEngine(GameState().apply { money = 100.0 })
+        engine.buyShares(quote(), 3, now = now)
+        val row = StockRowState(quote(), null, 999)
+        val sale = StockTradeState.from(engine, row, false, 3, now)
+        assertEquals(3L, sale.maximum)
+        assertEquals("$29.97", sale.total)
+        assertEquals("-$0.03", sale.profit)
+        assertEquals(-3L, sale.profitCents)
+        assertNull(sale.rejection)
+        val excessive = StockTradeState.from(engine, row, false, 4, now)
+        assertNotNull(excessive.rejection)
+        assertNull(excessive.profit)
+        assertNull(excessive.profitCents)
+        assertEquals(
+            3L,
+            engine.state.holdings
+                .getValue("AAPL")
+                .shares,
+        )
+    }
+
+    @Test
+    fun `failed search preserves selection and cached search clears network error without another request`() =
+        runBlocking {
+            val requests = mutableListOf<String>()
+            val controller =
+                StockMarketController(
+                    GameSession(GameEngine(GameState())),
+                    StockQuoteProvider {
+                        requests += it
+                        if (it == "FAIL") throw StockQuoteException(StockQuoteError.network)
+                        quote(it)
+                    },
+                    { now },
+                )
+            controller.search("AAPL")
+            controller.search("FAIL")
+            assertEquals("AAPL", controller.prices.value.selected)
+            assertEquals(StockQuoteError.network.message, controller.prices.value.message)
+            assertFalse(controller.prices.value.loading)
+            assertEquals(setOf("AAPL"), controller.prices.value.quotes.keys)
+            controller.search(" aapl ")
+            assertNull(controller.prices.value.message)
+            assertEquals(listOf("AAPL", "FAIL"), requests)
+        }
+
+    @Test
+    fun `search publishes loading before fetch and success after fetch without touching the farm`() =
+        runBlocking {
+            val started = CompletableDeferred<Unit>()
+            val response = CompletableDeferred<StockQuote>()
+            val engine = GameEngine(GameState().apply { money = 123.0 })
+            val controller =
+                StockMarketController(
+                    GameSession(engine),
+                    StockQuoteProvider {
+                        started.complete(Unit)
+                        response.await()
+                    },
+                    { now },
+                )
+            val search = launch { controller.search("aapl") }
+            started.await()
+            assertTrue(controller.prices.value.loading)
+            assertNull(controller.prices.value.selected)
+            response.complete(quote())
+            search.join()
+            assertFalse(controller.prices.value.loading)
+            assertEquals("AAPL", controller.prices.value.selected)
+            assertEquals(quote(), controller.prices.value.quotes["AAPL"])
+            assertTrue(engine.state.holdings.isEmpty())
+            assertEquals(123.0, engine.state.money)
+        }
+
     private val now = Instant.ofEpochSecond(30_000_000)
 
     private fun quote(

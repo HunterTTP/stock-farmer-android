@@ -13,6 +13,52 @@ internal class StandingLayoutTest {
     private fun rowBottom(row: Int) = (GameState.GRID_SIZE - 1 - row) * tile
 
     @Test
+    fun `fit scales up or down preserving proportions and zero destination gives zero size`() {
+        assertEquals(40f to 20f, StandingLayout.fit(2f, 1f, 40f, 40f))
+        assertEquals(10f to 20f, StandingLayout.fit(100f, 200f, 40f, 20f))
+        assertEquals(0f to 0f, StandingLayout.fit(100f, 200f, 0f, 20f))
+        assertEquals(0f to 0f, StandingLayout.fit(100f, 200f, 20f, 0f))
+    }
+
+    @Test
+    fun `standing and lying geometry stays anchored at the maps bottom right edge`() {
+        val last = GameState.GRID_SIZE - 1
+        val point = GridPoint(last, last)
+        val standing = StandingLayout.standing(point, 1, 1, 96f, 192f, 96f, 0.5f)
+        assertEquals(Box((last + 0.25f) * tile, 0f, 0.5f * tile, tile), standing)
+        val lying = StandingLayout.lying(point, 1, 1, 48f, 24f, 1f)
+        assertEquals(Box(last * tile, tile / 4, tile, tile / 2), lying)
+    }
+
+    @Test
+    fun `wide fruit tree keeps its bottom anchor and horizontal centering`() {
+        val box = StandingLayout.fruitTree(GridPoint(0, 0), 1, 200f, 100f)
+        assertEquals(0.95f * tile, box.width, 0.001f)
+        assertEquals(0.475f * tile, box.height, 0.001f)
+        assertEquals(0.025f * tile, box.x, 0.001f)
+        assertEquals(rowBottom(0), box.y)
+    }
+
+    @Test
+    fun `all fence connection combinations preserve arms and center pieces in depth order`() {
+        for (mask in 0..15) {
+            val connections =
+                FenceConnections(
+                    north = mask and 1 != 0,
+                    east = mask and 2 != 0,
+                    south = mask and 4 != 0,
+                    west = mask and 8 != 0,
+                )
+            val order = StandingLayout.fenceDrawOrder(connections)
+            assertEquals(connections.arms.size + connections.centerPieces.size, order.size)
+            assertEquals(connections.arms.toSet(), order.filter { it.row != 0 || it.column != 0 }.toSet())
+            assertEquals(connections.centerPieces, order.filter { it.row == 0 && it.column == 0 }.map { it.piece })
+            val depths = order.map { 2 * it.row + if (it.column == 0 && it.row == 0) 1 else 0 }
+            assertEquals(depths.sorted(), depths)
+        }
+    }
+
+    @Test
     fun `a tree is as wide as its ground and rests on the bottom edge of its last row`() {
         // 96 pixels to a tile: a two tile tree picture of 192 by 288 pixels.
         val box = StandingLayout.standing(GridPoint(3, 4), 2, 2, 192f, 288f, StandingLayout.LARGE_PIXELS_PER_TILE)

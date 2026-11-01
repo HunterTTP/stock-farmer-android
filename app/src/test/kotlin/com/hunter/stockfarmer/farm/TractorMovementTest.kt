@@ -19,6 +19,42 @@ internal class TractorMovementTest {
         )
 
     @Test
+    fun `a clock rollback and equal timestamp do not advance wheels or body`() {
+        val movement = TractorMovement()
+        movement.advance(driving.copy(progress = 0.25), start)
+        val frame = movement.wheelFrame()
+        val lift = movement.lift(driving)
+        movement.advance(driving.copy(progress = 0.3), start.minusSeconds(1))
+        assertEquals(frame, movement.wheelFrame())
+        assertEquals(lift, movement.lift(driving))
+        movement.advance(driving.copy(progress = 0.4), start.minusSeconds(1))
+        assertEquals(frame, movement.wheelFrame())
+        assertEquals(lift, movement.lift(driving))
+    }
+
+    @Test
+    fun `restarting after an idle interval seeds animation from the new runs progress`() {
+        val movement = TractorMovement()
+        movement.advance(driving.copy(progress = 0.75), start)
+        movement.advance(null, start.plusSeconds(1))
+        movement.advance(null, start.plusSeconds(20))
+        movement.advance(driving.copy(progress = 0.5), start.plusSeconds(60))
+        assertEquals(3, movement.wheelFrame())
+        assertEquals(0.0, movement.lift(driving), 1e-12)
+    }
+
+    @Test
+    fun `an equal run copy pauses animation and resuming counts only the latest frame interval`() {
+        val movement = TractorMovement()
+        movement.advance(driving, start)
+        movement.advance(driving.copy(), start.plusSeconds(60))
+        assertEquals(0, movement.wheelFrame())
+        movement.advance(driving.copy(progress = 0.1), start.plusMillis(60100))
+        movement.advance(driving.copy(progress = 0.2), start.plusMillis(60200))
+        assertEquals(1, movement.wheelFrame())
+    }
+
+    @Test
     fun `wheels cycle through six frames in the time it takes to drive a tile`() {
         val movement = TractorMovement()
         movement.advance(driving, start)

@@ -13,6 +13,46 @@ import java.io.File
 
 class NoticeUnlocksTest {
     @Test
+    fun `multi level notice sections follow the iOS category order`() {
+        val sections = LevelUnlocks.unlocked(0, 50).noticeSections()
+        assertEquals(
+            listOf(
+                "Crops",
+                "Farmland",
+                "Buildings",
+                "Decorations",
+                "Trees",
+                "Recipes",
+                "Upgrades",
+                "Fishing",
+                "Quests",
+            ),
+            sections.map { it.title },
+        )
+        assertTrue(sections.all { it.rows.isNotEmpty() })
+        val unlocks = LevelUnlocks.unlocked(0, 50)
+        assertEquals(
+            unlocks.crops.map { it.plantingName } + unlocks.fruitTrees.map { it.name },
+            sections.first().rows.map { it.text },
+        )
+    }
+
+    @Test
+    fun `zero farmland and disabled fishing and quests omit their notice sections`() {
+        val unlocks =
+            LevelUnlocks.unlocked(0, 50).copy(
+                farmlandTiles = 0,
+                fishRarities = emptyList(),
+                fishRatesShift = false,
+                stockQuests = false,
+            )
+        assertEquals(
+            listOf("Crops", "Buildings", "Decorations", "Trees", "Recipes", "Upgrades"),
+            unlocks.noticeSections().map { it.title },
+        )
+    }
+
+    @Test
     fun `single and combined level notices preserve section order and have bundled row art`() {
         val ranges = (1..50).map { it - 1 to it } + listOf(0 to 50)
         ranges.forEach { (before, level) ->
