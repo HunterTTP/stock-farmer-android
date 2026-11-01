@@ -8,7 +8,14 @@ import com.hunter.stockfarmer.core.rules.Season
 
 /** The farm's pictures, loaded from the bundled images the first time they are drawn and kept. */
 class TextureLibrary : Disposable {
-    private val cache = HashMap<String, Texture?>()
+    /** What a picture resolved to for each season and smoothing; a missing picture is remembered so it is searched for once. */
+    private class Slots {
+        val textures = arrayOfNulls<Texture>(Season.entries.size * 2)
+        val loaded = BooleanArray(Season.entries.size * 2)
+    }
+
+    // Keyed by extension, folder and name in turn, so a lookup builds no key string.
+    private val cache = HashMap<String, HashMap<String, HashMap<String, Slots>>>()
     private val generated = HashMap<String, Texture>()
 
     /** A single white pixel, tinted to draw plain colors. */
@@ -25,19 +32,32 @@ class TextureLibrary : Disposable {
         season: Season = Season.spring,
         smooth: Boolean = false,
     ): Texture? {
+        val slots = cache.getOrPut(extension) { HashMap() }.getOrPut(folder) { HashMap() }.getOrPut(name) { Slots() }
+        val slot = season.ordinal * 2 + if (smooth) 1 else 0
+        if (!slots.loaded[slot]) {
+            slots.textures[slot] = load(folder, name, extension, season, smooth)
+            slots.loaded[slot] = true
+        }
+        return slots.textures[slot]
+    }
+
+    private fun load(
+        folder: String,
+        name: String,
+        extension: String,
+        season: Season,
+        smooth: Boolean,
+    ): Texture? {
         val seasonal = if (season == Season.spring) null else "images/seasons/${season.name}/$folder/$name.$extension"
-        val key = "$seasonal|$folder|$name.$extension|$smooth"
-        return cache.getOrPut(key) {
-            val path =
-                listOfNotNull(
-                    seasonal,
-                    "images/$folder/$name.$extension",
-                ).firstOrNull { Gdx.files.internal(it).exists() }
-            path?.let {
-                Texture(Gdx.files.internal(it), smooth).apply {
-                    val filter = if (smooth) Texture.TextureFilter.MipMapLinearLinear else Texture.TextureFilter.Nearest
-                    setFilter(filter, if (smooth) Texture.TextureFilter.Linear else Texture.TextureFilter.Nearest)
-                }
+        val path =
+            listOfNotNull(
+                seasonal,
+                "images/$folder/$name.$extension",
+            ).firstOrNull { Gdx.files.internal(it).exists() }
+        return path?.let {
+            Texture(Gdx.files.internal(it), smooth).apply {
+                val filter = if (smooth) Texture.TextureFilter.MipMapLinearLinear else Texture.TextureFilter.Nearest
+                setFilter(filter, if (smooth) Texture.TextureFilter.Linear else Texture.TextureFilter.Nearest)
             }
         }
     }
@@ -71,7 +91,11 @@ class TextureLibrary : Disposable {
     }
 
     override fun dispose() {
-        cache.values.forEach { it?.dispose() }
+        cache.values.forEach { folders ->
+            folders.values.forEach { names ->
+                names.values.forEach { slots -> slots.textures.forEach { it?.dispose() } }
+            }
+        }
         cache.clear()
         generated.values.forEach { it.dispose() }
         generated.clear()

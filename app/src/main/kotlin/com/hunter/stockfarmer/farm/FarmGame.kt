@@ -181,6 +181,7 @@ class FarmGame(
             val screenScale = camera.zoom * Gdx.graphics.density
             renderer.cameraScale = screenScale
             renderer.maxCameraScale = FarmCamera.MAX_SCALE
+            renderer.view = visibleBounds()
             session.read {
                 effects.nightPulse.sync(session.nightPulse, session.nightPulseRevision)
                 effects.draw(EffectPhase.BACKGROUND, batch, it, now, camera)
@@ -225,6 +226,16 @@ class FarmGame(
         if (!events.containsRejection) effects.butterflies.remove(target)
         return events
     }
+
+    /** What the camera shows plus a tile all round, so nothing pops at the edges. */
+    private fun visibleBounds() =
+        ViewBounds
+            .around(
+                camera.position.x,
+                camera.position.y,
+                camera.viewportWidth * camera.zoom,
+                camera.viewportHeight * camera.zoom,
+            ).padded(FarmRenderer.TILE)
 
     /** Tells the sound side where the camera is looking. */
     private fun publishView() {

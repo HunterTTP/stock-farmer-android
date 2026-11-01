@@ -2,7 +2,6 @@ package com.hunter.stockfarmer.farm
 
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
-import com.badlogic.gdx.graphics.g2d.TextureRegion
 import com.hunter.stockfarmer.core.catalog.Building
 import com.hunter.stockfarmer.core.catalog.Crop
 import com.hunter.stockfarmer.core.catalog.Decoration
@@ -14,6 +13,7 @@ import com.hunter.stockfarmer.core.model.GridPoint
 import com.hunter.stockfarmer.core.model.Plot
 import com.hunter.stockfarmer.core.rules.FruitTreePhase
 import com.hunter.stockfarmer.core.rules.GrowthConditions
+import com.hunter.stockfarmer.core.rules.GrowthPhase
 import com.hunter.stockfarmer.core.rules.GrowthTimelines
 import com.hunter.stockfarmer.core.rules.Season
 import com.hunter.stockfarmer.core.rules.fullBuildings
@@ -23,6 +23,7 @@ import com.hunter.stockfarmer.game.SceneInteractions
 import com.hunter.stockfarmer.ui.screens.PerformanceMonitor
 import com.hunter.stockfarmer.ui.screens.PerformanceWork
 import java.time.Instant
+import kotlin.math.max
 
 /**
  * Draws the farm from the game state: the ground first, then everything that stands on it, back to front by how far down
@@ -38,6 +39,11 @@ class FarmRenderer(
 ) {
     private val standing = ArrayList<Standing>()
     private val timelines = HashMap<Plot, GrowthTimelines>()
+    private val livePlots = HashSet<Plot>()
+    private var timelinesPrunedAt = -1
+    private val cropSprites = HashMap<String, Array<String>>()
+    private val fenceFolders = HashMap<String, String>()
+    private val fenceSprites = HashMap<String, String>()
     private val terrain = TerrainTextures(textures)
     val growth = GrowthReveal()
     val interactions = SceneInteractions()
@@ -50,6 +56,9 @@ class FarmRenderer(
 
     /** Whether a gust leans the trees; a still picture of the farm has no gust in it. */
     var treesLean = true
+
+    /** What the camera shows; things wholly outside it are left out. A photo shows the whole map. */
+    internal var view = ViewBounds.EVERYTHING
 
     private fun <T> measure(
         work: PerformanceWork,
@@ -86,7 +95,7 @@ class FarmRenderer(
                 source.collect(batch, state, now, standing)
             }
         }
-        standing.sortBy { it.bottomEdge }
+        standing.sortWith(BY_BOTTOM_EDGE)
         standing.forEach { it.draw() }
     }
 
@@ -99,21 +108,24 @@ class FarmRenderer(
         val farmland = textures.texture("terrain", "farmland", "jpg", smooth = true)
         val saturatedTiles = state.saturatedFarmland
         val saturated = textures.texture("terrain", "farmland_saturated", "jpg", smooth = true)
-        for (row in 0 until GameState.GRID_SIZE) {
-            for (col in 0 until GameState.GRID_SIZE) {
-                grass?.let { batch.draw(it, col * TILE, worldY(row), TILE, TILE) }
+        if (grass != null) {
+            for (row in view.rows) {
+                for (col in view.columns) batch.draw(grass, col * TILE, worldY(row), TILE, TILE)
             }
         }
         for (point in state.farmland) {
+            if (!view.seesTile(point.row, point.col)) continue
             val texture = if (point in saturatedTiles) saturated else farmland
             texture?.let { batch.draw(it, point.col * TILE, worldY(point.row), TILE, TILE) }
         }
         for ((point, cover) in state.groundCover) {
+            if (!view.seesTile(point.row, point.col)) continue
             terrain
                 .cover(cover)
                 ?.let { batch.draw(it, point.col * TILE, worldY(point.row), TILE, TILE) }
         }
         for ((point, style) in state.water) {
+            if (!view.seesTile(point.row, point.col)) continue
             batch.color = waterColor(style)
             batch.draw(textures.white, point.col * TILE, worldY(point.row), TILE, TILE)
         }
@@ -141,6 +153,8 @@ class FarmRenderer(
                     texture.height.toFloat(),
                 )
             val (x, y) = box
+            // The oven's smoke and a tall roof rise past the picture, so the reach is generous.
+            if (!view.sees(x, y, box.width, box.height, max(box.width, box.height))) continue
             standing +=
                 Standing((placed.origin.row + building.height).toFloat()) {
                     val working =
@@ -152,8 +166,19 @@ class FarmRenderer(
                         if (sheet != null) {
                             val frameIndex = ((now.toEpochMilli() / 140) % 7).toInt()
                             val frameWidth = sheet.width / 7
-                            val dairyRegion = TextureRegion(sheet, frameIndex * frameWidth, 0, frameWidth, sheet.height)
-                            batch.draw(dairyRegion, x, y, box.width, box.height)
+                            batch.draw(
+                                sheet,
+                                x,
+                                y,
+                                box.width,
+                                box.height,
+                                frameIndex * frameWidth,
+                                0,
+                                frameWidth,
+                                sheet.height,
+                                false,
+                                false,
+                            )
                         } else {
                             batch.draw(texture, x, y, box.width, box.height)
                         }
@@ -165,13 +190,24 @@ class FarmRenderer(
                         if (sheet != null) {
                             val frameIndex = ((now.toEpochMilli() / 160) % 8).toInt()
                             val frameWidth = sheet.width / 8
-                            val smokeRegion = TextureRegion(sheet, frameIndex * frameWidth, 0, frameWidth, sheet.height)
                             val scale = box.width / 240f
                             val smokeWidth = 144f * scale
                             val smokeHeight = 192f * scale
                             val smokeX = x + box.width / 2f + 60f * scale - smokeWidth / 2f
                             val smokeY = y + box.height / 2f + 48f * scale
-                            batch.draw(smokeRegion, smokeX, smokeY, smokeWidth, smokeHeight)
+                            batch.draw(
+                                sheet,
+                                smokeX,
+                                smokeY,
+                                smokeWidth,
+                                smokeHeight,
+                                frameIndex * frameWidth,
+                                0,
+                                frameWidth,
+                                sheet.height,
+                                false,
+                                false,
+                            )
                         }
                     }
                     if (building.assetName == "silo_tower") {
@@ -180,8 +216,19 @@ class FarmRenderer(
                         if (index != null && sheet != null) {
                             val scale = box.height / 672
                             val frameWidth = sheet.width / 14
-                            val door = TextureRegion(sheet, index * frameWidth, 0, frameWidth, sheet.height)
-                            batch.draw(door, x + box.width / 2 - 24 * scale, y, 48 * scale, 96 * scale)
+                            batch.draw(
+                                sheet,
+                                x + box.width / 2 - 24 * scale,
+                                y,
+                                48 * scale,
+                                96 * scale,
+                                index * frameWidth,
+                                0,
+                                frameWidth,
+                                sheet.height,
+                                false,
+                                false,
+                            )
                         }
                     }
                 }
@@ -213,6 +260,8 @@ class FarmRenderer(
                     texture.height.toFloat(),
                     StandingLayout.LARGE_PIXELS_PER_TILE,
                 )
+            // A leaning tip and the growth glow both stray beyond the picture.
+            if (!view.sees(x, y, width, height, max(width, height))) continue
             val depth = (origin.row + tree.side).toFloat() + TREE_OVER
             val alpha = growth.collect(batch, textures, origin, true, now, depth, x, y, width, height, standing)
             standing +=
@@ -250,6 +299,7 @@ class FarmRenderer(
                     StandingLayout.LARGE_PIXELS_PER_TILE,
                     size.spriteScale.toFloat(),
                 )
+            if (!view.sees(x, y, width, height, max(width, height))) continue
             val depth = point.row + 1f
             val alpha = growth.collect(batch, textures, point, false, now, depth, x, y, width, height, standing)
             standing +=
@@ -300,17 +350,34 @@ class FarmRenderer(
                         decoration.drawScale.toFloat(),
                     )
                 }
+            // The animated sheets and a winter wobble are larger than the still picture.
+            if (!view.sees(x, y, width, height, 2 * max(width, height) + TILE)) {
+                // A weathercock's turn is worked out when it is drawn, so an unseen one still has to take each gust.
+                if (placed.decorationID == WEATHERCOCK) weathercocks.scaleX(origin, x + width / 2, now)
+                continue
+            }
             standing +=
                 Standing((origin.row + decoration.height).toFloat()) {
                     val motion = interactions.decoration(origin, placed, state.season, now)
                     val sheet = motion?.let { textures.texture("motion", it.name) }
                     if (motion != null && sheet != null) {
                         val frameWidth = sheet.width / motion.count
-                        val frame = TextureRegion(sheet, motion.frame * frameWidth, 0, frameWidth, sheet.height)
                         val animatedWidth = motion.width * scale
                         val animatedHeight = motion.height * scale
                         val center = x + width / 2 + if (motion.name == "well") 24 * scale else 0f
-                        batch.draw(frame, center - animatedWidth / 2, y, animatedWidth, animatedHeight)
+                        batch.draw(
+                            sheet,
+                            center - animatedWidth / 2,
+                            y,
+                            animatedWidth,
+                            animatedHeight,
+                            motion.frame * frameWidth,
+                            0,
+                            frameWidth,
+                            sheet.height,
+                            false,
+                            false,
+                        )
                     } else {
                         val rotation =
                             if (state.season == Season.winter) {
@@ -326,7 +393,24 @@ class FarmRenderer(
                             } else {
                                 1f
                             }
-                        batch.draw(TextureRegion(texture), x, y, width / 2, 0f, width, height, turn, 1f, rotation)
+                        batch.draw(
+                            texture,
+                            x,
+                            y,
+                            width / 2,
+                            0f,
+                            width,
+                            height,
+                            turn,
+                            1f,
+                            rotation,
+                            0,
+                            0,
+                            texture.width,
+                            texture.height,
+                            false,
+                            false,
+                        )
                     }
                 }
         }
@@ -340,7 +424,10 @@ class FarmRenderer(
         val spacing = TILE / 3
         val size = StandingLayout.fencePictureSize
         for ((point, colorID) in state.fences) {
+            // A fence tile's pictures reach about a tile past it.
+            if (!view.sees(point.col * TILE, worldY(point.row), TILE, TILE, TILE)) continue
             val color = FenceColor.named(colorID) ?: FenceColor.starter
+            val folder = fenceFolders.getOrPut(color.folder) { "decorations/${color.folder}" }
             val connections = FenceConnections(point, state.fences)
             val centerX = (point.col + 0.5f) * TILE
             val centerY = worldY(point.row) + TILE / 2
@@ -348,10 +435,11 @@ class FarmRenderer(
             standing +=
                 Standing(point.row + 1f + FENCE_OVER) {
                     for (placement in placements) {
+                        val piece = placement.piece.rawValue
                         val texture =
                             textures.texture(
-                                "decorations/${color.folder}",
-                                "fence-${placement.piece.rawValue}",
+                                folder,
+                                fenceSprites.getOrPut(piece) { "fence-$piece" },
                                 season = state.season,
                             )
                         texture?.let {
@@ -370,9 +458,18 @@ class FarmRenderer(
     ) {
         if (state.plots.isEmpty()) return
         val conditions = GrowthConditions(state)
-        timelines.keys.retainAll(state.plots.values.toSet())
+        // Planting or harvesting changes the count; a timeline kept past a swap at the same count only costs a little memory.
+        if (state.plots.size != timelinesPrunedAt) {
+            livePlots.clear()
+            livePlots.addAll(state.plots.values)
+            timelines.keys.retainAll(livePlots)
+            timelinesPrunedAt = state.plots.size
+        }
         for ((point, plot) in state.plots) {
             val crop = Crop.named(plot.cropID) ?: continue
+            // A fruit tree is drawn from its anchor tile out across its whole square.
+            val reach = if (crop.isFruitTree) crop.side * TILE else 0f
+            if (!view.sees(point.col * TILE, worldY(point.row), TILE, TILE, reach)) continue
             if (!plot.isAnchor(point)) continue
             if ((plot.origin ?: point) == moving.fruitTree) continue
             val progress = conditions.progress(plot, crop, point, now)
@@ -394,11 +491,15 @@ class FarmRenderer(
         season: Season,
     ) {
         val growth = timelines.getOrPut(plot) { GrowthTimelines(plot, point, crop) }
+        val sprites =
+            cropSprites.getOrPut(crop.id) {
+                Array(GrowthPhase.entries.size) { "${crop.id}-phase-${GrowthPhase.entries[it].spriteNumber}" }
+            }
         for (quadrant in 0 until QUADRANTS) {
             if (quadrant >= QUADRANTS - plot.servingsEaten) continue
             val phase = growth.phase(quadrant, progress)
-            val texture =
-                textures.texture("crops", "${crop.id}-phase-${phase.spriteNumber}", season = season) ?: continue
+            val sprite = sprites[phase.ordinal]
+            val texture = textures.texture("crops", sprite, season = season) ?: continue
             val (x, y, width, height) = StandingLayout.quadrant(point, quadrant)
             val near = quadrant >= 2
             standing +=
@@ -434,6 +535,7 @@ class FarmRenderer(
         val texture = textures.texture("tools", "fertilizer") ?: return
         val side = TILE / 2 * 0.7f
         for (tile in state.fertilized) {
+            if (!view.seesTile(tile.row, tile.col)) continue
             for (row in 0..1) {
                 for (col in 0..1) {
                     batch.draw(
@@ -450,12 +552,17 @@ class FarmRenderer(
 
     private fun waterColor(style: WaterStyle): Color =
         when (style) {
-            WaterStyle.deep -> Color(0.13f, 0.38f, 0.62f, 1f)
-            WaterStyle.medium -> Color(0.22f, 0.52f, 0.74f, 1f)
-            WaterStyle.shallow -> Color(0.45f, 0.72f, 0.86f, 1f)
+            WaterStyle.deep -> DEEP_WATER
+            WaterStyle.medium -> MEDIUM_WATER
+            WaterStyle.shallow -> SHALLOW_WATER
         }
 
     companion object {
+        private val DEEP_WATER = Color(0.13f, 0.38f, 0.62f, 1f)
+        private val MEDIUM_WATER = Color(0.22f, 0.52f, 0.74f, 1f)
+        private val SHALLOW_WATER = Color(0.45f, 0.72f, 0.86f, 1f)
+        private val BY_BOTTOM_EDGE = Comparator<Standing> { a, b -> a.bottomEdge.compareTo(b.bottomEdge) }
+
         /** A tile's side in world units; the map is [GameState.GRID_SIZE] tiles square. */
         const val TILE = 100f
         const val WORLD = GameState.GRID_SIZE * TILE
