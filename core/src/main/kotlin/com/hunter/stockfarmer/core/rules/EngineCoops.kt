@@ -33,7 +33,11 @@ fun GameEngine.chicken(
 internal fun GameEngine.chickenIndex(
     id: Int,
     coop: GridPoint,
-): Int? = state.coops[coop]?.chickens?.indexOfFirst { it.id == id }?.takeIf { it >= 0 }
+): Int? =
+    state.coops[coop]
+        ?.chickens
+        ?.indexOfFirst { it.id == id }
+        ?.takeIf { it >= 0 }
 
 /**
  * Brings every coop up to date: chicks hatch as they come due. A new coop gets its first chick at once and the rest
@@ -82,10 +86,12 @@ private fun GameEngine.hatchChick(
 ) {
     val current = state.coops[coop] ?: return
     val variant =
-        current.nextVariantID?.let(ChickenVariant::named) ?: ChickenVariant.all.randomElement(using) ?: ChickenVariant.all[0]
+        current.nextVariantID?.let(ChickenVariant::named) ?: ChickenVariant.all.randomElement(using)
+            ?: ChickenVariant.all[0]
     state.coops[coop] =
         current.copy(
-            chickens = current.chickens + Chicken.hatched(current.nextChickenID, variant, Chicken.DEFAULT_NAME, spot, due),
+            chickens =
+                current.chickens + Chicken.hatched(current.nextChickenID, variant, Chicken.DEFAULT_NAME, spot, due),
             nextChickenID = current.nextChickenID + 1,
             nextChickAt = due.advancedBy(Coop.HATCH_INTERVAL),
         )

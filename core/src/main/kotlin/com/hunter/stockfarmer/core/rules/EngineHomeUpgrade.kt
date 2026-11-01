@@ -33,7 +33,8 @@ fun GameEngine.homeUpgradeRejection(origin: GridPoint): Rejection? {
 }
 
 /** Whether an upgrade is on offer: from the level it unlocks at, until it has been bought. */
-fun GameEngine.offersHomeUpgrade(origin: GridPoint): Boolean = nextHomeUpgrade(origin)?.let { state.level >= it.unlockLevel } ?: false
+fun GameEngine.offersHomeUpgrade(origin: GridPoint): Boolean =
+    nextHomeUpgrade(origin)?.let { state.level >= it.unlockLevel } ?: false
 
 /** Pays for the next level of a home, which then has room for more animals; the births already under way fill it. */
 fun GameEngine.upgradeHome(origin: GridPoint): List<GameEvent> {

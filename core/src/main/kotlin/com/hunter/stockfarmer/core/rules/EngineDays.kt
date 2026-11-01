@@ -19,7 +19,8 @@ internal fun GameEngine.recordSale(
 ) {
     state.career.addGrossIncome(earnings)
     val sale = state.salesToday[itemID] ?: ItemSale(itemID, name, 0, 0.0)
-    state.salesToday[itemID] = ItemSale(itemID, name, sale.quantity + quantity, (sale.earnings + earnings).roundedToCents)
+    state.salesToday[itemID] =
+        ItemSale(itemID, name, sale.quantity + quantity, (sale.earnings + earnings).roundedToCents)
 }
 
 internal fun GameEngine.recordSale(
@@ -112,11 +113,16 @@ data class CropGrowthSummary(
 /** Only planted types, in unlock order, with the wait until their last plant is ready. */
 fun GameEngine.cropGrowthOverview(now: Instant): List<CropGrowthSummary> {
     val conditions = GrowthConditions(state)
-    val groups = state.plots.filter { (tile, plot) -> plot.isAnchor(tile) }.entries.groupBy { it.value.cropID }
+    val groups =
+        state.plots
+            .filter { (tile, plot) -> plot.isAnchor(tile) }
+            .entries
+            .groupBy { it.value.cropID }
     return UnlockOrder.sorted(Crop.all) { it.unlockLevel }.mapNotNull { crop ->
         val plants = groups[crop.id] ?: return@mapNotNull null
         val remaining =
-            plants.maxOfOrNull { (point, plot) -> conditions.remainingTime(plot, crop, plot.origin ?: point, now) } ?: 0.0
+            plants.maxOfOrNull { (point, plot) -> conditions.remainingTime(plot, crop, plot.origin ?: point, now) }
+                ?: 0.0
         val readyCount = plants.count { (point, plot) -> conditions.isReady(plot, crop, point, now) }
         CropGrowthSummary(crop, plants.size, readyCount, remaining)
     }

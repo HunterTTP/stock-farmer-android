@@ -35,9 +35,18 @@ enum class CareerSeries { XP, INCOME, STOCK_PROFIT }
 fun GameEngine.history(series: CareerSeries): List<ValueSample> {
     val (recorded, current) =
         when (series) {
-            CareerSeries.XP -> state.career.xpHistory.map { ValueSample(it.playTime, it.xp.toLong()) } to state.xp.toLong()
-            CareerSeries.INCOME -> state.career.incomeHistory to state.career.grossIncomeCents
-            CareerSeries.STOCK_PROFIT -> state.career.stockHistory to state.lifetimeStockProfitCents
+            CareerSeries.XP -> {
+                state.career.xpHistory.map { ValueSample(it.playTime, it.xp.toLong()) } to
+                    state.xp.toLong()
+            }
+
+            CareerSeries.INCOME -> {
+                state.career.incomeHistory to state.career.grossIncomeCents
+            }
+
+            CareerSeries.STOCK_PROFIT -> {
+                state.career.stockHistory to state.lifetimeStockProfitCents
+            }
         }
     val now = ValueSample(state.playTime, current)
     return listOf(ValueSample(0.0, 0)) +

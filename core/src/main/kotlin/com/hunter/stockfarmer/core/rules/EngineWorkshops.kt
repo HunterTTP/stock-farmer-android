@@ -14,7 +14,9 @@ import java.time.Instant
 sealed interface WorkshopStatus {
     data object Idle : WorkshopStatus
 
-    data class Working(val timeLeft: Double) : WorkshopStatus
+    data class Working(
+        val timeLeft: Double,
+    ) : WorkshopStatus
 
     /** Finished, and waiting for the Bucket to collect what it made. */
     data object Ready : WorkshopStatus
@@ -34,10 +36,19 @@ fun GameEngine.workshopStatus(
 ): WorkshopStatus {
     val recipe = state.workshopRecipe(origin) ?: return WorkshopStatus.Idle
     val workshop = state.workshops[origin] ?: return WorkshopStatus.Idle
-    return if (workshop.isFinished(recipe, now)) WorkshopStatus.Ready else WorkshopStatus.Working(workshop.timeLeft(recipe, now))
+    return if (workshop.isFinished(
+            recipe,
+            now,
+        )
+    ) {
+        WorkshopStatus.Ready
+    } else {
+        WorkshopStatus.Working(workshop.timeLeft(recipe, now))
+    }
 }
 
-private fun GameEngine.originalRecipe(origin: GridPoint): Recipe? = state.buildings[origin]?.let(Building::named)?.let(Recipe::of)
+private fun GameEngine.originalRecipe(origin: GridPoint): Recipe? =
+    state.buildings[origin]?.let(Building::named)?.let(Recipe::of)
 
 /** Why a workshop can't start a batch now, or null if it can. */
 fun GameEngine.startRejection(
@@ -45,13 +56,23 @@ fun GameEngine.startRejection(
     now: Instant,
 ): Rejection? {
     val recipe = state.workshopRecipe(origin) ?: return Rejection.NothingHere
-    if (recipe.id != originalRecipe(origin)?.id && state.level < recipe.unlockLevel) return Rejection.NeedLevel(recipe.unlockLevel)
+    if (recipe.id != originalRecipe(origin)?.id &&
+        state.level < recipe.unlockLevel
+    ) {
+        return Rejection.NeedLevel(recipe.unlockLevel)
+    }
     when (workshopStatus(origin, now)) {
         is WorkshopStatus.Working -> return Rejection.WorkInProgress
         WorkshopStatus.Ready -> return Rejection.GoodsWaiting
         WorkshopStatus.Idle -> Unit
     }
-    return if ((state.storage[recipe.input.id] ?: 0) >= recipe.inputCount) null else Rejection.NeedIngredients(recipe.inputCount, recipe.input.name)
+    return if ((state.storage[recipe.input.id] ?: 0) >=
+        recipe.inputCount
+    ) {
+        null
+    } else {
+        Rejection.NeedIngredients(recipe.inputCount, recipe.input.name)
+    }
 }
 
 /** Takes what a batch needs out of storage and sets the workshop to work. */
@@ -94,7 +115,13 @@ internal fun GameEngine.moveWorkshop(
     newOrigin: GridPoint,
 ) {
     val recipe = state.selectedWorkshopRecipes.remove(oldOrigin)
-    if (recipe != null) state.selectedWorkshopRecipes[newOrigin] = recipe else state.selectedWorkshopRecipes.remove(newOrigin)
+    if (recipe !=
+        null
+    ) {
+        state.selectedWorkshopRecipes[newOrigin] = recipe
+    } else {
+        state.selectedWorkshopRecipes.remove(newOrigin)
+    }
     val workshop = state.workshops.remove(oldOrigin) ?: return
     state.workshops[newOrigin] = workshop
 }
@@ -108,13 +135,24 @@ fun GameEngine.chooseRecipe(
     val recipe = Recipe.named(id)
     if (building == null || recipe == null || recipe.buildingID != building.id) return reject(Rejection.NothingHere)
     val original = Recipe.of(building)
-    if (recipe.id != original?.id && state.level < recipe.unlockLevel) return reject(Rejection.NeedLevel(recipe.unlockLevel))
+    if (recipe.id != original?.id &&
+        state.level < recipe.unlockLevel
+    ) {
+        return reject(Rejection.NeedLevel(recipe.unlockLevel))
+    }
     when (workshopStatus(origin, now)) {
         is WorkshopStatus.Working -> return reject(Rejection.WorkInProgress)
         WorkshopStatus.Ready -> return reject(Rejection.GoodsWaiting)
         WorkshopStatus.Idle -> Unit
     }
-    if (recipe.id == original?.id) state.selectedWorkshopRecipes.remove(origin) else state.selectedWorkshopRecipes[origin] = recipe.id
+    if (recipe.id ==
+        original?.id
+    ) {
+        state.selectedWorkshopRecipes.remove(origin)
+    } else {
+        state.selectedWorkshopRecipes[origin] =
+            recipe.id
+    }
     countAsSeen(setOf("recipe:${recipe.id}"))
     return emptyList()
 }

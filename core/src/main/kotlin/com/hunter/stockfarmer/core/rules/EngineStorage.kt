@@ -2,10 +2,10 @@ package com.hunter.stockfarmer.core.rules
 
 import com.hunter.stockfarmer.core.catalog.Crop
 import com.hunter.stockfarmer.core.catalog.HarvestTool
+import com.hunter.stockfarmer.core.catalog.PlacedBuilding
 import com.hunter.stockfarmer.core.catalog.StorageItem
 import com.hunter.stockfarmer.core.model.GridPoint
 import com.hunter.stockfarmer.core.model.Lesson
-import com.hunter.stockfarmer.core.model.PlacedBuilding
 import com.hunter.stockfarmer.core.model.PlayMode
 import com.hunter.stockfarmer.core.model.roundedToCents
 import java.time.Instant
@@ -15,7 +15,11 @@ const val BACKPACK_CAPACITY = 100
 
 /** How many items can be stored: the backpack, and whatever the storage buildings add to it. */
 val GameEngine.storageCapacity: Int
-    get() = state.placedBuildings.fold(BACKPACK_CAPACITY) { total, placed -> total + (placed.building.storageCapacity ?: 0) }
+    get() =
+        state.placedBuildings.fold(BACKPACK_CAPACITY) { total, placed ->
+            total +
+                (placed.building.storageCapacity ?: 0)
+        }
 
 /** How many items are in storage, of all kinds together. */
 val GameEngine.storedCount: Int get() = state.storage.values.sum()
@@ -44,7 +48,8 @@ fun GameEngine.setSelling(
 }
 
 /** Whether the Harvest tool is in hand holding this implement. */
-internal fun GameEngine.isHolding(tool: HarvestTool): Boolean = state.mode == PlayMode.harvest && state.harvestTool == tool
+internal fun GameEngine.isHolding(tool: HarvestTool): Boolean =
+    state.mode == PlayMode.harvest && state.harvestTool == tool
 
 /**
  * What to tell a player over something only a harvest implement can gather, when it isn't the one in hand: a ripe crop or
@@ -77,7 +82,14 @@ fun GameEngine.missingHarvestToolRejection(
         val produce = readyProduce(point, now)
         if (produce != null) {
             needed = produce.second
-            rejection = if (produce.second == HarvestTool.scythe) Rejection.UseTheScytheForWool else Rejection.UseTheBucketForAnimals
+            rejection =
+                if (produce.second ==
+                    HarvestTool.scythe
+                ) {
+                    Rejection.UseTheScytheForWool
+                } else {
+                    Rejection.UseTheBucketForAnimals
+                }
         } else if (state.eggs.any { it.point == point }) {
             needed = HarvestTool.bucket
             rejection = Rejection.UseTheBucketForEggs
@@ -95,7 +107,10 @@ internal fun GameEngine.gather(
     tool: HarvestTool,
     xp: Int = 0,
 ): GameEvent {
-    recordQuestProgress(com.hunter.stockfarmer.core.model.QuestGoal.Collect(item.id))
+    recordQuestProgress(
+        com.hunter.stockfarmer.core.model.QuestGoal
+            .Collect(item.id),
+    )
     markHarvested()
     if (!isSelling(tool)) {
         state.storage[item.id] = (state.storage[item.id] ?: 0) + 1

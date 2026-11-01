@@ -1,3 +1,5 @@
+@file:Suppress("ktlint:standard:enum-entry-name-case")
+
 package com.hunter.stockfarmer.core.rules
 
 import com.hunter.stockfarmer.core.model.GridPoint
@@ -73,7 +75,10 @@ internal const val MOST_OF_A_KIND_ON_THE_MAP = 15
 
 /** How many of each kind a body of water has room for, by its interior. */
 internal fun GameEngine.animalLimit(body: Int): Int =
-    (state.waterLayout.bodies[body].interior.size + INTERIOR_TILES_PER_ANIMAL - 1) / INTERIOR_TILES_PER_ANIMAL
+    (
+        state.waterLayout.bodies[body]
+            .interior.size + INTERIOR_TILES_PER_ANIMAL - 1
+    ) / INTERIOR_TILES_PER_ANIMAL
 
 /** How many of each kind the whole map has room for, by how much water it has. */
 internal val GameEngine.animalLimitOnTheMap: Int
@@ -125,7 +130,11 @@ private fun wouldCrowdAWindow(
     if (nearby.size < MOST_OF_A_KIND_IN_A_WINDOW) return false
     for (top in (tile.row - reach)..tile.row) {
         for (left in (tile.col - reach)..tile.col) {
-            val inWindow = nearby.count { it.row in top until top + WINDOW_SIDE && it.col in left until left + WINDOW_SIDE }
+            val inWindow =
+                nearby.count {
+                    it.row in top until top + WINDOW_SIDE &&
+                        it.col in left until left + WINDOW_SIDE
+                }
             if (inWindow >= MOST_OF_A_KIND_IN_A_WINDOW) return true
         }
     }

@@ -1,11 +1,12 @@
 package com.hunter.stockfarmer.core.rules
 
+import com.hunter.stockfarmer.core.catalog.PlacedBuilding
 import com.hunter.stockfarmer.core.model.Chicken
 import com.hunter.stockfarmer.core.model.GameState
 import com.hunter.stockfarmer.core.model.GridPoint
 import com.hunter.stockfarmer.core.model.Livestock
 import com.hunter.stockfarmer.core.model.cleanedName
-import com.hunter.stockfarmer.core.catalog.PlacedBuilding
+import com.hunter.stockfarmer.core.model.tractorOccupiedTiles
 import com.hunter.stockfarmer.core.util.RandomSource
 import com.hunter.stockfarmer.core.util.nextUnit
 import java.time.Instant
@@ -34,12 +35,27 @@ internal fun GameEngine.setPosition(
     animal: AnimalRef,
 ) {
     when (animal) {
-        is AnimalRef.Pet -> state.pets[animal.house]?.let { state.pets[animal.house] = it.copy(position = position) }
+        is AnimalRef.Pet -> {
+            state.pets[animal.house]?.let { state.pets[animal.house] = it.copy(position = position) }
+        }
+
         is AnimalRef.Chicken -> {
             updateChicken(animal.coop, animal.id) { it.copy(position = position) }
-            state.eggs = state.eggs.map { if (it.coop == animal.coop && it.henID == animal.id) it.copy(point = position) else it }
+            state.eggs =
+                state.eggs.map {
+                    if (it.coop == animal.coop &&
+                        it.henID == animal.id
+                    ) {
+                        it.copy(point = position)
+                    } else {
+                        it
+                    }
+                }
         }
-        is AnimalRef.Livestock -> updateLivestock(animal.home, animal.id) { it.copy(position = position) }
+
+        is AnimalRef.Livestock -> {
+            updateLivestock(animal.home, animal.id) { it.copy(position = position) }
+        }
     }
 }
 
@@ -83,11 +99,16 @@ fun GameEngine.rename(
     name: String,
 ) {
     when (animal) {
-        is AnimalRef.Pet -> renamePet(animal.house, name)
-        is AnimalRef.Chicken ->
+        is AnimalRef.Pet -> {
+            renamePet(animal.house, name)
+        }
+
+        is AnimalRef.Chicken -> {
             updateChicken(animal.coop, animal.id) {
                 it.copy(name = name.cleanedName(Chicken.MAX_NAME_LENGTH, Chicken.DEFAULT_NAME))
             }
+        }
+
         is AnimalRef.Livestock -> {
             val livestock = livestock(animal.id, animal.home) ?: return
             updateLivestock(animal.home, animal.id) {
@@ -119,7 +140,8 @@ internal fun GameEngine.canStand(
  * tree or decoration, even where only the room its picture rises into lies, and not under a backdrop tree.
  */
 internal fun GameEngine.isOpenGround(point: GridPoint): Boolean =
-    isBuildableGround(point) && state.building(point) == null && state.tree(point) == null && state.decoration(point) == null
+    isBuildableGround(point) && state.building(point) == null && state.tree(point) == null &&
+        state.decoration(point) == null
 
 /**
  * Ground with no water or fence on it and nothing taking it up: not the bottom row of a building, tree or decoration, nor
@@ -282,4 +304,5 @@ private fun GameEngine.appeal(
     return if (isChicken(animal) && chickenCount(point) > 0) base * CROWDED_TILE_APPEAL else base
 }
 
-internal fun animalAttractions(state: GameState): List<GridPoint> = state.plots.keys.toList() + state.placedBuildings.flatMap { it.footprint }
+internal fun animalAttractions(state: GameState): List<GridPoint> =
+    state.plots.keys.toList() + state.placedBuildings.flatMap { it.footprint }

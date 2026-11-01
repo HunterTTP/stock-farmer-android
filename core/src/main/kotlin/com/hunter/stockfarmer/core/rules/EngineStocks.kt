@@ -1,10 +1,10 @@
 package com.hunter.stockfarmer.core.rules
 
 import com.hunter.stockfarmer.core.catalog.Building
+import com.hunter.stockfarmer.core.model.GameState
 import com.hunter.stockfarmer.core.model.Holding
 import com.hunter.stockfarmer.core.model.PricePoint
 import com.hunter.stockfarmer.core.model.QuestGoal
-import com.hunter.stockfarmer.core.model.GameState
 import com.hunter.stockfarmer.core.model.StockQuote
 import com.hunter.stockfarmer.core.model.StockTrade
 import java.time.Instant
@@ -49,7 +49,11 @@ fun GameEngine.buyShares(
         return rejected(Rejection.InvalidQuantity)
     }
     val owned = state.holdings[quote.ticker]
-    if (owned == null && state.holdings.size >= stockSlotLimit) return rejected(Rejection.StockSlotsFull(stockSlotLimit))
+    if (owned == null &&
+        state.holdings.size >= stockSlotLimit
+    ) {
+        return rejected(Rejection.StockSlotsFull(stockSlotLimit))
+    }
     val ownedShares = owned?.shares ?: 0
     if (ownedShares + shares > StockMarketRules.MAX_SHARES) return rejected(Rejection.InvalidQuantity)
     val cash = StockMarketRules.cents(state.money)

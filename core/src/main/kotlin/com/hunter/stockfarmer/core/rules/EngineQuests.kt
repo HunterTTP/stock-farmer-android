@@ -60,7 +60,11 @@ private fun GameEngine.makeStockQuest(
     extraRewards: Set<Int>,
     using: RandomSource,
 ): MarketQuest {
-    val usedRewards = state.marketQuests.values.flatten().map { it.rewardXP }.toSet() + extraRewards
+    val usedRewards =
+        state.marketQuests.values
+            .flatten()
+            .map { it.rewardXP }
+            .toSet() + extraRewards
     return QuestRules.makeQuest(state.level, board == LARGE_BOARD, QuestGoal.StockProfit, usedRewards, using)
 }
 
@@ -74,8 +78,13 @@ internal fun GameEngine.fillQuestBoard(
     val ordered = groups.take(2) + groups.drop(2).shuffled(using)
     if (ordered.isEmpty()) return
     val quests = (state.marketQuests[id] ?: emptyList()).toMutableList()
-    val usedRewards = state.marketQuests.values.flatten().map { it.rewardXP }.toMutableSet()
-    val wantsStock = state.level >= QuestRules.stockQuestLevel && quests.none { q -> q.objectives.any { it.goal.isStock } }
+    val usedRewards =
+        state.marketQuests.values
+            .flatten()
+            .map { it.rewardXP }
+            .toMutableSet()
+    val wantsStock =
+        state.level >= QuestRules.stockQuestLevel && quests.none { q -> q.objectives.any { it.goal.isStock } }
     val capacity = max(quests.size, QuestRules.capacity(id))
     for (slot in quests.size until capacity) {
         if (wantsStock && slot == capacity - 1) {
@@ -148,7 +157,12 @@ private fun GameEngine.replaceQuest(
     val groups = QuestRules.goals(state.level)
     val fresh = groups.map { group -> group.filter { it !in used } }.filter { it.isNotEmpty() }
     val goal = (fresh.ifEmpty { groups }).randomElement(using)?.randomElement(using) ?: return
-    val usedRewards = state.marketQuests.values.flatten().filter { it.id != existing[index].id }.map { it.rewardXP }.toSet()
+    val usedRewards =
+        state.marketQuests.values
+            .flatten()
+            .filter { it.id != existing[index].id }
+            .map { it.rewardXP }
+            .toSet()
     val replacement = QuestRules.makeQuest(state.level, board == LARGE_BOARD, goal, usedRewards, using)
     state.marketQuests[board] = existing.replacing(index, replacement)
 }
@@ -174,7 +188,10 @@ internal fun GameEngine.recordQuestProgress(
                             if (objective.goal != goal || objective.isComplete) {
                                 objective
                             } else {
-                                objective.copy(progress = objective.progress + min(quantity, objective.target - objective.progress))
+                                objective.copy(
+                                    progress =
+                                        objective.progress + min(quantity, objective.target - objective.progress),
+                                )
                             }
                         },
                 )

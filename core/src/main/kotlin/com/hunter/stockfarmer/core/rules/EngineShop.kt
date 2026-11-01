@@ -3,8 +3,8 @@ package com.hunter.stockfarmer.core.rules
 import com.hunter.stockfarmer.core.catalog.Building
 import com.hunter.stockfarmer.core.catalog.Crop
 import com.hunter.stockfarmer.core.catalog.Decoration
-import com.hunter.stockfarmer.core.catalog.Fertilizer
 import com.hunter.stockfarmer.core.catalog.FenceColor
+import com.hunter.stockfarmer.core.catalog.Fertilizer
 import com.hunter.stockfarmer.core.catalog.LandscapeTool
 import com.hunter.stockfarmer.core.catalog.TreeSpecies
 import com.hunter.stockfarmer.core.model.ShopItem
@@ -35,7 +35,8 @@ fun GameEngine.placementLimit(item: ShopItem): Int? =
         else -> null
     }
 
-fun GameEngine.hasReachedPlacementLimit(item: ShopItem): Boolean = placementLimit(item)?.let { placedOnMap(item) >= it } ?: false
+fun GameEngine.hasReachedPlacementLimit(item: ShopItem): Boolean =
+    placementLimit(item)?.let { placedOnMap(item) >= it } ?: false
 
 /** How many are placed of a building, counting both tiers of a market stand and of the house as one kind. */
 private fun GameEngine.placedCount(ofBuildingKindOf: String): Int {
@@ -66,7 +67,8 @@ fun GameEngine.price(item: ShopItem): Double =
 
 fun GameEngine.refund(building: Building): Double = (building.cost * GameEngine.DESTROY_REFUND_SHARE).roundedToCents
 
-fun GameEngine.refund(decoration: Decoration): Double = (decoration.cost * GameEngine.DESTROY_REFUND_SHARE).roundedToCents
+fun GameEngine.refund(decoration: Decoration): Double =
+    (decoration.cost * GameEngine.DESTROY_REFUND_SHARE).roundedToCents
 
 /** The logs and stones destroying a building gives back. */
 fun GameEngine.materialRefund(building: Building): Pair<Int, Int> =

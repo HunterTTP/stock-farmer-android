@@ -5,8 +5,8 @@ import com.hunter.stockfarmer.core.catalog.LivestockHome
 import com.hunter.stockfarmer.core.catalog.LivestockWork
 import com.hunter.stockfarmer.core.catalog.StorageItem
 import com.hunter.stockfarmer.core.model.AnimalMeal
-import com.hunter.stockfarmer.core.model.Herd
 import com.hunter.stockfarmer.core.model.GridPoint
+import com.hunter.stockfarmer.core.model.Herd
 import com.hunter.stockfarmer.core.model.Livestock
 import com.hunter.stockfarmer.core.util.RandomSource
 import com.hunter.stockfarmer.core.util.advancedBy
@@ -207,7 +207,15 @@ internal fun GameEngine.moveHerd(
     state.eggs = state.eggs.map { if (it.coop == oldHome) it.copy(coop = newHome) else it }
     val placed = state.building(newHome) ?: return
     val front = placed.building.frontTile(placed.origin)
-    val landing = if (com.hunter.stockfarmer.core.model.GameState.contains(front) && state.building(front) == null) front else spawnTile(placed)
+    val landing =
+        if (com.hunter.stockfarmer.core.model.GameState
+                .contains(front) &&
+            state.building(front) == null
+        ) {
+            front
+        } else {
+            spawnTile(placed)
+        }
     landing ?: return
     state.herds[newHome] = herd.copy(animals = herd.animals.map { it.copy(position = landing) })
 }
@@ -225,8 +233,14 @@ internal fun GameEngine.collectProduce(
             if (animal.position != point || isInside(AnimalRef.Livestock(home, animal.id), now)) continue
             val produce = animal.readyProduce(now) ?: continue
             if (produce.second != tool) continue
-            if (!hasRoom(1, tool)) return events + levelUpEvents(levelBefore) + GameEvent.Rejected(Rejection.StorageFull)
-            updateLivestock(home, animal.id) { it.copy(readyAt = now.advancedBy(animal.species.workInterval), lastWorkedAt = now) }
+            if (!hasRoom(1, tool)) {
+                return events + levelUpEvents(levelBefore) +
+                    GameEvent.Rejected(Rejection.StorageFull)
+            }
+            updateLivestock(
+                home,
+                animal.id,
+            ) { it.copy(readyAt = now.advancedBy(animal.species.workInterval), lastWorkedAt = now) }
             noteWorked(animal.variant)
             events += gatherWithBonus(produce.first, point, tool, earnXPForProducing(produce.first))
         }

@@ -21,7 +21,8 @@ internal val LivestockHome.Companion.pond: LivestockHome
 /** The herds that live on ponds rather than in a building: any herd whose home is not a building made for animals. */
 internal val GameEngine.pondHerdOrigins: List<GridPoint>
     get() =
-        state.herds.keys.filter { state.building(it)?.building?.livestockHome == null }
+        state.herds.keys
+            .filter { state.building(it)?.building?.livestockHome == null }
             .sortedWith(compareBy({ it.row }, { it.col }))
 
 /** Whether the animals of a home are ducks that live on a pond. */
@@ -71,21 +72,31 @@ private fun GameEngine.returnStrandedDucksToTheWater() {
             herd.copy(
                 animals =
                     herd.animals.map { duck ->
-                        if (duck.position in state.water) duck else nearestWater(duck.position)?.let { duck.copy(position = it) } ?: duck
+                        if (duck.position in
+                            state.water
+                        ) {
+                            duck
+                        } else {
+                            nearestWater(duck.position)?.let { duck.copy(position = it) } ?: duck
+                        }
                     },
             )
     }
 }
 
 internal fun GameEngine.nearestWater(point: GridPoint): GridPoint? =
-    state.water.keys.minByOrNull { (it.row - point.row) * (it.row - point.row) + (it.col - point.col) * (it.col - point.col) }
+    state.water.keys.minByOrNull {
+        (it.row - point.row) * (it.row - point.row) +
+            (it.col - point.col) * (it.col - point.col)
+    }
 
 /** Gives every body of water with an interior that has none a herd of ducks to come, and takes away a herd with no ducks whose water has gone. */
 internal fun GameEngine.settleDucksOnPonds(now: Instant) {
     returnStrandedDucksToTheWater()
     val layout = state.waterLayout
 
-    fun hasInterior(origin: GridPoint) = layout.bodyIndexByTile[origin]?.let { layout.bodies[it].interior.isNotEmpty() } ?: false
+    fun hasInterior(origin: GridPoint) =
+        layout.bodyIndexByTile[origin]?.let { layout.bodies[it].interior.isNotEmpty() } ?: false
     for (origin in pondHerdOrigins) {
         if (state.herds[origin]?.animals?.isEmpty() == true && !hasInterior(origin)) state.herds.remove(origin)
     }

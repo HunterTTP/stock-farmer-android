@@ -19,9 +19,20 @@ import java.time.Instant
  */
 fun GameEngine.favoriteCrop(animal: AnimalRef): Crop? =
     when (animal) {
-        is AnimalRef.Pet -> null
-        is AnimalRef.Chicken -> chicken(animal.id, animal.coop)?.let { if (it.kind.isRooster) null else Chicken.favoriteCrop }
-        is AnimalRef.Livestock -> livestock(animal.id, animal.home)?.species?.favoriteCrop
+        is AnimalRef.Pet -> {
+            null
+        }
+
+        is AnimalRef.Chicken -> {
+            chicken(
+                animal.id,
+                animal.coop,
+            )?.let { if (it.kind.isRooster) null else Chicken.favoriteCrop }
+        }
+
+        is AnimalRef.Livestock -> {
+            livestock(animal.id, animal.home)?.species?.favoriteCrop
+        }
     }
 
 fun GameEngine.meal(animal: AnimalRef): AnimalMeal? =
@@ -51,10 +62,21 @@ fun GameEngine.producesHarvest(
     now: Instant,
 ): Boolean =
     when (animal) {
-        is AnimalRef.Pet -> false
-        is AnimalRef.Chicken -> chicken(animal.id, animal.coop)?.let { !it.kind.isRooster && it.isGrown(now) } ?: false
-        is AnimalRef.Livestock ->
-            livestock(animal.id, animal.home)?.let { it.species.work is LivestockWork.Gives && it.species.eatsToProduce } ?: false
+        is AnimalRef.Pet -> {
+            false
+        }
+
+        is AnimalRef.Chicken -> {
+            chicken(animal.id, animal.coop)?.let { !it.kind.isRooster && it.isGrown(now) } ?: false
+        }
+
+        is AnimalRef.Livestock -> {
+            livestock(
+                animal.id,
+                animal.home,
+            )?.let { it.species.work is LivestockWork.Gives && it.species.eatsToProduce }
+                ?: false
+        }
     }
 
 /**
@@ -68,11 +90,19 @@ fun GameEngine.isHungry(
     if (!producesHarvest(animal, now) || hasEaten(animal)) return false
     val since: List<Instant?> =
         when (animal) {
-            is AnimalRef.Pet -> emptyList()
-            is AnimalRef.Chicken ->
-                chicken(animal.id, animal.coop)?.let { listOf(it.hatchedAt, it.meal?.eatenAt, it.lastHarvestedAt) } ?: emptyList()
-            is AnimalRef.Livestock ->
-                livestock(animal.id, animal.home)?.let { listOf(it.bornAt, it.meal?.eatenAt, it.lastWorkedAt) } ?: emptyList()
+            is AnimalRef.Pet -> {
+                emptyList()
+            }
+
+            is AnimalRef.Chicken -> {
+                chicken(animal.id, animal.coop)?.let { listOf(it.hatchedAt, it.meal?.eatenAt, it.lastHarvestedAt) }
+                    ?: emptyList()
+            }
+
+            is AnimalRef.Livestock -> {
+                livestock(animal.id, animal.home)?.let { listOf(it.bornAt, it.meal?.eatenAt, it.lastWorkedAt) }
+                    ?: emptyList()
+            }
         }
     val latest = since.filterNotNull().maxOrNull() ?: return false
     return now >= latest.advancedBy(AnimalMeal.hungerDelay)
@@ -98,7 +128,9 @@ fun GameEngine.eatFavoriteCrops(now: Instant): List<GameEvent> {
         if (!canGraze(animal, now)) continue
         val position = position(animal) ?: continue
         val favorite = favoriteCrop(animal) ?: continue
-        val point = (listOf(position) + position.neighbors).firstOrNull { edibleFavorite(it, favorite, now, conditions) } ?: continue
+        val point =
+            (listOf(position) + position.neighbors).firstOrNull { edibleFavorite(it, favorite, now, conditions) }
+                ?: continue
         takeServing(point)
         giveMeal(animal, now)
         recordFavoriteEaten(animal)
@@ -157,7 +189,10 @@ internal fun GameEngine.directionToFavoriteCrop(
     val current = position(animal) ?: return null
     val favorite = favoriteCrop(animal) ?: return null
     val conditions = GrowthConditions(state)
-    val food = state.plots.keys.filter { edibleFavorite(it, favorite, now, conditions) }.toSet()
+    val food =
+        state.plots.keys
+            .filter { edibleFavorite(it, favorite, now, conditions) }
+            .toSet()
     if (food.isEmpty()) return null
     val seen = mutableSetOf(current)
     val queue = mutableListOf<Pair<GridPoint, GridPoint?>>(current to null)

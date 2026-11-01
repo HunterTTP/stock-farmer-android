@@ -23,7 +23,11 @@ fun GameEngine.layEggs(
 ) {
     for ((origin, coop) in state.coops) {
         for (hen in coop.chickens) {
-            if (hen.kind.isRooster || !hen.isGrown(now) || !hen.hasEaten || isInside(AnimalRef.Chicken(origin, hen.id), now)) continue
+            if (hen.kind.isRooster || !hen.isGrown(now) || !hen.hasEaten ||
+                isInside(AnimalRef.Chicken(origin, hen.id), now)
+            ) {
+                continue
+            }
             val productiveSeconds = hen.meal?.productiveSeconds(interval, now) ?: max(0.0, interval)
             val chance = productiveSeconds / Egg.LAY_INTERVAL
             if (state.eggs.count { it.coop == origin && it.henID == hen.id } >= Egg.MAX_PER_HEN) continue
@@ -65,9 +69,23 @@ internal fun GameEngine.collectEggs(
         chickenIndex(egg.henID, egg.coop)?.let { henIndex ->
             val coop = state.coops.getValue(egg.coop)
             state.coops[egg.coop] =
-                coop.copy(chickens = coop.chickens.mapIndexed { i, hen -> if (i == henIndex) hen.copy(lastHarvestedAt = now) else hen })
+                coop.copy(
+                    chickens =
+                        coop.chickens.mapIndexed { i, hen ->
+                            if (i ==
+                                henIndex
+                            ) {
+                                hen.copy(lastHarvestedAt = now)
+                            } else {
+                                hen
+                            }
+                        },
+                )
         }
-        state.coops[egg.coop]?.chickens?.firstOrNull { it.id == egg.henID }?.let { noteWorked(it.variant) }
+        state.coops[egg.coop]
+            ?.chickens
+            ?.firstOrNull { it.id == egg.henID }
+            ?.let { noteWorked(it.variant) }
         events += gatherWithBonus(StorageItem.Egg, point, HarvestTool.bucket, earnXPForProducing(StorageItem.Egg))
     }
     return events + levelUpEvents(levelBefore)

@@ -23,7 +23,13 @@ fun GameEngine.select(tool: LandscapeTool) {
 /** Picks up the Fertilize tool with whatever it last held, fertilizer or sprinklers. */
 fun GameEngine.selectTilling() {
     val sprinkler = Decoration.named(state.lastSprinklerID)
-    if (state.fertilizesWithSprinklers && sprinkler != null && isUnlocked(sprinkler)) select(sprinkler) else selectFertilizer()
+    if (state.fertilizesWithSprinklers && sprinkler != null &&
+        isUnlocked(sprinkler)
+    ) {
+        select(sprinkler)
+    } else {
+        selectFertilizer()
+    }
 }
 
 /** Picks up the Terrain tool with whatever terrain or tree it last held. */
@@ -61,7 +67,10 @@ internal fun GameEngine.tapLandscape(
             state.groundCover.remove(point)
             listOf(GameEvent.Placed(point))
         }
-        is Attempt.Refused -> reject(result.rejection)
+
+        is Attempt.Refused -> {
+            reject(result.rejection)
+        }
     }
 }
 
@@ -74,7 +83,13 @@ private fun GameEngine.structureRefusal(point: GridPoint): Rejection? {
     val decoration = state.decorationStanding(point)
     val hasStructure = point in state.fences || state.buildingBlocking(point) != null || decoration != null
     val standsOnAnything = decoration?.decoration?.isSprinkler == true
-    return if (hasStructure && !state.selectedLandscape.fitsUnderAStructure && !standsOnAnything) Rejection.StructureHere else null
+    return if (hasStructure && !state.selectedLandscape.fitsUnderAStructure &&
+        !standsOnAnything
+    ) {
+        Rejection.StructureHere
+    } else {
+        null
+    }
 }
 
 private fun GameEngine.placeGroundCover(

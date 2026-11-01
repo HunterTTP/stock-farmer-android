@@ -68,7 +68,10 @@ fun GameEngine.wholeFieldReadyDate(): Instant? {
     val conditions = GrowthConditions(state)
     return state.plots
         .mapNotNull { (point, plot) ->
-            Crop.named(plot.cropID)?.let { plot.plantedAt.advancedBy(it.growDuration / conditions.speedMultiplier(point)) }
+            Crop
+                .named(
+                    plot.cropID,
+                )?.let { plot.plantedAt.advancedBy(it.growDuration / conditions.speedMultiplier(point)) }
         }.maxOrNull()
 }
 

@@ -1,12 +1,12 @@
 package com.hunter.stockfarmer.core.rules
 
+import com.hunter.stockfarmer.core.catalog.HarvestTool
 import com.hunter.stockfarmer.core.catalog.LandscapeTool
 import com.hunter.stockfarmer.core.catalog.PlacedTree
 import com.hunter.stockfarmer.core.catalog.Tree
 import com.hunter.stockfarmer.core.catalog.TreeColor
 import com.hunter.stockfarmer.core.catalog.TreeSize
 import com.hunter.stockfarmer.core.catalog.TreeSpecies
-import com.hunter.stockfarmer.core.catalog.HarvestTool
 import com.hunter.stockfarmer.core.model.CareerRecord
 import com.hunter.stockfarmer.core.model.GameState
 import com.hunter.stockfarmer.core.model.GridPoint
@@ -125,7 +125,12 @@ internal fun GameEngine.isBareGround(point: GridPoint): Boolean =
 internal fun GameEngine.isFreeForTree(point: GridPoint): Boolean =
     isBuildableGround(point) && point !in state.farmland && point !in state.plots && animalStandingAt(point) == null
 
-internal val youngWildTrees: List<Tree> by lazy { Tree.wild.filter { it.size == TreeSize.small || it.size == TreeSize.medium } }
+internal val youngWildTrees: List<Tree> by lazy {
+    Tree.wild.filter {
+        it.size == TreeSize.small ||
+            it.size == TreeSize.medium
+    }
+}
 
 /** Whether a tree could stand with its origin on a tile: bare grass under all of it, away from the start and the front of a home. */
 internal fun GameEngine.canGrowWildTree(
