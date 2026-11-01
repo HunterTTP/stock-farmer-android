@@ -1,7 +1,7 @@
 # Handoff: where the project stands and what to do next
 
 Read this first in a fresh session, then `AGENTS.md`, `docs/DEVELOPMENT.md` and `docs/PARITY.md`.
-Last updated at `main` = `e234fa0` (2026-11-01).
+Last updated at `main` = `0881a31` (2026-11-01).
 
 ## The goal
 
@@ -29,17 +29,17 @@ Standing instructions from the user:
 - **Do not install, launch or test on the tablet until the very end of development** (see "The tablet").
 - Never claim a check passed that was not run. Use they/them for people whose pronouns are unknown.
 
-## Service rotation status (2026-11-01 ~11:58 CDT)
+## Service rotation status (checked 2026-11-01 13:05 -05:00)
 
 - **Gemini Flash 3.8 (`invoke_subagent` Model = `flash`)**: ACTIVE (running 4 parallel slices).
-- **Claude Sonnet 5.5 (`claude`)**: Rate-limited (`resets 2:10pm America/New_York`); timer scheduled to bring back into rotation at reset.
-- **Codex Sol 6.1 (`codex.cmd`)**: Rate-limited (`try again at 2:54 PM`); timer scheduled to bring back into rotation at reset.
+- **Claude Sonnet 5.5 (`claude`)**: Rate-limited (`You've hit your session limit · resets 2:10pm (America/New_York)`). Active wakeup timers scheduled for **13:11 -05:00** (~5m remaining) and **14:11 -05:00** (~1h 5m remaining, since EST is `-05:00`).
+- **Codex Sol 6.1 (`codex.cmd`)**: Rate-limited (`try again at 2:54 PM`). Active wakeup timer scheduled for **14:55 -05:00** (~1h 49m remaining).
 
-## Verified state (all green on `main` = `e234fa0`)
+## Verified state (all green on `main` = `0881a31`)
 
 ```
-./gradlew spotlessCheck :core:test :app:assembleDebug :app:testDebugUnitTest   -> BUILD SUCCESSFUL (at e234fa0)
-core tests: 1,019, 0 failures.   app unit tests: 358, 0 failures.   debug APK builds (85 MB, 16 KB aligned).
+./gradlew spotlessCheck :core:test :app:assembleDebug :app:testDebugUnitTest   -> BUILD SUCCESSFUL (at 0881a31)
+core tests: 1,019, 0 failures.   app unit tests: 365, 0 failures.   debug APK builds (85 MB, 16 KB aligned).
 ```
 
 ### Completed on `main` (`736658c`)
@@ -65,14 +65,16 @@ core tests: 1,019, 0 failures.   app unit tests: 358, 0 failures.   debug APK bu
   - 16 KB APK native alignment verification (`NativeAlignmentTest`) & `ItemDetailScreens`/`BuildingChoiceScreens`/`TimeSheet` HUD button polish (`6950222`)
   - `LaunchScreen`, `SaveStatusView`, `StatusHud`, `LessonGuide` & `RewardFlights` HUD theme polish (`a7499c7`)
   - `ToolBar`, `ToolRing`, `ToolCircle`, `ToolsSheet`, `PlacementButtons` & `HudSheet` parity audit (`e234fa0`)
+  - Storage tutorial lesson progression/pulses (`StorageMenuScreen`) & `NoticeScreens`/`SaveSlotsScreen` HUD theme polish (`0881a31`)
 
-## In flight right now (3 parallel slices finishing up)
+## In flight right now (4 parallel slices)
 
 | Slice | Branch | Worktree | Status |
 |---|---|---|---|
-| 1. Storage tutorial lesson progression/pulses (`StorageMenu`) & `NoticeScreens`/`SaveSlotsScreen` HUD polish | `app/storage-notices-polish` | `..\stock-farmer-android-wt-storage-notices` | Running (Gemini Flash 3.8, high) |
-| 2. Farm touch/hold/tap-menus/scene-interactions & audio/notifications parity audit | `app/farm-scene-and-audio-audit` | `..\stock-farmer-android-wt-sheet-nav` | Running (Gemini Flash 3.8, high) |
-| 3. Farm renderer sprite asset coverage & effects/standing-layer parity audit | `app/renderer-and-effects-audit` | `..\stock-farmer-android-wt-stock-quest` | Running (Gemini Flash 3.8, high) |
+| 1. Farm touch/hold/tap-menus/scene-interactions & audio/notifications parity audit | `app/farm-scene-and-audio-audit` | `..\stock-farmer-android-wt-sheet-nav` | Running (Gemini Flash 3.8, high) |
+| 2. Farm renderer sprite asset coverage & effects/standing-layer parity audit | `app/renderer-and-effects-audit` | `..\stock-farmer-android-wt-stock-quest` | Running (Gemini Flash 3.8, high) |
+| 3. Market session, `GamePersistence`/`FarmSlots` & `PhotoSaver`/`FarmPhotoTaker` parity audit | `app/market-persistence-photo-audit` | `..\stock-farmer-android-wt-perf-inst` | Running (Gemini Flash 3.8, high) |
+| 4. `Hud` `session.toasts` wiring & `MenusHost`/`Catalog` HUD theme parity audit | `app/hud-toast-and-catalog-audit` | `..\stock-farmer-android-wt-storage-notices` | Running (Gemini Flash 3.8, high) |
 
 ## Next steps, in order
 

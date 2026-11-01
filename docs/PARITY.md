@@ -30,7 +30,7 @@ Builds and runs in code but has never been run on a device. What is done, in fli
 |---|---|---|---|
 | Plant, grow, Scythe harvest, Storage sale, save and relaunch (first slice) | yes, tested | no | no |
 | App save/load: active slot, backup recovery, autosave, pause/stop, clock on reopen | existing core rules; JVM integration tests added | wired, including load/save errors and backup recovery | device verification pending |
-| Build/decorate/terrain/storage | core + app tests | Compose host; HUD wiring pending | device pending |
+| Build/decorate/terrain/storage | core + app tests (`StorageLessonTest`) | HUD-themed Compose host with Storage tutorial progression, `lessonPulse` highlights and completion toast; wired into HUD | device pending |
 | Stock quotes: ConnectivityManager monitor, tested polling interval, offline notice | existing core rules; StockPolling JUnit tests | wired in StockMarketScreen | device pending |
 | Stock market screen on HUD theme: summary card, rows, Buy Stock search flow, trade sheet and MarketQuestSection | existing core rules; JVM state and upgrade tests | HUD-themed trade sheet with `QuantityControls` (slider, steppers, direct entry, Max), House/Market Stand `BuildingUpgradeScreen` navigation, and HUD-styled `MarketQuestSection` | device pending |
 | Career screen on HUD theme: level ring, square cards, collection rows and tiles, charts | existing core rules; JVM collection and chart tick tests | done: section tints, entry name colors, HUD filter pills and 4-tick X/Y chart axes match iOS | device pending |
