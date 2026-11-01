@@ -31,6 +31,10 @@ android {
         compose = true
     }
 
+    testOptions {
+        unitTests.all { it.useJUnitPlatform() }
+    }
+
     sourceSets.getByName("main").jniLibs.directories.add(
         layout.buildDirectory
             .dir("natives")
@@ -63,5 +67,7 @@ dependencies {
     implementation(libs.androidx.fragment.ktx)
     implementation(libs.gdx)
     implementation(libs.gdx.backend.android)
+    testImplementation(libs.junit.jupiter)
+    testRuntimeOnly(libs.junit.platform.launcher)
     nativeAbis.forEach { natives("com.badlogicgames.gdx:gdx-platform:${libs.versions.gdx.get()}:natives-$it") }
 }
