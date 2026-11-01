@@ -30,13 +30,13 @@ Standing instructions from the user:
 - **Do not install, launch or test on the tablet until the very end of development** (see "The tablet").
 - Never claim a check passed that was not run. Use they/them for people whose pronouns are unknown.
 
-## Service rotation status (checked 2026-11-01 13:05 -05:00)
+## Service rotation status (checked 2026-11-01 13:33 -05:00)
 
-- **Gemini Flash 3.8 (`invoke_subagent` Model = `flash`)**: ACTIVE (running 4 parallel slices).
-- **Claude Sonnet 5.5 (`claude`)**: Rate-limited (`You've hit your session limit · resets 2:10pm (America/New_York)`). Active wakeup timers scheduled for **13:11 -05:00** (~5m remaining) and **14:11 -05:00** (~1h 5m remaining, since EST is `-05:00`).
-- **Codex Sol 6.1 (`codex.cmd`)**: Rate-limited (`try again at 2:54 PM`). Active wakeup timer scheduled for **14:55 -05:00** (~1h 49m remaining).
+- **Claude Sonnet 5.5 (`claude`)**: Rate-limited (`You've hit your session limit · resets 2:10pm (America/New_York)` = **14:10 -05:00**). Active wakeup timer `task-238` scheduled for **14:10:49 -05:00** (~37m remaining).
+- **Codex Sol 6.1 (`codex.cmd`)**: Rate-limited (`try again at 2:54 PM` = **14:54 -05:00**). Active wakeup timer `task-65` scheduled for **14:55:26 -05:00** (~1h 22m remaining).
+- **Gemini Flash 3.8 (`invoke_subagent` Model = `flash`)**: Rate-limited (`RESOURCE_EXHAUSTED 429: Individual quota reached`, resets at **16:16 -05:00**). Active wakeup timer `task-338` scheduled for **16:16:50 -05:00** (~2h 43m remaining).
 
-## Verified state (all green on `main` = `6d91f37`)
+## Verified state (all green on `main` = `58a0681`)
 
 ```
 ./gradlew spotlessCheck :core:test :app:assembleDebug :app:testDebugUnitTest   -> BUILD SUCCESSFUL (at 6d91f37)
@@ -71,14 +71,14 @@ core tests: 1,019, 0 failures.   app unit tests: 398, 0 failures.   debug APK bu
   - `Hud` `session.toasts` wiring & `MenusHost`/`Catalog` HUD theme parity (`e65677a`)
   - Farm touch/hold/tool-drag/scene-interactions & audio parity fixes (`6d91f37`)
 
-## In flight right now (4 parallel slices)
+## In flight right now (4 parallel slices — paused waiting for Claude reset at 14:10 -05:00)
 
 | Slice | Branch | Worktree | Status |
 |---|---|---|---|
-| 1. Market session, `GamePersistence`/`FarmSlots` & `PhotoSaver`/`FarmPhotoTaker` parity audit | `app/market-persistence-photo-audit` | `..\stock-farmer-android-wt-perf-inst` | Running (Gemini Flash 3.8, high) |
-| 2. Farm layers geometry, anchors, `pixelsPerTile`, animated sprites & z-sorting parity audit | `app/farm-layers-geometry-audit` | `..\stock-farmer-android-wt-stock-quest` | Running (Gemini Flash 3.8, high) |
-| 3. `FishingCanvas`/`FishingCast` & `TimelapseViewer`/`TimelapseRecorder` parity audit | `app/fishing-canvas-and-timelapse-audit` | `..\stock-farmer-android-wt-storage-notices` | Running (Gemini Flash 3.8, high) |
-| 4. Core catalog, feedback, presentation & rules parity audit against `StockFarmerCore` | `core/parity-audit` | `..\stock-farmer-android-wt-sheet-nav` | Running (Gemini Flash 3.8, high) |
+| 1. Market session, `GamePersistence`/`FarmSlots` & `PhotoSaver`/`FarmPhotoTaker` parity audit | `app/market-persistence-photo-audit` | `..\stock-farmer-android-wt-perf-inst` | Paused (uncommitted changes ready for final test fix & commit on Claude reset) |
+| 2. Farm layers geometry, anchors, `pixelsPerTile`, animated sprites & z-sorting parity audit | `app/farm-layers-geometry-audit` | `..\stock-farmer-android-wt-stock-quest` | Paused (resume on Claude reset) |
+| 3. `FishingCanvas`/`FishingCast` & `TimelapseViewer`/`TimelapseRecorder` parity audit | `app/fishing-canvas-and-timelapse-audit` | `..\stock-farmer-android-wt-storage-notices` | Paused (resume on Claude reset) |
+| 4. Core catalog, feedback, presentation & rules parity audit against `StockFarmerCore` | `core/parity-audit` | `..\stock-farmer-android-wt-sheet-nav` | Paused (resume on Claude reset) |
 
 ## Next steps, in order
 
