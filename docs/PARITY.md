@@ -29,6 +29,9 @@ Nothing built yet beyond the Compose shell. The SDK licenses are accepted and `.
 | Feature | Rules (core) | UI | Verified |
 |---|---|---|---|
 | Plant, grow, Scythe harvest, Storage sale, save and relaunch (first slice) | yes, tested | no | no |
+| App save/load: active slot, backup recovery, autosave, pause/stop, clock on reopen | existing core rules; JVM integration tests added | wired, including load/save errors and backup recovery | device verification pending |
+
+Save/load uses `LocalSaveFileSystem` under the app's private `filesDir/Farms`. `FarmStartup` prepares the active farm on a worker; failed loads block play and preserve the original until the player explicitly restores a backup. The app snapshots through `GameSession.act`, debounces timer saves, flushes on pause/stop through the disk worker, and holds the farm clock while away. JVM tests cover startup, active-slot selection, backup restoration, corrupt/newer saves, snapshot isolation, lifecycle clocks, and failed-write retry. On-device relaunch, rotation, backgrounding, and storage-failure UI remain unverified (no device available).
 
 ## Assets
 

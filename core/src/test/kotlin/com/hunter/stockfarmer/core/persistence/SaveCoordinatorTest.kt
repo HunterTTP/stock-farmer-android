@@ -11,6 +11,8 @@ import org.junit.jupiter.api.io.TempDir
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
@@ -45,6 +47,25 @@ private class SlowSaveFiles : SaveFileSystem {
 class SaveCoordinatorTest {
     @TempDir
     lateinit var directory: Path
+
+    @Test
+    fun `closing finishes pending writes and shuts down the worker`() {
+        val files = SlowSaveFiles()
+        val completed = CountDownLatch(1)
+        val saver = SaveCoordinator(SaveSlots(directory, files)) { _, _ -> completed.countDown() }
+        try {
+            saver.saveSoon(stateWith(money = 42.0), 0)
+            assertTrue(files.entered.tryAcquire(5, TimeUnit.SECONDS))
+            saver.close()
+            assertThrows(RejectedExecutionException::class.java) { saver.whenIdle { } }
+            files.release.release()
+            assertTrue(completed.await(5, TimeUnit.SECONDS))
+            assertEquals(42.0, SaveSlots(directory).load(0)?.money)
+        } finally {
+            files.release.release()
+            saver.close()
+        }
+    }
 
     @Test
     fun `a burst coalesces and a flush persists the latest state in each slot`() {

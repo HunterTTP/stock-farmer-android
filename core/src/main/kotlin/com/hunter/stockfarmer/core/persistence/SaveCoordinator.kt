@@ -14,7 +14,7 @@ import kotlin.concurrent.withLock
 class SaveCoordinator(
     private val slots: SaveSlots,
     private val onResult: (Int, Result<Unit>) -> Unit = { _, _ -> },
-) {
+) : AutoCloseable {
     private val queue =
         Executors.newSingleThreadExecutor { task ->
             Thread(task, "StockFarmer.saves").apply { isDaemon = true }
@@ -49,6 +49,9 @@ class SaveCoordinator(
     }
 
     fun <T> whenIdle(work: (SaveSlots) -> T): T = onQueue { work(slots) }
+
+    /** Finishes queued writes and releases the disk worker when its app session ends. */
+    override fun close() = queue.shutdown()
 
     private fun <T> onQueue(work: () -> T): T =
         try {
