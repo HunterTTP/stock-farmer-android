@@ -211,7 +211,7 @@ internal object SheetActions {
         return SheetResult(
             events,
             action is SheetAction.MovePetIn || action is SheetAction.Harvest ||
-                action == SheetAction.CancelHarvest || action == SheetAction.Demolish,
+                action == SheetAction.CancelHarvest || action == SheetAction.Demolish || action == SheetAction.Summon,
         )
     }
 

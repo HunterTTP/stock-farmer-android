@@ -12,6 +12,7 @@ import com.hunter.stockfarmer.core.rules.markSaved
 import com.hunter.stockfarmer.core.rules.newGame
 import com.hunter.stockfarmer.core.util.RandomSource
 import com.hunter.stockfarmer.core.util.SystemRandomSource
+import com.hunter.stockfarmer.ui.menus.countCurrentUnlocksAsSeen
 import java.time.Instant
 
 /** The saved games, by slot (null where nothing is saved), and the slot being played. */
@@ -179,6 +180,7 @@ class GamePersistence(
             slot = startup.slot
             session.act {
                 it.state = startup.engine.state
+                it.countCurrentUnlocksAsSeen()
                 session.wildGrowth.clear()
                 session.tractor.clear()
                 session.sceneFeedback.clear()

@@ -48,6 +48,7 @@ internal data class MenuChoice(
     val atLimit: Boolean = false,
     val variantTitle: String = "",
     val variants: List<MenuChoice> = emptyList(),
+    val isNew: Boolean = false,
 )
 
 internal data class MenuSection(
@@ -162,14 +163,14 @@ private fun buildingItem(building: Building) = ShopItem.BuildingItem(building.id
 
 private fun decorationItem(decoration: Decoration) = ShopItem.DecorationItem(decoration.id)
 
-private class MenuCatalog(
+internal class MenuCatalog(
     val engine: GameEngine,
 ) {
     private val state get() = engine.state
 
     fun sorted(items: List<ShopItem>): List<MenuChoice> = UnlockOrder.sorted(items) { it.unlockLevel }.map(::choice)
 
-    private fun choice(item: ShopItem): MenuChoice {
+    fun choice(item: ShopItem): MenuChoice {
         val limit = engine.placementLimit(item)
         val name = engine.name(item)
         val placed = MenuNumbers.count(engine.placedOnMap(item))
@@ -189,6 +190,7 @@ private class MenuCatalog(
             atLimit = engine.hasReachedPlacementLimit(item),
             variantTitle = variants.first,
             variants = variants.second,
+            isNew = engine.isNew(item),
         )
     }
 
@@ -241,8 +243,18 @@ private class MenuCatalog(
                 MenuPictures.fence(engine.selectedFenceColor)
             }
 
-            else -> {
-                error("Not a menu item: $item")
+            is ShopItem.Seed -> {
+                MenuPictures.stored(
+                    StorageItem.CropItem(
+                        com.hunter.stockfarmer.core.catalog.Crop
+                            .named(item.cropID)
+                            ?: com.hunter.stockfarmer.core.catalog.Crop.starter,
+                    ),
+                )
+            }
+
+            ShopItem.Fertilizer -> {
+                MenuPictures.stored(StorageItem.Fertilizer)
             }
         }
 

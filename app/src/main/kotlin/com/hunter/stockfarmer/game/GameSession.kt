@@ -8,6 +8,7 @@ import com.hunter.stockfarmer.core.rules.GameEvent
 import com.hunter.stockfarmer.core.rules.newGame
 import com.hunter.stockfarmer.core.util.SystemRandomSource
 import com.hunter.stockfarmer.ui.fishing.FishingCast
+import com.hunter.stockfarmer.ui.menus.countCurrentUnlocksAsSeen
 import com.hunter.stockfarmer.ui.sheets.SheetTarget
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,6 +23,10 @@ import java.time.Instant
 class GameSession(
     private val engine: GameEngine = GameEngine(newGame(SystemRandomSource)),
 ) {
+    init {
+        engine.countCurrentUnlocksAsSeen()
+    }
+
     /** Looks at the game without changing it. */
     fun <T> read(look: (GameState) -> T): T = synchronized(engine) { look(engine.state) }
 

@@ -1,3 +1,5 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+
 package com.hunter.stockfarmer.ui.menus
 
 import androidx.compose.foundation.layout.Arrangement
@@ -35,7 +37,16 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.hunter.stockfarmer.core.model.ShopItem
 import com.hunter.stockfarmer.game.GameSession
+import com.hunter.stockfarmer.ui.theme.ChoiceRow
+import com.hunter.stockfarmer.ui.theme.HudChoice
+import com.hunter.stockfarmer.ui.theme.HudSheet
+import com.hunter.stockfarmer.ui.theme.HudType
+import com.hunter.stockfarmer.ui.theme.MoneyBadge
+import com.hunter.stockfarmer.ui.theme.Theme
+import com.hunter.stockfarmer.ui.theme.categoryCard
+import com.hunter.stockfarmer.ui.theme.newDot
 import kotlinx.coroutines.delay
 
 /** The caller owns which menu is open; a successful selection returns the player to the farm. */
@@ -48,6 +59,7 @@ fun MenusHost(
     var state by remember(session, openMenu) { mutableStateOf(session.menuState(openMenu)) }
     var message by remember(session, openMenu) { mutableStateOf<String?>(null) }
     var transaction by remember(session, openMenu) { mutableStateOf<StorageTransaction?>(null) }
+    var detail by remember(session, openMenu) { mutableStateOf<ItemScreen?>(null) }
     val loader = rememberMenuAssetLoader()
     LaunchedEffect(session, openMenu) {
         while (true) {
@@ -60,35 +72,34 @@ fun MenusHost(
         state = session.menuState(openMenu)
         if (rejection == null) onClose() else message = rejection.message
     }
-    Dialog(onDismissRequest = onClose, properties = DialogProperties(usePlatformDefaultWidth = false)) {
-        Surface(
-            modifier = Modifier.widthIn(max = 560.dp).fillMaxWidth(0.96f).fillMaxHeight(0.92f),
-            shape = MaterialTheme.shapes.extraLarge,
-        ) {
-            Column {
-                MenuHeader(openMenu, state)
-                if (openMenu == Menu.Storage) {
-                    StorageMenuScreen(
-                        state = state,
-                        loader = loader,
-                        onChoose = choose,
-                        onTransact = { transaction = it },
-                        modifier = Modifier.weight(1f),
+    detail?.let { screen ->
+        MenusHost(session, screen, onClose = { detail = null }, onSelected = onClose)
+        return
+    }
+    HudSheet(onDismiss = onClose) {
+        Column(Modifier.fillMaxHeight()) {
+            MenuHeader(openMenu, state)
+            if (openMenu == Menu.Storage) {
+                StorageMenuScreen(
+                    state = state,
+                    loader = loader,
+                    onChoose = choose,
+                    onTransact = { transaction = it },
+                    modifier = Modifier.weight(1f),
+                )
+            } else {
+                CatalogMenuScreen(state, loader, choose, onInfo = { detail = it }, Modifier.weight(1f))
+            }
+            message?.let { text ->
+                Surface(color = MaterialTheme.colorScheme.secondaryContainer) {
+                    Text(
+                        text,
+                        Modifier.fillMaxWidth().padding(16.dp).semantics { liveRegion = LiveRegionMode.Polite },
                     )
-                } else {
-                    CatalogMenuScreen(state, loader, choose, Modifier.weight(1f))
                 }
-                message?.let { text ->
-                    Surface(color = MaterialTheme.colorScheme.secondaryContainer) {
-                        Text(
-                            text,
-                            Modifier.fillMaxWidth().padding(16.dp).semantics { liveRegion = LiveRegionMode.Polite },
-                        )
-                    }
-                }
-                TextButton(onClick = onClose, modifier = Modifier.fillMaxWidth().padding(8.dp)) {
-                    Text("Close")
-                }
+            }
+            TextButton(onClick = onClose, modifier = Modifier.fillMaxWidth().padding(8.dp)) {
+                Text("Close")
             }
         }
     }
@@ -129,6 +140,7 @@ private fun CatalogMenuScreen(
     state: MenuState,
     loader: MenuAssetLoader,
     onChoose: (MenuSelection) -> Unit,
+    onInfo: (ItemScreen) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
@@ -141,7 +153,7 @@ private fun CatalogMenuScreen(
                 Text(section.title, style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(8.dp))
             }
             items(section.choices, key = { it.id }) { choice ->
-                CatalogChoiceCard(choice, loader, onChoose)
+                CatalogChoiceCard(choice, loader, onChoose, onInfo)
             }
         }
     }
@@ -152,42 +164,47 @@ private fun CatalogChoiceCard(
     choice: MenuChoice,
     loader: MenuAssetLoader,
     onChoose: (MenuSelection) -> Unit,
+    onInfo: (ItemScreen) -> Unit,
 ) {
     var expanded by rememberSaveable(choice.id) { mutableStateOf(false) }
-    Card(Modifier.fillMaxWidth()) {
-        Row(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .selectable(selected = choice.selected, onClick = { onChoose(choice.selection) })
-                    .padding(12.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            MenuImage(choice.picture, loader, Modifier.alpha(if (choice.requiredLevel == null) 1f else 0.45f))
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(choice.title, style = MaterialTheme.typography.titleSmall)
-                if (choice.subtitle.isNotEmpty()) {
-                    Text(choice.subtitle, style = MaterialTheme.typography.bodySmall)
+    Column(Modifier.fillMaxWidth().categoryCard(choice.selected)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            ChoiceRow(
+                HudChoice(
+                    id = choice.id,
+                    title = choice.title,
+                    onPick = { onChoose(choice.selection) },
+                    subtitle = choice.subtitle,
+                    icon = { MenuImage(choice.picture, loader) },
+                    priceLine =
+                        if (choice.prices.isEmpty()) {
+                            null
+                        } else {
+                            {
+                                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    choice.prices.forEach { price ->
+                                        Text(
+                                            price.text,
+                                            style = HudType.caption,
+                                            color = if (price.affordable) Theme.accent else Theme.spend,
+                                        )
+                                    }
+                                }
+                            }
+                        },
+                    isSelected = choice.selected,
+                    isLocked = choice.requiredLevel != null,
+                    isNew = choice.isNew,
+                    isAffordable = choice.affordable,
+                    isAtLimit = choice.atLimit,
+                ),
+                Modifier.weight(1f).selectable(choice.selected) { onChoose(choice.selection) },
+            )
+            val item = choice.selection.shopItem
+            if (item != null || choice.selection == MenuSelection.Grass) {
+                TextButton(onClick = { onInfo(item?.let { ItemScreen.Item(it) } ?: ItemScreen.Eraser) }) {
+                    Text("ⓘ", color = Theme.accent)
                 }
-                choice.prices.forEach { price ->
-                    Text(
-                        price.text,
-                        color =
-                            if (price.affordable) {
-                                MaterialTheme.colorScheme.primary
-                            } else {
-                                MaterialTheme.colorScheme.error
-                            },
-                        style = MaterialTheme.typography.bodySmall,
-                    )
-                }
-                if (choice.atLimit) Text("Placement limit reached", style = MaterialTheme.typography.bodySmall)
-            }
-            if (choice.requiredLevel != null) {
-                Text("Locked", style = MaterialTheme.typography.labelSmall)
-            } else if (choice.selected) {
-                Text("Selected", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelSmall)
             }
         }
         if (choice.variants.isNotEmpty()) {
@@ -210,5 +227,77 @@ private fun CatalogChoiceCard(
                 }
             }
         }
+    }
+}
+
+/** HUD entry point for seed/fertilizer/tool info and tool upgrades; catalog info buttons use this host too. */
+@Composable
+fun MenusHost(
+    session: GameSession,
+    screen: ItemScreen,
+    onClose: () -> Unit,
+    onSelected: () -> Unit = onClose,
+    onUpgradeResult: (ToolUpgradeResult) -> Unit = {},
+) {
+    var message by remember(session, screen) { mutableStateOf<String?>(null) }
+    var money by remember(session, screen) { mutableStateOf(session.read { it.money }) }
+    LaunchedEffect(session, screen) {
+        while (true) {
+            money = session.read { it.money }
+            delay(250)
+        }
+    }
+    HudSheet(onDismiss = onClose) {
+        Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                when (screen) {
+                    is ItemScreen.Item -> {
+                        session.act { ItemInfo.from(screen.item, it).name }
+                    }
+
+                    ItemScreen.Eraser -> {
+                        "Grass"
+                    }
+
+                    is ItemScreen.Harvest -> {
+                        screen.tool.displayName
+                    }
+
+                    is ItemScreen.Upgrade -> {
+                        "Upgrade ${screen.tool.displayName}"
+                    }
+                },
+                Modifier.weight(1f),
+                style = HudType.headline,
+            )
+            MoneyBadge(money)
+            TextButton(onClick = onClose) { Text("Close") }
+        }
+        Column(Modifier.weight(1f)) {
+            when (screen) {
+                is ItemScreen.Item -> {
+                    ItemDetailScreen(session, screen.item, onSelected, { message = it })
+                }
+
+                ItemScreen.Eraser -> {
+                    EraserDetailScreen(session, onSelected)
+                }
+
+                is ItemScreen.Harvest -> {
+                    HarvestToolDetailScreen(session, screen.tool, onSelected)
+                }
+
+                is ItemScreen.Upgrade -> {
+                    ToolUpgradeScreen(session, screen.tool, onBought = {
+                        onUpgradeResult(ToolUpgradeResult(true, it))
+                        onClose()
+                    }, onMessage = {
+                        message = it
+                        onUpgradeResult(ToolUpgradeResult(false, it))
+                    })
+                }
+            }
+        }
+        message?.let { Text(it, Modifier.padding(20.dp).semantics { liveRegion = LiveRegionMode.Polite }) }
     }
 }

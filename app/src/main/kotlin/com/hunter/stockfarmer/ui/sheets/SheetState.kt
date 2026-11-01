@@ -50,6 +50,7 @@ internal data class RecipeChoice(
     val recipe: Recipe,
     val selected: Boolean,
     val requiredLevel: Int?,
+    val isNew: Boolean = false,
 )
 
 internal data class WorkshopState(
@@ -72,6 +73,8 @@ internal data class UpgradeState(
     val title: String,
     val detail: String,
     val refusal: String?,
+    val requiredLevel: Int? = null,
+    val affordable: Boolean = true,
 )
 
 internal data class TractorCropState(
@@ -181,6 +184,8 @@ internal data class SheetState(
                             "${HomeUpgrade.capacity(building.id, next.level)} animals · " +
                                 "Unlocks at Level ${next.unlockLevel}",
                             engine.homeUpgradeRejection(origin)?.message,
+                            next.unlockLevel.takeIf { it > engine.state.level },
+                            engine.state.money >= next.cost,
                         )
                     }
 
@@ -193,15 +198,7 @@ internal data class SheetState(
                 recipe?.let {
                     WorkshopState(
                         it,
-                        Recipe.options(building).map { option ->
-                            RecipeChoice(
-                                option,
-                                option.id == recipe.id,
-                                option.unlockLevel.takeIf { level ->
-                                    level > engine.state.level && option.id != Recipe.of(building)?.id
-                                },
-                            )
-                        },
+                        recipeChoices(engine, origin),
                         engine.state.storage[it.input.id] ?: 0,
                         engine.state.storage[it.output.id] ?: 0,
                         engine.workshopStatus(origin, now),
@@ -280,7 +277,6 @@ internal data class SheetState(
             val favorite = engine.favoriteCrop(ref)
             val lines =
                 buildList {
-                    pet?.let { add("${it.kind.name} · lives in this house") }
                     chicken?.let {
                         val growth =
                             if (it.isGrown(
@@ -292,7 +288,6 @@ internal data class SheetState(
                                 "Grows up in ${it.timeUntilGrown(now).durationText}"
                             }
                         add(growth)
-                        if (it.kind.isRooster) add("Ornamental rooster · lays no eggs")
                     }
                     livestock?.let {
                         if (!it.isGrown(now)) {

@@ -2,6 +2,7 @@ package com.hunter.stockfarmer.ui.menus
 
 import com.hunter.stockfarmer.core.catalog.Building
 import com.hunter.stockfarmer.core.catalog.BuildingStyle
+import com.hunter.stockfarmer.core.catalog.Crop
 import com.hunter.stockfarmer.core.catalog.Decoration
 import com.hunter.stockfarmer.core.catalog.FenceColor
 import com.hunter.stockfarmer.core.catalog.LandscapeTool
@@ -18,6 +19,7 @@ import com.hunter.stockfarmer.core.rules.equip
 import com.hunter.stockfarmer.core.rules.firstRejection
 import com.hunter.stockfarmer.core.rules.requiredLevel
 import com.hunter.stockfarmer.core.rules.select
+import com.hunter.stockfarmer.core.rules.selectFertilizer
 import com.hunter.stockfarmer.core.rules.sellStored
 import com.hunter.stockfarmer.core.rules.trashStored
 
@@ -128,6 +130,7 @@ internal object MenuActions {
                 engine.equip(selection.item)
             }
         }
+        selection.shopItem?.let { engine.markSeen(it) }
         return null
     }
 
@@ -136,6 +139,8 @@ internal object MenuActions {
         item: ShopItem,
     ) {
         when (item) {
+            is ShopItem.Seed -> Crop.named(item.cropID)?.let { engine.select(it) }
+            ShopItem.Fertilizer -> engine.selectFertilizer()
             is ShopItem.BuildingItem -> Building.named(item.id)?.let { engine.select(it) }
             is ShopItem.DecorationItem -> Decoration.named(item.id)?.let { engine.select(it) }
             is ShopItem.Tree -> TreeSpecies.named(item.id)?.let { engine.select(it) }
@@ -143,7 +148,6 @@ internal object MenuActions {
             ShopItem.Farmland -> engine.select(LandscapeTool.farmland)
             ShopItem.Water -> engine.select(LandscapeTool.water)
             ShopItem.Fence -> engine.select(FenceColor.named(engine.state.selectedFenceColorID) ?: FenceColor.starter)
-            else -> error("Not a menu item: $item")
         }
     }
 
@@ -165,6 +169,18 @@ internal object MenuActions {
         }
     }
 }
+
+internal val MenuSelection.shopItem: ShopItem?
+    get() =
+        when (this) {
+            is MenuSelection.Shop -> item
+            is MenuSelection.Style -> ShopItem.BuildingItem(building.id)
+            is MenuSelection.Size -> ShopItem.DecorationItem(decoration.id)
+            is MenuSelection.Tree -> ShopItem.Tree(species.id)
+            is MenuSelection.Water -> ShopItem.Water
+            is MenuSelection.Fence -> ShopItem.Fence
+            else -> null
+        }
 
 internal object MenuNumbers {
     fun count(value: Int): String =
