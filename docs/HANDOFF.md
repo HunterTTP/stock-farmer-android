@@ -27,7 +27,10 @@ Standing instructions from the user:
   - Codex Sol 6.1: `-c model_reasoning_effort='"medium"'` (standard UI/wiring/fixes) or `'"high"'` (complex multi-file rules/rendering).
   - Claude Sonnet 5.5: `--effort medium` or `--effort high` matching slice complexity.
   - Gemini subagents: `flash` or `pro` (never `flash_lite`).
-- **Do not install, launch or test on the tablet until the very end of development** (see "The tablet").
+- **Physical on-device testing (Lenovo tablet): DO NOT RUN unless the user explicitly asks.** This includes
+  installing, launching, inspecting logs or otherwise accessing `192.168.1.109:37725` or `adb-HA2KYQBP*`.
+- Complete all code porting and unit tests (`:core:test` and `:app:testDebugUnitTest`) first, then test in the
+  **Android Emulator**. Finishing development does not authorize physical-device testing.
 - Never claim a check passed that was not run. Use they/them for people whose pronouns are unknown.
 
 ## Service rotation status (checked 2026-11-01 14:37 -05:00)
@@ -78,13 +81,33 @@ core tests: 1,019, 0 failures.   app unit tests: 398, 0 failures.   debug APK bu
 | 1. Sound row icons, Career filter dropdown & Play/Graphics/Gameplay settings | `app/settings-graphics-gameplay-and-career-filter` | `..\stock-farmer-android-wt-storage-notices` | Paused (uncommitted changes ready for final `PlaySettings.kt` setter fix & commit on Codex reset) |
 | 2. Catalog, Tool Upgrade, `ToolBar`/`ToolCircle` & `PlacementButtons` final audit | `app/catalog-toolupgrade-placement-audit` | `..\stock-farmer-android-wt-stock-quest` | Paused (uncommitted `ItemDetailScreens.kt` changes ready to finish on Codex reset) |
 | 3. Level-up fireworks, banner queue, farm-switch `ReadyChime`, `TimeSheet` chime & timelapse tick pause | `app/lifecycle-fireworks-readychime-haptics` | `..\stock-farmer-android-wt-perf-inst` | Queued for Codex reset at 14:55 -05:00 |
-| 4. `docs/PARITY.md` cleanup & final cross-repo pre-device verification | `docs/parity-cleanup` | `..\stock-farmer-android-wt-sheet-nav` | Queued for Codex reset at 14:55 -05:00 |
+| 4. `docs/PARITY.md` cleanup & final cross-repo pre-emulator verification | `docs/parity-cleanup` | `..\stock-farmer-android-wt-sheet-nav` | Queued for Codex reset at 14:55 -05:00 |
 
 ## Next steps, in order
 
-1. Merge the 4 in-flight slices above into `main` as they complete, keeping `docs/PARITY.md` updated.
-2. Run a final parity & quality audit across all screens, menus, sheets, and APK alignment (16 KB page-size check).
-3. **Final testing on the tablet** (`192.168.1.109:37725` via `%LOCALAPPDATA%\Android\Sdk\platform-tools\adb.exe`): install debug APK, launch, play through the first session, inspect `adb logcat`, and fix any runtime/visual issues.
+1. Complete all remaining code porting and unit-test slices, keeping `docs/PARITY.md` updated. Both `:core:test`
+   and `:app:testDebugUnitTest` must pass. Run the final parity & quality audit across screens, menus, sheets,
+   and APK alignment (16 KB page-size check), plus `spotlessCheck` and `:app:assembleDebug`.
+2. Only after step 1 is complete, test in the **Android Emulator**: install the debug APK, launch, play through
+   the first session, inspect emulator logs, and fix runtime/visual issues. Target the emulator serial explicitly
+   for every ADB command; do not use an unqualified ADB command or access a physical device.
+3. **Physical on-device testing (Lenovo tablet): DO NOT RUN unless the user explicitly asks.** It is not an
+   automatic next step after emulator testing.
+
+## Emulator preparation (2026-11-01)
+
+- Installed via `C:\Users\hunter\AppData\Local\Android\Sdk\cmdline-tools\latest\bin\sdkmanager.bat`
+  with JDK 25: Android Emulator **37.2.13** and `system-images;android-36;google_apis;x86_64` **revision 7**.
+  The SDK license file is present; `sdkmanager.bat --licenses` reports that the option is no longer needed.
+- The current SDK wrapper split the semicolon-delimited image argument; installing with its supported
+  slash-separated form, `system-images/android-36/google_apis/x86_64`, succeeded.
+- Created **StockFarmerTablet** with `avdmanager.bat create avd -n StockFarmerTablet -k "system-images;android-36;google_apis;x86_64" -d "pixel_tablet" --force`.
+  `avdmanager.bat list avd` confirms the Pixel Tablet profile, Google APIs Android 16 / API 36, x86_64.
+  AVD path: `C:\Users\hunter\.android\avd\StockFarmerTablet.avd` (2560 x 1600, density 320, 2 GB RAM).
+- **Prepared only:** the emulator has not been launched and no runtime testing was performed in this setup task.
+  Finish all code porting and unit tests before launching it. No ADB commands or physical-device access occurred.
+- This setup slice is on `chore/emulator-setup-and-handoff` in `stock-farmer-android-wt-perf-inst`;
+  only `docs/HANDOFF.md` and `docs/PARITY.md` are changed in the repo. **Do not push this slice.**
 
 ## Build and check
 
