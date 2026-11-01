@@ -139,19 +139,18 @@ internal fun PillButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     onClick: () -> Unit,
-) {
-    Box(
-        Modifier
-            .fillMaxWidth()
-            .height(52.dp)
-            .then(modifier)
-            .background(fill, RoundedCornerShape(16.dp))
-            .clickable(enabled = enabled, role = Role.Button, onClick = onClick),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(title, color = text, style = HudType.headline)
-    }
-}
+) = com.hunter.stockfarmer.ui.theme
+    .PillButton(title, fill, text, modifier, enabled, onClick)
+
+@Composable
+internal fun PillButton(
+    title: String,
+    role: com.hunter.stockfarmer.ui.theme.PillRole,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    onClick: () -> Unit,
+) = com.hunter.stockfarmer.ui.theme
+    .PillButton(title, role, modifier, enabled, onClick)
 
 @Composable
 internal fun TradePriceRow(

@@ -1,15 +1,18 @@
 package com.hunter.stockfarmer.ui.screens
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.FilterChip
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -24,6 +27,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -145,7 +149,12 @@ private fun SeriesPage(
         if (series == CareerSeries.XP) {
             Row(horizontalArrangement = Arrangement.spacedBy(18.dp), verticalAlignment = Alignment.CenterVertically) {
                 LevelRing(state.level, state.levelFraction, amount == "Max level", 92.dp)
-                Text(amount, color = tint, style = HudType.title3.copy(fontWeight = FontWeight.ExtraBold))
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(amount, color = tint, style = HudType.title3.copy(fontWeight = FontWeight.ExtraBold))
+                    if (amount != "Max level") {
+                        Text("to the next level", color = Theme.textSecondary, style = HudType.footnote)
+                    }
+                }
             }
         } else {
             Text(amount, color = tint, style = HudType.title.copy(fontWeight = FontWeight.ExtraBold), maxLines = 1)
@@ -193,15 +202,43 @@ private fun CollectionPage(
         )
         ProgressBar(collected, total, Theme.accent)
         OutlinedTextField(
-            query,
-            { query = it },
-            label = { Text("Search") },
+            value = query,
+            onValueChange = { query = it },
+            placeholder = { Text("Search", color = Theme.textSecondary, style = HudType.body) },
             singleLine = true,
+            shape = RoundedCornerShape(12.dp),
             modifier = Modifier.fillMaxWidth(),
+            colors =
+                OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = Theme.textPrimary,
+                    unfocusedTextColor = Theme.textPrimary,
+                    focusedBorderColor = Theme.accent,
+                    unfocusedBorderColor = Color.White.copy(alpha = 0.18f),
+                    focusedContainerColor = Theme.glassFill,
+                    unfocusedContainerColor = Theme.glassFill,
+                    cursorColor = Theme.accent,
+                ),
+            trailingIcon =
+                if (query.isNotEmpty()) {
+                    {
+                        Text(
+                            "✕",
+                            Modifier.clickable(role = Role.Button) { query = "" }.padding(8.dp),
+                            color = Theme.textSecondary,
+                            style = HudType.footnote,
+                        )
+                    }
+                } else {
+                    null
+                },
         )
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             CareerFilter.entries.forEach {
-                FilterChip(selected = filter == it, onClick = { filter = it }, label = { Text(it.title) })
+                CareerFilterChip(
+                    title = it.title,
+                    isSelected = filter == it,
+                    onClick = { filter = it },
+                )
             }
         }
     }
@@ -239,6 +276,27 @@ private fun CollectionPage(
     }
 }
 
+@Composable
+private fun CareerFilterChip(
+    title: String,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+) {
+    Box(
+        Modifier
+            .glassCard(17.dp, if (isSelected) Theme.accent else null)
+            .clickable(role = Role.RadioButton, onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 6.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            title,
+            color = if (isSelected) Theme.accent else Theme.textSecondary,
+            style = HudType.footnote.copy(fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium),
+        )
+    }
+}
+
 private val CareerSeries.title: String get() =
     when (this) {
         CareerSeries.XP -> "XP"
@@ -265,7 +323,7 @@ private fun CareerChart(
     money: Boolean,
     tint: Color,
 ) {
-    val chart = remember(samples, money) { CareerChartState.from(samples, if (money) 0.01 else 1.0) }
+    val chart = remember(samples, money) { CareerChartState.from(samples, if (money) 0.01 else 1.0, money) }
     Column(Modifier.fillMaxWidth().glassCard(18.dp).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Text("$title over time played", color = Theme.textPrimary, style = HudType.headline)
         if (chart.points.size < 2) {
@@ -277,39 +335,65 @@ private fun CareerChart(
                 textAlign = TextAlign.Center,
             )
         } else {
-            Row(Modifier.fillMaxWidth()) {
-                AxisLabel(ScreenFormat.compact(chart.maximum, money))
-                Spacer(Modifier.weight(1f))
-                AxisLabel(ScreenFormat.compact(chart.minimum, money))
-            }
-            Canvas(
-                Modifier.fillMaxWidth().height(180.dp).semantics {
-                    contentDescription =
-                        "$title from ${samples.first().value} to ${samples.last().value}; ${chart.endTime} played"
-                },
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                repeat(4) { index ->
-                    val y = size.height * index / 3
-                    drawLine(Theme.glassFill, Offset(0f, y), Offset(size.width, y))
-                }
-                val path = Path()
-                chart.points.forEachIndexed { index, point ->
-                    if (index == 0) {
-                        path.moveTo(point.x * size.width, point.y * size.height)
-                    } else {
-                        path.lineTo(point.x * size.width, point.y * size.height)
+                Column(
+                    Modifier.height(180.dp),
+                    verticalArrangement = Arrangement.SpaceBetween,
+                    horizontalAlignment = Alignment.End,
+                ) {
+                    chart.yLabels.forEach { label ->
+                        AxisLabel(label)
                     }
                 }
-                drawPath(path, tint, style = Stroke(width = 2.5.dp.toPx(), cap = StrokeCap.Round))
-                path.lineTo(size.width, size.height)
-                path.lineTo(0f, size.height)
-                path.close()
-                drawPath(path, Brush.verticalGradient(listOf(tint.copy(alpha = 0.45f), tint.copy(alpha = 0.02f))))
-            }
-            Row(Modifier.fillMaxWidth()) {
-                AxisLabel("0")
-                Spacer(Modifier.weight(1f))
-                AxisLabel(chart.endTime)
+                Column(
+                    Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    Canvas(
+                        Modifier.fillMaxWidth().height(180.dp).semantics {
+                            contentDescription =
+                                "$title from ${samples.first().value} to ${samples.last().value}; ${chart.endTime} played"
+                        },
+                    ) {
+                        repeat(4) { index ->
+                            val y = size.height * index / 3
+                            drawLine(Theme.glassFill, Offset(0f, y), Offset(size.width, y))
+                        }
+                        repeat(4) { index ->
+                            val x = size.width * index / 3
+                            drawLine(Theme.glassFill, Offset(x, 0f), Offset(x, size.height))
+                        }
+                        val path = Path()
+                        chart.points.forEachIndexed { index, point ->
+                            if (index == 0) {
+                                path.moveTo(point.x * size.width, point.y * size.height)
+                            } else {
+                                path.lineTo(point.x * size.width, point.y * size.height)
+                            }
+                        }
+                        val fillPath = Path()
+                        fillPath.addPath(path)
+                        fillPath.lineTo(size.width, size.height)
+                        fillPath.lineTo(0f, size.height)
+                        fillPath.close()
+                        drawPath(
+                            fillPath,
+                            Brush.verticalGradient(listOf(tint.copy(alpha = 0.45f), tint.copy(alpha = 0.02f))),
+                        )
+                        drawPath(path, tint, style = Stroke(width = 2.5.dp.toPx(), cap = StrokeCap.Round))
+                    }
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        chart.xLabels.forEach { label ->
+                            AxisLabel(label)
+                        }
+                    }
+                }
             }
         }
     }

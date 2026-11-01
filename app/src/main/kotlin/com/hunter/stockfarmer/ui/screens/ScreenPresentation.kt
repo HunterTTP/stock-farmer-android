@@ -25,7 +25,7 @@ internal object ScreenFormat {
         val steps = listOf(1e12 to "T", 1e9 to "B", 1e6 to "M", 1e3 to "K")
         val step = steps.firstOrNull { magnitude >= it.first }
         val formatter = DecimalFormat(if (step == null) "#,##0" else "0.#", DecimalFormatSymbols(Locale.US))
-        val sign = if (value < 0) "-" else ""
+        val sign = if (value < -1e-9) "-" else ""
         return sign + (if (money) "$" else "") +
             formatter.format(magnitude / (step?.first ?: 1.0)) + (step?.second ?: "")
     }
@@ -59,15 +59,19 @@ internal data class CareerChartState(
     val minimum: Double,
     val maximum: Double,
     val endTime: String,
+    val yLabels: List<String> = emptyList(),
+    val xLabels: List<String> = emptyList(),
 ) {
     companion object {
         fun from(
             samples: List<ValueSample>,
             scale: Double = 1.0,
+            money: Boolean = false,
         ): CareerChartState {
             val end = samples.lastOrNull()?.playTime ?: 0.0
             val unit = if (end < 7200) 60.0 else 3600.0
-            val endText = ScreenFormat.compact(end / unit) + if (unit == 60.0) "m" else "h"
+            val unitSuffix = if (unit == 60.0) "m" else "h"
+            val endText = ScreenFormat.compact(end / unit) + unitSuffix
             val values = samples.map { it.value * scale }
             val minimum = minOf(0.0, values.minOrNull() ?: 0.0)
             val maximum = maxOf(0.0, values.maxOrNull() ?: 0.0)
@@ -79,7 +83,25 @@ internal data class CareerChartState(
                         (1 - (sample.value * scale - minimum) / span).toFloat().coerceIn(0f, 1f),
                     )
                 }
-            return CareerChartState(points, minimum, maximum, endText)
+            val yLabels =
+                (0..3).map { index ->
+                    val fraction = (3 - index) / 3.0
+                    val tickVal = minimum + (maximum - minimum) * fraction
+                    ScreenFormat.compact(tickVal, money)
+                }
+            val xLabels =
+                (0..3).map { index ->
+                    val fraction = index / 3.0
+                    val amount = (end / unit) * fraction
+                    val formatted =
+                        if (amount % 1.0 == 0.0) {
+                            String.format(Locale.US, "%.0f", amount)
+                        } else {
+                            String.format(Locale.US, "%.1f", amount)
+                        }
+                    "$formatted$unitSuffix"
+                }
+            return CareerChartState(points, minimum, maximum, endText, yLabels, xLabels)
         }
     }
 }

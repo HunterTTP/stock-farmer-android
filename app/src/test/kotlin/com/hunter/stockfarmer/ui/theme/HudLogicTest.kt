@@ -5,6 +5,7 @@ import androidx.compose.ui.graphics.toArgb
 import com.hunter.stockfarmer.core.catalog.Rarity
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
@@ -129,7 +130,16 @@ internal class HudLogicTest {
 
         assertEquals(Theme.glassFill, pillContainerColor(PillRole.neutral))
         assertEquals(Theme.textPrimary, pillContentColor(PillRole.neutral))
-        org.junit.jupiter.api.Assertions
-            .assertNotNull(pillBorderStroke(PillRole.neutral))
+        assertNotNull(pillBorderStroke(PillRole.neutral))
+    }
+
+    @Test
+    fun `pill roles match HUD palette for fill and text`() {
+        assertEquals(Theme.accent, PillRole.accent.fill)
+        assertEquals(Theme.onAccent, PillRole.accent.text)
+        assertEquals(Theme.danger, PillRole.destructive.fill)
+        assertEquals(Theme.onDanger, PillRole.destructive.text)
+        assertEquals(Color.White.copy(alpha = 0.16f), PillRole.neutral.fill)
+        assertEquals(Theme.onNeutral, PillRole.neutral.text)
     }
 }

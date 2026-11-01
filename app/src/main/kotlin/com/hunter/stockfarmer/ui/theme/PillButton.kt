@@ -7,13 +7,17 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -30,6 +34,32 @@ enum class PillRole {
     accent,
     destructive,
     neutral,
+    ACCENT,
+    DESTRUCTIVE,
+    NEUTRAL,
+    ;
+
+    val fill: Color
+        get() =
+            when (this) {
+                earn, accent, ACCENT -> Theme.accent
+                destructive, DESTRUCTIVE -> Theme.danger
+                neutral, NEUTRAL -> Color.White.copy(alpha = 0.16f)
+            }
+
+    val text: Color
+        get() =
+            when (this) {
+                earn, accent, ACCENT -> Theme.onAccent
+                destructive, DESTRUCTIVE -> Theme.onDanger
+                neutral, NEUTRAL -> Theme.onNeutral
+            }
+
+    companion object {
+        val accent: PillRole = ACCENT
+        val destructive: PillRole = DESTRUCTIVE
+        val neutral: PillRole = NEUTRAL
+    }
 }
 
 @Composable
@@ -59,6 +89,51 @@ fun PillButton(
                     fontWeight = FontWeight.SemiBold,
                     color = pillContentColor(role),
                 ),
+        )
+    }
+}
+
+@Composable
+fun PillButton(
+    title: String,
+    role: PillRole,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    onClick: () -> Unit,
+) {
+    PillButton(
+        title = title,
+        fill = role.fill,
+        text = role.text,
+        modifier = modifier,
+        enabled = enabled,
+        onClick = onClick,
+    )
+}
+
+@Composable
+fun PillButton(
+    title: String,
+    fill: Color,
+    text: Color,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    onClick: () -> Unit,
+) {
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .height(52.dp)
+            .then(modifier)
+            .alpha(if (enabled) 1f else 0.4f)
+            .background(fill, RoundedCornerShape(16.dp))
+            .clickable(enabled = enabled, role = Role.Button, onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            title,
+            color = text,
+            style = HudType.headline.copy(fontWeight = FontWeight.SemiBold),
         )
     }
 }
@@ -101,22 +176,20 @@ fun PillButton(
 
 fun pillContainerColor(role: PillRole): Color =
     when (role) {
-        PillRole.earn -> Theme.accent
-        PillRole.accent -> Theme.accent
-        PillRole.destructive -> Theme.danger
-        PillRole.neutral -> Theme.glassFill
+        PillRole.earn, PillRole.accent, PillRole.ACCENT -> Theme.accent
+        PillRole.destructive, PillRole.DESTRUCTIVE -> Theme.danger
+        PillRole.neutral, PillRole.NEUTRAL -> Theme.glassFill
     }
 
 fun pillContentColor(role: PillRole): Color =
     when (role) {
-        PillRole.earn -> Theme.onAccent
-        PillRole.accent -> Theme.onAccent
-        PillRole.destructive -> Theme.onDanger
-        PillRole.neutral -> Theme.textPrimary
+        PillRole.earn, PillRole.accent, PillRole.ACCENT -> Theme.onAccent
+        PillRole.destructive, PillRole.DESTRUCTIVE -> Theme.onDanger
+        PillRole.neutral, PillRole.NEUTRAL -> Theme.textPrimary
     }
 
 fun pillBorderStroke(role: PillRole): BorderStroke? =
     when (role) {
-        PillRole.neutral -> BorderStroke(1.dp, Theme.glassEdge)
-        PillRole.destructive, PillRole.accent, PillRole.earn -> null
+        PillRole.neutral, PillRole.NEUTRAL -> BorderStroke(1.dp, Theme.glassEdge)
+        PillRole.destructive, PillRole.DESTRUCTIVE, PillRole.accent, PillRole.ACCENT, PillRole.earn -> null
     }

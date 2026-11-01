@@ -135,5 +135,7 @@ class CareerCollectionStateTest {
                 .first()
                 .nameColor,
         )
+        assertEquals(Theme.xp, tools.first().entries[1].nameColor)
+        assertEquals(Theme.toolLevel3, tools.first().entries[2].nameColor)
     }
 }

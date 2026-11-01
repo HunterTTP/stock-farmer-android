@@ -38,12 +38,15 @@ class ScreenPresentationTest {
             CareerChartState.from(
                 listOf(ValueSample(0.0, 0), ValueSample(60.0, -500), ValueSample(240.0, 1500)),
                 0.01,
+                money = true,
             )
         assertEquals(-5.0, chart.minimum)
         assertEquals(15.0, chart.maximum)
         assertEquals("4m", chart.endTime)
         assertEquals(listOf(0f, 0.25f, 1f), chart.points.map { it.x })
         assertEquals(listOf(0.75f, 1f, 0f), chart.points.map { it.y })
+        assertEquals(listOf("$15", "$8", "$2", "-$5"), chart.yLabels)
+        assertEquals(listOf("0m", "1.3m", "2.7m", "4m"), chart.xLabels)
     }
 
     @Test

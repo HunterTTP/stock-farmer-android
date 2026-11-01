@@ -1,20 +1,20 @@
 package com.hunter.stockfarmer.ui.timelapse
 
 import android.text.format.Formatter
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -24,9 +24,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import com.hunter.stockfarmer.core.persistence.TimelapseStore
 import com.hunter.stockfarmer.core.rules.DayNightCycle
 import com.hunter.stockfarmer.game.GameSession
@@ -34,6 +39,11 @@ import com.hunter.stockfarmer.ui.screens.Figure
 import com.hunter.stockfarmer.ui.screens.ScreenCard
 import com.hunter.stockfarmer.ui.screens.ScreenLayout
 import com.hunter.stockfarmer.ui.screens.rememberScreenState
+import com.hunter.stockfarmer.ui.theme.HudType
+import com.hunter.stockfarmer.ui.theme.PillButton
+import com.hunter.stockfarmer.ui.theme.PillRole
+import com.hunter.stockfarmer.ui.theme.Theme
+import com.hunter.stockfarmer.ui.theme.glassCard
 import kotlinx.coroutines.launch
 import java.util.Locale
 
@@ -75,7 +85,7 @@ fun TimelapseScreen(
             Figure("Saved images", Formatter.formatFileSize(context, archive?.totalBytes ?: 0))
         }
         ScreenCard {
-            Text("Daily capture time", style = MaterialTheme.typography.titleMedium)
+            Text("Daily capture time", color = Theme.textPrimary, style = HudType.headline)
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 TimeMenu("Hour", settings.captureMinute / 60, 24, ::hourText) {
                     recorder.setMinute(it * 60 + session.read { state -> state.timelapse.captureMinute % 60 })
@@ -86,30 +96,48 @@ fun TimelapseScreen(
             }
             Text(
                 "One whole-farm screenshot each in-game day while you play. Images stay in the app until you clear them.",
+                color = Theme.textSecondary,
+                style = HudType.subheadline,
             )
             if (count == 0) {
                 val time = DayNightCycle.clockText(settings.captureMinute.toDouble())
                 Text(
                     "Your first screenshot will be taken when the farm clock next crosses $time " +
                         "while Timelapse is enabled.",
-                    style = MaterialTheme.typography.bodySmall,
+                    color = Theme.textSecondary,
+                    style = HudType.caption,
                 )
             }
         }
-        Button(
-            onClick = { viewing = true },
+        PillButton(
+            title = "Play Timelapse",
+            role = PillRole.accent,
             enabled = count > 0 && !recording.isClearing,
-            modifier = Modifier.fillMaxWidth(),
-        ) { Text("Play Timelapse") }
-        OutlinedButton(
-            onClick = { confirmsClear = true },
+            onClick = { viewing = true },
+        )
+        PillButton(
+            title = "Clear Timelapse",
+            role = PillRole.destructive,
             enabled = (count > 0 || recording.error != null) && !recording.isClearing,
-            modifier = Modifier.fillMaxWidth(),
-        ) { Text("Clear Timelapse") }
-        if (recording.isClearing) Text("Clearing screenshots…")
+            onClick = { confirmsClear = true },
+        )
+        if (recording.isClearing) {
+            Text(
+                "Clearing screenshots…",
+                color = Theme.textSecondary,
+                style = HudType.subheadline,
+            )
+        }
         recording.error?.let { error ->
-            Text(error, color = MaterialTheme.colorScheme.error)
-            TextButton(onClick = { scope.launch { recorder.refresh() } }) { Text("Retry") }
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(error, color = Theme.spend, style = HudType.subheadline)
+                PillButton(
+                    title = "Retry",
+                    role = PillRole.accent,
+                    modifier = Modifier.fillMaxWidth(0.4f),
+                    onClick = { scope.launch { recorder.refresh() } },
+                )
+            }
         }
         ScreenCard {
             TimelapseSwitch("Crossfade Transitions", settings.crossfades, recorder::setCrossfades)
@@ -119,22 +147,46 @@ fun TimelapseScreen(
         }
     }
     if (confirmsClear) {
-        AlertDialog(
-            onDismissRequest = { confirmsClear = false },
-            title = { Text("Clear Timelapse?") },
-            text = {
+        Dialog(onDismissRequest = { confirmsClear = false }) {
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .glassCard(18.dp)
+                    .padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                Text(
+                    "Clear Timelapse?",
+                    color = Theme.textPrimary,
+                    style = HudType.headline,
+                )
                 Text(
                     "Delete all timelapse screenshots for this farm? Your capture time and recording settings stay the same.",
+                    color = Theme.textSecondary,
+                    style = HudType.subheadline,
                 )
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    confirmsClear = false
-                    scope.launch { recorder.clear() }
-                }) { Text("Clear") }
-            },
-            dismissButton = { TextButton(onClick = { confirmsClear = false }) { Text("Cancel") } },
-        )
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    PillButton(
+                        title = "Cancel",
+                        role = PillRole.neutral,
+                        modifier = Modifier.weight(1f),
+                        onClick = { confirmsClear = false },
+                    )
+                    PillButton(
+                        title = "Clear",
+                        role = PillRole.destructive,
+                        modifier = Modifier.weight(1f),
+                        onClick = {
+                            confirmsClear = false
+                            scope.launch { recorder.clear() }
+                        },
+                    )
+                }
+            }
+        }
     }
     val farm = settings.historyID
     if (viewing && archive != null && farm != null) {
@@ -154,13 +206,32 @@ private fun TimeMenu(
 ) {
     var expanded by remember { mutableStateOf(false) }
     Box {
-        OutlinedButton(onClick = { expanded = true }) { Text("$label: ${text(value)}") }
-        DropdownMenu(expanded, onDismissRequest = { expanded = false }, modifier = Modifier.heightIn(max = 320.dp)) {
+        Box(
+            Modifier
+                .glassCard(12.dp)
+                .clickable(role = Role.Button) { expanded = true }
+                .padding(horizontal = 14.dp, vertical = 8.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                "$label: ${text(value)}",
+                color = Theme.accent,
+                style = HudType.subheadline.copy(fontWeight = FontWeight.SemiBold),
+            )
+        }
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.heightIn(max = 320.dp).background(Color(0.19f, 0.19f, 0.19f)),
+        ) {
             repeat(count) { option ->
-                DropdownMenuItem(text = { Text(text(option)) }, onClick = {
-                    expanded = false
-                    onSelect(option)
-                })
+                DropdownMenuItem(
+                    text = { Text(text(option), color = Theme.textPrimary, style = HudType.subheadline) },
+                    onClick = {
+                        expanded = false
+                        onSelect(option)
+                    },
+                )
             }
         }
     }
@@ -172,8 +243,27 @@ private fun TimelapseSwitch(
     enabled: Boolean,
     onChange: (Boolean) -> Unit,
 ) {
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text(title, Modifier.weight(1f))
-        Switch(enabled, onCheckedChange = onChange)
+    Row(
+        Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            title,
+            Modifier.weight(1f),
+            color = Theme.textPrimary,
+            style = HudType.body,
+        )
+        Switch(
+            checked = enabled,
+            onCheckedChange = onChange,
+            colors =
+                SwitchDefaults.colors(
+                    checkedThumbColor = Theme.onAccent,
+                    checkedTrackColor = Theme.accent,
+                    uncheckedThumbColor = Theme.textSecondary,
+                    uncheckedTrackColor = Theme.glassFill,
+                ),
+        )
     }
 }
