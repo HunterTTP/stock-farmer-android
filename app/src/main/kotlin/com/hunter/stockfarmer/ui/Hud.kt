@@ -16,7 +16,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -26,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.hunter.stockfarmer.audio.SoundCenter
 import com.hunter.stockfarmer.core.feedback.SoundCue
 import com.hunter.stockfarmer.core.model.DaySummary
@@ -118,9 +118,9 @@ fun Hud(
             delay(HUD_REFRESH_MILLIS)
         }
     }
-    val cast by session.casts.collectAsState()
-    val sheet by session.sheets.collectAsState()
-    val confirmation by session.confirmations.collectAsState()
+    val cast by session.casts.collectAsStateWithLifecycle()
+    val sheet by session.sheets.collectAsStateWithLifecycle()
+    val confirmation by session.confirmations.collectAsStateWithLifecycle()
     LaunchedEffect(session) { session.newDays.collect { daySummary = it } }
     LaunchedEffect(session) { session.toasts.collect { toast = it } }
     LaunchedEffect(session) {

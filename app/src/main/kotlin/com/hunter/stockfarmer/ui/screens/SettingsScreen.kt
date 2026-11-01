@@ -23,6 +23,7 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.core.content.edit
 import com.hunter.stockfarmer.audio.AudioChannel
 import com.hunter.stockfarmer.audio.SoundCenter
 import com.hunter.stockfarmer.audio.SoundSettings
@@ -95,7 +96,7 @@ private class PreferenceScreenAudio(
         level: Double,
     ) {
         val clamped = settings.withLevel(channel, level)[channel]
-        preferences.edit().putString(channel.preferenceKey, clamped.toString()).apply()
+        preferences.edit { putString(channel.preferenceKey, clamped.toString()) }
     }
 }
 

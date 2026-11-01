@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,6 +49,7 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.hunter.stockfarmer.core.catalog.StorageItem
 import com.hunter.stockfarmer.core.model.GameState
 import com.hunter.stockfarmer.core.model.PlayMode
@@ -108,7 +108,7 @@ internal fun ToolBar(
     val flights = LocalRewardFlights.current
     flights?.revision
     val storagePulse = flights?.tracker?.storagePulse ?: 0
-    val cast by session.casts.collectAsState()
+    val cast by session.casts.collectAsStateWithLifecycle()
     val lesson = hud.lesson
     val lessonTool =
         when (lesson.toolTarget) {
@@ -125,7 +125,7 @@ internal fun ToolBar(
         isRingOpen = false
     }
 
-    val farmTouches by session.farmTouches.collectAsState()
+    val farmTouches by session.farmTouches.collectAsStateWithLifecycle()
     LaunchedEffect(farmTouches, closeRequests) { closeMenus() }
 
     fun tileAt(point: Offset) =

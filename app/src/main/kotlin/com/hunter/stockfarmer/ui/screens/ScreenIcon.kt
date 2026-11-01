@@ -1,8 +1,10 @@
 package com.hunter.stockfarmer.ui.screens
 
-import android.graphics.BitmapFactory
+import android.content.res.AssetManager
+import android.graphics.Bitmap
 import android.graphics.BitmapRegionDecoder
 import android.graphics.Rect
+import android.util.LruCache
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Text
@@ -34,23 +36,7 @@ internal fun ScreenIcon(
         value =
             art?.let {
                 withContext(Dispatchers.IO) {
-                    runCatching {
-                        val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-                        assets.open(it.path).use { stream -> BitmapFactory.decodeStream(stream, null, options) }
-                        val width = it.frameWidth ?: (options.outWidth / it.columns)
-                        val height = it.frameHeight ?: (options.outHeight / it.rows)
-                        val x = it.column * width
-                        val y = it.row * height
-                        assets.open(it.path).use { stream ->
-                            @Suppress("DEPRECATION")
-                            val decoder = requireNotNull(BitmapRegionDecoder.newInstance(stream, false))
-                            try {
-                                decoder.decodeRegion(Rect(x, y, x + width, y + height), null).asImageBitmap()
-                            } finally {
-                                decoder.recycle()
-                            }
-                        }
-                    }.getOrNull()
+                    ScreenIconCache.load(assets, it)
                 }
             }
     }
@@ -64,4 +50,40 @@ internal fun ScreenIcon(
             alpha = if (collected) 1f else 0.45f,
         )
     } ?: Text(symbol, modifier = Modifier.size(size), color = if (collected) Theme.accent else Color.Black)
+}
+
+/** Icons are re-opened every time a list screen is entered, so decoded frames are kept in a small bounded cache. */
+private object ScreenIconCache {
+    private val cache =
+        object : LruCache<ScreenArt, Bitmap>(2 * 1024 * 1024) {
+            override fun sizeOf(
+                key: ScreenArt,
+                value: Bitmap,
+            ): Int = value.allocationByteCount
+        }
+
+    fun load(
+        assets: AssetManager,
+        art: ScreenArt,
+    ): ImageBitmap? {
+        synchronized(cache) { cache.get(art) }?.let { return it.asImageBitmap() }
+        val bitmap =
+            runCatching {
+                assets.open(art.path).use { stream ->
+                    @Suppress("DEPRECATION")
+                    val decoder = requireNotNull(BitmapRegionDecoder.newInstance(stream, false))
+                    try {
+                        val width = art.frameWidth ?: (decoder.width / art.columns)
+                        val height = art.frameHeight ?: (decoder.height / art.rows)
+                        val x = art.column * width
+                        val y = art.row * height
+                        decoder.decodeRegion(Rect(x, y, x + width, y + height), null)
+                    } finally {
+                        decoder.recycle()
+                    }
+                }
+            }.getOrNull() ?: return null
+        synchronized(cache) { cache.put(art, bitmap) }
+        return bitmap.asImageBitmap()
+    }
 }

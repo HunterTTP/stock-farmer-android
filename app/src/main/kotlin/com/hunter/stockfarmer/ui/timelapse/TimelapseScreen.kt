@@ -17,7 +17,6 @@ import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,6 +31,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.hunter.stockfarmer.core.persistence.TimelapseStore
 import com.hunter.stockfarmer.core.rules.DayNightCycle
 import com.hunter.stockfarmer.game.GameSession
@@ -69,7 +69,7 @@ fun TimelapseScreen(
     onClose: () -> Unit,
 ) {
     val recorder = rememberTimelapseRecorder(session)
-    val recording by recorder.state.collectAsState()
+    val recording by recorder.state.collectAsStateWithLifecycle()
     val settings by rememberScreenState(session) { session.read { it.timelapse } }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current

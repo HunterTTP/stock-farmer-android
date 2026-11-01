@@ -50,6 +50,7 @@ import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -106,6 +107,7 @@ fun TimelapseViewer(
         remember(context) {
             Settings.Global.getFloat(context.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f
         }
+    val displayLongSide = LocalWindowInfo.current.containerSize.let { maxOf(it.width, it.height) }
     val reveal = remember(player) { Animatable(0f) }
     val finish by rememberUpdatedState(onClose)
     val images =
@@ -113,7 +115,10 @@ fun TimelapseViewer(
             TimelapseImages(archive.frames) { frame ->
                 withContext(Dispatchers.IO) {
                     val bytes = recorder.store.image(frame, farm) ?: throw IOException("Missing screenshot")
-                    val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                    val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                    BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
+                    val options = BitmapFactory.Options().apply { inSampleSize = sampleSize(bounds, displayLongSide) }
+                    val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size, options)
                     bitmap?.asImageBitmap() ?: throw IOException("Invalid screenshot")
                 }
             }
@@ -251,6 +256,17 @@ fun TimelapseViewer(
             }
         }
     }
+}
+
+/** The largest power of two that still leaves the screenshot's long side at least as large as the display's. */
+private fun sampleSize(
+    bounds: BitmapFactory.Options,
+    displayLongSide: Int,
+): Int {
+    val longSide = maxOf(bounds.outWidth, bounds.outHeight)
+    var sample = 1
+    while (displayLongSide > 0 && longSide / (sample * 2) >= displayLongSide) sample *= 2
+    return sample
 }
 
 @Composable

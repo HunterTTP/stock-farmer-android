@@ -28,6 +28,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import com.hunter.stockfarmer.core.catalog.WaterStyle
 import com.hunter.stockfarmer.core.rules.DayNightCycle
 import com.hunter.stockfarmer.core.rules.Season
 import com.hunter.stockfarmer.core.rules.Weather
@@ -188,14 +189,25 @@ private fun loadFishingArt(
         } catch (_: IOException) {
             null
         }
-    val water = FishingWater(cast.waterStyle)
-
-    fun frames(glowing: Boolean): List<ImageBitmap> =
-        List(60) { frame ->
-            Bitmap.createBitmap(water.pixels(frame, glowing), 16, 16, Bitmap.Config.ARGB_8888).asImageBitmap()
-        }
-    return FishingArt(fish, frames(false), frames(true))
+    val (water, glow) = waterFrames(cast.waterStyle)
+    return FishingArt(fish, water, glow)
 }
+
+/** The shimmer depends only on the water style, so each style's 120 frames are built once. */
+private val waterFrameCache = mutableMapOf<WaterStyle, Pair<List<ImageBitmap>, List<ImageBitmap>>>()
+
+private fun waterFrames(style: WaterStyle): Pair<List<ImageBitmap>, List<ImageBitmap>> =
+    synchronized(waterFrameCache) {
+        waterFrameCache.getOrPut(style) {
+            val water = FishingWater(style)
+
+            fun frames(glowing: Boolean): List<ImageBitmap> =
+                List(60) { frame ->
+                    Bitmap.createBitmap(water.pixels(frame, glowing), 16, 16, Bitmap.Config.ARGB_8888).asImageBitmap()
+                }
+            frames(false) to frames(true)
+        }
+    }
 
 private fun DrawScope.drawRod(
     point: Offset,

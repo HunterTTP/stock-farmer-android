@@ -11,7 +11,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -27,6 +26,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import com.hunter.stockfarmer.core.market.StockQuoteProvider
 import com.hunter.stockfarmer.core.rules.GameEvent
@@ -51,7 +51,7 @@ import com.hunter.stockfarmer.market.StockQuoteProvider as YahooQuotes
 @Composable
 private fun rememberIsOnline(): Boolean {
     val monitor = NetworkMonitor.of(LocalContext.current)
-    return monitor.isOnline.collectAsState().value
+    return monitor.isOnline.collectAsStateWithLifecycle().value
 }
 
 private val defaultStockQuotes = YahooQuotes()
@@ -70,7 +70,7 @@ fun StockMarketScreen(
     onEvents: (List<GameEvent>) -> Unit = {},
 ) {
     val controller = remember(session, provider) { StockMarketController(session, provider) }
-    val prices by controller.prices.collectAsState()
+    val prices by controller.prices.collectAsStateWithLifecycle()
     val state by rememberScreenState(session to controller) {
         session.act { StockMarketState.from(it, controller.prices.value, Instant.now()) }
     }

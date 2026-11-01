@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.core.content.edit
 import kotlin.math.roundToInt
 
 /** Where the Graphics and Gameplay settings are kept between runs. */
@@ -46,12 +47,12 @@ private class PreferencePlayStorage(
     override fun putBoolean(
         key: String,
         value: Boolean,
-    ) = preferences.edit().putBoolean(key, value).apply()
+    ) = preferences.edit { putBoolean(key, value) }
 
     override fun putFloat(
         key: String,
         value: Float,
-    ) = preferences.edit().putFloat(key, value).apply()
+    ) = preferences.edit { putFloat(key, value) }
 }
 
 /**
