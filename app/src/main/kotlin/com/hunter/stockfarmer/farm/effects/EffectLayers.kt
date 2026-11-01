@@ -64,11 +64,12 @@ fun effectLayers(
     textures: TextureLibrary,
     foreground: List<EffectOverlay> = emptyList(),
     precipitation: Boolean = true,
+    onGust: (pushesRight: Boolean, at: Instant) -> Unit = { _, _ -> },
     monitor: PerformanceMonitor? = null,
 ): EffectLayers {
     val fireflies = FireflyLayer(textures)
     val butterflies = ButterflyLayer(textures)
-    val wind = WindLayer(textures)
+    val wind = WindLayer(textures, onGust)
     val fireworks = FireworkLayer(textures)
     val shadows = ShadowLayer(textures)
     return EffectLayers(

@@ -14,12 +14,15 @@ import kotlin.math.floor
 
 class WindLayer(
     private val textures: TextureLibrary,
+    /** Told which way each gust pushes, true for towards the right of the map, as it sets off. */
+    private val onGust: (pushesRight: Boolean, at: Instant) -> Unit = { _, _ -> },
 ) : EffectOverlay,
     StandingSource {
     override val phase = EffectPhase.GROUND
     override val work = PerformanceWork.weather
     internal val motion = WindMotion()
     private val clock = EffectClock()
+    private var gustsTold = 0
 
     override fun draw(
         batch: SpriteBatch,
@@ -35,6 +38,10 @@ class WindLayer(
             camera.view(),
             View(0.0, 0.0, camera.viewportWidth.toDouble(), camera.viewportHeight.toDouble()),
         )
+        if (motion.gusts != gustsTold) {
+            gustsTold = motion.gusts
+            onGust(motion.gustRight, now)
+        }
     }
 
     override fun collect(

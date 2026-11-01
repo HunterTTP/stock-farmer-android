@@ -105,6 +105,12 @@ internal class WindMotion(
     var time = 0.0
         private set
     private var nextGust = 30.0
+
+    /** How many gusts have set off, and which way the latest blew. */
+    var gusts = 0
+        private set
+    var gustRight = true
+        private set
     private var nextLeaves = 0.0
     private var season: Season? = null
 
@@ -127,6 +133,8 @@ internal class WindMotion(
         leaves.removeAll { time - it.born >= it.duration }
         if (time < nextGust) return
         nextGust = time + 30
+        gusts++
+        gustRight = right
         gust(right, worldView)
         if (season != Season.fall || raining || time < nextLeaves || screen.width <= 0) return
         nextLeaves = time + 60

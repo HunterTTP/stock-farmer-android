@@ -27,6 +27,7 @@ class TractorLayer(
     override val work = PerformanceWork.tractor
     private val regions = HashMap<Pair<Int, Int>, TextureRegion>()
     private val badges = ProduceBadge(textures)
+    private val movement = TractorMovement()
     private var loadKey: String? = null
     private var loadAt = Instant.EPOCH
 
@@ -37,15 +38,15 @@ class TractorLayer(
         out: MutableList<Standing>,
     ) {
         val run = state.tractorRun
+        movement.advance(run, now)
         for (placed in state.placedBuildings.filter { it.building.id == TRACTOR_ID && it.origin != run?.home }) {
             val facing = TractorFacing.ofStyle(placed.building.styleID)
             val center = TractorMotion.center(TractorRules.headTile(placed.origin, facing), facing)
-            add(batch, center, facing, 0, out)
+            add(batch, center, facing, 0, 0.0, out)
         }
         if (run != null) {
             val frame = TractorMotion.frame(run)
-            val wheelFrame = (now.toEpochMilli() / WHEEL_MILLIS % FRAME_COUNT).toInt()
-            add(batch, frame.position, frame.facing, wheelFrame, out)
+            add(batch, frame.position, frame.facing, movement.wheelFrame(), movement.lift(run), out)
         }
     }
 
@@ -104,6 +105,7 @@ class TractorLayer(
         center: TilePoint,
         facing: TractorFacing,
         column: Int,
+        lift: Double,
         out: MutableList<Standing>,
     ) {
         val region = region(facing, column) ?: return
@@ -116,7 +118,7 @@ class TractorLayer(
         // Sideways artwork reaches the frame's bottom, so it sits half a tile below the footprint center.
         val anchorY = if (sideways) FarmRenderer.TILE / 2 / size else 1 - bodyY / FRAME_SIZE
         val x = center.x.toFloat() * FarmRenderer.TILE - anchorX * size
-        val y = (GameState.GRID_SIZE - center.y.toFloat()) * FarmRenderer.TILE - anchorY * size
+        val y = (GameState.GRID_SIZE - center.y.toFloat() + lift.toFloat()) * FarmRenderer.TILE - anchorY * size
         val bottomOffset = if (sideways) 0.5 else 0.8
         out += Standing(ceil(center.y + bottomOffset).toFloat() + TRACTOR_OVER) { batch.draw(region, x, y, size, size) }
     }
@@ -139,7 +141,6 @@ class TractorLayer(
         const val ROWS = 5
         const val FRAME_SIZE = 96f
         const val BODY_LENGTH = 82f
-        const val WHEEL_MILLIS = 90L
         const val TRACTOR_OVER = 0.7f
         val BODY_CENTER_X =
             mapOf(

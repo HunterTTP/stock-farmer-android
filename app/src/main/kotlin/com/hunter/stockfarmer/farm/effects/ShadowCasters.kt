@@ -38,7 +38,7 @@ internal class ShadowCasters(
                     ShadowShape(kind, texture.width * scale, texture.height * scale, "${state.season}/$folder/$name")
                 add(ShadowCaster(foot, shape, texture))
             }
-            for (placed in state.placedBuildings) {
+            for (placed in state.shadowCastingBuildings()) {
                 val building = placed.building
                 val texture = textures.texture("buildings", building.assetName, season = state.season) ?: continue
                 val scale = minOf(building.width * TILE / texture.width, building.height * TILE / texture.height)
@@ -107,3 +107,6 @@ internal class ShadowCasters(
             }
         }
 }
+
+/** The buildings that cast a shadow: a Tractor out driving casts its own, so the home it left casts none. */
+internal fun GameState.shadowCastingBuildings() = placedBuildings.filter { it.origin != tractorRun?.home }
