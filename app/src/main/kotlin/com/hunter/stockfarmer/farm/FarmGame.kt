@@ -10,6 +10,8 @@ import com.badlogic.gdx.math.Vector3
 import com.hunter.stockfarmer.core.model.GameState
 import com.hunter.stockfarmer.core.model.GridPoint
 import com.hunter.stockfarmer.game.GameSession
+import com.hunter.stockfarmer.game.preview
+import com.hunter.stockfarmer.game.touch
 import java.time.Instant
 import kotlin.math.floor
 import kotlin.math.max
@@ -82,6 +84,7 @@ class FarmGame(
         batch.begin()
         val now = Instant.now()
         session.read { renderer.draw(batch, it, now) }
+        session.preview(now)?.let { renderer.drawPreview(batch, textures, it) }
         batch.end()
     }
 
@@ -103,7 +106,7 @@ class FarmGame(
             if (col in 0 until GameState.GRID_SIZE &&
                 row in 0 until GameState.GRID_SIZE
             ) {
-                session.tap(GridPoint(row, col))
+                session.touch(GridPoint(row, col))
             }
             return true
         }

@@ -17,6 +17,7 @@ import com.hunter.stockfarmer.core.rules.FruitTreePhase
 import com.hunter.stockfarmer.core.rules.GrowthConditions
 import com.hunter.stockfarmer.core.rules.GrowthTimelines
 import com.hunter.stockfarmer.core.rules.saturatedFarmland
+import com.hunter.stockfarmer.game.PlacementPreview
 import java.time.Instant
 import kotlin.math.min
 
@@ -292,3 +293,25 @@ class FarmRenderer(
         fun worldY(row: Int): Float = (GameState.GRID_SIZE - 1 - row) * TILE
     }
 }
+
+/** Draws where the thing being placed would go: its tiles tinted green when it can be put there and red when it cannot. */
+fun FarmRenderer.drawPreview(
+    batch: SpriteBatch,
+    textures: TextureLibrary,
+    preview: PlacementPreview,
+) {
+    batch.color = if (preview.canPlace) PREVIEW_OK else PREVIEW_BLOCKED
+    for (tile in preview.footprint) {
+        batch.draw(
+            textures.white,
+            tile.col * FarmRenderer.TILE,
+            FarmRenderer.worldY(tile.row),
+            FarmRenderer.TILE,
+            FarmRenderer.TILE,
+        )
+    }
+    batch.color = Color.WHITE
+}
+
+private val PREVIEW_OK = Color(0.2f, 0.85f, 0.3f, 0.45f)
+private val PREVIEW_BLOCKED = Color(0.9f, 0.2f, 0.2f, 0.45f)

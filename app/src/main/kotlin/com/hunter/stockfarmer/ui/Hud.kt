@@ -7,9 +7,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Button
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -24,11 +26,14 @@ import com.hunter.stockfarmer.core.catalog.HarvestTool
 import com.hunter.stockfarmer.core.model.PlayMode
 import com.hunter.stockfarmer.core.model.dollars
 import com.hunter.stockfarmer.core.rules.LevelRules
+import com.hunter.stockfarmer.core.rules.isPlacing
 import com.hunter.stockfarmer.core.rules.select
 import com.hunter.stockfarmer.core.rules.selectDecorating
 import com.hunter.stockfarmer.core.rules.selectFertilizer
 import com.hunter.stockfarmer.core.rules.selectTerrain
 import com.hunter.stockfarmer.game.GameSession
+import com.hunter.stockfarmer.game.cancelPlacement
+import com.hunter.stockfarmer.game.confirmPlacement
 import kotlinx.coroutines.delay
 
 /** What the heads-up display shows, read from the game a few times a second. */
@@ -39,10 +44,12 @@ private data class HudState(
     val mode: PlayMode,
     val harvestTool: HarvestTool,
     val selectedCropID: String,
+    val isPlacing: Boolean,
 )
 
 private fun GameSession.hud(): HudState =
-    read { state ->
+    act { engine ->
+        val state = engine.state
         val (earned, span) = LevelRules.progress(state.xp)
         HudState(
             money = state.money,
@@ -51,6 +58,7 @@ private fun GameSession.hud(): HudState =
             mode = state.mode,
             harvestTool = state.harvestTool,
             selectedCropID = state.selectedCropID,
+            isPlacing = engine.isPlacing,
         )
     }
 
@@ -71,6 +79,7 @@ fun Hud(
     Column(modifier.padding(12.dp), verticalArrangement = Arrangement.SpaceBetween) {
         StatusBar(hud)
         Column {
+            if (hud.isPlacing) PlacementBar(session)
             if (hud.mode == PlayMode.plant) SeedPicker(session, hud)
             ToolBar(session, hud)
         }
@@ -123,5 +132,14 @@ private fun ToolBar(
         items(tools, key = { it.first }) { (label, selected, onClick) ->
             FilterChip(selected = selected, onClick = onClick, label = { Text(label) })
         }
+    }
+}
+
+/** Shown while something is being placed: put it down where the green tiles are, or put it away. */
+@Composable
+private fun PlacementBar(session: GameSession) {
+    Row(Modifier.fillMaxWidth().padding(bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Button(onClick = { session.confirmPlacement() }) { Text("Place") }
+        OutlinedButton(onClick = { session.cancelPlacement() }) { Text("Cancel") }
     }
 }
