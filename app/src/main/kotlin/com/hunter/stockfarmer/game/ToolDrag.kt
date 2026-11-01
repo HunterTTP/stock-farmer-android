@@ -1,0 +1,96 @@
+package com.hunter.stockfarmer.game
+
+import com.hunter.stockfarmer.core.model.GridPoint
+import com.hunter.stockfarmer.core.model.PlayMode
+import com.hunter.stockfarmer.core.rules.GameEngine
+import com.hunter.stockfarmer.core.rules.GameEvent
+import com.hunter.stockfarmer.core.rules.ToolStroke
+import com.hunter.stockfarmer.core.rules.containsRejection
+import com.hunter.stockfarmer.core.rules.isFruitTreeSelected
+import com.hunter.stockfarmer.core.rules.isPlacing
+import com.hunter.stockfarmer.core.rules.isSprinklerSelected
+import com.hunter.stockfarmer.core.rules.movePlacement
+import com.hunter.stockfarmer.core.rules.toolFootprint
+import java.time.Instant
+import kotlin.math.abs
+import kotlin.math.max
+
+/**
+ * The tool dragged over the farm. Buildings, fruit trees and sprinklers are carried to where the finger is and wait for
+ * the player to place them; any other tool is used on every tile the finger passes over.
+ */
+class ToolDrag(
+    private val session: GameSession,
+) {
+    private var stroke = ToolStroke()
+    private var last: GridPoint? = null
+
+    /** The finger is over [tile], or over nothing when it is null. */
+    fun move(
+        tile: GridPoint?,
+        now: Instant = Instant.now(),
+    ) {
+        if (tile == null) {
+            session.view.toolPreview = null
+            return
+        }
+        val events =
+            session.act { engine ->
+                if (engine.carriesWhatItPlaces()) {
+                    carry(engine, tile)
+                } else {
+                    use(engine, tile, now)
+                }
+            }
+        session.publish(events)
+        last = tile
+    }
+
+    /** The finger lifted: a carried thing stays put awaiting the player's OK, and the stroke is over. */
+    fun end() {
+        session.act { stroke.end(it) }
+        stroke = ToolStroke()
+        last = null
+        session.view.toolPreview = null
+    }
+
+    private fun GameEngine.carriesWhatItPlaces() =
+        state.mode == PlayMode.build || isFruitTreeSelected || (state.mode == PlayMode.decorate && isSprinklerSelected)
+
+    private fun carry(
+        engine: GameEngine,
+        tile: GridPoint,
+    ): List<GameEvent> {
+        if (engine.isPlacing) engine.movePlacement(tile) else engine.startsPlacing(tile)
+        return emptyList()
+    }
+
+    private fun use(
+        engine: GameEngine,
+        tile: GridPoint,
+        now: Instant,
+    ): List<GameEvent> {
+        val events = stroke.use(engine, tilesBetween(last ?: tile, tile), now)
+        session.view.toolPreview =
+            PlacementPreview(engine.toolFootprint(tile), !events.containsRejection, null)
+        return events
+    }
+
+    companion object {
+        /** Every tile on the way from one tile to another, ending with the second, so a quick drag skips none. */
+        fun tilesBetween(
+            from: GridPoint,
+            to: GridPoint,
+        ): List<GridPoint> {
+            val steps = max(abs(to.row - from.row), abs(to.col - from.col))
+            if (steps == 0) return listOf(to)
+            return (1..steps)
+                .map { step ->
+                    GridPoint(
+                        from.row + Math.round((to.row - from.row) * step / steps.toFloat()),
+                        from.col + Math.round((to.col - from.col) * step / steps.toFloat()),
+                    )
+                }.distinct()
+        }
+    }
+}

@@ -41,7 +41,7 @@ fun GameSession.touch(
         }
     }.let { publish(it) }
 
-private fun GameEngine.startsPlacing(point: GridPoint): Boolean =
+internal fun GameEngine.startsPlacing(point: GridPoint): Boolean =
     when {
         state.mode == PlayMode.build -> {
             beginPlacing(point)
@@ -75,7 +75,9 @@ fun GameSession.nudgePlacement(
 ) = act { it.nudgePlacement(rows, cols) }
 
 /** Where the thing being placed would go, and whether it can go there; null when nothing is being placed. */
-fun GameSession.preview(now: Instant = Instant.now()): PlacementPreview? =
+fun GameSession.preview(now: Instant = Instant.now()): PlacementPreview? = placementPreview(now) ?: view.toolPreview
+
+private fun GameSession.placementPreview(now: Instant): PlacementPreview? =
     act { engine ->
         val footprint =
             engine.buildingPlacement?.footprint

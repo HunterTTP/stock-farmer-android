@@ -24,6 +24,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.hunter.stockfarmer.audio.SoundCenter
@@ -64,7 +65,19 @@ private data class HudState(
     val harvestTool: HarvestTool,
     val selectedCropID: String,
     val isPlacing: Boolean,
-)
+) {
+    /** What the tool circle says: the thing in hand. */
+    val toolLabel: String
+        get() =
+            when (mode) {
+                PlayMode.plant -> "Seed"
+                PlayMode.harvest -> harvestTool.displayName
+                PlayMode.landscape -> "Terrain"
+                PlayMode.build -> "Build"
+                PlayMode.decorate -> "Decor"
+                PlayMode.fertilize -> "Soil"
+            }
+}
 
 private fun GameSession.hud(): HudState =
     act { engine ->
@@ -92,6 +105,7 @@ private enum class HudScreen(
 }
 
 private const val REFRESH_MILLIS = 250L
+private val TOOL_CIRCLE_BOTTOM = 132.dp
 
 @Composable
 fun Hud(
@@ -131,6 +145,11 @@ fun Hud(
                 ToolBar(session, hud, onMenu = { menu = it })
             }
         }
+        ToolCircle(
+            session,
+            hud.toolLabel,
+            Modifier.align(Alignment.BottomEnd).padding(end = 16.dp, bottom = TOOL_CIRCLE_BOTTOM),
+        )
         menu?.let { open -> Overlay { MenusHost(session, open, onClose = { menu = null }) } }
         screen?.let { open ->
             val audio = remember(sound) { SoundCenterScreenAudio(sound) }

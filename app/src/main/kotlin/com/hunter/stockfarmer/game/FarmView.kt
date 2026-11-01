@@ -2,6 +2,7 @@ package com.hunter.stockfarmer.game
 
 import com.hunter.stockfarmer.core.feedback.SoundPlacement
 import com.hunter.stockfarmer.core.model.GridPoint
+import kotlin.math.floor
 
 /** What the camera is looking at, as the farm last drew it. */
 data class ViewSnapshot(
@@ -19,6 +20,25 @@ data class ViewSnapshot(
 class FarmView {
     @Volatile
     var snapshot: ViewSnapshot? = null
+
+    /** What the dragged tool would do under the finger, drawn on the farm like a placement. */
+    @Volatile
+    var toolPreview: PlacementPreview? = null
+
+    /** The tile under a point on the screen, or null when it is off the map or the farm has not been drawn yet. */
+    fun tileAt(
+        screenX: Float,
+        screenY: Float,
+        tileSize: Float,
+        gridSize: Int,
+    ): GridPoint? {
+        val view = snapshot ?: return null
+        val worldX = view.centerX + (screenX - view.widthPixels / 2f) * view.worldPerPixel
+        val worldY = view.centerY - (screenY - view.heightPixels / 2f) * view.worldPerPixel
+        val col = floor(worldX / tileSize).toInt()
+        val row = gridSize - 1 - floor(worldY / tileSize).toInt()
+        return if (col in 0 until gridSize && row in 0 until gridSize) GridPoint(row, col) else null
+    }
 
     /** How a sound from a tile is heard: quieter and to one side when it is off to one side or far from the view. */
     fun placement(
