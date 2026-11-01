@@ -202,7 +202,7 @@ fun ToolCircle(
                     alpha = if (isDragging) ToolCircleMetrics.DRAGGED_OPACITY else 1f
                 }.onGloballyPositioned { flights?.frames?.set(HUDTarget.Storage, it.boundsInRoot()) }
                 .throb(shownThrob)
-                .lessonPulse(pulses && !isDragging)
+                .lessonPulse(pulses && !isDragging, CircleShape)
                 .newDot(isNew, Alignment.TopEnd, DpOffset((-4).dp, 4.dp))
                 .then(
                     if (isDragging) {

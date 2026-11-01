@@ -136,7 +136,7 @@ private fun StoredItemCard(
         modifier =
             Modifier
                 .fillMaxWidth()
-                .lessonPulse(row.isLesson)
+                .lessonPulse(row.isLesson, shape = RoundedCornerShape(14.dp))
                 .glassCard(14.dp)
                 .padding(horizontal = 14.dp, vertical = 10.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -209,7 +209,7 @@ private fun ActionButton(
             Modifier
                 .width(ACTION_BUTTON_WIDTH)
                 .height(ACTION_BUTTON_HEIGHT)
-                .lessonPulse(pulses)
+                .lessonPulse(pulses, shape = CircleShape)
                 .background(background, CircleShape)
                 .clickable(role = Role.Button, onClick = onClick)
                 .semantics { this.contentDescription = contentDescription },
@@ -304,7 +304,7 @@ internal fun StorageTransactionDialog(
                         Modifier
                             .fillMaxWidth()
                             .height(52.dp)
-                            .lessonPulse(pulsesConfirm)
+                            .lessonPulse(pulsesConfirm, shape = RoundedCornerShape(16.dp))
                             .background(
                                 if (transaction.sell) Theme.accent else Theme.danger,
                                 RoundedCornerShape(16.dp),

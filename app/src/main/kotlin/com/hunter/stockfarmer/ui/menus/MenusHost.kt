@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -172,7 +173,7 @@ fun MenusHost(
                     Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 8.dp)
-                        .lessonPulse(pulsesClose)
+                        .lessonPulse(pulsesClose, shape = RoundedCornerShape(16.dp))
                         .glassCard(16.dp)
                         .clickable(role = Role.Button, onClick = closeWithLesson)
                         .heightIn(min = 52.dp),

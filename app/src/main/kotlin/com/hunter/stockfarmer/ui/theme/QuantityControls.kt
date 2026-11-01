@@ -150,7 +150,7 @@ fun QuantityControls(
             }
             Box(
                 Modifier
-                    .pulsing(pulsesMax)
+                    .pulsing(pulsesMax, shape = CircleShape)
                     .height(40.dp)
                     .background(Theme.accent.copy(alpha = 0.15f), CircleShape)
                     .clickable(role = Role.Button) {
