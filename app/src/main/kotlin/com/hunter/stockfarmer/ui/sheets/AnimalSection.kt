@@ -115,6 +115,14 @@ internal fun AnimalMenu(
                             modifier = Modifier.fillMaxWidth(),
                             role = PillRole.neutral,
                         )
+                        if (animal.sellable) {
+                            PillButton(
+                                title = "Sell",
+                                onClick = { act(SheetAction.Sell) },
+                                modifier = Modifier.fillMaxWidth(),
+                                role = PillRole.destructive,
+                            )
+                        }
                         if (animal.releasable) {
                             PillButton(
                                 title = "Release",

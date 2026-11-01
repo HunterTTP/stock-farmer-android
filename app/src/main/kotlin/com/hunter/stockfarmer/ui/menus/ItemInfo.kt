@@ -274,7 +274,7 @@ data class ItemInfo(
                     ),
                 )
                 home.species.forEach { species ->
-                    val work = species.work as LivestockWork.Gives
+                    val work = species.work as? LivestockWork.Gives ?: return@forEach
                     add(
                         effect(
                             "${species.pluralName} give ${work.item.name.lowercase(java.util.Locale.US)} worth ",

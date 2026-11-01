@@ -36,10 +36,13 @@ data class LivestockSpecies(
     /** Where its pictures are, in `Images/animals`. */
     val folder: String,
     val growDuration: Double,
-    val work: LivestockWork,
+    /** What it gives now and then; null for an animal that gives nothing, like the duck. */
+    val work: LivestockWork?,
     /** For the animals whose work is done now and then: how long between one time and the next. */
     val workInterval: Double,
     val variants: List<LivestockVariant>,
+    /** What the player is paid to sell one of this kind; null for the animals that can only be released. */
+    val salePrice: Double? = null,
 ) {
     val pluralName: String get() = if (id == "sheep") name else "${name}s"
 
@@ -48,6 +51,7 @@ data class LivestockSpecies(
         const val MILK_SALE_PRICE = 60.0
         const val GOAT_MILK_SALE_PRICE = 18.0
         const val WOOL_SALE_PRICE = 30.0
+        const val DUCK_SALE_PRICE = 25.0
 
         val rabbit =
             LivestockSpecies(
@@ -112,8 +116,9 @@ data class LivestockSpecies(
                 babyName = "Duckling",
                 folder = "Ducks",
                 growDuration = 10 * 60.0,
-                work = LivestockWork.Gives(StorageItem.Egg, HarvestTool.bucket),
-                workInterval = 10 * 60.0,
+                work = null,
+                workInterval = 0.0,
+                salePrice = DUCK_SALE_PRICE,
                 variants =
                     listOf(
                         LivestockVariant("duck", "brown", "Brown Duck", adult = "Duck_Brown", baby = "Duckling_Brown"),

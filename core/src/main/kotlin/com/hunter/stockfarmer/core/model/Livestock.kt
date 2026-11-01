@@ -61,7 +61,7 @@ data class Livestock(
      * has eaten since the last time it was harvested.
      */
     fun readyProduce(now: Instant): Pair<StorageItem, HarvestTool>? {
-        val work = species.work as LivestockWork.Gives
+        val work = species.work as? LivestockWork.Gives ?: return null
         if (!isGrown(now) || now < readyAt || !(hasEaten || !species.eatsToProduce)) return null
         return work.item to work.tool
     }

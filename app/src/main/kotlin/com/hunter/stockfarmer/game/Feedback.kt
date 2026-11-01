@@ -1,6 +1,7 @@
 package com.hunter.stockfarmer.game
 
 import com.hunter.stockfarmer.core.catalog.HarvestTool
+import com.hunter.stockfarmer.core.model.dollars
 import com.hunter.stockfarmer.core.rules.GameEvent
 import com.hunter.stockfarmer.core.rules.firstRejection
 import com.hunter.stockfarmer.ui.screens.QuestReward
@@ -23,6 +24,11 @@ object Feedback {
     /** The message for a refusal, which takes precedence over everything else in the batch. */
     fun toast(events: List<GameEvent>): ToastMessage? =
         events.firstRejection?.let { ToastMessage(it.message, it.suggestedTool) }
+            ?: events.filterIsInstance<GameEvent.AnimalSold>().firstOrNull()?.let {
+                ToastMessage(
+                    "Sold for ${it.value.dollars}",
+                )
+            }
 
     /** The quests turned in, if a batch without a refusal holds any. */
     fun questBanner(events: List<GameEvent>): List<QuestReward>? =

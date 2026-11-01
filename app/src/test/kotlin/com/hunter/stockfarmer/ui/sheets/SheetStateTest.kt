@@ -21,6 +21,7 @@ import com.hunter.stockfarmer.core.model.TractorFacing
 import com.hunter.stockfarmer.core.model.TractorRun
 import com.hunter.stockfarmer.core.rules.AnimalRef
 import com.hunter.stockfarmer.core.rules.GameEngine
+import com.hunter.stockfarmer.core.rules.GameEvent
 import com.hunter.stockfarmer.core.rules.LevelRules
 import com.hunter.stockfarmer.core.rules.Rejection
 import com.hunter.stockfarmer.core.rules.WorkshopStatus
@@ -105,6 +106,22 @@ class SheetStateTest {
         assertFalse(pet.releasable)
         assertTrue(pet.foods.isEmpty())
         assertNull(SheetState.animal(engine, AnimalRef.Chicken(origin, 99), now))
+    }
+
+    @Test
+    fun `ducks are sold instead of released and show no produce`() {
+        val engine = GameEngine()
+        val duck = Livestock.born(0, LivestockSpecies.duck.variants.first(), "Duck", origin, now.minusSeconds(100_000))
+        engine.state.herds[origin] = Herd(listOf(duck), now)
+        val ref = AnimalRef.Livestock(origin, 0)
+        val state = requireNotNull(SheetState.animal(engine, ref, now))
+        assertTrue(state.sellable)
+        assertFalse(state.releasable)
+        assertEquals(listOf("Sells for $25", "(Fully grown)"), state.description)
+        val result = SheetActions.perform(engine, SheetTarget.Animal(ref), SheetAction.Sell, now)
+        assertEquals(listOf<GameEvent>(GameEvent.AnimalSold(origin, 25.0)), result.events)
+        assertTrue(result.shouldClose)
+        assertNull(SheetState.animal(engine, ref, now))
     }
 
     @Test

@@ -30,6 +30,7 @@ enum class HapticCue {
                     this is GameEvent.Undecorated ||
                     this is GameEvent.StorageSold ||
                     this is GameEvent.Sold ||
+                    this is GameEvent.AnimalSold ||
                     this is GameEvent.BoughtShares ||
                     this is GameEvent.SoldShares
     }

@@ -1,3 +1,7 @@
+## 2026-11-01
+- Ducks no longer lay eggs. Tap a duck and Sell it for $25 (toast "Sold for $25") instead of releasing it; every other animal still offers
+  Release.
+
 ## 2026-10-22
 - Music is half as loud as it was.
 - The startup screen shows the carrot icon again, and its loading bar now fills smoothly instead of jumping and
