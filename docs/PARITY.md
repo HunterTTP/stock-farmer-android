@@ -32,7 +32,7 @@ Builds and runs in code but has never been run on a device. What is done, in fli
 | App save/load: active slot, backup recovery, autosave, pause/stop, clock on reopen | existing core rules; JVM integration tests added | wired, including load/save errors and backup recovery | device verification pending |
 | Build/decorate/terrain/storage | core + app tests | Compose host; HUD wiring pending | device pending |
 | Stock quotes: ConnectivityManager monitor, tested polling interval, offline notice | existing core rules; StockPolling JUnit tests | wired in StockMarketScreen | device pending |
-| Stock market screen on HUD theme: summary card, rows, Buy Stock search flow | existing core rules | glass cards and pills; trade dialog still Material, no quantity slider | device pending |
+| Stock market screen on HUD theme: summary card, rows, Buy Stock search flow, trade sheet and MarketQuestSection | existing core rules; JVM state and upgrade tests | HUD-themed trade sheet with `QuantityControls` (slider, steppers, direct entry, Max), House/Market Stand `BuildingUpgradeScreen` navigation, and HUD-styled `MarketQuestSection` | device pending |
 | Career screen on HUD theme: level ring, square cards, collection rows and tiles, charts | existing core rules | done; section tints, entry name colors and axis ticks approximated | device pending |
 | Launcher icon (mipmaps, adaptive icon) and per-farm ambience reset | n/a | done | device pending |
 | Fishing mini-game | existing core contest/catch rules; app JVM session tests | Compose Canvas overlay; tap/HUD/tick wiring pending | device pending |
