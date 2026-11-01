@@ -26,9 +26,9 @@ An exact Android remake of the iOS game at `../stock-farmer-ios` (frozen referen
 - Clean Code, SOLID, DRY, KISS, YAGNI. Match the style of the file you are in.
 - Names carry the meaning. Comment only to say why, briefly.
 - Minimum change per request; no drive-by refactors. Delete replaced code and tests.
-- Rules live in `core`, never in composables or the renderer. UI presents state and forwards intent.
+- Rules live in `core`, never in composables or the renderer. UI presents state and forwards intent. Old-save migrations from the iOS app are not ported: a new app has no old saves.
 - Numbers: Swift `Int` is 64-bit, so use `Long` where values can exceed 32 bits (prices reach 100 billion cents). Keep `Double` arithmetic and rounding identical to the Swift.
-- Nested state must be immutable (no shared mutable collections) so copies are independent.
+- `GameState` is a mutable object owned by one `GameEngine`; `GameState.copy()` is a deep copy, so a preview runs on `engine.copy()` and never touches the real farm. Value types inside it (plots, animals, buildings) are immutable data classes. Maps that feed derived indexes (buildings, trees, decorations) change only through `GameState`'s put and remove methods.
 - Use fixed times and a seeded generator in tests. Never rely on wall-clock or system randomness in rules tests.
 - Add a dependency only when the current slice needs it.
 
