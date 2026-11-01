@@ -1,5 +1,6 @@
 package com.hunter.stockfarmer.ui.screens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -21,7 +22,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -37,6 +40,7 @@ import com.hunter.stockfarmer.game.GameSession
 import com.hunter.stockfarmer.market.NetworkMonitor
 import com.hunter.stockfarmer.market.StockPolling
 import com.hunter.stockfarmer.ui.theme.HudMaterialTheme
+import com.hunter.stockfarmer.ui.theme.HudType
 import com.hunter.stockfarmer.ui.theme.Theme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -72,6 +76,7 @@ fun StockMarketScreen(
     var search by remember { mutableStateOf("") }
     var trade by remember { mutableStateOf<TradeSelection?>(null) }
     var upgrading by remember { mutableStateOf(false) }
+    var searching by remember { mutableStateOf(false) }
     var message by remember { mutableStateOf<String?>(null) }
     var rewards by remember(session) { mutableStateOf(emptyList<QuestReward>()) }
     val scope = rememberCoroutineScope()
@@ -93,6 +98,7 @@ fun StockMarketScreen(
             }
         }
     }
+    BackHandler(enabled = searching) { searching = false }
     LaunchedEffect(rewards) {
         if (rewards.isNotEmpty()) {
             delay(4000)
@@ -101,51 +107,33 @@ fun StockMarketScreen(
     }
     ScreenLayout("Stock Market", session, onClose) {
         if (!online) {
-            Text("No internet connection", style = MaterialTheme.typography.titleMedium)
-            Text("The Stock Market needs the internet to get live prices. Connect to Wi-Fi or mobile data.")
+            OfflineNotice()
         } else {
             if (rewards.isNotEmpty()) QuestRewardCard(rewards)
-            ScreenCard {
-                Figure("Stocks Owned", state.slots)
-                Figure("Portfolio Value", state.portfolioValue, Theme.accent)
-                Figure("Performance %", state.performance, if (state.gainCents < 0) Theme.spend else Theme.accent)
-                Figure(
-                    "Performance $",
-                    ScreenFormat.signedMoney(state.gainCents),
-                    if (state.gainCents < 0) Theme.spend else Theme.accent,
-                )
-            }
-            if (state.rows.none { it.holding != null }) Text("You don't own any stocks yet. Search for a ticker below.")
-            OutlinedTextField(
-                search,
-                { search = it },
-                label = { Text("Ticker, e.g. AAPL") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-            )
-            Button(onClick = { scope.launch { controller.search(search) } }, enabled = !prices.loading) {
-                Text(if (prices.loading) "Getting prices…" else "Search")
-            }
-            prices.message?.let { Text(it, color = Theme.spend) }
             TemporaryMessage(message) { message = null }
-            state.rows.forEach { row ->
-                ScreenCard {
-                    Figure(row.quote.ticker, row.price, Theme.accent)
-                    row.dayChange?.let { Text(it) }
-                    row.holding?.let { holding ->
-                        Text("${ScreenFormat.number(holding.shares)} shares · worth ${row.worth}")
-                        Text("Average cost ${(holding.averageCostCents / 100.0).dollars}")
-                    } ?: Text("Not owned")
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Button(onClick = { trade = TradeSelection(row.quote.ticker, true) }) { Text("Buy") }
-                        if (row.holding != null) {
-                            Button(onClick = { trade = TradeSelection(row.quote.ticker, false) }) { Text("Sell") }
-                        }
-                    }
+            if (searching) {
+                SearchCard(search, { search = it }, prices.loading) { scope.launch { controller.search(search) } }
+                prices.message?.let { Text(it, color = Theme.spend, style = HudType.subheadline) }
+                state.rows.firstOrNull { it.quote.ticker == prices.selected }?.let { row ->
+                    StockRow(row) { trade = TradeSelection(row.quote.ticker, it) }
                 }
+            } else {
+                SummaryCard(state)
+                val owned = state.rows.filter { it.holding != null }
+                if (owned.isEmpty()) {
+                    Text(
+                        "You don't own any stocks yet. Tap Buy Stock to search for a ticker.",
+                        color = Theme.textSecondary,
+                        style = HudType.subheadline,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+                owned.forEach { row -> StockRow(row) { trade = TradeSelection(row.quote.ticker, it) } }
+                PillButton("Buy Stock", Theme.accent, Theme.onAccent) { searching = true }
             }
-            state.upgrade?.let {
-                Button(onClick = { upgrading = !upgrading }) { Text("Upgrade House") }
+            state.upgrade?.takeIf { !searching }?.let {
+                PillButton("Upgrade", Theme.xp, Color.White) { upgrading = !upgrading }
                 if (upgrading) {
                     UpgradeCard(it) {
                         val events =

@@ -141,6 +141,7 @@ internal data class StockMarketState(
     val portfolioValue: String,
     val performance: String,
     val gainCents: Long,
+    val hasCost: Boolean,
     val houseOrigin: GridPoint?,
     val upgrade: UpgradeState?,
 ) {
@@ -191,6 +192,7 @@ internal data class StockMarketState(
                 StockMarketRules.dollars(value).dollars,
                 performance,
                 value - cost,
+                cost > 0,
                 house?.key,
                 upgrade,
             )
