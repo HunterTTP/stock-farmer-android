@@ -46,35 +46,47 @@ internal class WeatherMotionTest {
     @Test
     fun `a shower starts full and stops without lingering particles`() {
         val rain = RainMotion(seeded(4))
-        val drops = rain.update(0.0, 1.0, false, true, 1000.0, 800.0)
-        assertEquals(100, drops.size)
-        assertTrue(drops.any { it.point.y < 400 })
-        assertTrue(drops.all { it.alpha in 0.225..0.375 })
-        assertTrue(rain.update(0.1, 0.0, false, true, 1000.0, 800.0).isEmpty())
+        assertEquals(100, rain.update(0.0, 1.0, false, true, 1000.0, 800.0))
+        assertTrue((0 until rain.count).any { rain.y[it] < 400 })
+        assertTrue((0 until rain.count).all { rain.alpha[it] in 0.225f..0.375f })
+        assertEquals(0, rain.update(0.1, 0.0, false, true, 1000.0, 800.0))
         assertEquals(0, rain.count)
     }
 
     @Test
+    fun `a steady frame reuses its arrays and eases intensity once per frame`() {
+        val rain = RainMotion(seeded(4))
+        rain.update(0.0, 1.0, false, true, 1000.0, 800.0)
+        val xs = rain.x
+        val alphas = rain.alpha
+        rain.update(0.016, 1.0, false, true, 1000.0, 800.0)
+        assertTrue(xs === rain.x && alphas === rain.alpha)
+        val full = rain.alpha[0]
+        rain.update(0.0, 0.5, false, true, 1000.0, 800.0)
+        assertEquals(full / 2, rain.alpha[0], 1e-6f)
+    }
+
+    @Test
     fun `rain leans downwind and intensity eases while snow stays upright`() {
-        val right = RainMotion(seeded(9)).update(0.0, 0.5, false, true, 800.0, 1000.0)
-        val left = RainMotion(seeded(9)).update(0.0, 1.0, false, false, 800.0, 1000.0)
-        assertEquals(left.size, right.size)
-        right.zip(left).forEach { (r, l) ->
-            assertEquals(r.alpha * 2, l.alpha, 1e-9)
-            assertEquals(r.rotation, -l.rotation)
-        }
-        val snow = RainMotion(seeded(9)).update(0.0, 1.0, true, false, 800.0, 1000.0)
-        assertTrue(snow.all { it.rotation == 0.0 && it.alpha in 0.775..0.925 })
-        assertTrue(snow.size > right.size)
+        val right = RainMotion(seeded(9))
+        val rightCount = right.update(0.0, 0.5, false, true, 800.0, 1000.0)
+        val left = RainMotion(seeded(9))
+        assertEquals(rightCount, left.update(0.0, 1.0, false, false, 800.0, 1000.0))
+        (0 until rightCount).forEach { assertEquals(right.alpha[it] * 2, left.alpha[it], 1e-6f) }
+        assertEquals(right.rotation, -left.rotation)
+        val snow = RainMotion(seeded(9))
+        val snowCount = snow.update(0.0, 1.0, true, false, 800.0, 1000.0)
+        assertEquals(0.0, snow.rotation)
+        assertTrue((0 until snowCount).all { snow.alpha[it] in 0.775f..0.925f })
+        assertTrue(snowCount > rightCount)
     }
 
     @Test
     fun `changing precipitation kind rebuilds the emitter and resizing fills the new view`() {
         val motion = RainMotion(seeded(2))
         motion.update(0.0, 1.0, false, true, 100.0, 100.0)
-        val snow = motion.update(0.0, 1.0, true, true, 1000.0, 1000.0)
-        assertEquals(405, snow.size)
-        assertTrue(snow.any { it.point.x > 500 && it.point.y > 500 })
+        assertEquals(405, motion.update(0.0, 1.0, true, true, 1000.0, 1000.0))
+        assertTrue((0 until motion.count).any { motion.x[it] > 500 && motion.y[it] > 500 })
     }
 
     @Test

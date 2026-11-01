@@ -26,6 +26,8 @@ class RainLayer(
     private val motion = RainMotion()
     private val clock = EffectClock()
     private val presentation = WeatherPresentation()
+    private var rainRegion: TextureRegion? = null
+    private var snowRegion: TextureRegion? = null
 
     override fun draw(
         batch: SpriteBatch,
@@ -46,7 +48,7 @@ class RainLayer(
                 Wind.pushesRight(now, state.clockOffset),
             )
         val snow = look.snow
-        val drops =
+        val count =
             motion.update(
                 seconds,
                 look.amount,
@@ -55,52 +57,54 @@ class RainLayer(
                 camera.viewportWidth / density,
                 camera.viewportHeight / density,
             )
-        if (drops.isEmpty()) return
-        val texture =
+        if (count == 0) return
+        val region =
             if (snow) {
-                textures.generated("effects/snow", 8, 8, smooth = true) { x, y ->
-                    rgba(255, 255, 255, (snowAlpha(hypot(x + 0.5 - 4, y + 0.5 - 4) / 4) * 255).roundToInt())
-                }
+                snowRegion ?: snowTexture().also { snowRegion = it }
             } else {
-                textures.generated("effects/rain", 3, 28) { _, y ->
-                    rgba(
-                        255,
-                        255,
-                        255,
-                        (
-                            y *
-                                255.0 /
-                                27
-                        ).roundToInt(),
-                    )
-                }
+                rainRegion ?: rainTexture().also { rainRegion = it }
             }
         val view = camera.view()
-        val zoom = camera.zoom * density
+        val zoom = (camera.zoom * density).toFloat()
+        val left = view.left.toFloat()
+        val bottom = view.bottom.toFloat()
+        val baseWidth = if (snow) 8 else 3
+        val baseHeight = if (snow) 8 else 28
+        val rotation = motion.rotation.toFloat()
+        val red = if (snow) 1f else 0.3f
+        val green = if (snow) 1f else 0.6f
         batch.preserve {
-            for (drop in drops) {
-                batch.setColor(if (snow) 1f else 0.3f, if (snow) 1f else 0.6f, 1f, drop.alpha.toFloat())
-                val width = (if (snow) 8 else 3) * drop.size * zoom
-                val height = (if (snow) 8 else 28) * drop.size * zoom
+            for (i in 0 until count) {
+                batch.setColor(red, green, 1f, motion.alpha[i])
+                val width = baseWidth * motion.size[i] * zoom
+                val height = baseHeight * motion.size[i] * zoom
                 batch.draw(
-                    TextureRegion(texture),
-                    (view.left + drop.point.x * zoom - width / 2).toFloat(),
-                    (
-                        view.bottom +
-                            drop.point.y * zoom -
-                            height / 2
-                    ).toFloat(),
-                    (width / 2).toFloat(),
-                    (height / 2).toFloat(),
-                    width.toFloat(),
-                    height.toFloat(),
+                    region,
+                    left + motion.x[i] * zoom - width / 2,
+                    bottom + motion.y[i] * zoom - height / 2,
+                    width / 2,
+                    height / 2,
+                    width,
+                    height,
                     1f,
                     1f,
-                    drop.rotation.toFloat(),
+                    rotation,
                 )
             }
         }
     }
+
+    private fun snowTexture() =
+        TextureRegion(
+            textures.generated("effects/snow", 8, 8, smooth = true) { x, y ->
+                rgba(255, 255, 255, (snowAlpha(hypot(x + 0.5 - 4, y + 0.5 - 4) / 4) * 255).roundToInt())
+            },
+        )
+
+    private fun rainTexture() =
+        TextureRegion(
+            textures.generated("effects/rain", 3, 28) { _, y -> rgba(255, 255, 255, (y * 255.0 / 27).roundToInt()) },
+        )
 }
 
 class RainTint(

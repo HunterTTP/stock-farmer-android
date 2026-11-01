@@ -13,30 +13,42 @@ import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.tan
 
-internal data class Precipitation(
-    val point: Point,
-    val size: Double,
-    val alpha: Double,
-    val rotation: Double,
-)
-
+/**
+ * Falling rain or snow held as parallel arrays so a frame allocates nothing. After [update] the first [count]
+ * entries of [x], [y], [size] and [alpha] are the drops to draw, in points from the bottom-left of the view.
+ */
 internal class RainMotion(
     private val random: RandomSource = SystemRandomSource,
 ) {
-    private data class Drop(
-        val x: Double,
-        val age: Double,
-        val life: Double,
-        val speed: Double,
-        val scale: Double,
-        val alpha: Double,
-    )
+    private var capacity = 0
+    private var dropX = DoubleArray(0)
+    private var age = DoubleArray(0)
+    private var life = DoubleArray(0)
+    private var speed = DoubleArray(0)
+    private var scale = DoubleArray(0)
+    private var baseAlpha = DoubleArray(0)
 
-    private val drops = mutableListOf<Drop>()
-    private var snow: Boolean? = null
+    var x = FloatArray(0)
+        private set
+    var y = FloatArray(0)
+        private set
+    var size = FloatArray(0)
+        private set
+    var alpha = FloatArray(0)
+        private set
+
+    /** Degrees to turn each drop; zero for snow. */
+    var rotation = 0.0
+        private set
+    var snow = false
+        private set
+    var count = 0
+        private set
     private var width = 0.0
     private var height = 0.0
+    private var built = false
 
+    /** Advances every drop and returns how many are in flight. */
     fun update(
         seconds: Double,
         amount: Double,
@@ -44,54 +56,84 @@ internal class RainMotion(
         pushesRight: Boolean,
         width: Double,
         height: Double,
-    ): List<Precipitation> {
+    ): Int {
         if (amount <= 0 || width <= 0 || height <= 0) {
-            drops.clear()
-            return emptyList()
+            count = 0
+            built = false
+            return 0
         }
-        val speed = if (snowing) 120.0 else 800.0
-        val range = if (snowing) 40.0 else 150.0
+        val fall = if (snowing) 120.0 else 800.0
         val slant = if (snowing) 0.12 else 0.3
-        val life = (height + 80) / speed
+        val lifeBase = (height + 80) / fall
         val drift = (height + 80) * tan(slant)
-        val count = ceil((if (snowing) 45 else 90) * life).toInt()
-        val scaleBase = if (snowing) 0.8 else 0.9
-        val scaleRange = if (snowing) 0.2 else 0.15
-
-        fun drop(prefill: Boolean): Drop =
-            Drop(
-                random.nextDouble(-drift / 2, width + drift / 2),
-                if (prefill) random.nextDouble(0.0, life) else 0.0,
-                life + random.nextDouble(-0.05, 0.05),
-                speed + random.nextDouble(-range / 2, range / 2),
-                scaleBase + random.nextDouble(-scaleRange, scaleRange),
-                (if (snowing) 0.85 else 0.3) + random.nextDouble(-0.075, 0.075),
-            )
-        if (snow != snowing || this.width != width || this.height != height || drops.isEmpty()) {
-            drops.clear()
-            repeat(count) { drops += drop(true) }
+        if (!built || snow != snowing || this.width != width || this.height != height) {
+            build(snowing, width, height, lifeBase, drift, fall)
         }
         snow = snowing
         this.width = width
         this.height = height
         val sign = if (pushesRight) 1 else -1
-        return drops.indices.map { index ->
-            var d = drops[index].copy(age = drops[index].age + seconds)
-            if (d.age >= d.life) d = drop(false)
-            drops[index] = d
-            Precipitation(
-                Point(
-                    d.x - sign * drift / 2 + sign * sin(slant) * d.speed * d.age,
-                    height + 40 - cos(slant) * d.speed * d.age,
-                ),
-                d.scale,
-                d.alpha * Weather.eased(amount),
-                if (snowing) 0.0 else sign * slant * 180 / Math.PI,
-            )
+        rotation = if (snowing) 0.0 else sign * slant * 180 / Math.PI
+        val eased = Weather.eased(amount)
+        val sideways = sign * sin(slant)
+        val downwards = cos(slant)
+        val offset = sign * drift / 2
+        for (i in 0 until count) {
+            age[i] += seconds
+            if (age[i] >= life[i]) respawn(i, false, snowing, width, lifeBase, drift, fall)
+            x[i] = (dropX[i] - offset + sideways * speed[i] * age[i]).toFloat()
+            y[i] = (height + 40 - downwards * speed[i] * age[i]).toFloat()
+            size[i] = scale[i].toFloat()
+            alpha[i] = (baseAlpha[i] * eased).toFloat()
         }
+        return count
     }
 
-    val count get() = drops.size
+    private fun build(
+        snowing: Boolean,
+        width: Double,
+        height: Double,
+        lifeBase: Double,
+        drift: Double,
+        fall: Double,
+    ) {
+        count = ceil((if (snowing) 45 else 90) * lifeBase).toInt()
+        if (count > capacity) {
+            capacity = count
+            dropX = DoubleArray(count)
+            age = DoubleArray(count)
+            life = DoubleArray(count)
+            speed = DoubleArray(count)
+            scale = DoubleArray(count)
+            baseAlpha = DoubleArray(count)
+            x = FloatArray(count)
+            y = FloatArray(count)
+            size = FloatArray(count)
+            alpha = FloatArray(count)
+        }
+        for (i in 0 until count) respawn(i, true, snowing, width, lifeBase, drift, fall)
+        built = true
+    }
+
+    private fun respawn(
+        i: Int,
+        prefill: Boolean,
+        snowing: Boolean,
+        width: Double,
+        lifeBase: Double,
+        drift: Double,
+        fall: Double,
+    ) {
+        val range = if (snowing) 40.0 else 150.0
+        val scaleBase = if (snowing) 0.8 else 0.9
+        val scaleRange = if (snowing) 0.2 else 0.15
+        dropX[i] = random.nextDouble(-drift / 2, width + drift / 2)
+        age[i] = if (prefill) random.nextDouble(0.0, lifeBase) else 0.0
+        life[i] = lifeBase + random.nextDouble(-0.05, 0.05)
+        speed[i] = fall + random.nextDouble(-range / 2, range / 2)
+        scale[i] = scaleBase + random.nextDouble(-scaleRange, scaleRange)
+        baseAlpha[i] = (if (snowing) 0.85 else 0.3) + random.nextDouble(-0.075, 0.075)
+    }
 }
 
 internal data class SkyColor(
