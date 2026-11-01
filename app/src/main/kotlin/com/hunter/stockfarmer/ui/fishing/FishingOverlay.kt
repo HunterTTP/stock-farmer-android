@@ -4,7 +4,6 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -22,11 +21,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -52,21 +47,28 @@ import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
-import com.hunter.stockfarmer.core.catalog.Rarity
 import com.hunter.stockfarmer.core.model.dollars
 import com.hunter.stockfarmer.core.rules.FishingContest
 import com.hunter.stockfarmer.core.rules.GameEvent
 import com.hunter.stockfarmer.core.rules.firstRejection
 import com.hunter.stockfarmer.core.util.SystemRandomSource
 import com.hunter.stockfarmer.game.GameSession
+import com.hunter.stockfarmer.ui.theme.HudType
+import com.hunter.stockfarmer.ui.theme.PillButton
+import com.hunter.stockfarmer.ui.theme.PillRole
+import com.hunter.stockfarmer.ui.theme.Theme
+import com.hunter.stockfarmer.ui.theme.glassPanel
+import com.hunter.stockfarmer.ui.theme.hudColor
 import kotlinx.coroutines.delay
 import java.time.Instant
 import java.util.Locale
@@ -214,14 +216,24 @@ fun FishingOverlay(
                     contentAlignment = Alignment.Center,
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        error?.let { Text(it, color = Color(0xFFFFAAAA), textAlign = TextAlign.Center) }
+                        val message = error
+                        if (message != null) {
+                            BasicText(
+                                message,
+                                style = HudType.subheadline.copy(color = Theme.spend, textAlign = TextAlign.Center),
+                            )
+                        }
                         Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                            Button(onClick = { land(selling = true) }) {
-                                Text("Sell · ${cast.sellPrice.dollars}")
-                            }
-                            Button(onClick = { land(selling = false) }) {
-                                Text("Store")
-                            }
+                            PillButton(
+                                title = "Sell · ${cast.sellPrice.dollars}",
+                                onClick = { land(selling = true) },
+                                role = PillRole.earn,
+                            )
+                            PillButton(
+                                title = "Store",
+                                onClick = { land(selling = false) },
+                                role = PillRole.neutral,
+                            )
                         }
                     }
                 }
@@ -232,12 +244,15 @@ fun FishingOverlay(
                     Modifier.align(Alignment.TopCenter).padding(top = (area.top + 8).dp),
                 )
             }
-            TextButton(
+            PillButton(
+                title = if (caught) "Store & close" else "Give up",
                 onClick = ::leave,
-                modifier = Modifier.align(Alignment.BottomEnd).padding(end = 12.dp, bottom = (area.bottom + 24).dp),
-            ) {
-                Text(if (caught) "Store & close" else "Give up", color = Color.White)
-            }
+                role = PillRole.neutral,
+                modifier =
+                    Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(end = 12.dp, bottom = (area.bottom + 24).dp),
+            )
         }
     }
 }
@@ -251,7 +266,10 @@ private fun CatchMeter(
     modifier: Modifier,
 ) {
     FishingPanel(modifier) {
-        Text("Catch Meter", color = Color.White, fontWeight = FontWeight.Bold)
+        BasicText(
+            "Catch Meter",
+            style = HudType.subheadline.copy(fontWeight = FontWeight.Bold, color = Color.White),
+        )
         Canvas(
             Modifier.size(200.dp, 12.dp).semantics {
                 contentDescription = "${cast.kind.rarity.displayName} catch meter"
@@ -269,33 +287,57 @@ private fun CatchMeter(
                 )
             }
         }
-        Text(cast.kind.rarity.displayName, color = cast.kind.rarity.fishingColor(), fontWeight = FontWeight.Bold)
-        if (cast.showsHint) Text("Hold the rod over the fish", color = Color.LightGray, fontSize = 12.sp)
+        BasicText(
+            cast.kind.rarity.displayName,
+            style = HudType.subheadline.copy(fontWeight = FontWeight.Bold, color = cast.kind.rarity.hudColor),
+        )
+        if (cast.showsHint) {
+            BasicText(
+                "Hold the rod over the fish",
+                style = HudType.caption.copy(fontWeight = FontWeight.SemiBold, color = Theme.textSecondary),
+            )
+        }
     }
 }
 
 @Composable
 private fun CatchDetails(cast: FishingCast) {
     val article = if (cast.kind.name.first() in "AEIOU") "an" else "a"
-    FishingPanel(Modifier.padding(horizontal = 16.dp).widthIn(max = 560.dp)) {
-        Text(
+    Column(
+        Modifier
+            .padding(horizontal = 16.dp)
+            .widthIn(max = 560.dp)
+            .glassPanel(18.dp)
+            .padding(horizontal = 22.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        BasicText(
             "You caught $article ${cast.kind.name}!",
-            color = Color.White,
-            fontSize = 22.sp,
-            fontWeight = FontWeight.ExtraBold,
-            textAlign = TextAlign.Center,
+            style =
+                HudType.title2.copy(
+                    fontWeight = FontWeight.ExtraBold,
+                    color = Color.White,
+                    textAlign = TextAlign.Center,
+                ),
         )
-        Text(cast.kind.rarity.displayName, color = cast.kind.rarity.fishingColor(), fontWeight = FontWeight.Bold)
-        Text(String.format(Locale.US, "%.1f lb", cast.weight), color = Color.White, fontWeight = FontWeight.Bold)
-        Text(
-            String.format(
-                Locale.US,
-                "Heavier than %.1f%% of this species",
-                cast.kind.weightPercentile(cast.weight) * 100,
-            ),
-            color = cast.kind.weightRarity(cast.weight).fishingColor(),
-            fontSize = 12.sp,
-            textAlign = TextAlign.Center,
+        BasicText(
+            cast.kind.rarity.displayName,
+            style = HudType.caption.copy(fontWeight = FontWeight.Bold, color = cast.kind.rarity.hudColor),
+        )
+        BasicText(
+            String.format(Locale.US, "%.1f lb", cast.weight),
+            style = HudType.headline.copy(color = Color.White),
+        )
+        BasicText(
+            buildAnnotatedString {
+                append("Heavier than ")
+                withStyle(SpanStyle(color = cast.kind.weightRarity(cast.weight).hudColor)) {
+                    append(String.format(Locale.US, "%.1f%%", cast.kind.weightPercentile(cast.weight) * 100))
+                }
+                append(" of this species")
+            },
+            style = HudType.caption.copy(color = Color.White, textAlign = TextAlign.Center),
         )
     }
 }
@@ -305,19 +347,12 @@ private fun FishingPanel(
     modifier: Modifier,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    Surface(
-        modifier,
-        shape = RoundedCornerShape(16.dp),
-        color = Color(0xEE303030),
-        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.15f)),
-    ) {
-        Column(
-            Modifier.padding(horizontal = 18.dp, vertical = 10.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            content = content,
-        )
-    }
+    Column(
+        modifier
+            .glassPanel(16.dp)
+            .padding(horizontal = 18.dp, vertical = 10.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        content = content,
+    )
 }
-
-private fun Rarity.fishingColor() = Color(color.red.toFloat(), color.green.toFloat(), color.blue.toFloat())

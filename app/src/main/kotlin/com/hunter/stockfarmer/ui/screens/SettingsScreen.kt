@@ -3,14 +3,15 @@ package com.hunter.stockfarmer.ui.screens
 import android.content.Context
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicText
-import androidx.compose.material3.Button
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Switch
-import androidx.compose.material3.Text
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -30,6 +31,8 @@ import com.hunter.stockfarmer.audio.SoundSettings
 import com.hunter.stockfarmer.game.GameSession
 import com.hunter.stockfarmer.ui.hud.ToolRoute
 import com.hunter.stockfarmer.ui.theme.HudType
+import com.hunter.stockfarmer.ui.theme.PillButton
+import com.hunter.stockfarmer.ui.theme.PillRole
 import com.hunter.stockfarmer.ui.theme.Theme
 import com.hunter.stockfarmer.ui.theme.glassCard
 
@@ -165,7 +168,13 @@ fun SoundSettingsScreen(
         settings = next
     }
     ScreenLayout("Sound", session, onClose) {
-        ScreenCard {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .glassCard(14.dp)
+                .padding(vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
             SettingSwitch("Music", controls.musicEnabled) {
                 controls.toggleMusic(it)
                 applyControls()
@@ -183,21 +192,84 @@ fun SoundSettingsScreen(
                         AudioChannel.animals -> "Animals"
                         AudioChannel.ambience -> "Ambience"
                     }
-                Figure(title, "${(settings[channel] * 100).toInt()}%")
-                Slider(value = settings[channel].toFloat(), onValueChange = {
-                    controls.setLevel(channel, it.toDouble())
-                    applyControls()
-                })
+                VolumeRow(
+                    title = title,
+                    value = settings[channel].toFloat(),
+                    onValueChange = {
+                        controls.setLevel(channel, it.toDouble())
+                        applyControls()
+                    },
+                )
             }
-            Button(onClick = {
-                controls.reset()
-                applyControls()
-            }) { Text("Reset sound") }
             track?.let {
-                Text("Now playing: $it")
-                Button(onClick = audio::skipMusic) { Text("Next song") }
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 14.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    BasicText(
+                        "Now playing: $it",
+                        Modifier.weight(1f),
+                        style = HudType.subheadline.copy(color = Theme.textSecondary),
+                    )
+                    PillButton(
+                        title = "Next song",
+                        onClick = audio::skipMusic,
+                        role = PillRole.neutral,
+                    )
+                }
             }
         }
+        PillButton(
+            title = "Reset sound",
+            onClick = {
+                controls.reset()
+                applyControls()
+            },
+            modifier = Modifier.fillMaxWidth(),
+            role = PillRole.neutral,
+        )
+    }
+}
+
+@Composable
+private fun VolumeRow(
+    title: String,
+    value: Float,
+    onValueChange: (Float) -> Unit,
+) {
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 14.dp, vertical = 6.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            BasicText(
+                title,
+                style = HudType.headline.copy(color = Theme.textPrimary),
+            )
+            BasicText(
+                "${(value * 100).toInt()}%",
+                style = HudType.subheadline.copy(color = Theme.textSecondary),
+            )
+        }
+        Slider(
+            value = value,
+            onValueChange = onValueChange,
+            colors =
+                SliderDefaults.colors(
+                    thumbColor = Theme.accent,
+                    activeTrackColor = Theme.accent,
+                    inactiveTrackColor = Theme.accent.copy(alpha = 0.24f),
+                ),
+        )
     }
 }
 
@@ -207,8 +279,29 @@ private fun SettingSwitch(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
 ) {
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text(title, Modifier.weight(1f))
-        Switch(checked, onCheckedChange)
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 14.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        BasicText(
+            title,
+            Modifier.weight(1f),
+            style = HudType.headline.copy(color = Theme.textPrimary),
+        )
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            colors =
+                SwitchDefaults.colors(
+                    checkedThumbColor = Theme.onAccent,
+                    checkedTrackColor = Theme.accent,
+                    uncheckedThumbColor = Theme.textSecondary,
+                    uncheckedTrackColor = Theme.glassFill,
+                    uncheckedBorderColor = Theme.panelBorder,
+                ),
+        )
     }
 }

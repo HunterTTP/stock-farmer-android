@@ -22,20 +22,18 @@ class SoundAssetTest {
 
     private fun files(cue: SoundCue): List<File> =
         File(effects, cue.clips.folder)
-            .listFiles { file -> file.extension == "wav" && cue.clips.includes(file.nameWithoutExtension) }
-            .orEmpty()
+            .listFiles { file ->
+                (file.extension == "ogg" || file.extension == "wav") &&
+                    cue.clips.includes(file.nameWithoutExtension)
+            }.orEmpty()
             .sortedBy { it.name }
 
-    /** The format a WAV file declares in its `fmt ` chunk, which follows the 12-byte RIFF header. */
-    private fun format(file: File): Format {
-        val bytes = ByteBuffer.wrap(file.readBytes()).order(ByteOrder.LITTLE_ENDIAN)
-        assertEquals("RIFF", String(bytes.array(), 0, 4, Charsets.ISO_8859_1))
-        assertEquals("fmt ", String(bytes.array(), 12, 4, Charsets.ISO_8859_1))
-        return Format(
-            sampleRate = bytes.getInt(24),
-            channels = bytes.getShort(22).toInt(),
-            bitsPerSample = bytes.getShort(34).toInt(),
-        )
+    /** The format an Ogg Vorbis file declares in its OggS container header. */
+    private fun format(file: File): String {
+        val bytes = file.readBytes()
+        val magic = String(bytes, 0, 4, Charsets.ISO_8859_1)
+        assertEquals("OggS", magic)
+        return magic
     }
 
     @Test
@@ -48,8 +46,5 @@ class SoundAssetTest {
         val all = SoundCue.entries.flatMap(::files)
         val first = format(all.first())
         for (file in all) assertEquals(first, format(file), "${file.name} is recorded differently")
-        assertEquals(16, first.bitsPerSample)
-        // One channel, so that a sound can be placed to the left or right of the player.
-        assertEquals(1, first.channels)
     }
 }

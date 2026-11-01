@@ -1,18 +1,18 @@
 package com.hunter.stockfarmer.ui.sheets
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.hunter.stockfarmer.core.catalog.StorageItem
 import com.hunter.stockfarmer.core.model.durationText
@@ -29,7 +29,10 @@ import com.hunter.stockfarmer.ui.theme.EffectsCard
 import com.hunter.stockfarmer.ui.theme.HudType
 import com.hunter.stockfarmer.ui.theme.LevelRequirementNotice
 import com.hunter.stockfarmer.ui.theme.NewDot
+import com.hunter.stockfarmer.ui.theme.PillButton
+import com.hunter.stockfarmer.ui.theme.PillRole
 import com.hunter.stockfarmer.ui.theme.Theme
+import com.hunter.stockfarmer.ui.theme.glassCard
 
 @Composable
 internal fun BuildingSections(
@@ -55,7 +58,10 @@ internal fun BuildingSections(
         else -> {
             SheetCard {
                 MenuImage(MenuPictures.building(building), loader, Modifier.size(120.dp))
-                Text(building.name, style = HudType.title2)
+                BasicText(
+                    building.name,
+                    style = HudType.title2.copy(fontWeight = FontWeight.Bold, color = Theme.textPrimary),
+                )
             }
             EffectsCard(ItemInfo.descriptionLines(building))
         }
@@ -68,36 +74,58 @@ internal fun BuildingSections(
             } else {
                 SheetCard(highlighted = true) {
                     ScreenIcon(resident.pet?.let(SheetPictures::resident), size = 96.dp)
-                    Text(resident.name, style = HudType.title2)
+                    BasicText(
+                        resident.name,
+                        style = HudType.title2.copy(fontWeight = FontWeight.Bold, color = Theme.textPrimary),
+                    )
                     resident.pet?.let {
-                        Text(
+                        BasicText(
                             "${it.kind.name} · lives in this house",
-                            style = HudType.subheadline,
-                            color = Theme.textSecondary,
+                            style = HudType.subheadline.copy(color = Theme.textSecondary),
                         )
                     }
                 }
-                SheetButton("Summon") { act(SheetAction.Summon) }
+                PillButton(
+                    "Summon",
+                    onClick = { act(SheetAction.Summon) },
+                    modifier = Modifier.fillMaxWidth(),
+                    role = PillRole.accent,
+                )
             }
         }
 
         building.isChickenCoop || building.livestockHome != null -> {
-            state.homeMessage?.let { SheetCard { Text(it, style = HudType.subheadline) } }
-            if (building.isChickenCoop) SheetButton("Choose Next Chick", onChick)
+            state.homeMessage?.let {
+                SheetCard {
+                    BasicText(it, style = HudType.subheadline.copy(color = Theme.textPrimary))
+                }
+            }
+            if (building.isChickenCoop) {
+                PillButton(
+                    "Choose Next Chick",
+                    onClick = onChick,
+                    modifier = Modifier.fillMaxWidth(),
+                    role = PillRole.neutral,
+                )
+            }
             SheetCard {
-                state.homeLevel?.let { Text(it, style = HudType.headline) }
+                state.homeLevel?.let {
+                    BasicText(it, style = HudType.headline.copy(color = Theme.textPrimary))
+                }
                 if (state.upgrade == null) {
-                    Text("Fully upgraded", color = Theme.textSecondary)
+                    BasicText("Fully upgraded", style = HudType.subheadline.copy(color = Theme.textSecondary))
                 } else {
                     val requiredLevel = state.upgrade.requiredLevel
                     if (requiredLevel != null) {
                         LevelRequirementNotice(requiredLevel)
                     } else {
-                        Button(
-                            onUpgrade,
-                            Modifier.fillMaxWidth().alpha(if (state.upgrade.affordable) 1f else 0.4f),
-                            colors = ButtonDefaults.buttonColors(containerColor = Theme.xp),
-                        ) { Text("Upgrade") }
+                        PillButton(
+                            title = "Upgrade",
+                            onClick = onUpgrade,
+                            modifier = Modifier.fillMaxWidth(),
+                            role = PillRole.accent,
+                            enabled = state.upgrade.affordable,
+                        )
                     }
                 }
             }
@@ -117,10 +145,25 @@ private fun WorkshopSection(
 ) {
     val loader = rememberMenuAssetLoader()
     if (state.choices.size > 1) {
-        TextButton(onRecipes, Modifier.fillMaxWidth()) {
-            Text("Choose Recipe", Modifier.weight(1f), style = HudType.headline)
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .glassCard(14.dp)
+                .clickable(role = Role.Button, onClick = onRecipes)
+                .padding(14.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            BasicText(
+                "Choose Recipe",
+                Modifier.weight(1f),
+                style = HudType.headline.copy(color = Theme.textPrimary),
+            )
             if (state.choices.any { it.isNew }) NewDot()
-            Text("›")
+            BasicText(
+                "›",
+                style = HudType.headline.copy(fontWeight = FontWeight.Bold, color = Theme.textSecondary),
+            )
         }
     }
     val recipe = state.recipe
@@ -128,24 +171,41 @@ private fun WorkshopSection(
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
                 MenuImage(MenuPictures.stored(recipe.input), loader, Modifier.size(56.dp))
-                Text("${recipe.inputCount} ${recipe.input.name}", style = HudType.subheadline)
-                Text("${state.inputStored} in storage", style = HudType.caption, color = Theme.textSecondary)
+                BasicText(
+                    "${recipe.inputCount} ${recipe.input.name}",
+                    style = HudType.subheadline.copy(fontWeight = FontWeight.SemiBold, color = Theme.textPrimary),
+                )
+                BasicText(
+                    "${state.inputStored} in storage",
+                    style = HudType.caption.copy(color = Theme.textSecondary),
+                )
             }
-            Text("→", style = HudType.title3)
+            BasicText("→", style = HudType.title3.copy(color = Theme.textSecondary))
             Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
                 MenuImage(MenuPictures.stored(recipe.output), loader, Modifier.size(56.dp))
-                Text("${recipe.outputCount} ${recipe.output.name}", style = HudType.subheadline)
-                Text("${state.outputStored} in storage", style = HudType.caption, color = Theme.textSecondary)
+                BasicText(
+                    "${recipe.outputCount} ${recipe.output.name}",
+                    style = HudType.subheadline.copy(fontWeight = FontWeight.SemiBold, color = Theme.textPrimary),
+                )
+                BasicText(
+                    "${state.outputStored} in storage",
+                    style = HudType.caption.copy(color = Theme.textSecondary),
+                )
             }
         }
     }
     SheetCard(
         highlighted = state.status == WorkshopStatus.Ready,
-    ) { Text(state.statusText, style = HudType.subheadline) }
-    Button(
+    ) {
+        BasicText(state.statusText, style = HudType.subheadline.copy(color = Theme.textPrimary))
+    }
+    PillButton(
+        title = "Start",
         onClick = { act(SheetAction.StartWork) },
-        modifier = Modifier.fillMaxWidth().alpha(if (state.startRefusal == null) 1f else 0.4f),
-    ) { Text("Start") }
+        modifier = Modifier.fillMaxWidth(),
+        role = PillRole.accent,
+        enabled = state.startRefusal == null,
+    )
 }
 
 @Composable
@@ -154,20 +214,32 @@ private fun TractorSection(
     act: (SheetAction) -> Unit,
 ) {
     val loader = rememberMenuAssetLoader()
-    SheetCard { Text(state.farmland, style = HudType.headline) }
+    SheetCard {
+        BasicText(state.farmland, style = HudType.headline.copy(color = Theme.textPrimary))
+    }
     state.run?.let {
         SheetCard(highlighted = true) {
-            Text(it, style = HudType.headline)
-            if (state.canCancel) TextButton({ act(SheetAction.CancelHarvest) }) { Text("Cancel") }
+            BasicText(it, style = HudType.headline.copy(color = Theme.textPrimary))
+            if (state.canCancel) {
+                PillButton(
+                    title = "Cancel",
+                    onClick = { act(SheetAction.CancelHarvest) },
+                    role = PillRole.neutral,
+                )
+            }
         }
     }
     if (state.crops.isEmpty()) {
-        SheetCard { Text("Nothing is planted or gathered yet.") }
+        SheetCard {
+            BasicText(
+                "Nothing is planted or gathered yet.",
+                style = HudType.subheadline.copy(color = Theme.textSecondary),
+            )
+        }
     } else {
-        Text(
+        BasicText(
             "Harvest ready crops, then sell or store the load before the next trip.",
-            style = HudType.subheadline,
-            color = Theme.textSecondary,
+            style = HudType.subheadline.copy(color = Theme.textSecondary),
         )
     }
     state.crops.forEach { crop ->
@@ -176,23 +248,53 @@ private fun TractorSection(
             Row(horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.CenterVertically) {
                 MenuImage(MenuPictures.stored(StorageItem.CropItem(summary.crop)), loader, Modifier.size(56.dp))
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                    Text(summary.crop.name, style = HudType.headline)
+                    BasicText(
+                        summary.crop.name,
+                        style = HudType.headline.copy(fontWeight = FontWeight.Bold, color = Theme.textPrimary),
+                    )
                     summary.remaining?.let {
-                        Text("${summary.plantedCount} planted", style = HudType.caption, color = Theme.textSecondary)
-                        Text(
+                        BasicText(
+                            "${summary.plantedCount} planted",
+                            style = HudType.caption.copy(color = Theme.textSecondary),
+                        )
+                        BasicText(
                             if (it <= 0) "Ready to harvest" else "Ready in ${it.durationText}",
-                            style = HudType.subheadline,
-                            color = if (summary.readyCount > 0) Theme.accent else Theme.textSecondary,
+                            style =
+                                HudType.subheadline.copy(
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = if (summary.readyCount > 0) Theme.accent else Theme.textSecondary,
+                                ),
                         )
                     }
                     if (summary.gathered > 0) {
-                        Text("${summary.gathered} gathered", style = HudType.subheadline)
-                        Row {
-                            Button({ act(SheetAction.Cargo(summary.crop.id, false)) }) { Text("Store") }
-                            Button({ act(SheetAction.Cargo(summary.crop.id, true)) }) { Text("Sell · ${crop.sale}") }
+                        BasicText(
+                            "${summary.gathered} gathered",
+                            style =
+                                HudType.subheadline.copy(
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Theme.textPrimary,
+                                ),
+                        )
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            PillButton(
+                                title = "Store",
+                                onClick = { act(SheetAction.Cargo(summary.crop.id, false)) },
+                                role = PillRole.neutral,
+                            )
+                            PillButton(
+                                title = "Sell · ${crop.sale}",
+                                onClick = { act(SheetAction.Cargo(summary.crop.id, true)) },
+                                role = PillRole.earn,
+                            )
                         }
                     }
-                    if (crop.canHarvest) Button({ act(SheetAction.Harvest(summary.crop.id)) }) { Text("Harvest") }
+                    if (crop.canHarvest) {
+                        PillButton(
+                            title = "Harvest",
+                            onClick = { act(SheetAction.Harvest(summary.crop.id)) },
+                            role = PillRole.accent,
+                        )
+                    }
                 }
             }
         }

@@ -112,4 +112,24 @@ internal class HudLogicTest {
         assertEquals(Color.White, DetailStat("Owned", 0).color)
         assertEquals("1,200", DetailStat("Owned", 1200).display)
     }
+
+    @Test
+    fun `pill button colors match role specifications`() {
+        assertEquals(Theme.accent, pillContainerColor(PillRole.earn))
+        assertEquals(Theme.onAccent, pillContentColor(PillRole.earn))
+        assertEquals(null, pillBorderStroke(PillRole.earn))
+
+        assertEquals(Theme.accent, pillContainerColor(PillRole.accent))
+        assertEquals(Theme.onAccent, pillContentColor(PillRole.accent))
+        assertEquals(null, pillBorderStroke(PillRole.accent))
+
+        assertEquals(Theme.danger, pillContainerColor(PillRole.destructive))
+        assertEquals(Theme.onDanger, pillContentColor(PillRole.destructive))
+        assertEquals(null, pillBorderStroke(PillRole.destructive))
+
+        assertEquals(Theme.glassFill, pillContainerColor(PillRole.neutral))
+        assertEquals(Theme.textPrimary, pillContentColor(PillRole.neutral))
+        org.junit.jupiter.api.Assertions
+            .assertNotNull(pillBorderStroke(PillRole.neutral))
+    }
 }

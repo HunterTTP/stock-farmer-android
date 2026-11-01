@@ -1,36 +1,37 @@
 package com.hunter.stockfarmer.ui.sheets
 
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.BasicText
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.hunter.stockfarmer.core.catalog.Cat
 import com.hunter.stockfarmer.core.catalog.DogBreed
 import com.hunter.stockfarmer.core.model.Pet
 import com.hunter.stockfarmer.core.model.PetSpecies
-import com.hunter.stockfarmer.ui.menus.MenuImage
-import com.hunter.stockfarmer.ui.menus.MenuPictures
-import com.hunter.stockfarmer.ui.menus.rememberMenuAssetLoader
 import com.hunter.stockfarmer.ui.screens.ScreenIcon
 import com.hunter.stockfarmer.ui.theme.HudType
+import com.hunter.stockfarmer.ui.theme.PillButton
+import com.hunter.stockfarmer.ui.theme.PillRole
 import com.hunter.stockfarmer.ui.theme.Theme
-import com.hunter.stockfarmer.ui.theme.categoryCard
+import com.hunter.stockfarmer.ui.theme.glassCard
 
 @Composable
 internal fun AnimalMenu(
@@ -45,46 +46,101 @@ internal fun AnimalMenu(
     if (naming) {
         AlertDialog(
             onDismissRequest = onClose,
-            title = { Text("Give it a name") },
+            containerColor = Theme.launchBackground,
+            title = {
+                BasicText(
+                    "Give it a name",
+                    style = HudType.headline.copy(fontWeight = FontWeight.Bold, color = Theme.textPrimary),
+                )
+            },
             text = {
                 OutlinedTextField(
                     name,
                     { name = it.take(Pet.MAX_NAME_LENGTH) },
-                    label = { Text("Name") },
+                    label = {
+                        BasicText("Name", style = HudType.caption.copy(color = Theme.textSecondary))
+                    },
                     singleLine = true,
                 )
             },
             confirmButton = {
-                TextButton({
-                    act(SheetAction.Rename(name))
-                    onClose()
-                }) { Text("Save") }
+                PillButton(
+                    title = "Save",
+                    onClick = {
+                        act(SheetAction.Rename(name))
+                        onClose()
+                    },
+                    role = PillRole.accent,
+                )
             },
-            dismissButton = { TextButton(onClose) { Text("Cancel") } },
+            dismissButton = {
+                PillButton("Cancel", onClick = onClose, role = PillRole.neutral)
+            },
         )
     } else {
         AlertDialog(
             onDismissRequest = onClose,
-            title = { Text(animal.name) },
+            containerColor = Theme.launchBackground,
+            title = {
+                BasicText(
+                    animal.name,
+                    style = HudType.title3.copy(fontWeight = FontWeight.Bold, color = Theme.textPrimary),
+                )
+            },
             text = {
-                androidx.compose.foundation.layout.Column {
-                    animal.description.forEach { Text(it) }
-                    message?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-                    TextButton({ onInteraction?.invoke(AnimalInteraction.PET) }, enabled = onInteraction != null) {
-                        Text("Pet")
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    animal.description.forEach {
+                        BasicText(it, style = HudType.subheadline.copy(color = Theme.textSecondary))
                     }
-                    TextButton({ onInteraction?.invoke(AnimalInteraction.NUDGE) }, enabled = onInteraction != null) {
-                        Text("Nudge")
+                    message?.let {
+                        BasicText(it, style = HudType.subheadline.copy(color = Theme.spend))
                     }
-                    TextButton({ naming = true }) { Text("Name") }
-                    if (animal.releasable) {
-                        TextButton({ act(SheetAction.Release) }) {
-                            Text("Release", color = MaterialTheme.colorScheme.error)
+                    Column(
+                        modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        PillButton(
+                            title = "Pet",
+                            onClick = { onInteraction?.invoke(AnimalInteraction.PET) },
+                            modifier = Modifier.fillMaxWidth(),
+                            role = PillRole.neutral,
+                            enabled = onInteraction != null,
+                        )
+                        PillButton(
+                            title = "Nudge",
+                            onClick = { onInteraction?.invoke(AnimalInteraction.NUDGE) },
+                            modifier = Modifier.fillMaxWidth(),
+                            role = PillRole.neutral,
+                            enabled = onInteraction != null,
+                        )
+                        PillButton(
+                            title = "Name",
+                            onClick = { naming = true },
+                            modifier = Modifier.fillMaxWidth(),
+                            role = PillRole.neutral,
+                        )
+                        if (animal.releasable) {
+                            PillButton(
+                                title = "Release",
+                                onClick = { act(SheetAction.Release) },
+                                modifier = Modifier.fillMaxWidth(),
+                                role = PillRole.destructive,
+                            )
                         }
                     }
                 }
             },
-            confirmButton = { TextButton(onClose) { Text("Cancel") } },
+            confirmButton = {
+                PillButton(
+                    title = "Cancel",
+                    onClick = onClose,
+                    modifier = Modifier.fillMaxWidth(),
+                    role = PillRole.neutral,
+                )
+            },
         )
     }
 }
@@ -94,7 +150,10 @@ internal fun PetChoiceForm(onConfirm: (PetChoiceState) -> Unit) {
     var choice by remember { mutableStateOf(PetChoiceState()) }
     SheetCard {
         ScreenIcon(SheetPictures.pet(choice.breed))
-        Text("Who will live in this house?", style = MaterialTheme.typography.titleMedium)
+        BasicText(
+            "Who will live in this house?",
+            style = HudType.headline.copy(fontWeight = FontWeight.Bold, color = Theme.textPrimary),
+        )
         SheetChoice("Pet", choice.species.displayName, PetSpecies.entries, { it.displayName }) {
             choice = choice.copy(species = it)
         }
@@ -106,10 +165,24 @@ internal fun PetChoiceForm(onConfirm: (PetChoiceState) -> Unit) {
                 choice = choice.copy(dog = it)
             }
         } else {
-            SheetChoice("Color", choice.cat.colorName, Cat.all, { it.colorName }) { choice = choice.copy(cat = it) }
+            SheetChoice("Color", choice.cat.colorName, Cat.all, { it.colorName }) {
+                choice = choice.copy(cat = it)
+            }
         }
-        OutlinedTextField(choice.name, { choice = choice.named(it) }, label = { Text("Name") }, singleLine = true)
-        SheetButton("OK") { onConfirm(choice) }
+        OutlinedTextField(
+            choice.name,
+            { choice = choice.named(it) },
+            label = {
+                BasicText("Name", style = HudType.caption.copy(color = Theme.textSecondary))
+            },
+            singleLine = true,
+        )
+        PillButton(
+            title = "OK",
+            onClick = { onConfirm(choice) },
+            modifier = Modifier.fillMaxWidth(),
+            role = PillRole.accent,
+        )
     }
 }
 
@@ -123,20 +196,31 @@ internal fun <T> SheetChoice(
 ) {
     var expanded by remember { mutableStateOf(false) }
     Box {
-        TextButton(onClick = { expanded = true }, Modifier.fillMaxWidth().categoryCard(false)) {
-            Row(Modifier.fillMaxWidth()) {
-                Column(Modifier.weight(1f)) {
-                    Text(title, style = HudType.caption, color = Theme.textSecondary)
-                    Text(value, style = HudType.subheadline, color = Theme.textPrimary)
-                }
-                Text("⌃⌄", color = Theme.textSecondary)
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .glassCard(14.dp)
+                .clickable(role = Role.Button, onClick = { expanded = true })
+                .padding(12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                BasicText(title, style = HudType.caption.copy(color = Theme.textSecondary))
+                BasicText(
+                    value,
+                    style = HudType.subheadline.copy(fontWeight = FontWeight.SemiBold, color = Theme.textPrimary),
+                )
             }
+            BasicText("▾", style = HudType.subheadline.copy(color = Theme.textSecondary))
         }
         DropdownMenu(expanded, { expanded = false }) {
             options.forEach { option ->
                 val text = label(option) + if (label(option) == value) " ✓" else ""
                 DropdownMenuItem(
-                    text = { Text(text) },
+                    text = {
+                        BasicText(text, style = HudType.subheadline.copy(color = Theme.textPrimary))
+                    },
                     onClick = {
                         onChoose(option)
                         expanded = false
