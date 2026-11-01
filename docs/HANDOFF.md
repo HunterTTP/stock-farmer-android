@@ -1,7 +1,7 @@
 # Handoff: where the project stands and what to do next
 
 Read this first in a fresh session, then `AGENTS.md`, `docs/DEVELOPMENT.md` and `docs/PARITY.md`.
-Last updated at `main` = `421ce7d` (2026-11-01).
+Last updated at `main` = `2d3902f` (2026-11-01).
 
 ## The goal
 
@@ -17,7 +17,11 @@ Standing instructions from the user:
   `main`. Commit as `git -c user.name=HunterTTP -c user.email=hunterttp@gmail.com commit`, message ending with
   `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>` (add a `Co-Authored-By: Codex <noreply@openai.com>` line
   for Codex-written code).
-- Orchestrate work across **Gemini Flash 3.8**, **Codex Sol 6.1** (`codex.cmd exec -m gpt-6.1-sol`), and **Claude Sonnet 5.5** (`claude -p ... --model claude-sonnet-5-5`). Aim to always have **4 agents running** until the port is complete. If any service hits usage limits, take it out of rotation until limits reset and then bring it back in.
+- Orchestrate work across **Claude Sonnet 5.5** (`claude -p ... --model claude-sonnet-5-5`), **Codex Sol 6.1** (`codex.cmd exec -m gpt-6.1-sol`), and **Gemini Flash 3.8** (`invoke_subagent` `Model = "flash"`). Aim to always have **4 agents running** until the port is complete. If any service hits usage limits, take it out of rotation until limits reset and then bring it back in.
+- **Model preference order by task complexity** (among services currently in rotation):
+  1. **Claude Sonnet 5.5** (preferred for the most complex multi-file porting, architecture/wiring, and nuanced UI/state slices)
+  2. **Codex Sol 6.1** (next preference for complex/medium feature and test slices)
+  3. **Gemini Flash 3.8** (next preference for well-scoped slices, polish, and overflow when Claude/Codex are rate-limited or full)
 - **Set reasoning/effort level to `medium` or higher (`high`/`max`)** matching slice complexity — never below `medium`:
   - Codex Sol 6.1: `-c model_reasoning_effort='"medium"'` (standard UI/wiring/fixes) or `'"high"'` (complex multi-file rules/rendering).
   - Claude Sonnet 5.5: `--effort medium` or `--effort high` matching slice complexity.
@@ -31,11 +35,11 @@ Standing instructions from the user:
 - **Claude Sonnet 5.5 (`claude`)**: Rate-limited (`resets 2:10pm America/New_York`); timer scheduled to bring back into rotation at reset.
 - **Codex Sol 6.1 (`codex.cmd`)**: Rate-limited (`try again at 2:54 PM`); timer scheduled to bring back into rotation at reset.
 
-## Verified state (all green on `main` = `421ce7d`)
+## Verified state (all green on `main` = `2d3902f`)
 
 ```
-./gradlew spotlessCheck :core:test :app:assembleDebug :app:testDebugUnitTest   -> BUILD SUCCESSFUL (at 421ce7d)
-core tests: 1,019, 0 failures.   app unit tests: ~355+, 0 failures.   debug APK builds (85 MB).
+./gradlew spotlessCheck :core:test :app:assembleDebug :app:testDebugUnitTest   -> BUILD SUCCESSFUL (at 2d3902f)
+core tests: 1,019, 0 failures.   app unit tests: 345, 0 failures.   debug APK builds (85 MB).
 ```
 
 ### Completed on `main` (`736658c`)
@@ -55,15 +59,16 @@ core tests: 1,019, 0 failures.   app unit tests: ~355+, 0 failures.   debug APK 
   - Sheet navigation & HUD wiring (`ToolsSheet`, `ToolRoute`, `PlacementDestroy`, unlock dots, lesson guide, `SheetHost` HUD sheet wrapping) (`bfd14d1`)
   - Stock market trade sheet (`QuantityControls`/slider/Max, House upgrade) & `MarketQuestSection` HUD polish (`4fa605d`)
   - Renderer `PerformanceMonitor` subsystem instrumentation & `LaunchScreen` failed-state `onChooseFarm` wiring (`421ce7d`)
+  - Fishing overlay, Sound settings, and Building/Animal sheet sections HUD theme polish (`2d3902f`)
 
 ## In flight right now (4 parallel slices)
 
 | Slice | Branch | Worktree | Status |
 |---|---|---|---|
 | 1. Storage tutorial lesson progression/pulses (`StorageMenu`) & `NoticeScreens`/`SaveSlotsScreen` HUD polish | `app/storage-notices-polish` | `..\stock-farmer-android-wt-storage-notices` | Running (Gemini Flash 3.8, high) |
-| 2. Fishing overlay, Sound settings, and Building/Animal sheet sections HUD theme polish | `app/fishing-sound-sheets-polish` | `..\stock-farmer-android-wt-sheet-nav` | Running (Gemini Flash 3.8, high) |
-| 3. `TimelapseScreen` HUD theme conversion & `CareerScreen` collection search/filter/chart axis polish | `app/timelapse-career-polish` | `..\stock-farmer-android-wt-stock-quest` | Running (Gemini Flash 3.8, high) |
-| 4. `GameTick` `learnWheatIsRipe` tutorial hook & `PerformanceScreen`/`InformationScreens` HUD theme polish | `app/tick-perf-info-polish` | `..\stock-farmer-android-wt-perf-inst` | Running (Gemini Flash 3.8, high) |
+| 2. `GameTick` `learnWheatIsRipe` tutorial hook & `PerformanceScreen`/`InformationScreens` HUD theme polish | `app/tick-perf-info-polish` | `..\stock-farmer-android-wt-perf-inst` | Running (Gemini Flash 3.8, high) |
+| 3. `TimelapseScreen` HUD theme conversion & `CareerScreen` collection search/filter/chart axis polish (rebasing onto `2d3902f`) | `app/timelapse-career-polish` | `..\stock-farmer-android-wt-stock-quest` | Running (Gemini Flash 3.8, high) |
+| 4. 16 KB APK native alignment verification & `MenusHost`/`ItemDetailScreens`/`TimeSheet` HUD parity audit | `app/apk-alignment-and-audit` | `..\stock-farmer-android-wt-sheet-nav` | Running (Gemini Flash 3.8, high) |
 
 ## Next steps, in order
 
