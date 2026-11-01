@@ -1,0 +1,26 @@
+package com.hunter.stockfarmer.game
+
+import com.hunter.stockfarmer.core.model.GameState
+import com.hunter.stockfarmer.core.model.GridPoint
+import com.hunter.stockfarmer.core.rules.GameEngine
+import com.hunter.stockfarmer.core.rules.GameEvent
+import com.hunter.stockfarmer.core.rules.newGame
+import com.hunter.stockfarmer.core.util.SystemRandomSource
+import java.time.Instant
+
+/**
+ * The game being played. The farm draws it on the render thread and the screens read and change it on the main thread,
+ * so every access goes through [read] or [act], which take turns.
+ */
+class GameSession(
+    private val engine: GameEngine = GameEngine(newGame(SystemRandomSource)),
+) {
+    /** Looks at the game without changing it. */
+    fun <T> read(look: (GameState) -> T): T = synchronized(engine) { look(engine.state) }
+
+    /** Changes the game, handing back whatever the change returns. */
+    fun <T> act(change: (GameEngine) -> T): T = synchronized(engine) { change(engine) }
+
+    /** A tap on the farm uses the selected tool on that tile. */
+    fun tap(point: GridPoint): List<GameEvent> = act { it.tap(point, Instant.now()) }
+}
