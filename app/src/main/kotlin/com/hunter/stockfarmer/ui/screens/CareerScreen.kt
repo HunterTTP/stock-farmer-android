@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -28,12 +30,16 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.hunter.stockfarmer.core.model.ValueSample
 import com.hunter.stockfarmer.core.rules.CareerSeries
 import com.hunter.stockfarmer.game.GameSession
+import com.hunter.stockfarmer.ui.theme.HudIcon
+import com.hunter.stockfarmer.ui.theme.HudIcons
+import com.hunter.stockfarmer.ui.theme.HudMaterialTheme
 import com.hunter.stockfarmer.ui.theme.HudSearchField
 import com.hunter.stockfarmer.ui.theme.HudType
 import com.hunter.stockfarmer.ui.theme.Theme
@@ -194,22 +200,21 @@ private fun CollectionPage(
     val total = sections.sumOf { it.entries.size }
     val collected = sections.sumOf { it.collected }
     Column(Modifier.fillMaxWidth().glassCard(18.dp).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text(
-            "$collected of $total collected",
-            color = Theme.textPrimary,
-            style = HudType.title3.copy(fontWeight = FontWeight.ExtraBold),
-        )
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                "$collected of $total collected",
+                Modifier.weight(1f),
+                color = Theme.textPrimary,
+                style = HudType.title3.copy(fontWeight = FontWeight.ExtraBold),
+            )
+            CareerFilterMenu(filter) { filter = it }
+        }
         ProgressBar(collected, total, Theme.accent)
         HudSearchField(query, { query = it })
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            CareerFilter.entries.forEach {
-                CareerFilterChip(
-                    title = it.title,
-                    isSelected = filter == it,
-                    onClick = { filter = it },
-                )
-            }
-        }
     }
     val visible = sections.mapNotNull { it.filtered(query, filter) }
     if (visible.isEmpty()) {
@@ -245,24 +250,43 @@ private fun CollectionPage(
     }
 }
 
+/** A filter icon that opens a menu of the choices, filled and in the accent color while a filter is on (iOS `filterMenu`). */
 @Composable
-private fun CareerFilterChip(
-    title: String,
-    isSelected: Boolean,
-    onClick: () -> Unit,
+private fun CareerFilterMenu(
+    filter: CareerFilter,
+    onSelect: (CareerFilter) -> Unit,
 ) {
-    Box(
-        Modifier
-            .glassCard(17.dp, if (isSelected) Theme.accent else null)
-            .clickable(role = Role.RadioButton, onClick = onClick)
-            .padding(horizontal = 14.dp, vertical = 6.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            title,
-            color = if (isSelected) Theme.accent else Theme.textSecondary,
-            style = HudType.footnote.copy(fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium),
+    var isOpen by remember { mutableStateOf(false) }
+    val isActive = filter != CareerFilter.ALL
+    val icon =
+        if (isActive) HudIcons.lineThreeHorizontalDecreaseCircleFill else HudIcons.lineThreeHorizontalDecreaseCircle
+    Box {
+        HudIcon(
+            icon,
+            if (isActive) Theme.accent else Theme.textSecondary,
+            Modifier
+                .clickable(role = Role.Button, onClickLabel = "Filter") { isOpen = true }
+                .semantics { stateDescription = filter.title }
+                .padding(6.dp),
+            size = 24.dp,
+            contentDescription = "Filter",
         )
+        HudMaterialTheme {
+            DropdownMenu(isOpen, { isOpen = false }) {
+                CareerFilter.entries.forEach {
+                    DropdownMenuItem(
+                        text = { Text(it.title, style = HudType.body, color = Theme.textPrimary) },
+                        trailingIcon = {
+                            if (it == filter) HudIcon(HudIcons.checkmarkCircleFill, Theme.accent, size = 18.dp)
+                        },
+                        onClick = {
+                            isOpen = false
+                            onSelect(it)
+                        },
+                    )
+                }
+            }
+        }
     }
 }
 

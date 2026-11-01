@@ -27,6 +27,10 @@ sealed interface ToolRoute {
 
     data object SoundSettings : ToolRoute
 
+    data object GraphicsSettings : ToolRoute
+
+    data object GameplaySettings : ToolRoute
+
     data object About : ToolRoute
 
     data object Performance : ToolRoute

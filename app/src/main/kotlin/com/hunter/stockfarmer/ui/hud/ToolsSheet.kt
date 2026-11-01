@@ -19,6 +19,8 @@ import com.hunter.stockfarmer.ui.menus.ToolUpgradeResult
 import com.hunter.stockfarmer.ui.screens.AboutScreen
 import com.hunter.stockfarmer.ui.screens.CareerScreen
 import com.hunter.stockfarmer.ui.screens.ChangelogScreen
+import com.hunter.stockfarmer.ui.screens.GameplaySettingsScreen
+import com.hunter.stockfarmer.ui.screens.GraphicsSettingsScreen
 import com.hunter.stockfarmer.ui.screens.PerformanceMonitor
 import com.hunter.stockfarmer.ui.screens.PerformanceScreen
 import com.hunter.stockfarmer.ui.screens.PrivacyScreen
@@ -126,6 +128,10 @@ private fun RouteScreen(
         ToolRoute.Settings -> SettingsScreen(session, open, onPhoto, performance.snapshot.isRecording, back)
 
         ToolRoute.SoundSettings -> SoundSettingsScreen(session, back)
+
+        ToolRoute.GraphicsSettings -> GraphicsSettingsScreen(session, back)
+
+        ToolRoute.GameplaySettings -> GameplaySettingsScreen(session, back)
 
         ToolRoute.About -> AboutScreen(session, open, back)
 

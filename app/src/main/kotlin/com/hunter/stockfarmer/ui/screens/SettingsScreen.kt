@@ -8,11 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicText
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderDefaults
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -21,6 +17,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.semantics.Role
@@ -34,10 +31,7 @@ import com.hunter.stockfarmer.game.GameSession
 import com.hunter.stockfarmer.ui.hud.ToolRoute
 import com.hunter.stockfarmer.ui.theme.HudIcon
 import com.hunter.stockfarmer.ui.theme.HudIcons
-import com.hunter.stockfarmer.ui.theme.HudMaterialTheme
 import com.hunter.stockfarmer.ui.theme.HudType
-import com.hunter.stockfarmer.ui.theme.PillButton
-import com.hunter.stockfarmer.ui.theme.PillRole
 import com.hunter.stockfarmer.ui.theme.Theme
 import com.hunter.stockfarmer.ui.theme.glassCard
 import kotlin.math.roundToInt
@@ -121,6 +115,8 @@ fun SettingsScreen(
         ScreenLink("Timelapse") { onOpen(ToolRoute.Timelapse) }
         ScreenLink("Load Game") { onOpen(ToolRoute.LoadGame) }
         ScreenLink("Sound") { onOpen(ToolRoute.SoundSettings) }
+        ScreenLink("Graphics") { onOpen(ToolRoute.GraphicsSettings) }
+        ScreenLink("Gameplay") { onOpen(ToolRoute.GameplaySettings) }
         ScreenLink("Performance", badge = if (isRecording) "Recording" else null) { onOpen(ToolRoute.Performance) }
         ScreenLink("About") { onOpen(ToolRoute.About) }
     }
@@ -187,12 +183,12 @@ fun SoundSettingsScreen(
         AudioChannel.entries.filter { settings[it] != next[it] }.forEach { audio.setVolume(it, next[it]) }
         settings = next
     }
-    var confirmsReset by remember { mutableStateOf(false) }
     ScreenLayout("Sound", session, onClose) {
         Column(Modifier.fillMaxWidth().glassCard(14.dp)) {
             AudioChannel.entries.forEach { channel ->
                 VolumeRow(
                     title = channel.title,
+                    icon = channel.icon,
                     value = settings[channel].toFloat(),
                     onValueChange = {
                         controls.setLevel(channel, it.toDouble())
@@ -205,46 +201,9 @@ fun SoundSettingsScreen(
                 }
             }
         }
-        PillButton(
-            title = "Reset to Defaults",
-            onClick = { confirmsReset = true },
-            modifier = Modifier.fillMaxWidth(),
-            role = PillRole.neutral,
-        )
-    }
-    if (confirmsReset) {
-        HudMaterialTheme {
-            AlertDialog(
-                onDismissRequest = { confirmsReset = false },
-                title = {
-                    Text(
-                        "Reset Sound to defaults?",
-                        style = HudType.title3.copy(fontWeight = FontWeight.Bold),
-                        color = Theme.textPrimary,
-                    )
-                },
-                text = {
-                    Text(
-                        "Your sound settings go back to how the game first came.",
-                        style = HudType.subheadline,
-                        color = Theme.textSecondary,
-                    )
-                },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            confirmsReset = false
-                            controls.reset()
-                            applyControls()
-                        },
-                    ) { Text("Reset", style = HudType.headline, color = Theme.danger) }
-                },
-                dismissButton = {
-                    TextButton(onClick = { confirmsReset = false }) {
-                        Text("Cancel", style = HudType.subheadline, color = Theme.textSecondary)
-                    }
-                },
-            )
+        ResetDefaultsButton("Sound") {
+            controls.reset()
+            applyControls()
         }
     }
 }
@@ -288,9 +247,20 @@ private val AudioChannel.title: String
             AudioChannel.ambience -> "Ambience"
         }
 
+private val AudioChannel.icon: ImageVector
+    get() =
+        when (this) {
+            AudioChannel.music -> HudIcons.musicNote
+            AudioChannel.`interface` -> HudIcons.speakerWave2Fill
+            AudioChannel.farm -> HudIcons.leafFill
+            AudioChannel.animals -> HudIcons.pawprintFill
+            AudioChannel.ambience -> HudIcons.cloudRainFill
+        }
+
 @Composable
 private fun VolumeRow(
     title: String,
+    icon: ImageVector,
     value: Float,
     onValueChange: (Float) -> Unit,
     onRelease: () -> Unit,
@@ -306,10 +276,7 @@ private fun VolumeRow(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            BasicText(
-                title,
-                style = HudType.headline.copy(color = Theme.textPrimary),
-            )
+            SettingLabel(title, icon)
             BasicText(
                 "${(value * 100).roundToInt()}%",
                 style = HudType.subheadline.copy(color = Theme.textSecondary),
@@ -319,12 +286,7 @@ private fun VolumeRow(
             value = value,
             onValueChange = onValueChange,
             onValueChangeFinished = onRelease,
-            colors =
-                SliderDefaults.colors(
-                    thumbColor = Theme.accent,
-                    activeTrackColor = Theme.accent,
-                    inactiveTrackColor = Theme.accent.copy(alpha = 0.24f),
-                ),
+            colors = settingSliderColors,
         )
     }
 }

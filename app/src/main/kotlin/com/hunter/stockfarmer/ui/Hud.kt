@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -66,6 +67,7 @@ import com.hunter.stockfarmer.ui.screens.DaySummaryBanner
 import com.hunter.stockfarmer.ui.screens.LevelUpScreen
 import com.hunter.stockfarmer.ui.screens.LocalScreenAudio
 import com.hunter.stockfarmer.ui.screens.PerformanceMonitor
+import com.hunter.stockfarmer.ui.screens.PlaySettings
 import com.hunter.stockfarmer.ui.screens.QuestBanner
 import com.hunter.stockfarmer.ui.screens.QuestReward
 import com.hunter.stockfarmer.ui.screens.SoundCenterScreenAudio
@@ -93,7 +95,8 @@ fun Hud(
     onRetrySave: () -> Unit = {},
 ) {
     val context = LocalContext.current
-    var hud by remember { mutableStateOf(session.hud()) }
+    val play = remember(context) { PlaySettings.of(context) }
+    var hud by remember { mutableStateOf(session.hud(play.toolReach)) }
     var toolRoute by remember { mutableStateOf<ToolRoute?>(null) }
     var isShowingDetailFromList by remember { mutableStateOf(false) }
     var isTimeShown by remember { mutableStateOf(false) }
@@ -106,7 +109,7 @@ fun Hud(
     val regions = remember { MenuInteractionRegions() }
     LaunchedEffect(session) {
         while (true) {
-            hud = session.hud()
+            hud = session.hud(play.toolReach)
             delay(HUD_REFRESH_MILLIS)
         }
     }
@@ -142,6 +145,7 @@ fun Hud(
             StatusAndBars(
                 session = session,
                 hud = hud,
+                play = play,
                 regions = regions,
                 isDraggingTool = isDraggingTool,
                 closeRequests = closeRequests,
@@ -261,6 +265,7 @@ fun Hud(
 private fun StatusAndBars(
     session: GameSession,
     hud: HudState,
+    play: PlaySettings,
     regions: MenuInteractionRegions,
     isDraggingTool: Boolean,
     closeRequests: Int,
@@ -279,25 +284,31 @@ private fun StatusAndBars(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, Alignment.Top) {
-                MoneyHud(
-                    money,
-                    pulse = 0,
-                    modifier =
-                        Modifier
-                            .rewardTarget(
-                                HUDTarget.Money,
-                            ).observesOutsideTouches(true, regions, onCloseMenus),
-                )
-                LevelHud(
-                    xp,
-                    pulse = 0,
-                    onClick = { if (!hud.isPlacing) onCareer() },
-                    modifier =
-                        Modifier
-                            .rewardTarget(
-                                HUDTarget.Level,
-                            ).observesOutsideTouches(true, regions, onCloseMenus),
-                )
+                if (play.isMoneyShown) {
+                    MoneyHud(
+                        money,
+                        pulse = 0,
+                        modifier =
+                            Modifier
+                                .rewardTarget(
+                                    HUDTarget.Money,
+                                ).observesOutsideTouches(true, regions, onCloseMenus),
+                    )
+                } else {
+                    Spacer(Modifier)
+                }
+                if (play.isLevelShown) {
+                    LevelHud(
+                        xp,
+                        pulse = 0,
+                        onClick = { if (!hud.isPlacing) onCareer() },
+                        modifier =
+                            Modifier
+                                .rewardTarget(
+                                    HUDTarget.Level,
+                                ).observesOutsideTouches(true, regions, onCloseMenus),
+                    )
+                }
             }
         }
         if (hud.isPlacing && !isDraggingTool) {

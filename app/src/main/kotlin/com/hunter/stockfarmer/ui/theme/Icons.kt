@@ -271,6 +271,150 @@ object HudIcons {
                 close()
             }
         }
+
+    val musicNote =
+        icon("music.note") {
+            filled {
+                circle(8f, 18f, 3.6f)
+                polygon(listOf(10.6f to 3.5f, 12.6f to 3.5f, 12.6f to 18f, 10.6f to 18f))
+                polygon(listOf(12.6f to 3.5f, 18.5f to 7f, 18.5f to 10.5f, 12.6f to 7.5f))
+            }
+        }
+
+    val speakerWave2Fill =
+        icon("speaker.wave.2.fill") {
+            filled { polygon(listOf(2.5f to 9f, 6.5f to 9f, 12f to 4.5f, 12f to 19.5f, 6.5f to 15f, 2.5f to 15f)) }
+            stroked(2f) {
+                moveTo(15f, 9f)
+                arcTo(4f, 4f, 0f, false, true, 15f, 15f)
+                moveTo(17.8f, 6.2f)
+                arcTo(7.5f, 7.5f, 0f, false, true, 17.8f, 17.8f)
+            }
+        }
+
+    val leafFill =
+        icon("leaf.fill") {
+            filled {
+                moveTo(4f, 20f)
+                curveTo(4f, 10f, 10f, 4f, 20f, 4f)
+                curveTo(20f, 14f, 14f, 20f, 4f, 20f)
+                close()
+            }
+        }
+
+    val pawprintFill =
+        icon("pawprint.fill") {
+            filled {
+                circle(6.2f, 10.2f, 2.2f)
+                circle(10f, 6f, 2.2f)
+                circle(14f, 6f, 2.2f)
+                circle(17.8f, 10.2f, 2.2f)
+                moveTo(12f, 11.5f)
+                curveTo(8.5f, 11.5f, 6f, 15f, 6.5f, 17.5f)
+                curveTo(7f, 19.5f, 9.5f, 19f, 12f, 19f)
+                curveTo(14.5f, 19f, 17f, 19.5f, 17.5f, 17.5f)
+                curveTo(18f, 15f, 15.5f, 11.5f, 12f, 11.5f)
+                close()
+            }
+        }
+
+    val cloudRainFill =
+        icon("cloud.rain.fill") {
+            filled {
+                circle(7.5f, 11f, 3.5f)
+                circle(12.5f, 8.5f, 4.5f)
+                circle(17.5f, 11f, 3.5f)
+                polygon(listOf(7.5f to 7.5f, 17.5f to 7.5f, 17.5f to 14.5f, 7.5f to 14.5f))
+            }
+            stroked(1.7f) {
+                moveTo(8f, 17.5f)
+                lineTo(7f, 20.5f)
+                moveTo(12.5f, 17.5f)
+                lineTo(11.5f, 20.5f)
+                moveTo(17f, 17.5f)
+                lineTo(16f, 20.5f)
+            }
+        }
+
+    val sunMaxFill =
+        icon("sun.max.fill") {
+            filled { circle(12f, 12f, 4.6f) }
+            stroked(2f) {
+                repeat(8) {
+                    val angle = it * PI / 4
+                    moveTo((12 + 7.6 * cos(angle)).toFloat(), (12 + 7.6 * sin(angle)).toFloat())
+                    lineTo((12 + 10.6 * cos(angle)).toFloat(), (12 + 10.6 * sin(angle)).toFloat())
+                }
+            }
+        }
+
+    val grid =
+        icon("grid") {
+            stroked(1.8f) {
+                polygon(listOf(4f to 4f, 20f to 4f, 20f to 20f, 4f to 20f))
+                moveTo(9.3f, 4f)
+                lineTo(9.3f, 20f)
+                moveTo(14.7f, 4f)
+                lineTo(14.7f, 20f)
+                moveTo(4f, 9.3f)
+                lineTo(20f, 9.3f)
+                moveTo(4f, 14.7f)
+                lineTo(20f, 14.7f)
+            }
+        }
+
+    /** A ring with a dollar sign; the SF Symbol is a filled disc with the sign cut out. */
+    val dollarsignCircle =
+        icon("dollarsign.circle.fill") {
+            stroked(1.8f) { circle(12f, 12f, 9.2f) }
+            stroked(1.8f) {
+                moveTo(14.8f, 9.2f)
+                curveTo(14.8f, 7.8f, 13.6f, 7.2f, 12f, 7.2f)
+                curveTo(10.2f, 7.2f, 9.2f, 8.1f, 9.2f, 9.3f)
+                curveTo(9.2f, 10.6f, 10.4f, 11.2f, 12f, 11.7f)
+                curveTo(13.8f, 12.2f, 14.9f, 12.9f, 14.9f, 14.5f)
+                curveTo(14.9f, 15.8f, 13.6f, 16.8f, 12f, 16.8f)
+                curveTo(10.4f, 16.8f, 9.2f, 16.1f, 9.1f, 14.8f)
+                moveTo(12f, 5.8f)
+                lineTo(12f, 7.2f)
+                moveTo(12f, 16.8f)
+                lineTo(12f, 18.2f)
+            }
+        }
+
+    val arrowUpRight =
+        icon("arrow.up.right") {
+            stroked(2.4f) {
+                moveTo(7f, 17f)
+                lineTo(17f, 7f)
+                moveTo(8.5f, 7f)
+                lineTo(17f, 7f)
+                lineTo(17f, 15.5f)
+            }
+        }
+
+    val lineThreeHorizontalDecreaseCircle =
+        icon("line.3.horizontal.decrease.circle") {
+            stroked(1.8f) { circle(12f, 12f, 9.2f) }
+            stroked(1.8f) {
+                moveTo(7f, 9f)
+                lineTo(17f, 9f)
+                moveTo(9f, 12f)
+                lineTo(15f, 12f)
+                moveTo(11f, 15f)
+                lineTo(13f, 15f)
+            }
+        }
+
+    val lineThreeHorizontalDecreaseCircleFill =
+        icon("line.3.horizontal.decrease.circle.fill") {
+            filled(PathFillType.EvenOdd) {
+                circle(12f, 12f, 10f)
+                polygon(listOf(6.8f to 8.1f, 17.2f to 8.1f, 17.2f to 9.9f, 6.8f to 9.9f))
+                polygon(listOf(8.8f to 11.1f, 15.2f to 11.1f, 15.2f to 12.9f, 8.8f to 12.9f))
+                polygon(listOf(10.8f to 14.1f, 13.2f to 14.1f, 13.2f to 15.9f, 10.8f to 15.9f))
+            }
+        }
 }
 
 /** Draws a [HudIcons] vector in one color at a size. */
