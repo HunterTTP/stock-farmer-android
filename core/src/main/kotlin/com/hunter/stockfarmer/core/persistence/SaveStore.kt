@@ -37,7 +37,10 @@ class FileSaveStore(
         return GameStateJson.json
             .decodeFromString<Envelope>(data)
             .state
-            .also { it.reindex() }
+            .also {
+                it.validate()
+                it.reindex()
+            }
     }
 
     fun save(state: GameState) {

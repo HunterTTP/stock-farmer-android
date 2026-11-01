@@ -13,5 +13,9 @@ object GameStateJson {
 
     fun encode(state: GameState): String = json.encodeToString(GameState.serializer(), state)
 
-    fun decode(text: String): GameState = json.decodeFromString(GameState.serializer(), text).also { it.reindex() }
+    fun decode(text: String): GameState =
+        json.decodeFromString(GameState.serializer(), text).also {
+            it.validate()
+            it.reindex()
+        }
 }

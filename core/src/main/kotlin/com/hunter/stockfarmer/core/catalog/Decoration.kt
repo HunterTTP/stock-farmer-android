@@ -2,6 +2,7 @@ package com.hunter.stockfarmer.core.catalog
 
 import com.hunter.stockfarmer.core.model.GridPoint
 import com.hunter.stockfarmer.core.util.InstantSerializer
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.time.Instant
 import kotlin.math.floor
@@ -187,7 +188,7 @@ data class Decoration(
 data class PlacedDecoration(
     val decorationID: String,
     /** Which of its sizes, counting from the smallest, if it comes in more than one. */
-    val size: Int = 0,
+    @SerialName("size") private val savedSize: Int = 0,
     /** For a decoration that waters the land, when its first spray ends and it waters all it reaches; null once it has. */
     @Serializable(with = InstantSerializer::class) val wateringStartsAt: Instant? = null,
     /** The farmland its first spray has already watered, which grows as the spray goes on and is dropped once it is over. */
@@ -195,6 +196,12 @@ data class PlacedDecoration(
     /** When it was set down, which tells a sprinkler just set down (to spray at once) from one already standing. */
     @Serializable(with = InstantSerializer::class) val placedAt: Instant? = null,
 ) {
+    init {
+        require(Decoration.named(decorationID) != null) { "Unknown decoration" }
+    }
+
+    val size: Int get() = decoration.clampedSize(savedSize)
+
     val decoration: Decoration get() = Decoration.named(decorationID) ?: Decoration.all[0]
 
     companion object {
