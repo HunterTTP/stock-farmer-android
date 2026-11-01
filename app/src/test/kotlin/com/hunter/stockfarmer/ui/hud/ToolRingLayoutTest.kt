@@ -51,4 +51,13 @@ class ToolRingLayoutTest {
         assertEquals(inset + radius, rightX, 1e-4f)
         assertEquals(span - inset, rightY, 1e-4f)
     }
+
+    @Test
+    fun `fishing mode offers just the exit on the inner arc`() {
+        val slot = ToolRingLayout.fishingSlots.single()
+        assertEquals(Satellite.ExitFishing, slot.satellite)
+        assertEquals(45.0, slot.angle)
+        assertEquals(ToolRingLayout.OTHER_RADIUS, slot.radius)
+        assertEquals(ToolRingLayout.OTHER_SIZE, slot.size)
+    }
 }

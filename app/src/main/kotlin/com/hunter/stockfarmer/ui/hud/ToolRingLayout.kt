@@ -24,6 +24,11 @@ sealed interface Satellite {
     data object Time : Satellite {
         override val title = "Time"
     }
+
+    /** The one button fishing mode offers: the way out. */
+    data object ExitFishing : Satellite {
+        override val title = "Exit"
+    }
 }
 
 /** One button fanned out around the tool circle: [angle] is degrees counterclockwise from straight right of its middle. */
@@ -50,6 +55,9 @@ object ToolRingLayout {
             listOf(Satellite.Storage, Satellite.Settings, Satellite.Time)
                 .zip(otherAngles)
                 .map { (satellite, angle) -> RingSlot(satellite, angle, OTHER_RADIUS, OTHER_SIZE) }
+
+    /** Fishing mode has just the one button, the way out, on the inner arc. */
+    val fishingSlots = listOf(RingSlot(Satellite.ExitFishing, 45.0, OTHER_RADIUS, OTHER_SIZE))
 
     /** The width and height of the square the ring is laid out in. */
     fun span(scale: Float): Float = (TOOL_RADIUS + TOOL_SIZE) * scale

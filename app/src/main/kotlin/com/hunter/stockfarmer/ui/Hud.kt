@@ -1,7 +1,13 @@
 package com.hunter.stockfarmer.ui
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -40,7 +46,12 @@ import com.hunter.stockfarmer.game.askToDestroyWhilePlacing
 import com.hunter.stockfarmer.game.cancelPlacement
 import com.hunter.stockfarmer.game.confirmPlacement
 import com.hunter.stockfarmer.game.interactWithAnimal
-import com.hunter.stockfarmer.ui.fishing.FishingOverlay
+import com.hunter.stockfarmer.ui.fishing.FishingCanvas
+import com.hunter.stockfarmer.ui.fishing.FishingCatch
+import com.hunter.stockfarmer.ui.fishing.FishingMode
+import com.hunter.stockfarmer.ui.fishing.FishingPill
+import com.hunter.stockfarmer.ui.fishing.FishingRing
+import com.hunter.stockfarmer.ui.fishing.rememberFishingMode
 import com.hunter.stockfarmer.ui.hud.BannerBox
 import com.hunter.stockfarmer.ui.hud.HUD_REFRESH_MILLIS
 import com.hunter.stockfarmer.ui.hud.HudState
@@ -146,9 +157,29 @@ fun Hud(
         }
     }
     ScalesHudForTablets {
-        Box(modifier) {
+        BoxWithConstraints(modifier) {
+            val fishing =
+                cast?.let { hooked ->
+                    rememberFishingMode(
+                        session,
+                        hooked,
+                        maxWidth.value.toDouble(),
+                        maxHeight.value.toDouble(),
+                        onCaught = { sound.play(SoundCue.questComplete) },
+                        onFinish = { events ->
+                            session.publish(events)
+                            if (events.isEmpty()) {
+                                session.showToast(hooked.swamAwayMessage, durationMillis = Feedback.TOAST_MILLIS)
+                            }
+                            session.casts.value = null
+                        },
+                    )
+                }
+            // The water lies over the farm and under the menus, which stay on it.
+            if (fishing != null) FishingCanvas(session, fishing, Modifier.fillMaxSize())
             StatusAndBars(
                 session = session,
+                fishing = fishing,
                 hud = hud,
                 play = play,
                 regions = regions,
@@ -246,20 +277,6 @@ fun Hud(
                     onAnimalInteraction = session::interactWithAnimal,
                 )
             }
-            cast?.let { hooked ->
-                FishingOverlay(
-                    session,
-                    hooked,
-                    onCaught = { sound.play(SoundCue.questComplete) },
-                    onFinish = { events ->
-                        session.publish(events)
-                        if (events.isEmpty()) {
-                            session.showToast(hooked.swamAwayMessage, durationMillis = Feedback.TOAST_MILLIS)
-                        }
-                        session.casts.value = null
-                    },
-                )
-            }
             ToastBanner(session, toast) { toast = null }
             QuestBanner(session, onClose = { rewards = emptyList() }, rewards = rewards)
             DaySummaryBanner(session, onClose = { daySummary = null }, summary = daySummary)
@@ -276,6 +293,7 @@ fun Hud(
 @Composable
 private fun StatusAndBars(
     session: GameSession,
+    fishing: FishingMode?,
     hud: HudState,
     play: PlaySettings,
     regions: MenuInteractionRegions,
@@ -290,62 +308,91 @@ private fun StatusAndBars(
     val flights = LocalRewardFlights.current
     val money = flights?.displayedMoney(hud.money) ?: hud.money
     val xp = flights?.displayedXP(hud.xp) ?: hud.xp
-    Box(Modifier.fillMaxSize().safeDrawingPadding()) {
-        Column(
-            Modifier.fillMaxSize().padding(horizontal = 16.dp).padding(bottom = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, Alignment.Top) {
-                if (play.isMoneyShown) {
-                    MoneyHud(
-                        money,
-                        pulse = 0,
-                        modifier =
-                            Modifier
-                                .rewardTarget(
-                                    HUDTarget.Money,
-                                ).observesOutsideTouches(true, regions, onCloseMenus),
-                    )
-                } else {
-                    Spacer(Modifier)
-                }
-                if (play.isLevelShown) {
-                    LevelHud(
-                        xp,
-                        pulse = 0,
-                        onClick = { if (!hud.isPlacing) onCareer() },
-                        modifier =
-                            Modifier
-                                .rewardTarget(
-                                    HUDTarget.Level,
-                                ).observesOutsideTouches(true, regions, onCloseMenus),
-                    )
+    Box(Modifier.fillMaxSize()) {
+        Box(Modifier.fillMaxSize().safeDrawingPadding()) {
+            Column(
+                Modifier.fillMaxSize().padding(horizontal = 16.dp).padding(bottom = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                // A fish on the line puts the catch meter in the place of the money and level.
+                Crossfade(fishing?.isFishing == true, animationSpec = tween(FISHING_HUD_FADE_MILLIS)) { isFishing ->
+                    if (isFishing && fishing != null) {
+                        Row(Modifier.fillMaxWidth(), Arrangement.Center, Alignment.Top) {
+                            AnimatedVisibility(
+                                !fishing.isCaught,
+                                enter = fadeIn(),
+                                exit = fadeOut(),
+                            ) { FishingPill(fishing) }
+                        }
+                    } else {
+                        Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, Alignment.Top) {
+                            if (play.isMoneyShown) {
+                                MoneyHud(
+                                    money,
+                                    pulse = 0,
+                                    modifier =
+                                        Modifier
+                                            .rewardTarget(
+                                                HUDTarget.Money,
+                                            ).observesOutsideTouches(true, regions, onCloseMenus),
+                                )
+                            } else {
+                                Spacer(Modifier)
+                            }
+                            if (play.isLevelShown) {
+                                LevelHud(
+                                    xp,
+                                    pulse = 0,
+                                    onClick = { if (!hud.isPlacing) onCareer() },
+                                    modifier =
+                                        Modifier
+                                            .rewardTarget(
+                                                HUDTarget.Level,
+                                            ).observesOutsideTouches(true, regions, onCloseMenus),
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
-        if (hud.isPlacing && !isDraggingTool) {
-            PlacementButtons(
-                onConfirm = { session.confirmPlacement() },
-                onCancel = { session.cancelPlacement() },
-                modifier = Modifier.align(Alignment.BottomCenter).padding(horizontal = 16.dp).padding(bottom = 8.dp),
-                cost = hud.placementCost,
-                onDestroy = if (hud.canDestroy) ({ session.askToDestroyWhilePlacing() }) else null,
-            )
+        if (fishing != null) {
+            FishingRing(fishing)
+            FishingCatch(fishing)
         }
-        if (!hud.isPlacing || isDraggingTool) {
-            ToolBar(
-                session = session,
-                hud = hud,
-                regions = regions,
-                onRingScreen = onRingScreen,
-                modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 8.dp),
-                closeRequests = closeRequests,
-                onOpenRoute = onOpenRoute,
-                onDraggingChanged = onDraggingChanged,
-            )
+        Box(Modifier.fillMaxSize().safeDrawingPadding()) {
+            if (hud.isPlacing && !isDraggingTool) {
+                PlacementButtons(
+                    onConfirm = { session.confirmPlacement() },
+                    onCancel = { session.cancelPlacement() },
+                    modifier =
+                        Modifier
+                            .align(
+                                Alignment.BottomCenter,
+                            ).padding(horizontal = 16.dp)
+                            .padding(bottom = 8.dp),
+                    cost = hud.placementCost,
+                    onDestroy = if (hud.canDestroy) ({ session.askToDestroyWhilePlacing() }) else null,
+                )
+            }
+            if (!hud.isPlacing || isDraggingTool) {
+                ToolBar(
+                    session = session,
+                    hud = hud,
+                    regions = regions,
+                    onRingScreen = onRingScreen,
+                    modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 8.dp),
+                    closeRequests = closeRequests,
+                    onOpenRoute = onOpenRoute,
+                    onDraggingChanged = onDraggingChanged,
+                    fishing = fishing,
+                )
+            }
         }
     }
 }
+
+private const val FISHING_HUD_FADE_MILLIS = 350
 
 /** The message over the farm, with the implement it offers to pick up. */
 @Composable

@@ -17,6 +17,7 @@ import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -81,6 +82,7 @@ internal fun ToolRing(
     regions: MenuInteractionRegions,
     onPick: (Satellite) -> Unit,
     modifier: Modifier = Modifier,
+    isFishing: Boolean = false,
 ) {
     val scale = LocalHudScale.current
     val span = ToolRingLayout.span(scale).dp
@@ -91,8 +93,10 @@ internal fun ToolRing(
                 bottom = ((ToolCircleMetrics.DIAMETER - ToolRingLayout.TOOL_SIZE) * scale / 2).dp,
             ).size(span),
     ) {
-        ToolRingLayout.slots.forEachIndexed { index, slot ->
-            RingButton(index, slot, isOpen, state, loader, regions, scale) { onPick(slot.satellite) }
+        (if (isFishing) ToolRingLayout.fishingSlots else ToolRingLayout.slots).forEachIndexed { index, slot ->
+            key(slot.satellite.title) {
+                RingButton(index, slot, isOpen, state, loader, regions, scale) { onPick(slot.satellite) }
+            }
         }
     }
 }
@@ -197,6 +201,12 @@ private fun Face(
 
         Satellite.Settings -> {
             RingFace("Settings", size, scale = scale) { Symbol("⚙", scale, Color.White) }
+        }
+
+        Satellite.ExitFishing -> {
+            RingFace("Exit", size, scale = scale) {
+                HudIcon(HudIcons.xmark, Color.White, size = (30 * scale).dp)
+            }
         }
 
         Satellite.Time -> {

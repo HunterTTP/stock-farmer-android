@@ -160,6 +160,35 @@ object HudIcons {
             }
         }
 
+    val trayAndArrowDownFill =
+        icon("tray.and.arrow.down.fill") {
+            filled {
+                polygon(
+                    listOf(
+                        2.5f to 13f,
+                        7.5f to 13f,
+                        8.6f to 15.5f,
+                        15.4f to 15.5f,
+                        16.5f to 13f,
+                        21.5f to 13f,
+                        21.5f to 20f,
+                        2.5f to 20f,
+                    ),
+                )
+                polygon(
+                    listOf(
+                        10.8f to 3f,
+                        13.2f to 3f,
+                        13.2f to 8.5f,
+                        16.6f to 8.5f,
+                        12f to 13.2f,
+                        7.4f to 8.5f,
+                        10.8f to 8.5f,
+                    ),
+                )
+            }
+        }
+
     val chartLineUptrend =
         icon("chart.line.uptrend.xyaxis") {
             stroked(2f) {
