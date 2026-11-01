@@ -157,4 +157,15 @@ class RemainingScreenStateTest {
         assertFalse(failed.isComplete)
         assertEquals(LaunchSequence(), LaunchPresentation.transition(failed, LaunchSequence.Stage.loadingFarm))
     }
+
+    @Test
+    fun `launch stages follow the loader and then the renderer`() {
+        val stage = LaunchSequence.Stage.entries.associateBy { it.name }
+        assertEquals(stage["loadingFarm"], LaunchPresentation.stage(false, true, false, 0))
+        assertEquals(stage["failed"], LaunchPresentation.stage(false, false, false, 0))
+        assertEquals(stage["buildingScene"], LaunchPresentation.stage(true, false, false, 0))
+        assertEquals(stage["loadingTextures"], LaunchPresentation.stage(true, false, true, 0))
+        assertEquals(stage["waitingForFrame"], LaunchPresentation.stage(true, false, true, 1))
+        assertEquals(stage["ready"], LaunchPresentation.stage(true, false, true, 2))
+    }
 }

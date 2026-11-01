@@ -85,6 +85,8 @@ class FarmGame(
             }
         }
         placeCamera()
+        session.view.framesDrawn = 0
+        session.view.isSceneBuilt = true
     }
 
     override fun resize(
@@ -153,6 +155,7 @@ class FarmGame(
         tilePreview.draw(batch, textures, session.preview(now), now, screenScale)
         batch.end()
         session.view.drawnSprites = batch.sprites
+        session.view.framesDrawn++
     }
 
     /** Sets off the fireworks the game side asked for since the last frame. */
@@ -201,6 +204,8 @@ class FarmGame(
 
     override fun dispose() {
         session.photos.handler = null
+        session.view.isSceneBuilt = false
+        session.view.framesDrawn = 0
         batch.dispose()
         textures.dispose()
     }

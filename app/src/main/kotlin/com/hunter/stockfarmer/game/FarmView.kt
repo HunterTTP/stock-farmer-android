@@ -21,6 +21,14 @@ class FarmView {
     @Volatile
     var snapshot: ViewSnapshot? = null
 
+    /** True from when the farm scene is built until it is torn down, for the launch screen's stages. */
+    @Volatile
+    var isSceneBuilt: Boolean = false
+
+    /** Frames the farm has drawn since its scene was built. */
+    @Volatile
+    var framesDrawn: Int = 0
+
     /** Sprites drawn in the last frame, for the performance screen's node count. */
     @Volatile
     var drawnSprites: Int = 0

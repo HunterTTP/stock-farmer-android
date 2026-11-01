@@ -54,6 +54,7 @@ import com.hunter.stockfarmer.notifications.WorkManagerFieldReadyScheduler
 import com.hunter.stockfarmer.ui.Hud
 import com.hunter.stockfarmer.ui.rewards.RewardFlights
 import com.hunter.stockfarmer.ui.rewards.RewardFlightsHost
+import com.hunter.stockfarmer.ui.screens.LaunchPresentation
 import com.hunter.stockfarmer.ui.screens.LaunchScreen
 import com.hunter.stockfarmer.ui.screens.PerformanceSampling
 import com.hunter.stockfarmer.ui.timelapse.LocalTimelapseRecorder
@@ -119,12 +120,24 @@ class MainActivity :
                     }
                     if (launching || !persistence.isReady) {
                         key(launchId) {
-                            val stage =
-                                when {
-                                    persistence.isReady -> LaunchSequence.Stage.ready
-                                    persistence.isLoading -> LaunchSequence.Stage.loadingFarm
-                                    else -> LaunchSequence.Stage.failed
+                            var isSceneBuilt by remember { mutableStateOf(false) }
+                            var framesDrawn by remember { mutableIntStateOf(0) }
+                            LaunchedEffect(Unit) {
+                                while (true) {
+                                    isSceneBuilt = model.session.view.isSceneBuilt
+                                    framesDrawn =
+                                        model.session.view.framesDrawn
+                                            .coerceAtMost(2)
+                                    delay(RENDERER_POLL_MILLIS)
                                 }
+                            }
+                            val stage =
+                                LaunchPresentation.stage(
+                                    persistence.isReady,
+                                    persistence.isLoading,
+                                    isSceneBuilt,
+                                    framesDrawn,
+                                )
                             LaunchScreen(
                                 stage = stage,
                                 saveError = persistence.error,
@@ -230,6 +243,7 @@ class MainActivity :
 
     private companion object {
         const val MUSIC_REFRESH_MILLIS = 1_000L
+        const val RENDERER_POLL_MILLIS = 16L
         const val FARM_TAG = "farm"
     }
 }
