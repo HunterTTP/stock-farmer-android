@@ -60,23 +60,23 @@ import com.hunter.stockfarmer.ui.rewards.HUDTarget
 import com.hunter.stockfarmer.ui.rewards.LocalRewardFlights
 import com.hunter.stockfarmer.ui.rewards.rewardTarget
 import com.hunter.stockfarmer.ui.screens.CareerScreen
+import com.hunter.stockfarmer.ui.screens.ChangelogScreen
 import com.hunter.stockfarmer.ui.screens.DaySummaryBanner
+import com.hunter.stockfarmer.ui.screens.LessonGuide
+import com.hunter.stockfarmer.ui.screens.LessonGuideState
 import com.hunter.stockfarmer.ui.screens.LevelUpScreen
 import com.hunter.stockfarmer.ui.screens.LocalScreenAudio
 import com.hunter.stockfarmer.ui.screens.MarketQuestScreen
-import com.hunter.stockfarmer.ui.screens.QuestBanner
-import com.hunter.stockfarmer.ui.screens.QuestReward
-import com.hunter.stockfarmer.ui.screens.ChangelogScreen
-import com.hunter.stockfarmer.ui.screens.LessonGuide
-import com.hunter.stockfarmer.ui.screens.LessonGuideState
 import com.hunter.stockfarmer.ui.screens.PerformanceMonitor
 import com.hunter.stockfarmer.ui.screens.PerformanceScreen
 import com.hunter.stockfarmer.ui.screens.PrivacyScreen
+import com.hunter.stockfarmer.ui.screens.QuestBanner
+import com.hunter.stockfarmer.ui.screens.QuestReward
 import com.hunter.stockfarmer.ui.screens.SaveSlotsScreen
-import com.hunter.stockfarmer.ui.screens.lessonPulse
 import com.hunter.stockfarmer.ui.screens.SettingsScreen
 import com.hunter.stockfarmer.ui.screens.SoundCenterScreenAudio
 import com.hunter.stockfarmer.ui.screens.StockMarketScreen
+import com.hunter.stockfarmer.ui.screens.lessonPulse
 import com.hunter.stockfarmer.ui.sheets.SheetHost
 import com.hunter.stockfarmer.ui.timelapse.TimelapseScreen
 import kotlinx.coroutines.delay
@@ -212,16 +212,41 @@ fun Hud(
                 CompositionLocalProvider(LocalScreenAudio provides audio) {
                     val close = { screen = null }
                     when (open) {
-                        HudScreen.Quests -> MarketQuestScreen(session, close)
-                        HudScreen.Stocks -> StockMarketScreen(session, close)
-                        HudScreen.Career -> CareerScreen(session, close)
-                        HudScreen.Farms -> SaveSlotsScreen(session, farms, close)
-                        HudScreen.Timelapse -> TimelapseScreen(session, close)
-                        HudScreen.Performance ->
+                        HudScreen.Quests -> {
+                            MarketQuestScreen(session, close)
+                        }
+
+                        HudScreen.Stocks -> {
+                            StockMarketScreen(session, close)
+                        }
+
+                        HudScreen.Career -> {
+                            CareerScreen(session, close)
+                        }
+
+                        HudScreen.Farms -> {
+                            SaveSlotsScreen(session, farms, close)
+                        }
+
+                        HudScreen.Timelapse -> {
+                            TimelapseScreen(session, close)
+                        }
+
+                        HudScreen.Performance -> {
                             PerformanceScreen(performance, close, recordingContext = { "Stock Farmer" })
-                        HudScreen.Changelog -> ChangelogScreen(close)
-                        HudScreen.Privacy -> PrivacyScreen(close)
-                        HudScreen.Settings -> SettingsScreen(session, close)
+                        }
+
+                        HudScreen.Changelog -> {
+                            ChangelogScreen(close)
+                        }
+
+                        HudScreen.Privacy -> {
+                            PrivacyScreen(close)
+                        }
+
+                        HudScreen.Settings -> {
+                            SettingsScreen(session, close)
+                        }
                     }
                 }
             }

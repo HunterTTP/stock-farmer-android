@@ -39,6 +39,7 @@ import com.hunter.stockfarmer.audio.SoundCenter
 import com.hunter.stockfarmer.audio.ambienceDriver
 import com.hunter.stockfarmer.core.feedback.HapticCue
 import com.hunter.stockfarmer.core.model.GameState
+import com.hunter.stockfarmer.core.presentation.LaunchSequence
 import com.hunter.stockfarmer.core.rules.GameEvent
 import com.hunter.stockfarmer.core.rules.NightPulse
 import com.hunter.stockfarmer.core.rules.minuteOfDay
@@ -49,7 +50,6 @@ import com.hunter.stockfarmer.haptics.Haptics
 import com.hunter.stockfarmer.notifications.FieldReadyNotificationPermission
 import com.hunter.stockfarmer.notifications.FieldReadyNotifier
 import com.hunter.stockfarmer.notifications.WorkManagerFieldReadyScheduler
-import com.hunter.stockfarmer.core.presentation.LaunchSequence
 import com.hunter.stockfarmer.ui.Hud
 import com.hunter.stockfarmer.ui.rewards.RewardFlights
 import com.hunter.stockfarmer.ui.rewards.RewardFlightsHost
