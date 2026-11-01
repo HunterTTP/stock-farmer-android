@@ -16,6 +16,16 @@ data class GridPoint(
 
     /** The top left of a square of [side] tiles standing on this tile: its bottom row, in the middle. */
     fun topLeftOfSquare(side: Int): GridPoint = GridPoint(row - (side - 1), col - (side - 1) / 2)
+
+    /** The four tiles that share a side with this one: above, below, left, right. */
+    val neighbors: List<GridPoint>
+        get() =
+            listOf(
+                GridPoint(row - 1, col),
+                GridPoint(row + 1, col),
+                GridPoint(row, col - 1),
+                GridPoint(row, col + 1),
+            )
 }
 
 /** The tiles on the lowest row of the map among them: what a picture standing on this ground really takes up. */
