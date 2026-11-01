@@ -136,17 +136,71 @@ internal fun PillButton(
     title: String,
     fill: Color,
     text: Color,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
     onClick: () -> Unit,
 ) {
     Box(
         Modifier
             .fillMaxWidth()
             .height(52.dp)
+            .then(modifier)
             .background(fill, RoundedCornerShape(16.dp))
-            .clickable(role = Role.Button, onClick = onClick),
+            .clickable(enabled = enabled, role = Role.Button, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         Text(title, color = text, style = HudType.headline)
+    }
+}
+
+@Composable
+internal fun TradePriceRow(
+    title: String,
+    value: String,
+    isTotal: Boolean = false,
+) {
+    Row(
+        Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(title, color = Theme.textSecondary, style = HudType.subheadline)
+        Text(
+            value,
+            color = Theme.money,
+            style =
+                if (isTotal) {
+                    HudType.title3.copy(fontWeight = FontWeight.Bold)
+                } else {
+                    HudType.body.copy(fontWeight = FontWeight.SemiBold)
+                },
+        )
+    }
+}
+
+@Composable
+internal fun TradeProfitRow(
+    title: String,
+    profit: String?,
+    profitCents: Long?,
+) {
+    Row(
+        Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(title, color = Theme.textSecondary, style = HudType.subheadline)
+        if (profit != null) {
+            val color =
+                when {
+                    (profitCents ?: 0L) > 0L -> Theme.earn
+                    (profitCents ?: 0L) < 0L -> Theme.spend
+                    else -> Theme.textPrimary
+                }
+            Text(profit, color = color, style = HudType.body.copy(fontWeight = FontWeight.SemiBold))
+        } else {
+            Text("—", color = Theme.textSecondary, style = HudType.body)
+        }
     }
 }
 
@@ -172,7 +226,20 @@ internal fun SearchCard(
             keyboardActions = KeyboardActions(onSearch = { onRun() }),
             modifier = Modifier.weight(1f),
         )
-        Button(onClick = onRun, enabled = !loading) { Text(if (loading) "Getting prices…" else "Search") }
+        Box(
+            Modifier
+                .height(44.dp)
+                .background(Theme.accent.copy(alpha = 0.15f), CircleShape)
+                .clickable(enabled = !loading, role = Role.Button, onClick = onRun)
+                .padding(horizontal = 16.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                if (loading) "Getting prices…" else "Search",
+                color = Theme.accent,
+                style = HudType.subheadline.copy(fontWeight = FontWeight.Bold),
+            )
+        }
     }
 }
 

@@ -55,16 +55,23 @@ class QuestBoardStateTest {
         val quest = MarketQuest(UUID(0, 1), listOf(QuestObjective(QuestGoal.PlantTrees, 1, 1)), 50)
         assertEquals("Maximum level", QuestCardState.from(quest, engine).reward)
         assertTrue(QuestCardState.from(quest, engine).complete)
+        val board = QuestBoardState.all(engine, now).single()
+        assertFalse(board.isUpgraded)
+        assertEquals(0, board.completedQuests)
+        assertFalse(board.canAffordUpgrade)
         assertEquals(
             "Complete ${QuestRules.QUESTS_TO_UPGRADE} quests to upgrade the Market Stand",
-            QuestBoardState
-                .all(engine, now)
-                .single()
-                .upgrade
-                ?.lockReason,
+            board.upgrade?.lockReason,
         )
+        engine.state.completedMarketQuests = QuestRules.QUESTS_TO_UPGRADE
+        engine.state.money = QuestRules.UPGRADE_COST
+        val affordableBoard = QuestBoardState.all(engine, now).single()
+        assertTrue(affordableBoard.canAffordUpgrade)
+        assertNull(affordableBoard.upgrade?.lockReason)
         engine.state.putBuilding(origin, "marketStandLarge", null)
-        assertNull(QuestBoardState.all(engine, now).single().upgrade)
+        val upgradedBoard = QuestBoardState.all(engine, now).single()
+        assertTrue(upgradedBoard.isUpgraded)
+        assertNull(upgradedBoard.upgrade)
     }
 
     @Test

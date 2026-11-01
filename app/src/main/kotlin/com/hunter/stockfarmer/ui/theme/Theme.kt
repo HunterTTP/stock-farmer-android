@@ -42,6 +42,7 @@ object Theme {
     val blue = Color(0.36f, 0.66f, 1f)
     val xp = Color(0.66f, 0.45f, 0.98f)
     val money = accent
+    val earn = accent
 
     /** A tool's level text at level 3 and above; level 1 is white, level 2 purple. */
     val toolLevel3 = Color(1f, 0.58f, 0.16f)

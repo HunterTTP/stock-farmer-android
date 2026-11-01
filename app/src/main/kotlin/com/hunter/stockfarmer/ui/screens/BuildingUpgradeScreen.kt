@@ -9,9 +9,12 @@ import androidx.compose.runtime.setValue
 import com.hunter.stockfarmer.core.model.GridPoint
 import com.hunter.stockfarmer.core.rules.GameEvent
 import com.hunter.stockfarmer.core.rules.upgradeHome
+import com.hunter.stockfarmer.core.rules.upgradeHouse
 import com.hunter.stockfarmer.core.rules.upgradeMarketStand
 import com.hunter.stockfarmer.core.util.SystemRandomSource
 import com.hunter.stockfarmer.game.GameSession
+import com.hunter.stockfarmer.ui.theme.HudType
+import com.hunter.stockfarmer.ui.theme.Theme
 import java.time.Instant
 
 @Composable
@@ -25,16 +28,26 @@ fun BuildingUpgradeScreen(
     var message by remember { mutableStateOf<String?>(null) }
     ScreenLayout("Upgrade", session, onClose) {
         val offered = buildings.filter { origin == null || it.origin == origin }
-        if (offered.isEmpty()) Text("No building upgrades are available here.")
-        message?.let { Text(it) }
+        if (offered.isEmpty()) {
+            Text("No building upgrades are available here.", style = HudType.subheadline, color = Theme.textSecondary)
+        }
+        message?.let { Text(it, style = HudType.subheadline, color = Theme.spend) }
         offered.forEach { building ->
             UpgradeCard(building.upgrade) {
                 val events =
                     session.screenAction {
-                        if (building.market) {
-                            it.upgradeMarketStand(building.origin, Instant.now(), SystemRandomSource)
-                        } else {
-                            it.upgradeHome(building.origin)
+                        when (building.kind) {
+                            BuildingUpgradeKind.MARKET -> {
+                                it.upgradeMarketStand(building.origin, Instant.now(), SystemRandomSource)
+                            }
+
+                            BuildingUpgradeKind.HOUSE -> {
+                                it.upgradeHouse(building.origin, Instant.now())
+                            }
+
+                            BuildingUpgradeKind.HOME -> {
+                                it.upgradeHome(building.origin)
+                            }
                         }
                     }
                 onEvents(events)

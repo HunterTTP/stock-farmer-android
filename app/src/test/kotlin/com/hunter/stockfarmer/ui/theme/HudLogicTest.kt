@@ -79,6 +79,17 @@ internal class HudLogicTest {
         assertFalse(QuantityRange.canDecrease(1))
         assertTrue(QuantityRange.canIncrease(1, 2))
         assertFalse(QuantityRange.canIncrease(2, 2))
+
+        assertEquals(1L, QuantityRange.fewer(1L))
+        assertEquals(4L, QuantityRange.fewer(5L))
+        assertEquals(5L, QuantityRange.more(5L, 5L))
+        assertEquals(3L, QuantityRange.more(2L, 5L))
+        assertEquals(1L, QuantityRange.max(0L))
+        assertEquals(12L, QuantityRange.max(12L))
+        assertFalse(QuantityRange.canDecrease(1L))
+        assertTrue(QuantityRange.canIncrease(1L, 2L))
+        assertFalse(QuantityRange.canIncrease(2L, 2L))
+        assertFalse(QuantityRange.canIncrease(0L, 0L))
     }
 
     @Test

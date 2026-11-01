@@ -113,6 +113,9 @@ internal data class QuestBoardState(
     val name: String,
     val quests: List<QuestCardState>,
     val upgrade: UpgradeState?,
+    val isUpgraded: Boolean = false,
+    val completedQuests: Int = 0,
+    val canAffordUpgrade: Boolean = false,
 ) {
     companion object {
         fun all(
@@ -124,25 +127,29 @@ internal data class QuestBoardState(
                     Building.named(it.value)?.takeIf { building -> building.isMarketStand }
                         ?: return@mapNotNull null
                 QuestBoardState(
-                    it.key,
-                    building.name,
-                    engine.quests(it.key).map { quest -> QuestCardState.from(quest, engine) },
-                    if (building.isUpgradedMarketStand) {
-                        null
-                    } else {
-                        UpgradeState(
-                            "Upgrade Market Stand",
-                            listOf(
-                                "Your Market Stand becomes bigger where it stands",
-                                "Its quests are harder and in two parts and reward more XP",
-                                "Needs ${QuestRules.QUESTS_TO_UPGRADE} completed quests",
-                                "Quests completed: ${engine.state.completedMarketQuests}/" +
-                                    QuestRules.QUESTS_TO_UPGRADE,
-                            ),
-                            QuestRules.UPGRADE_COST.dollars,
-                            engine.marketUpgradeRejection(it.key, now)?.message,
-                        )
-                    },
+                    origin = it.key,
+                    name = building.name,
+                    quests = engine.quests(it.key).map { quest -> QuestCardState.from(quest, engine) },
+                    upgrade =
+                        if (building.isUpgradedMarketStand) {
+                            null
+                        } else {
+                            UpgradeState(
+                                "Upgrade Market Stand",
+                                listOf(
+                                    "Your Market Stand becomes bigger where it stands",
+                                    "Its quests are harder and in two parts and reward more XP",
+                                    "Needs ${QuestRules.QUESTS_TO_UPGRADE} completed quests",
+                                    "Quests completed: ${engine.state.completedMarketQuests}/" +
+                                        QuestRules.QUESTS_TO_UPGRADE,
+                                ),
+                                QuestRules.UPGRADE_COST.dollars,
+                                engine.marketUpgradeRejection(it.key, now)?.message,
+                            )
+                        },
+                    isUpgraded = building.isUpgradedMarketStand,
+                    completedQuests = engine.state.completedMarketQuests,
+                    canAffordUpgrade = engine.marketUpgradeRejection(it.key, now) == null,
                 )
             }
     }

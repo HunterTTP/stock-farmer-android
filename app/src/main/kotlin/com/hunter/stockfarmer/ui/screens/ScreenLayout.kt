@@ -28,7 +28,9 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -36,7 +38,9 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.hunter.stockfarmer.core.model.dollars
 import com.hunter.stockfarmer.game.GameSession
 import com.hunter.stockfarmer.ui.theme.HudMaterialTheme
+import com.hunter.stockfarmer.ui.theme.HudType
 import com.hunter.stockfarmer.ui.theme.Theme
+import com.hunter.stockfarmer.ui.theme.categoryCard
 import com.hunter.stockfarmer.ui.theme.glassCard
 import kotlinx.coroutines.delay
 
@@ -122,13 +126,35 @@ internal fun UpgradeCard(
     state: UpgradeState,
     onUpgrade: () -> Unit,
 ) {
-    ScreenCard {
-        Text(state.title, style = MaterialTheme.typography.titleMedium, color = Theme.xp)
-        state.effects.forEach { Text(it) }
-        state.lockReason?.let { Text(it, color = MaterialTheme.colorScheme.onSurfaceVariant) }
-        Button(onClick = onUpgrade, enabled = state.lockReason == null, modifier = Modifier.fillMaxWidth()) {
-            Text("Upgrade · ${state.cost}")
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .categoryCard(isHighlighted = false)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        Text(
+            state.title,
+            style = HudType.title2.copy(fontWeight = FontWeight.Bold),
+            color = Theme.textPrimary,
+        )
+        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            state.effects.forEach {
+                Text(it, style = HudType.subheadline, color = Theme.textPrimary)
+            }
         }
+        state.lockReason?.let {
+            Text(it, style = HudType.subheadline, color = Theme.spend)
+        }
+        val isAffordable = state.lockReason == null
+        PillButton(
+            title = "Upgrade · ${state.cost}",
+            fill = Theme.xp,
+            text = Color.White,
+            enabled = isAffordable,
+            modifier = Modifier.alpha(if (isAffordable) 1f else 0.4f),
+            onClick = onUpgrade,
+        )
     }
 }
 

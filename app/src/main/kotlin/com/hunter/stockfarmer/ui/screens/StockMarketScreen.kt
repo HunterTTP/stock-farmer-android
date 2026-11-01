@@ -5,43 +5,44 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import com.hunter.stockfarmer.core.market.StockQuoteProvider
-import com.hunter.stockfarmer.core.model.dollars
 import com.hunter.stockfarmer.core.rules.GameEvent
 import com.hunter.stockfarmer.core.rules.StockMarketRules
 import com.hunter.stockfarmer.core.rules.buyShares
 import com.hunter.stockfarmer.core.rules.sellShares
-import com.hunter.stockfarmer.core.rules.upgradeHouse
 import com.hunter.stockfarmer.game.GameSession
 import com.hunter.stockfarmer.market.NetworkMonitor
 import com.hunter.stockfarmer.market.StockPolling
-import com.hunter.stockfarmer.ui.theme.HudMaterialTheme
+import com.hunter.stockfarmer.ui.theme.BarScrollView
+import com.hunter.stockfarmer.ui.theme.HudSheet
 import com.hunter.stockfarmer.ui.theme.HudType
+import com.hunter.stockfarmer.ui.theme.QuantityControls
 import com.hunter.stockfarmer.ui.theme.Theme
+import com.hunter.stockfarmer.ui.theme.categoryCard
+import com.hunter.stockfarmer.ui.theme.glassCard
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.time.Instant
@@ -133,28 +134,20 @@ fun StockMarketScreen(
                 PillButton("Buy Stock", Theme.accent, Theme.onAccent) { searching = true }
             }
             state.upgrade?.takeIf { !searching }?.let {
-                PillButton("Upgrade", Theme.xp, Color.White) { upgrading = !upgrading }
-                if (upgrading) {
-                    UpgradeCard(it) {
-                        val events =
-                            state.houseOrigin
-                                ?.let { origin ->
-                                    session.screenAction { engine -> engine.upgradeHouse(origin, Instant.now()) }
-                                }.orEmpty()
-                        val limit = StockMarketRules.UPGRADED_SLOT_LIMIT
-                        onEvents(events)
-                        QuestReward.from(events).takeIf { it.isNotEmpty() }?.let { rewards = it }
-                        message = events
-                            .filterIsInstance<GameEvent.Rejected>()
-                            .firstOrNull()
-                            ?.rejection
-                            ?.message
-                            ?: "Luxury House built: you can now own up to $limit stocks"
-                        upgrading = false
-                    }
-                }
+                PillButton("Upgrade", Theme.xp.copy(alpha = 0.14f), Theme.xp) { upgrading = true }
             }
         }
+    }
+    if (upgrading && state.houseOrigin != null) {
+        BuildingUpgradeScreen(
+            session = session,
+            onClose = { upgrading = false },
+            origin = state.houseOrigin,
+            onEvents = { events ->
+                onEvents(events)
+                QuestReward.from(events).takeIf { it.isNotEmpty() }?.let { rewards = it }
+            },
+        )
     }
     trade?.let { selection ->
         val row = state.rows.firstOrNull { it.quote.ticker == selection.ticker }
@@ -170,6 +163,7 @@ fun StockMarketScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun StockTradeDialog(
     session: GameSession,
@@ -179,41 +173,95 @@ private fun StockTradeDialog(
     onEvents: (List<GameEvent>) -> Unit,
     onTraded: (String) -> Unit,
 ) {
-    var quantityText by remember(row.quote.ticker, buying) { mutableStateOf("1") }
+    var quantity by remember(row.quote.ticker, buying) { mutableLongStateOf(1L) }
     var failure by remember { mutableStateOf<String?>(null) }
-    val quantity = quantityText.toLongOrNull() ?: 0L
     val preview = session.act { StockTradeState.from(it, row, buying, quantity, Instant.now()) }
     val verb = if (buying) "Buy" else "Sell"
-    HudMaterialTheme {
-        AlertDialog(
-            onDismissRequest = onDismiss,
-            title = { Text("$verb ${row.quote.ticker}") },
-            text = {
+    val owned = row.holding?.shares ?: 0L
+    val change = StockMarketRules.dayChange(row.priceCents, row.quote.previousCloseCents)
+    val changeColor = if ((change ?: 0.0) >= 0) Theme.accent else Theme.spend
+    val canConfirm = preview.rejection == null && quantity in 1..preview.maximum && preview.maximum > 0L
+    val buttonFill = if (buying) Theme.accent else Theme.danger
+    val buttonText = if (buying) Theme.onAccent else Theme.onDanger
+
+    HudSheet(onDismiss = onDismiss) {
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                "$verb ${row.quote.ticker}",
+                Modifier.weight(1f),
+                style = HudType.headline,
+                color = Theme.textPrimary,
+            )
+            TextButton(onClick = onDismiss) {
+                Text("Cancel", color = Theme.textSecondary, style = HudType.subheadline)
+            }
+        }
+        BarScrollView(Modifier.fillMaxWidth().weight(1f, fill = false)) {
+            Column(
+                Modifier.fillMaxWidth().padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp),
+            ) {
                 Column(
-                    Modifier.verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    Modifier.fillMaxWidth().categoryCard(isHighlighted = false),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
-                    Text("Owned: ${row.holding?.shares ?: 0}")
-                    Text("As of ${ScreenFormat.quoteTime(row.quote.quotedAt)}")
-                    OutlinedTextField(
-                        quantityText,
-                        { quantityText = it },
-                        label = { Text("Whole shares") },
-                        singleLine = true,
+                    val countText = if (owned > 0L) " (${ScreenFormat.number(owned)}x)" else ""
+                    Text(
+                        "${row.quote.ticker}$countText",
+                        style = HudType.title3.copy(fontWeight = FontWeight.Bold),
+                        color = Theme.textPrimary,
                     )
-                    TextButton(onClick = { quantityText = preview.maximum.toString() }) {
-                        Text("Maximum: ${ScreenFormat.number(preview.maximum)}")
+                    if (change != null) {
+                        val arrow = if (change >= 0) "▲" else "▼"
+                        Text(
+                            "$arrow ${ScreenFormat.percent(change)}",
+                            color = changeColor,
+                            style = HudType.subheadline.copy(fontWeight = FontWeight.Bold),
+                        )
                     }
-                    Figure("Price each", row.price)
-                    Figure("Total", preview.total)
-                    Figure("Profit / loss", preview.profit ?: "—")
-                    if (buying) Text("Buying shares does not realize a profit or loss.")
-                    (failure ?: preview.rejection)?.let { Text(it, color = Theme.spend) }
+                    Text(
+                        "As of ${ScreenFormat.quoteTime(row.quote.quotedAt)}",
+                        style = HudType.footnote,
+                        color = Theme.textSecondary,
+                    )
                 }
-            },
-            confirmButton = {
-                TextButton(
-                    enabled = preview.rejection == null && quantity in 1..preview.maximum,
+
+                QuantityControls(
+                    quantity = quantity,
+                    onQuantityChange = { quantity = it },
+                    maximum = preview.maximum,
+                )
+
+                Column(
+                    Modifier.fillMaxWidth().glassCard(14.dp).padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    TradePriceRow("Price each", row.price)
+                    TradePriceRow("Total", preview.total, isTotal = true)
+                    TradeProfitRow("Profit / loss", preview.profit, preview.profitCents)
+                    if (buying) {
+                        Text(
+                            "Buying shares does not realize a profit or loss.",
+                            style = HudType.footnote,
+                            color = Theme.textSecondary,
+                        )
+                    }
+                }
+
+                (failure ?: preview.rejection)?.let {
+                    Text(it, color = Theme.spend, style = HudType.subheadline)
+                }
+
+                PillButton(
+                    title = verb,
+                    fill = buttonFill,
+                    text = buttonText,
+                    enabled = canConfirm,
+                    modifier = Modifier.alpha(if (canConfirm) 1f else 0.5f),
                     onClick = {
                         val events =
                             session.screenAction {
@@ -224,18 +272,20 @@ private fun StockTradeDialog(
                                 }
                             }
                         onEvents(events)
-                        failure =
+                        val rejection =
                             events
                                 .filterIsInstance<GameEvent.Rejected>()
                                 .firstOrNull()
                                 ?.rejection
                                 ?.message
+                        failure = rejection
                         val resultVerb = if (buying) "Bought" else "Sold"
-                        if (failure == null) onTraded("$resultVerb $quantity ${row.quote.ticker}")
+                        if (rejection == null) {
+                            onTraded("$resultVerb $quantity ${row.quote.ticker}")
+                        }
                     },
-                ) { Text(verb) }
-            },
-            dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
-        )
+                )
+            }
+        }
     }
 }

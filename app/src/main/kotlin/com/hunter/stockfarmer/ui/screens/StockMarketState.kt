@@ -225,6 +225,7 @@ internal data class StockTradeState(
     val total: String,
     val profit: String?,
     val rejection: String?,
+    val profitCents: Long? = null,
 ) {
     companion object {
         fun from(
@@ -260,8 +261,8 @@ internal data class StockTradeState(
                     ?.rejection
                     ?.message
             val total = StockMarketRules.totalCents(quantity, row.priceCents)
-            val profit =
-                if (rejection == null) {
+            val profitCents =
+                if (rejection == null && !buying) {
                     preview.state.stockTrades
                         .lastOrNull()
                         ?.profitCents
@@ -271,8 +272,9 @@ internal data class StockTradeState(
             return StockTradeState(
                 maximum,
                 total?.let { StockMarketRules.dollars(it).dollars } ?: "—",
-                profit?.let(ScreenFormat::signedMoney),
+                profitCents?.let(ScreenFormat::signedMoney),
                 rejection,
+                profitCents,
             )
         }
     }
