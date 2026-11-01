@@ -65,8 +65,7 @@ import com.hunter.stockfarmer.ui.menus.MenuAssetLoader
 import com.hunter.stockfarmer.ui.menus.MenuImage
 import com.hunter.stockfarmer.ui.menus.MenuPictures
 import com.hunter.stockfarmer.ui.menus.rememberMenuAssetLoader
-import com.hunter.stockfarmer.ui.rewards.HUDTarget
-import com.hunter.stockfarmer.ui.rewards.rewardTarget
+import com.hunter.stockfarmer.ui.rewards.LocalRewardFlights
 import com.hunter.stockfarmer.ui.screens.lessonPulse
 import com.hunter.stockfarmer.ui.theme.BuildingPriceLine
 import com.hunter.stockfarmer.ui.theme.ChoiceList
@@ -79,6 +78,7 @@ import com.hunter.stockfarmer.ui.theme.MoneyPriceLine
 import com.hunter.stockfarmer.ui.theme.Theme
 import com.hunter.stockfarmer.ui.theme.hudPanel
 import com.hunter.stockfarmer.ui.theme.newDot
+import com.hunter.stockfarmer.ui.theme.pulsing
 import kotlinx.coroutines.flow.update
 
 /** What the ring's non-tool buttons open. */
@@ -105,6 +105,10 @@ internal fun ToolBar(
     val density = LocalDensity.current.density
     val haptics = LocalHapticFeedback.current
     val loader = rememberMenuAssetLoader()
+    val flights = LocalRewardFlights.current
+    flights?.revision
+    val storagePulse = flights?.tracker?.storagePulse ?: 0
+    val cast by session.casts.collectAsState()
     val lesson = hud.lesson
     val lessonTool =
         when (lesson.toolTarget) {
@@ -174,7 +178,7 @@ internal fun ToolBar(
                     pulses = lesson.pulses,
                     isNew =
                         if (lesson.isTeaching) lessonTool != null || lesson.storageTarget else newTools.isNotEmpty(),
-                    throbTrigger = 0,
+                    throbTrigger = storagePulse,
                     showsTile = { tileAt(it) != null },
                     onTap = {
                         openDropdown = null
@@ -187,21 +191,22 @@ internal fun ToolBar(
                     onDragEnded = { drag.end() },
                     modifier =
                         Modifier
-                            .rewardTarget(HUDTarget.Storage)
-                            .menuInteractionRegion(regions, "tool-circle", 12.dp),
+                            .menuInteractionRegion(regions, "tool-circle", (12 * scale).dp),
                     onDraggingChanged = onDraggingChanged,
                 ) { MenuImage(hud.toolPicture, loader, Modifier.fillMaxSize()) }
-                Options(
-                    hud = hud,
-                    isRingOpen = isRingOpen,
-                    openDropdown = openDropdown,
-                    regions = regions,
-                    onOpen = { openDropdown = if (openDropdown == it) null else it },
-                    modifier =
-                        Modifier
-                            .padding(bottom = ((ToolCircleMetrics.DIAMETER - DROPDOWN_HEIGHT) * scale / 2).dp)
-                            .alpha(if (isRingOpen) 0f else 1f),
-                )
+                if (cast == null) {
+                    Options(
+                        hud = hud,
+                        isRingOpen = isRingOpen,
+                        openDropdown = openDropdown,
+                        regions = regions,
+                        onOpen = { openDropdown = if (openDropdown == it) null else it },
+                        modifier =
+                            Modifier
+                                .padding(bottom = ((ToolCircleMetrics.DIAMETER - DROPDOWN_HEIGHT) * scale / 2).dp)
+                                .alpha(if (isRingOpen) 0f else 1f),
+                    )
+                }
             }
         }
         ToolRing(
@@ -266,7 +271,7 @@ private fun Options(
                 isOpen = openDropdown == dropdown.id,
                 modifier =
                     Modifier
-                        .lessonPulse(dropdown.pulses)
+                        .pulsing(dropdown.pulses, keepsPlace = false)
                         .menuInteractionRegion(
                             regions,
                             "tool-dropdown-${dropdown.id}",

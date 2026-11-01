@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -28,6 +29,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.changedToUpIgnoreConsumed
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalDensity
@@ -39,6 +41,11 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.hunter.stockfarmer.ui.rewards.HUDTarget
+import com.hunter.stockfarmer.ui.rewards.LocalRewardFlights
 import com.hunter.stockfarmer.ui.screens.lessonPulse
 import com.hunter.stockfarmer.ui.theme.LocalHudScale
 import com.hunter.stockfarmer.ui.theme.darkGlass
@@ -71,6 +78,18 @@ fun ToolCircle(
     val scale = LocalHudScale.current
     val density = LocalDensity.current.density
     val scope = rememberCoroutineScope()
+    val owner = LocalLifecycleOwner.current
+    val flights = LocalRewardFlights.current
+    var cancelRequests by remember { mutableIntStateOf(0) }
+    DisposableEffect(owner) {
+        val observer =
+            LifecycleEventObserver { _, event ->
+                if (event == Lifecycle.Event.ON_PAUSE) cancelRequests++
+            }
+        owner.lifecycle.addObserver(observer)
+        onDispose { owner.lifecycle.removeObserver(observer) }
+    }
+    DisposableEffect(flights) { onDispose { flights?.frames?.remove(HUDTarget.Storage) } }
     val currentTool by rememberUpdatedState(tool)
     val currentScale by rememberUpdatedState(scale)
     val currentShowsTile by rememberUpdatedState(showsTile)
@@ -106,8 +125,8 @@ fun ToolCircle(
     var restCenter by remember { mutableStateOf<Offset?>(null) }
     val offset = remember { Animatable(Offset.Zero, Offset.VectorConverter) }
     var isDragging by remember { mutableStateOf(false) }
-    var shownThrob by remember { mutableStateOf(throbTrigger) }
-    if (!isDragging && shownThrob != throbTrigger) shownThrob = throbTrigger
+    var shownThrob by remember { mutableIntStateOf(0) }
+    LaunchedEffect(throbTrigger) { if (!isDragging) shownThrob = throbTrigger }
     val currentDragging by rememberUpdatedState(onDraggingChanged)
     LaunchedEffect(isDragging) { currentDragging(isDragging) }
 
@@ -118,39 +137,48 @@ fun ToolCircle(
             .onGloballyPositioned {
                 restOrigin = it.positionInWindow()
                 restCenter = (restOrigin + Offset(it.size.width / 2f, it.size.height / 2f)) / density
-            }.pointerInput(gesture) {
-                awaitEachGesture {
-                    val down = awaitFirstDown(requireUnconsumed = false)
-                    val start = (restOrigin + down.position) / density
-                    var first = true
-                    while (true) {
-                        val change = awaitPointerEventChange(down.id) ?: break
-                        if (change.changedToUpIgnoreConsumed()) {
-                            gesture.end()
-                            isDragging = false
-                            scope.launch { offset.animateTo(Offset.Zero, spring(1f, 438f)) }
-                            break
-                        }
-                        if (!change.pressed) {
-                            gesture.cancel()
-                            isDragging = false
-                            scope.launch { offset.animateTo(Offset.Zero, spring(1f, 438f)) }
-                            break
-                        }
-                        val location = (restOrigin + change.position) / density
-                        if (gesture.change(start, location)) {
-                            change.consume()
-                            isDragging = true
-                            // The circle centers under the finger, even if it was grabbed by its edge.
-                            val target = location - (restCenter ?: start)
-                            if (first) {
-                                first = false
-                                scope.launch { offset.animateTo(target, tween(100, easing = LinearOutSlowInEasing)) }
-                            } else {
-                                scope.launch { offset.snapTo(target) }
+            }.pointerInput(gesture, cancelRequests) {
+                try {
+                    awaitEachGesture {
+                        val down = awaitFirstDown(requireUnconsumed = false)
+                        val start = (restOrigin + down.position) / density
+                        var first = true
+                        while (true) {
+                            val change = awaitPointerEventChange(down.id) ?: break
+                            if (change.changedToUpIgnoreConsumed()) {
+                                gesture.end()
+                                isDragging = false
+                                scope.launch { offset.animateTo(Offset.Zero, spring(1f, 438f)) }
+                                break
+                            }
+                            if (!change.pressed) {
+                                gesture.cancel()
+                                isDragging = false
+                                scope.launch { offset.animateTo(Offset.Zero, spring(1f, 438f)) }
+                                break
+                            }
+                            val location = (restOrigin + change.position) / density
+                            if (gesture.change(start, location)) {
+                                change.consume()
+                                isDragging = true
+                                // The circle centers under the finger, even if it was grabbed by its edge.
+                                val target = location - (restCenter ?: start)
+                                if (first) {
+                                    first = false
+                                    scope.launch {
+                                        offset.animateTo(target, tween(100, easing = LinearOutSlowInEasing))
+                                    }
+                                } else {
+                                    scope.launch { offset.snapTo(target) }
+                                }
                             }
                         }
                     }
+                } finally {
+                    gesture.cancel()
+                    isDragging = false
+                    currentDragging(false)
+                    scope.launch { offset.snapTo(Offset.Zero) }
                 }
             }.semantics {
                 contentDescription = title
@@ -172,7 +200,8 @@ fun ToolCircle(
                     scaleX = grown
                     scaleY = grown
                     alpha = if (isDragging) ToolCircleMetrics.DRAGGED_OPACITY else 1f
-                }.throb(shownThrob)
+                }.onGloballyPositioned { flights?.frames?.set(HUDTarget.Storage, it.boundsInRoot()) }
+                .throb(shownThrob)
                 .lessonPulse(pulses && !isDragging)
                 .newDot(isNew, Alignment.TopEnd, DpOffset((-4).dp, 4.dp))
                 .then(

@@ -38,11 +38,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.hunter.stockfarmer.core.catalog.Building
+import com.hunter.stockfarmer.core.catalog.StorageItem
 import com.hunter.stockfarmer.core.model.Lesson
 import com.hunter.stockfarmer.core.model.ShopItem
 import com.hunter.stockfarmer.core.rules.currentLesson
 import com.hunter.stockfarmer.core.rules.learn
 import com.hunter.stockfarmer.game.GameSession
+import com.hunter.stockfarmer.ui.theme.BuildingPriceLine
 import com.hunter.stockfarmer.ui.theme.ChoiceRow
 import com.hunter.stockfarmer.ui.theme.HudChoice
 import com.hunter.stockfarmer.ui.theme.HudIcon
@@ -50,6 +53,7 @@ import com.hunter.stockfarmer.ui.theme.HudIcons
 import com.hunter.stockfarmer.ui.theme.HudSheet
 import com.hunter.stockfarmer.ui.theme.HudType
 import com.hunter.stockfarmer.ui.theme.MoneyBadge
+import com.hunter.stockfarmer.ui.theme.MoneyPriceLine
 import com.hunter.stockfarmer.ui.theme.Theme
 import com.hunter.stockfarmer.ui.theme.ToastView
 import com.hunter.stockfarmer.ui.theme.categoryCard
@@ -264,22 +268,7 @@ private fun CatalogChoiceCard(
                     onPick = { onChoose(choice.selection) },
                     subtitle = choice.subtitle,
                     icon = { MenuImage(choice.picture, loader) },
-                    priceLine =
-                        if (choice.prices.isEmpty()) {
-                            null
-                        } else {
-                            {
-                                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                    choice.prices.forEach { price ->
-                                        Text(
-                                            price.text,
-                                            style = HudType.caption,
-                                            color = if (price.affordable) Theme.accent else Theme.spend,
-                                        )
-                                    }
-                                }
-                            }
-                        },
+                    priceLine = catalogPriceLine(choice, loader),
                     isSelected = choice.selected,
                     isLocked = choice.requiredLevel != null,
                     isNew = choice.isNew,
@@ -350,6 +339,30 @@ private fun CatalogChoiceCard(
                 }
             }
         }
+    }
+}
+
+private fun catalogPriceLine(
+    choice: MenuChoice,
+    loader: MenuAssetLoader,
+): (@Composable () -> Unit)? {
+    val money = choice.prices.firstOrNull() ?: return null
+    val building =
+        (choice.selection.shopItem as? ShopItem.BuildingItem)?.let { Building.named(it.id) }
+            ?: return { MoneyPriceLine(money.text, money.affordable) }
+    val logs = choice.prices.getOrNull(1).takeIf { building.logCost > 0 }
+    val stones = choice.prices.getOrNull(if (building.logCost > 0) 2 else 1).takeIf { building.stoneCost > 0 }
+    return {
+        BuildingPriceLine(
+            moneyText = money.text,
+            hasMoney = money.affordable,
+            logs = building.logCost,
+            hasLogs = logs?.affordable ?: true,
+            logIcon = { MenuImage(MenuPictures.stored(StorageItem.Log), loader) },
+            stones = building.stoneCost,
+            hasStones = stones?.affordable ?: true,
+            stoneIcon = { MenuImage(MenuPictures.stored(StorageItem.Stone), loader) },
+        )
     }
 }
 

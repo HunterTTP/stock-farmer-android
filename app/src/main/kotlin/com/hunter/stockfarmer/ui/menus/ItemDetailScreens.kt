@@ -1,7 +1,10 @@
 package com.hunter.stockfarmer.ui.menus
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -10,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -27,8 +31,10 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.scale
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.hunter.stockfarmer.core.catalog.Building
@@ -57,8 +63,6 @@ import com.hunter.stockfarmer.ui.theme.DetailStat
 import com.hunter.stockfarmer.ui.theme.EffectsCard
 import com.hunter.stockfarmer.ui.theme.HudType
 import com.hunter.stockfarmer.ui.theme.LevelRequirementNotice
-import com.hunter.stockfarmer.ui.theme.PillButton
-import com.hunter.stockfarmer.ui.theme.PillRole
 import com.hunter.stockfarmer.ui.theme.Requirement
 import com.hunter.stockfarmer.ui.theme.Theme
 import com.hunter.stockfarmer.ui.theme.categoryCard
@@ -96,6 +100,7 @@ internal data class ItemDetailState(
     val stats: List<DetailStat>,
     val requirements: List<ItemRequirement>,
     val fountain: Boolean?,
+    val colors: List<MenuChoice>,
 ) {
     companion object {
         fun from(
@@ -136,6 +141,7 @@ internal data class ItemDetailState(
                 engine.state.sprinklersRunConstantly.takeIf {
                     !locked && (item as? ShopItem.DecorationItem)?.let { Decoration.named(it.id)?.isSprinkler } == true
                 },
+                itemDetailColors(engine, item),
             )
         }
 
@@ -181,22 +187,18 @@ fun ItemDetailScreen(
         stats = state.stats,
         isHighlighted = state.choice.selected,
         dropdowns =
-            if (state.choice.variants.isEmpty()) {
+            if (state.colors.isEmpty()) {
                 null
             } else {
                 {
-                    val variants = state.choice.variants
+                    val variants = state.colors
                     SheetChoice(
-                        if (item == ShopItem.Water || item == ShopItem.Fence || item is ShopItem.Tree) {
-                            "Color"
-                        } else {
-                            state.choice.variantTitle.removeSuffix("s")
-                        },
+                        "Color",
                         variants.firstOrNull { it.selected }?.title ?: variants.first().title,
                         variants,
                         { it.title },
                     ) { variant ->
-                        session.act { MenuActions.choose(it, variant.selection) }?.let { onMessage(it.message) }
+                        session.act { selectItemDetailColor(it, variant.selection) }
                         state = session.act { ItemDetailState.from(it, item) }
                     }
                 }
@@ -229,13 +231,17 @@ fun ItemDetailScreen(
         state.fountain?.let { runs ->
             Row(Modifier.fillMaxWidth().categoryCard(false), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Text("Always On", style = HudType.headline)
-                    Text("Every sprinkler runs all the time, like a fountain", style = HudType.caption)
+                    Text("Always On", style = HudType.headline, color = Theme.textPrimary)
+                    Text(
+                        "Every sprinkler runs all the time, like a fountain",
+                        style = HudType.caption,
+                        color = Theme.textSecondary,
+                    )
                 }
                 Switch(runs, { value ->
                     session.act { it.setSprinklersRunConstantly(value) }
                     state = session.act { ItemDetailState.from(it, item) }
-                })
+                }, colors = SwitchDefaults.colors(checkedTrackColor = Theme.accent))
             }
         }
     }
@@ -315,9 +321,13 @@ fun ToolUpgradeScreen(
     }
     BarScrollView {
         Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
-            Column(Modifier.fillMaxWidth().categoryCard(false), horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(
+                Modifier.fillMaxWidth().categoryCard(false),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
                 HarvestToolImage(tool, Modifier.size(120.dp))
-                Text(state.title, style = HudType.title2)
+                Text(state.title, style = HudType.title2.copy(fontWeight = FontWeight.Bold), color = Theme.textPrimary)
             }
             if (state.effects.isNotEmpty()) EffectsCard(state.effects)
             state.upgrade?.let { upgrade ->
@@ -325,17 +335,23 @@ fun ToolUpgradeScreen(
                 if (level != null) {
                     LevelRequirementNotice(level)
                 } else {
-                    PillButton(
-                        title = "Upgrade · ${upgrade.cost.dollars}",
-                        onClick = {
-                            val result = session.upgradeTool(tool)
-                            if (result.bought) onBought(result.message) else onMessage(result.message)
-                        },
-                        modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
-                        role = PillRole.accent,
-                        enabled = state.affordable,
-                        cornerRadius = 16.dp,
-                    )
+                    Box(
+                        Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 52.dp)
+                            .alpha(if (state.affordable) 1f else 0.4f)
+                            .background(Theme.xp, RoundedCornerShape(16.dp))
+                            .clickable(role = Role.Button) {
+                                val result = session.upgradeTool(tool)
+                                if (result.bought) onBought(result.message) else onMessage(result.message)
+                            },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            "Upgrade · ${upgrade.cost.dollars}",
+                            style = HudType.headline.copy(color = Color.White, fontWeight = FontWeight.SemiBold),
+                        )
+                    }
                 }
             }
         }

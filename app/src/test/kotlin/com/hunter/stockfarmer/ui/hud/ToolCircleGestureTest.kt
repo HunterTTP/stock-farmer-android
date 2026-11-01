@@ -92,6 +92,20 @@ class ToolCircleGestureTest {
     }
 
     @Test
+    fun `cancelling a pending activation clears timers and permits a fresh tap`() {
+        gesture.change(start, Offset(190f, 100f))
+        assertEquals(2, pending.size)
+        gesture.cancel()
+        assertTrue(pending.isEmpty())
+        assertFalse(gesture.isActive)
+        assertFalse(gesture.isDragging)
+        gesture.cancel()
+        assertEquals(1, log.count { it == "ended" })
+        gesture.end()
+        assertEquals("tap", log.last())
+    }
+
+    @Test
     fun `tools aim up and right of the finger where a tile shows, the axe at the finger`() {
         val finger = Offset(100f, 100f)
         assertEquals(Offset(116f, 84f), aimedTarget(finger, tool, 1f, showsTile = { true }))
