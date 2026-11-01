@@ -28,7 +28,7 @@ internal class HudLogicTest {
     }
 
     @Test
-    fun `palette matches the iOS values that existing screens used`() {
+    fun `palette keeps the values existing screens use`() {
         assertEquals(0xFF87FF85.toInt(), Theme.accent.toArgb())
         assertEquals(0xFFA873FA.toInt(), Theme.xp.toArgb())
         assertEquals(0xFFFF5959.toInt(), Theme.spend.toArgb())

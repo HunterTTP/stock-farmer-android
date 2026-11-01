@@ -57,7 +57,7 @@ internal sealed interface PaletteAction {
     ) : PaletteAction
 }
 
-/** One row in a tool's list of choices (iOS `ToolChoice`), reduced to what the row draws. */
+/** One row in a tool's list of choices, reduced to what the row draws. */
 internal data class ToolChoice(
     val id: String,
     val title: String,
@@ -96,7 +96,7 @@ internal data class ToolDropdown(
     val selected: ToolChoice? get() = choices.firstOrNull { it.isSelected }
 }
 
-/** Builds the dropdowns each tool offers from the game state (iOS `ToolPalette`). Nothing here changes the game. */
+/** Builds the dropdowns each tool offers from the game state. Nothing here changes the game. */
 internal object ToolPalette {
     private val fertilizerPicture = MenuPicture.Asset("images/tools/fertilizer.png")
 

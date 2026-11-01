@@ -30,7 +30,7 @@ import com.hunter.stockfarmer.ui.theme.EffectLine
 import com.hunter.stockfarmer.ui.theme.EffectLine.Segment
 import com.hunter.stockfarmer.ui.theme.EffectLine.Segment.Tint
 
-/** ItemInfo.swift's text and semantic tints, built without Compose or Android calls. */
+/** Item text and semantic tints, built without Compose or Android calls. */
 data class ItemInfo(
     val name: String,
     val effects: List<EffectLine>,

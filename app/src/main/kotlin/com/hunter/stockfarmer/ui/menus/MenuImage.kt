@@ -41,7 +41,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.IOException
 
-/** Menus use spring artwork, like the iOS HUD. Decoding stays off the UI thread and the cache is bounded. */
+/** Menus use spring artwork. Decoding stays off the UI thread and the cache is bounded. */
 internal class MenuAssetLoader(
     private val assets: AssetManager,
 ) {
@@ -145,7 +145,7 @@ private fun WaterImage(style: WaterStyle) {
     }
 }
 
-/** Paths are generated from the grass image on iOS too; there are no path image files in the assets. */
+/** Paths are generated from the grass image; there are no path image files in the assets. */
 @Composable
 private fun GroundImage(
     cover: GroundCover,

@@ -28,7 +28,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
-/** SwiftUI's `.snappy`: a 0.5 second spring with 0.15 bounce, so a damping ratio of 0.85 and stiffness (2 pi / 0.5) squared. */
+/** A snappy spring: 0.5 second spring with 0.15 bounce, so a damping ratio of 0.85 and stiffness (2 pi / 0.5) squared. */
 object ToastMotion {
     const val DAMPING_RATIO = 0.85f
     const val STIFFNESS = 157.9f

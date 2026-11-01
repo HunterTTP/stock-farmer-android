@@ -55,7 +55,7 @@ private class PreferencePlayStorage(
 }
 
 /**
- * The settings behind the Graphics and Gameplay pages (iOS `GameViewModel` flags, shadow intensity and tool reach). Reads
+ * The settings behind the Graphics and Gameplay pages (flags, shadow intensity and tool reach). Reads
  * are Compose state, so the HUD and the pages follow a change at once.
  */
 class PlaySettings(

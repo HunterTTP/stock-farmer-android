@@ -55,7 +55,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /**
- * The round tool icon: tap it to change tools, or drag it over the farm to use the tool (iOS `ToolCircle`). All positions the
+ * The round tool icon: tap it to change tools, or drag it over the farm to use the tool. All positions the
  * callbacks see are window coordinates in dp.
  */
 @Composable

@@ -42,7 +42,7 @@ class GameSession(
 
     private val days = MutableSharedFlow<DaySummary>(extraBufferCapacity = EVENT_BUFFER)
 
-    /** The day just over, with what sold in it, a little after each new day begins (as the banner fades in on iOS). */
+    /** The day just over, with what sold in it, a little after each new day begins (the banner fades in). */
     val newDays: SharedFlow<DaySummary> = days.asSharedFlow()
 
     fun announce(summary: DaySummary) {

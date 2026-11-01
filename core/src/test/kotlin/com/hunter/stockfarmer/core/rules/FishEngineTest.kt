@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test
 import java.time.Instant
 import kotlin.math.abs
 
-/** The fish half of the Swift `FishTests`: ponds, arrivals, swimming, weights and days. */
+/** Ponds, arrivals, swimming, weights and days. */
 class FishEngineTest {
     private val now = Instant.ofEpochSecond(30_000_000)
     private val anchor = GridPoint(20, 20)

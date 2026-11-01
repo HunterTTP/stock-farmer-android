@@ -11,7 +11,7 @@ import java.util.UUID
 import kotlin.math.floor
 import kotlin.math.roundToLong
 
-/** A UUID as the upper-case string Swift writes. */
+/** A UUID as an upper-case string. */
 object UuidSerializer : KSerializer<UUID> {
     override val descriptor = PrimitiveSerialDescriptor("Uuid", PrimitiveKind.STRING)
 
@@ -23,7 +23,7 @@ object UuidSerializer : KSerializer<UUID> {
     override fun deserialize(decoder: Decoder): UUID = UUID.fromString(decoder.decodeString())
 }
 
-/** An instant as seconds since 2001-01-01, the number Swift's `Date` writes. */
+/** An instant as seconds since 2001-01-01 (the Apple reference date). */
 object InstantSerializer : KSerializer<Instant> {
     private const val REFERENCE_EPOCH = 978_307_200.0
 

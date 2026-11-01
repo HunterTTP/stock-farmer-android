@@ -63,7 +63,7 @@ class GamePersistence(
             if (state.isReady) save(flush = true) else load()
         }
 
-    /** Recovery is an explicit choice, as on iOS; a failed load never creates a replacement farm. */
+    /** Recovery is an explicit choice; a failed load never creates a replacement farm. */
     fun restore(backup: SaveBackup) =
         scheduler.execute {
             if (!closed && !state.isReady && backup in state.backups) load(backup)

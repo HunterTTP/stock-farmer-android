@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test
 
 class RoosterTest {
     @Test fun `optionalRoostersHaveNewIDsAndPreserveHistoricalHenMigration`() {
-        // The Coop migration assertions are blocked until Coop is ported.
         assertEquals(7, ChickenVariant.all.size)
         assertTrue(ChickenVariant.all.none { it.isRooster })
         assertEquals(7, ChickenVariant.roosters.size)

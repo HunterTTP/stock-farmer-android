@@ -38,7 +38,7 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-/** One row of a [ChoiceList]: the iOS `ToolChoice` reduced to what the row draws. */
+/** One row of a [ChoiceList]: reduced to what the row draws. */
 data class HudChoice(
     val id: String,
     val title: String,

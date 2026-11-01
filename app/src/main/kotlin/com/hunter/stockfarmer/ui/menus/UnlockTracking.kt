@@ -15,7 +15,7 @@ import com.hunter.stockfarmer.core.rules.hasSeen
 import com.hunter.stockfarmer.core.rules.requiredLevel
 import com.hunter.stockfarmer.game.GameSession
 
-/** Keys match UnlockKeys.swift; farmland gets a fresh dot whenever its allowance increases. */
+/** Keys are stable saved strings; farmland gets a fresh dot whenever its allowance increases. */
 fun GameEngine.unlockKey(item: ShopItem): String? =
     when (item) {
         is ShopItem.Seed -> Crop.named(item.cropID)?.let { "seed:${it.id}" }

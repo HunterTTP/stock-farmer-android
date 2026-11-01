@@ -13,7 +13,7 @@ import java.io.File
 
 class NoticeUnlocksTest {
     @Test
-    fun `multi level notice sections follow the iOS category order`() {
+    fun `multi level notice sections follow the category order`() {
         val sections = LevelUnlocks.unlocked(0, 50).noticeSections()
         assertEquals(
             listOf(

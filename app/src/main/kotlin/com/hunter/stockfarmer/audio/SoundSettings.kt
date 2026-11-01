@@ -25,7 +25,7 @@ enum class AudioChannel(
     }
 }
 
-/** Zero is the off switch. A fresh Android installation needs no legacy iOS preference migration. */
+/** Zero is the off switch. */
 @ConsistentCopyVisibility
 data class SoundSettings private constructor(
     private val levels: Map<AudioChannel, Double>,

@@ -54,9 +54,9 @@ import java.time.Instant
 /** What the ring needs from the game to draw its faces. */
 internal data class RingState(
     val currentTool: HudTool,
-    /** Slot for the unlock-dot slice: the tools that have something new. */
+    /** The tools that have something new. */
     val newTools: Set<HudTool> = emptySet(),
-    /** Slot for the lesson slice: the tool the first-time walk through points at. */
+    /** The tool the first-time lesson points at. */
     val lessonTool: HudTool? = null,
     val isStorageLesson: Boolean = false,
     val storageDescription: String = "",
@@ -70,7 +70,7 @@ private const val SPRING_STIFFNESS = 321.5f
 private const val CLOSED_SCALE = 0.3f
 
 /**
- * The ring of buttons that fans out around the tool circle when it is tapped (iOS `ToolRing`). The tools sit on the outer arc and
+ * The ring of buttons that fans out around the tool circle when it is tapped. The tools sit on the outer arc and
  * Storage, Settings and the clock on an inner one, both facing up and to the right, away from the corner the circle sits in.
  */
 @Composable

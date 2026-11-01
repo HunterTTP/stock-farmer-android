@@ -27,7 +27,7 @@ import java.time.Instant
 import kotlin.math.abs
 import kotlin.math.max
 
-/** The pet half of the Swift `PetTests`: moving in, names, houses, wandering and rushing crops. */
+/** Pets: moving in, names, houses, wandering and rushing crops. */
 class PetEngineTest {
     private val now = Instant.ofEpochSecond(12_000_000)
     private val house = GridPoint(20, 20)

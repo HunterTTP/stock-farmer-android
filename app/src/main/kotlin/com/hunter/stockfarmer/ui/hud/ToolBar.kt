@@ -430,7 +430,7 @@ private fun priceLine(
     }
 }
 
-/** Splits widths into rows that fit [available], a new row starting when the next would not fit (iOS `WrappingStack`). */
+/** Splits widths into rows that fit [available], a new row starting when the next would not fit. */
 object WrappingRows {
     fun rows(
         widths: List<Int>,

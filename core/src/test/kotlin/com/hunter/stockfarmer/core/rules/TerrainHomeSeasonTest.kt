@@ -28,7 +28,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.time.Instant
 
-/** The Swift `SeasonTests`, `GroundCoverTests`, `HomeUpgradeTests` and `SaveValidationTests` that the first port left out. */
+/** Seasons, ground cover, home upgrades and save validation. */
 class TerrainHomeSeasonTest {
     // Seasons
 

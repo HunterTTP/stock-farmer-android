@@ -27,7 +27,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.time.Instant
 
-/** The Swift `RodFishingTests`, `FishWeightTests` and `SellOnHarvestTests`. */
+/** Rod fishing, fish weights and selling on harvest. */
 class RodFishingEngineTest {
     private val anchor = GridPoint(10, 10)
     private val now = Instant.ofEpochSecond(40_000_000)

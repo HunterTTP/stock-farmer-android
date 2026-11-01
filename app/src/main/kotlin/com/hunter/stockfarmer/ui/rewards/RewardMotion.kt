@@ -40,7 +40,7 @@ private fun RewardPoint.interpolate(
     amount: Double,
 ): RewardPoint = RewardPoint(x + (other.x - x) * amount, y + (other.y - y) * amount)
 
-// SwiftUI's easeIn/easeOut cubic curves have y control points 0 and 1.
+// The easeIn/easeOut cubic curves have y control points 0 and 1.
 private fun ease(
     progress: Double,
     x1: Double,

@@ -34,7 +34,7 @@ internal class WaterAnimationTest {
     }
 
     @Test
-    fun `fish breathing follows the two iOS scale durations`() {
+    fun `fish breathing follows the two scale durations`() {
         assertEquals(1f, fishBreathing(0.0))
         assertEquals(1.04f, fishBreathing(1.1), 0.000001f)
         assertEquals(0.97f, fishBreathing(2.4), 0.000001f)

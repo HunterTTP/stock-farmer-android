@@ -62,7 +62,7 @@ object YahooChartParser {
 
     private fun JsonElement?.isPresent() = this != null && this !is JsonNull
 
-    /** Every result's meta; a result shaped any other way fails the whole decode, as it does on iOS. */
+    /** Every result's meta; a result shaped any other way fails the whole decode. */
     private fun JsonElement?.metas(): List<JsonObject> {
         if (!isPresent()) return emptyList()
         val results = this as? JsonArray ?: throw StockQuoteException(StockQuoteError.unavailable)

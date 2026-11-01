@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 /**
- * The places on screen a touch counts as inside the open ring or list, so it leaves them open (iOS `MenuInteractionRegions`).
+ * The places on screen a touch counts as inside the open ring or list, so it leaves them open.
  * Touches on the farm close the menus through `GameSession.farmTouches`; this covers touches on the other HUD controls.
  */
 @Stable

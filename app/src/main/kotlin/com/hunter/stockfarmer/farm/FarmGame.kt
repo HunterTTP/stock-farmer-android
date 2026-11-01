@@ -463,7 +463,7 @@ internal class FarmCamera(
     }
 }
 
-/** The lower sixty percent of the camera view leaves room for the bursts overhead, as on iOS. */
+/** The lower sixty percent of the camera view leaves room for the bursts overhead. */
 internal fun ViewSnapshot.fireworkGround(): FireworkArea {
     val width = widthPixels * worldPerPixel.toDouble()
     val height = heightPixels * worldPerPixel.toDouble()

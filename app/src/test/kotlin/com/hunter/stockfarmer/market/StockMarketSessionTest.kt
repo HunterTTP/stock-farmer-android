@@ -176,8 +176,8 @@ class StockMarketSessionTest {
             assertEquals(1, requests)
             session.search("AAPL", start.plusSeconds(300))
             assertEquals(2, requests)
-            assertFalse(session.hasFreshstaleQuote("AAPL", start.plusSeconds(299)))
-            assertTrue(session.hasFreshstaleQuote("AAPL", start.plusSeconds(300)))
+            assertFalse(session.hasFreshQuote("AAPL", start.plusSeconds(299)))
+            assertTrue(session.hasFreshQuote("AAPL", start.plusSeconds(300)))
         }
 
     @Test
@@ -196,7 +196,7 @@ class StockMarketSessionTest {
             fail = true
             session.pull(listOf("AAPL"), start.plusSeconds(300), reportsFailure = true)
             assertEquals(staleQuote("AAPL"), session.quotes.value["AAPL"])
-            assertFalse(session.hasFreshstaleQuote("AAPL", start.plusSeconds(300)))
+            assertFalse(session.hasFreshQuote("AAPL", start.plusSeconds(300)))
             assertEquals("AAPL", session.selected.value)
             assertEquals(StockQuoteError.network.message, session.message.value)
         }

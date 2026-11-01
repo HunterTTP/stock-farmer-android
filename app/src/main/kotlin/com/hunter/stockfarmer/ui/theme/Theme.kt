@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-/** The iOS HUD palette, value for value (SwiftUI `Color(red:green:blue:)` and `Color(white:)`). */
+/** The HUD palette. */
 object Theme {
     val launchBackground = Color(36 / 255f, 36 / 255f, 36 / 255f)
     val accent = Color(0.53f, 1f, 0.52f)
@@ -62,7 +62,7 @@ object Theme {
         }
 }
 
-/** SwiftUI's default text styles on iOS, in sp. The system rounded design has no Android equivalent; sans-serif stands in. */
+/** Default text styles, in sp; sans-serif stands in for the rounded design. */
 object HudType {
     private fun style(
         size: Int,
@@ -83,8 +83,8 @@ object HudType {
 }
 
 /**
- * Dark glass for every panel that floats over the farm: one recipe so they all match. The iOS blur of what is behind has
- * no cheap Android equivalent over a libGDX surface, so a faint light base under the wash stands in for the material.
+ * Dark glass for every panel that floats over the farm: one recipe so they all match. Blurring what is behind
+ * is not cheap over a libGDX surface, so a faint light base under the wash stands in for the material.
  */
 fun Modifier.darkGlass(shape: Shape): Modifier =
     this

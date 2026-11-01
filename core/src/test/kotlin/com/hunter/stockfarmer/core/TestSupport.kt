@@ -16,7 +16,7 @@ import com.hunter.stockfarmer.core.util.SeededRandom
 import java.time.Instant
 import com.hunter.stockfarmer.core.rules.beginMoving as beginMovingInPlace
 
-/** A game with the given money, XP, mode and building materials, as the Swift tests build theirs. */
+/** A game with the given money, XP, mode and building materials. */
 fun stateWith(
     money: Double = 0.0,
     xp: Int = 0,

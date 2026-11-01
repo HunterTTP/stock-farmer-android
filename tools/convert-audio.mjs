@@ -1,6 +1,6 @@
 // Turns the source game's audio into files Android plays: Core Audio (.caf) and WAV linear PCM become OGG Vorbis, the rest is copied as is.
 // Needs `npm install` in this folder once (the encoder is a tool-time dependency only).
-// Usage: node tools/convert-audio.mjs <iOS Resources/Audio folder> <app/src/main/assets/audio folder>
+// Usage: node tools/convert-audio.mjs <source Resources/Audio folder> <app/src/main/assets/audio folder>
 import { copyFileSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { createOggEncoder } from 'wasm-media-encoders';
 import { dirname, extname, join, relative } from 'node:path';

@@ -129,9 +129,9 @@ class PhotoEffects internal constructor(
     }
 
     /**
-     * The rain's tint, the torches' glow and the rain or snow already falling, over the night's tint like the iOS photo. The glow
-     * and the rain start afresh, so each photo catches the sky full of drops at its first moment. The fireflies and butterflies the
-     * iOS photo runs for a tenth of a second have barely begun to fade in, so none are drawn.
+     * The rain's tint, the torches' glow and the rain or snow already falling, over the night's tint. The glow
+     * and the rain start afresh, so each photo catches the sky full of drops at its first moment. The fireflies and butterflies a
+     * photo runs for a tenth of a second have barely begun to fade in, so none are drawn.
      */
     fun drawWeather(
         batch: SpriteBatch,

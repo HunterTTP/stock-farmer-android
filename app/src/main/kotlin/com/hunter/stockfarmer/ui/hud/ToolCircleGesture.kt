@@ -49,7 +49,7 @@ fun aimedTarget(
 }
 
 /**
- * The tool circle's touch handling, ported from iOS `ToolCircle`: a touch that stays within the tap slop is a tap; otherwise
+ * The tool circle's touch handling: a touch that stays within the tap slop is a tap; otherwise
  * the circle follows the finger, the tool wakes after the finger has gone one button width (and, for tools with a pause, rested),
  * and a finger that rests for a while asks the game to explain itself. Timers are injected so the logic is plain Kotlin.
  */

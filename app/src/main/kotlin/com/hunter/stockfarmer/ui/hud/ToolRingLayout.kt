@@ -34,7 +34,7 @@ data class RingSlot(
     val size: Float,
 )
 
-/** Where the ring's buttons go, in dp before the HUD scale (iOS `ToolRing`). The tools sit on the outer arc, the rest on an inner one. */
+/** Where the ring's buttons go, in dp before the HUD scale. The tools sit on the outer arc, the rest on an inner one. */
 object ToolRingLayout {
     const val TOOL_RADIUS = 222f
     const val TOOL_SIZE = 68f

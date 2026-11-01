@@ -24,7 +24,7 @@ object BannerPlacement {
     fun alignment(isTablet: Boolean): Alignment = if (isTablet) Alignment.Center else Alignment.TopCenter
 }
 
-/** Places [content] as a banner over the farm (iOS `placedAsBanner`), with the 16 point side margin the banners have. */
+/** Places [content] as a banner over the farm, with the 16 point side margin the banners have. */
 @Composable
 fun BannerBox(
     modifier: Modifier = Modifier,

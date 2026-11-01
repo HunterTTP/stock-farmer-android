@@ -23,7 +23,7 @@ import java.time.Instant
 import java.util.concurrent.atomic.AtomicReference
 import com.hunter.stockfarmer.core.market.StockQuoteProvider as QuoteProvider
 
-/** Device-side Yahoo quotes, cached for the same pull spacing as the iOS market session. */
+/** Device-side Yahoo quotes, cached for the same pull spacing as the market session. */
 class StockQuoteProvider(
     private val openConnection: (URL) -> HttpURLConnection = { it.openConnection() as HttpURLConnection },
     private val now: () -> Instant = Instant::now,

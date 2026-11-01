@@ -106,7 +106,7 @@ class TimeSheetTest {
     }
 
     @Test
-    fun `the presets set the times iOS does`() {
+    fun `the presets set the expected times`() {
         assertEquals(listOf(1.0, 360.0, 720.0, 840.0, 1080.0, 1320.0), TimePreset.entries.map { it.minute })
         assertEquals("12:01 AM", TimePreset.Midnight.clockText)
         assertEquals("2:00 PM", TimePreset.Rain.clockText)

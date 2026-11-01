@@ -101,7 +101,7 @@ private class PreferenceScreenAudio(
 
 private const val SOURCE_CODE_URL = "https://github.com/HunterTTP/stock-farmer-android"
 
-/** The Settings page of the tools sheet: farm photo and links to the pages under it (iOS `SettingsScreen` main page). */
+/** The Settings page of the tools sheet: farm photo and links to the pages under it. */
 @Composable
 fun SettingsScreen(
     session: GameSession,
@@ -165,7 +165,7 @@ private fun ScreenLink(
     }
 }
 
-/** Volume sliders per channel, with the music switch and the song playing (iOS `SettingsScreen` sound page). */
+/** Volume sliders per channel, with the music switch and the song playing. */
 @Composable
 fun SoundSettingsScreen(
     session: GameSession,

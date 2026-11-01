@@ -28,7 +28,7 @@ data class MarketPrices(
 
 /**
  * The prices fetched for the Stock Market menu, and the one place that asks the provider for them.
- * Pure Kotlin/coroutine equivalent of iOS StockMarketSession.
+ * Coroutine-based session that owns quote pulls, caching and polling.
  */
 class StockMarketSession(
     private val provider: StockQuoteProvider = StockQuoteProvider(),

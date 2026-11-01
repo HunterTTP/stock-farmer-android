@@ -228,7 +228,7 @@ class GameTickTest {
     }
 
     @Test
-    fun `changing the time ends the pulse but leaves an already scheduled summary as on iOS`() {
+    fun `changing the time ends the pulse but leaves an already scheduled summary`() {
         val session = GameSession(GameEngine())
         val tick = GameTick(session, RandomSource(Random(42)::nextLong)).apply { tick(midnight.minusSeconds(1)) }
         tick.tick(midnight.plusSeconds(1))

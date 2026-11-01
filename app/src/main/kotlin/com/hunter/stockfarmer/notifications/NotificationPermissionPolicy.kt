@@ -1,6 +1,6 @@
 package com.hunter.stockfarmer.notifications
 
-/** The iOS prompt is offered on first planting or on returning to a farm with crops, once per session. */
+/** The permission prompt is offered on first planting or on returning to a farm with crops, once per session. */
 class NotificationPermissionPolicy {
     private var hasAsked = false
 
