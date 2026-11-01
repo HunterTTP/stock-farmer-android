@@ -1,7 +1,7 @@
 # Handoff: where the project stands and what to do next
 
 Read this first in a fresh session, then `AGENTS.md`, `docs/DEVELOPMENT.md` and `docs/PARITY.md`.
-Last updated at `main` = `6d91f37` (2026-11-01).
+Last updated at `main` = `39ef5a1` (2026-11-01).
 
 ## The goal
 
@@ -33,17 +33,18 @@ Standing instructions from the user:
   **Android Emulator**. Finishing development does not authorize physical-device testing.
 - Never claim a check passed that was not run. Use they/them for people whose pronouns are unknown.
 
-## Service rotation status (checked 2026-11-01 14:37 -05:00)
+## Service rotation status (checked 2026-11-01 15:44 -05:00)
 
-- **Codex Sol 6.1 (`codex.cmd`)**: Rate-limited (`try again at 2:54 PM` = **14:54 -05:00**). Active wakeup timer `task-65` scheduled for **14:55:26 -05:00** (~18m remaining).
-- **Gemini Flash 3.8 (`invoke_subagent` Model = `flash`)**: Rate-limited (`RESOURCE_EXHAUSTED 429: Individual quota reached`, resets at **16:16 -05:00**). Active wakeup timer `task-338` scheduled for **16:16:50 -05:00** (~1h 39m remaining).
-- **Claude Sonnet 5.5 (`claude`)**: Rate-limited (`You've hit your session limit · resets 7:10pm (America/New_York)` = **19:10 -05:00**). Active wakeup timer `task-443` scheduled for **19:10:35 -05:00** (~4h 33m remaining).
+- **Gemini Flash 3.8 (`invoke_subagent` Model = `flash`)**: Rate-limited (`RESOURCE_EXHAUSTED 429: Individual quota reached`, resets at **16:16 -05:00**). Active wakeup timer `task-338` scheduled for **16:16:50 -05:00** (~32m remaining).
+- **Claude Sonnet 5.5 (`claude`)**: Rate-limited (`You've hit your session limit · resets 7:10pm (America/New_York)` = **19:10 -05:00**). Active wakeup timer `task-443` scheduled for **19:10:35 -05:00** (~3h 26m remaining).
+- **Codex Sol 6.1 (`codex.cmd`)**: Rate-limited (`try again at 7:55 PM` = **19:55 -05:00**). Active wakeup timer `task-554` scheduled for **19:55:01 -05:00** (~4h 11m remaining).
 
-## Verified state (all green on `main` = `e781216`)
+## Verified state (all green on `main` = `39ef5a1`)
 
 ```
-./gradlew spotlessCheck :core:test :app:assembleDebug :app:testDebugUnitTest   -> BUILD SUCCESSFUL (at 6d91f37)
-core tests: 1,019, 0 failures.   app unit tests: 398, 0 failures.   debug APK builds (85 MB, 16 KB aligned).
+./gradlew spotlessCheck :core:test :app:assembleDebug :app:testDebugUnitTest   -> BUILD SUCCESSFUL (at 39ef5a1)
+core tests: 1,319, 0 failures (100% of all 1,221 Swift core test cases across 132 suites mapped by tools/audit-ios-core-tests.mjs).
+app unit tests: 580, 0 failures.   total unit tests: 1,899, 0 failures.   debug APK builds (85 MB, 16 KB aligned).
 ```
 
 ### Completed on `main` (`736658c`)
@@ -73,15 +74,20 @@ core tests: 1,019, 0 failures.   app unit tests: 398, 0 failures.   debug APK bu
   - Farm renderer tree/rock 96px/tile scale fix, full-workshop & dairy/oven animation parity, seasonal building textures & `FarmAssetCoverageTest` (`b9cc118`)
   - `Hud` `session.toasts` wiring & `MenusHost`/`Catalog` HUD theme parity (`e65677a`)
   - Farm touch/hold/tool-drag/scene-interactions & audio parity fixes (`6d91f37`)
+  - Fishing catch sound, swam-away toast, meter border & timelapse accessibility labels (`16161d2`)
+  - `HudTextField`/`HudSearchField`, Stock Market icons, Sound settings page & `TimelapseViewer` icon buttons (`c6e5257`, `abfd392`)
+  - `StandingLayout`, fence junction draw order, `TractorMovement`, `WeathercockTurn`, `MovingOrigins`, `TreeLean` & `FarmPhoto` weather layers (`efe358d`, `87d18fc`)
+  - `StockMarketSession`, `YahooStockQuoteClient`, `GamePersistence`/`FarmSlots`/`PhotoSaver`/`FarmPhotoTaker` parity (`eed350a`)
+  - Bouncy spring 1.2x throb on `StatusHud` & `RewardFlights`, `StorageMenuScreen` `"Select"`/`"Sell"` labels & backpack icon, and `TimeSheet` season symbols (`0e0329e`)
+  - Core parity audit & full 132-suite Swift test coverage (`b6874fa`, `39ef5a1` — 1,319 core tests passing)
+  - `GameTick` background & timelapse pause, 5s play-time gap window, rain/snow Career recording, delayed day-summary banner (`GameSession.dayBegins`), `NightChime`, level-up `celebrateAcross` fireworks, farm-switch `ReadyChime` init & full haptic wiring (`e781216`, `ba5f05a`, `746b586`)
+  - `PlaySettings` & `PlaySettingsScreens` (Graphics & Gameplay settings wired to `FarmGame`), Career filter dropdown menu, `CatalogModels`, `NoticeScreens` unlock artwork & transitions, `MarketQuestScreen` parity & 580 app unit tests (`4753140`, `fea2aaa`, `ab39c62`, `87e0b93`, `81fa39e`, `cd06b71`, `353cd86`)
 
-## In flight right now (waiting 18m for Codex Sol 6.1 reset at 14:55 -05:00)
+## Next phase (queued for Gemini Flash 3.8 reset at 16:16 -05:00)
 
 | Slice | Branch | Worktree | Status |
 |---|---|---|---|
-| 1. Sound row icons, Career filter dropdown & Play/Graphics/Gameplay settings | `app/settings-graphics-gameplay-and-career-filter` | `..\stock-farmer-android-wt-storage-notices` | Paused (uncommitted changes ready for final `PlaySettings.kt` setter fix & commit on Codex reset) |
-| 2. Catalog, Tool Upgrade, `ToolBar`/`ToolCircle` & `PlacementButtons` final audit | `app/catalog-toolupgrade-placement-audit` | `..\stock-farmer-android-wt-stock-quest` | Paused (uncommitted `ItemDetailScreens.kt` changes ready to finish on Codex reset) |
-| 3. Level-up fireworks, banner queue, farm-switch `ReadyChime`, `TimeSheet` chime & timelapse tick pause | `app/lifecycle-fireworks-readychime-haptics` | `..\stock-farmer-android-wt-perf-inst` | Queued for Codex reset at 14:55 -05:00 |
-| 4. `docs/PARITY.md` cleanup & final cross-repo pre-emulator verification | `docs/parity-cleanup` | `..\stock-farmer-android-wt-sheet-nav` | Queued for Codex reset at 14:55 -05:00 |
+| 1. Android Emulator end-to-end verification (`StockFarmerTablet` AVD) | `app/emulator-verification` | `..\stock-farmer-android-wt-perf-inst` | Queued for Gemini Flash 3.8 reset at 16:16 -05:00 (`task-338`) |
 
 ## Next steps, in order
 
