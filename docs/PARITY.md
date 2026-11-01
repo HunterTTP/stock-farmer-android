@@ -46,3 +46,5 @@ farm and session wiring are outside this slice; on-device layout and interaction
 ## Assets
 
 `app/src/main/assets/images` is a straight copy of the iOS `Images` folder. `app/src/main/assets/audio` comes from `node tools/convert-audio.mjs <iOS Resources/Audio> app/src/main/assets/audio`: the Core Audio effects become WAV (still 16-bit mono, checked by `SoundAssetTest`) and the music is copied as is. The effects are uncompressed, so a later pass should encode them to OGG to shrink the download.
+
+Weather/ambient effects: app layers and pure JVM motion tests are implemented under `farm/effects`; integration is intentionally pending. See [FARM_EFFECTS.md](FARM_EFFECTS.md) for exact renderer/scene hooks, event APIs and verification limits. Includes rain/snow and rain tint, seasonal space sky, fall leaves, wind wisps, fireflies, butterflies (including released/resting behavior), building door lights, midnight pulse, water shimmer/glow and drop palettes, fireworks, and cached sun shadows. Existing FarmGame night tint is reused. No device verification; static grass matches the frozen reference.
