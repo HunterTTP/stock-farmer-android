@@ -217,7 +217,12 @@ private fun CollectionPage(
     visible.forEach { section ->
         if (visible.size > 1) {
             Row(Modifier.fillMaxWidth().padding(horizontal = 4.dp)) {
-                Text(section.title, Modifier.weight(1f), color = Theme.textPrimary, style = HudType.headline)
+                Text(
+                    section.title,
+                    Modifier.weight(1f),
+                    color = section.tint ?: Theme.textPrimary,
+                    style = HudType.headline,
+                )
                 Text(
                     "${section.collected} / ${section.entries.size}",
                     color = Theme.textSecondary,

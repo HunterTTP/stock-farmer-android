@@ -9,6 +9,7 @@ import com.hunter.stockfarmer.core.model.GameState
 import com.hunter.stockfarmer.core.model.ValueSample
 import com.hunter.stockfarmer.core.rules.CareerSeries
 import com.hunter.stockfarmer.core.rules.GameEngine
+import com.hunter.stockfarmer.ui.theme.Theme
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNull
@@ -116,5 +117,23 @@ class CareerCollectionStateTest {
             .flatMap { it.entries }
             .mapNotNull { it.art }
             .forEach { assertTrue(File(assets, it.path).isFile, it.path) }
+    }
+
+    @Test
+    fun `fish sections take their rarity tint and tool levels their level color`() {
+        val engine = GameEngine(GameState())
+        val fish = CareerCollections.sections(engine, CareerCollection.FISH)
+        assertTrue(fish.all { it.tint != null })
+        assertNull(CareerCollections.sections(engine, CareerCollection.CROPS).single().tint)
+        val tools = CareerCollections.sections(engine, CareerCollection.TOOLS)
+        assertTrue(tools.all { section -> section.entries.all { it.nameColor != null } })
+        assertEquals(
+            Theme.textPrimary,
+            tools
+                .first()
+                .entries
+                .first()
+                .nameColor,
+        )
     }
 }

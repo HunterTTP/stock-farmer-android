@@ -1,5 +1,6 @@
 package com.hunter.stockfarmer.ui.screens
 
+import androidx.compose.ui.graphics.Color
 import com.hunter.stockfarmer.core.catalog.Building
 import com.hunter.stockfarmer.core.catalog.Cat
 import com.hunter.stockfarmer.core.catalog.ChickenVariant
@@ -24,6 +25,8 @@ import com.hunter.stockfarmer.core.rules.Season
 import com.hunter.stockfarmer.core.rules.ToolUpgrade
 import com.hunter.stockfarmer.core.rules.hasSeenEnvironment
 import com.hunter.stockfarmer.core.rules.level
+import com.hunter.stockfarmer.ui.theme.Theme
+import com.hunter.stockfarmer.ui.theme.hudColor
 import java.util.Locale
 
 internal enum class CareerCollection(
@@ -55,11 +58,14 @@ internal data class CareerEntry(
     val detail: String? = null,
     val art: ScreenArt? = null,
     val symbol: String = "✦",
+    /** The name's color once collected, where it is not the usual white. */
+    val nameColor: Color? = null,
 )
 
 internal data class CareerSection(
     val title: String,
     val entries: List<CareerEntry>,
+    val tint: Color? = null,
 ) {
     val collected: Int get() = entries.count { it.collected }
 
@@ -150,6 +156,7 @@ internal object CareerCollections {
                                 engine.level(tool) >= it,
                                 art = if (tool == HarvestTool.rod) null else ScreenArt.image("tools", asset),
                                 symbol = "🎣",
+                                nameColor = Theme.toolLevel(it),
                             )
                         }
                     CareerSection(tool.displayName, entries)
@@ -177,7 +184,7 @@ internal object CareerCollections {
                         }
                     CareerEntry(it.id, it.name, weight != null, detail, ScreenArt.image("animals/Fish", it.assetName))
                 }
-            CareerSection(rarity.displayName, entries)
+            CareerSection(rarity.displayName, entries, rarity.hudColor)
         }
 
     private fun buildings(record: CareerRecord): List<CareerSection> {

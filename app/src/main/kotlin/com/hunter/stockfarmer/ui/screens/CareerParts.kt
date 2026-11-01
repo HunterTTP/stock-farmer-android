@@ -209,7 +209,7 @@ internal fun CareerTile(
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
                 entry.name,
-                color = if (entry.collected) Theme.textPrimary else Theme.textSecondary,
+                color = if (entry.collected) entry.nameColor ?: Theme.textPrimary else Theme.textSecondary,
                 style = HudType.footnote.copy(fontWeight = FontWeight.SemiBold),
                 maxLines = 2,
             )
