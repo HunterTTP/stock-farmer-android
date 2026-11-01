@@ -65,6 +65,8 @@ dependencies {
     implementation(libs.compose.material3)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.fragment.ktx)
+    implementation(libs.androidx.work.runtime)
+    implementation(libs.kotlinx.coroutines.core)
     implementation(libs.gdx)
     implementation(libs.gdx.backend.android)
     testImplementation(libs.junit.jupiter)
