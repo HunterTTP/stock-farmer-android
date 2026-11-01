@@ -156,3 +156,18 @@ fun GameEngine.chooseRecipe(
     countAsSeen(setOf("recipe:${recipe.id}"))
     return emptyList()
 }
+
+/** The origins of the buildings showing their picture of being full: a workshop that has finished what it was making. */
+fun GameState.fullBuildings(now: Instant): Set<GridPoint> =
+    placedBuildings
+        .filter { it.building.fullAssetName != null && isFull(it, now) }
+        .map { it.origin }
+        .toSet()
+
+private fun GameState.isFull(
+    placed: PlacedBuilding,
+    now: Instant,
+): Boolean {
+    val recipe = workshopRecipe(placed.origin) ?: return false
+    return workshops[placed.origin]?.isFinished(recipe, now) ?: false
+}
