@@ -18,7 +18,9 @@ import com.hunter.stockfarmer.core.rules.FruitTreePhase
 import com.hunter.stockfarmer.core.rules.GrowthConditions
 import com.hunter.stockfarmer.core.rules.GrowthTimelines
 import com.hunter.stockfarmer.core.rules.Season
+import com.hunter.stockfarmer.core.rules.fullBuildings
 import com.hunter.stockfarmer.core.rules.saturatedFarmland
+import com.hunter.stockfarmer.core.rules.workshopRecipe
 import com.hunter.stockfarmer.game.SceneInteractions
 import com.hunter.stockfarmer.ui.screens.PerformanceMonitor
 import com.hunter.stockfarmer.ui.screens.PerformanceWork
@@ -118,10 +120,13 @@ class FarmRenderer(
         state: GameState,
         now: Instant,
     ) {
+        val fullOrigins = state.fullBuildings(now)
         for (placed in state.placedBuildings) {
             val building: Building = placed.building
             if (building.id == "tractor1") continue
-            val texture = textures.texture("buildings", building.assetName) ?: continue
+            val isFull = placed.origin in fullOrigins
+            val assetName = if (isFull) building.fullAssetName ?: building.assetName else building.assetName
+            val texture = textures.texture("buildings", assetName, season = state.season) ?: continue
             val box = fit(texture, building.width * TILE, building.height * TILE)
             val footprintLeft = placed.origin.col * TILE
             val footprintTop = worldY(placed.origin.row)
@@ -129,7 +134,37 @@ class FarmRenderer(
             val y = footprintTop + TILE - building.height * TILE + (building.height * TILE - box.second) / 2
             standing +=
                 Standing((placed.origin.row + building.height).toFloat()) {
-                    batch.draw(texture, x, y, box.first, box.second)
+                    val working =
+                        state.workshops[placed.origin]?.let { batchWork ->
+                            state.workshopRecipe(placed.origin)?.let { !batchWork.isFinished(it, now) }
+                        } ?: false
+                    if (building.id == "dairy" && working) {
+                        val sheet = textures.texture("motion", "dairyWork")
+                        if (sheet != null) {
+                            val frameIndex = ((now.toEpochMilli() / 140) % 7).toInt()
+                            val frameWidth = sheet.width / 7
+                            val dairyRegion = TextureRegion(sheet, frameIndex * frameWidth, 0, frameWidth, sheet.height)
+                            batch.draw(dairyRegion, x, y, box.first, box.second)
+                        } else {
+                            batch.draw(texture, x, y, box.first, box.second)
+                        }
+                    } else {
+                        batch.draw(texture, x, y, box.first, box.second)
+                    }
+                    if (building.id == "stoneOven" && working) {
+                        val sheet = textures.texture("motion", "ovenSmoke")
+                        if (sheet != null) {
+                            val frameIndex = ((now.toEpochMilli() / 160) % 8).toInt()
+                            val frameWidth = sheet.width / 8
+                            val smokeRegion = TextureRegion(sheet, frameIndex * frameWidth, 0, frameWidth, sheet.height)
+                            val scale = box.first / 240f
+                            val smokeWidth = 144f * scale
+                            val smokeHeight = 192f * scale
+                            val smokeX = x + box.first / 2f + 60f * scale - smokeWidth / 2f
+                            val smokeY = y + box.second / 2f + 48f * scale
+                            batch.draw(smokeRegion, smokeX, smokeY, smokeWidth, smokeHeight)
+                        }
+                    }
                     if (building.assetName == "silo_tower") {
                         val index = interactions.door(placed.origin, now)
                         val sheet = textures.texture("motion", "siloDoor")
@@ -152,7 +187,7 @@ class FarmRenderer(
         for ((origin, placed) in state.trees) {
             val tree = placed.tree
             val texture = textures.texture("trees", tree.assetName(placed.color), season = state.season) ?: continue
-            val scale = TILE / PIXELS_PER_TILE
+            val scale = TILE / TREE_PIXELS_PER_TILE
             val width = texture.width * scale
             val x = (origin.col + tree.side / 2f) * TILE - width / 2
             val y = worldY(origin.row + tree.side - 1)
@@ -176,7 +211,7 @@ class FarmRenderer(
     ) {
         for ((point, size) in state.rocks) {
             val texture = textures.texture("rocks", size.assetName, season = state.season) ?: continue
-            val scale = TILE / PIXELS_PER_TILE * size.spriteScale.toFloat()
+            val scale = TILE / ROCK_PIXELS_PER_TILE * size.spriteScale.toFloat()
             val width = texture.width * scale
             val height = texture.height * scale
             val x = (point.col + 0.5f) * TILE - width / 2
@@ -375,6 +410,8 @@ class FarmRenderer(
         const val TILE = 100f
         const val WORLD = GameState.GRID_SIZE * TILE
         private const val PIXELS_PER_TILE = 48f
+        private const val TREE_PIXELS_PER_TILE = 96f
+        private const val ROCK_PIXELS_PER_TILE = 96f
         private const val QUADRANTS = 4
 
         // Standing uses rows rather than SpriteKit's thousandths, so its local depth offsets scale with the rows.

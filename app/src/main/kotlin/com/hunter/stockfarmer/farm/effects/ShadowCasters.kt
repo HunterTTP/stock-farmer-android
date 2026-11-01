@@ -40,7 +40,7 @@ internal class ShadowCasters(
             }
             for (placed in state.placedBuildings) {
                 val building = placed.building
-                val texture = textures.texture("buildings", building.assetName) ?: continue
+                val texture = textures.texture("buildings", building.assetName, season = state.season) ?: continue
                 val scale = minOf(building.width * TILE / texture.width, building.height * TILE / texture.height)
                 val width = texture.width * scale
                 val height = texture.height * scale
@@ -54,11 +54,11 @@ internal class ShadowCasters(
                     placed.tree.assetName(placed.color),
                     ShadowKind.TREE,
                     foot(origin, placed.tree.side, placed.tree.side),
-                    TILE / 48,
+                    TILE / 96,
                 )
             }
             for ((origin, size) in state.rocks) {
-                picture("rocks", size.assetName, ShadowKind.ROCK, foot(origin, 1, 1), TILE / 48 * size.spriteScale)
+                picture("rocks", size.assetName, ShadowKind.ROCK, foot(origin, 1, 1), TILE / 96 * size.spriteScale)
             }
             for ((origin, placed) in state.decorations) {
                 val decoration = Decoration.named(placed.decorationID) ?: continue
