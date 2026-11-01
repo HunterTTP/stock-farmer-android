@@ -1,0 +1,12 @@
+// Run with: ./gradlew --offline -I app/src/test/audio-tests.init.gradle :app:testDebugUnitTest
+gradle.beforeProject { project ->
+    if (project.path == ':app') {
+        project.plugins.withId('com.android.application') {
+            project.dependencies.add('testImplementation', 'org.junit.jupiter:junit-jupiter:5.12.2')
+            project.dependencies.add('testRuntimeOnly', 'org.junit.platform:junit-platform-launcher:1.12.2')
+            project.tasks.withType(org.gradle.api.tasks.testing.Test).configureEach {
+                useJUnitPlatform()
+            }
+        }
+    }
+}
