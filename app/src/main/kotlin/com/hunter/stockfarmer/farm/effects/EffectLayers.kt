@@ -34,6 +34,7 @@ class EffectLayers internal constructor(
     val butterflies: ButterflyLayer,
     val fireworks: FireworkLayer,
     val shadows: ShadowLayer,
+    val photo: PhotoEffects,
 ) {
     fun draw(
         phase: EffectPhase,
@@ -75,7 +76,32 @@ fun effectLayers(
         butterflies = butterflies,
         fireworks = fireworks,
         shadows = shadows,
+        photo = PhotoEffects(SeasonSky(textures), WaterLayer(textures), shadows),
     )
+}
+
+/** The effects a farm photo keeps: they follow the photo's own camera, and shadows are finished before the shot. */
+class PhotoEffects internal constructor(
+    private val sky: SeasonSky,
+    private val water: WaterLayer,
+    private val shadows: ShadowLayer,
+) {
+    fun drawSky(
+        batch: SpriteBatch,
+        state: GameState,
+        now: Instant,
+        camera: OrthographicCamera,
+    ) = sky.draw(batch, state, now, camera)
+
+    fun drawGround(
+        batch: SpriteBatch,
+        state: GameState,
+        now: Instant,
+        camera: OrthographicCamera,
+    ) {
+        water.draw(batch, state, now, camera)
+        shadows.drawFinished(batch, state, now, camera)
+    }
 }
 
 internal data class Point(

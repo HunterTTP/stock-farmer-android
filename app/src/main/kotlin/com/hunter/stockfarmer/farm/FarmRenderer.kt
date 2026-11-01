@@ -41,12 +41,13 @@ class FarmRenderer(
         batch: SpriteBatch,
         state: GameState,
         now: Instant,
+        ground: ((SpriteBatch, GameState, Instant) -> Unit)? = groundEffects,
     ) {
         val season = state.season
         drawGround(batch, state, season)
         if (gridShown) drawGrid(batch, textures, cameraScale, maxCameraScale)
         drawFertilizer(batch, state)
-        groundEffects?.invoke(batch, state, now)
+        ground?.invoke(batch, state, now)
         standing.clear()
         growth.prune(state.trees.keys, state.rocks.keys, now)
         collectBuildings(batch, state)

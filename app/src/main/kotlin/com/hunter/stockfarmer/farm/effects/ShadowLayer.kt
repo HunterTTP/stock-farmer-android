@@ -39,6 +39,22 @@ class ShadowLayer(
         state: GameState,
         now: Instant,
         camera: OrthographicCamera,
+    ) = draw(batch, state, now, camera, finishAll = false)
+
+    /** Draws with every shadow already cast, for a still picture. */
+    fun drawFinished(
+        batch: SpriteBatch,
+        state: GameState,
+        now: Instant,
+        camera: OrthographicCamera,
+    ) = draw(batch, state, now, camera, finishAll = true)
+
+    private fun draw(
+        batch: SpriteBatch,
+        state: GameState,
+        now: Instant,
+        camera: OrthographicCamera,
+        finishAll: Boolean,
     ) {
         val minute = DayNightCycle.minuteOfDay(now, state.clockOffset)
         val sun = Sun.shadow(minute)
@@ -58,8 +74,8 @@ class ShadowLayer(
         }
         waiting.retainAll(shapes)
         waiting += shapes.filter { it !in made }
-        val next = waiting.firstOrNull()
-        if (next != null) {
+        while (true) {
+            val next = waiting.firstOrNull() ?: break
             val caster = wanted.first { it.shape == next }
             val mask = caster.texture?.let { texture -> masks.getOrPut(next.image!!) { alphaMask(texture) } }
             val image = ShadowRaster.render(next, Sun.shadow(sunStep * Sun.stepMinutes), intensity, mask)
@@ -85,6 +101,7 @@ class ShadowLayer(
                 made[next] = Made(key, image, texture)
             }
             waiting.remove(next)
+            if (!finishAll) break
         }
         val view = camera.view()
         batch.preserve {

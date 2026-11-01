@@ -9,14 +9,20 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.glutils.FrameBuffer
 import com.badlogic.gdx.utils.ScreenUtils
 import com.hunter.stockfarmer.core.model.GameState
-import com.hunter.stockfarmer.farm.effects.skyRGB
+import com.hunter.stockfarmer.core.rules.DayNightCycle
+import com.hunter.stockfarmer.farm.effects.PhotoEffects
 import java.io.ByteArrayOutputStream
 import java.time.Instant
 
-/** A picture of the whole farm, drawn off screen and encoded as a PNG. Call on the graphics thread. */
+/**
+ * A picture of the whole farm, drawn off screen and encoded as a PNG. Call on the graphics thread. Like the iOS photo it keeps
+ * the season's sky, water, finished shadows and the night's darkness, and leaves out the effects that move with the live view.
+ */
 class FarmPhoto(
     private val renderer: FarmRenderer,
     private val batch: SpriteBatch,
+    private val textures: TextureLibrary,
+    private val effects: PhotoEffects,
     private val foreground: ((SpriteBatch, GameState, Instant) -> Unit)? = null,
 ) {
     /** The PNG of the map with a margin of sky around it, [pixels] on a side, or null if the device ran out of memory. */
@@ -49,15 +55,16 @@ class FarmPhoto(
         val oldMax = renderer.maxCameraScale
         try {
             target.begin()
-            val sky = state.season.skyRGB()
-            Gdx.gl.glClearColor(sky.red, sky.green, sky.blue, 1f)
+            Gdx.gl.glClearColor(0f, 0f, 0f, 1f)
             Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT)
             batch.projectionMatrix = camera.combined
             batch.begin()
             renderer.cameraScale = side / pixels
             renderer.maxCameraScale = Float.MAX_VALUE
-            renderer.draw(batch, state, now)
+            effects.drawSky(batch, state, now, camera)
+            renderer.draw(batch, state, now) { b, s, t -> effects.drawGround(b, s, t, camera) }
             foreground?.invoke(batch, state, now)
+            batch.drawNightTint(textures, camera, DayNightCycle.darkness(now, state.clockOffset))
             batch.end()
             val picture = ScreenUtils.getFrameBufferPixmap(0, 0, pixels, pixels)
             target.end()
