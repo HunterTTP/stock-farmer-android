@@ -4,26 +4,21 @@ Reference: iOS repo at commit `d01e7bb` (`../stock-farmer-ios`). Port convention
 
 ## Core port status (Swift `StockFarmerCore` -> `core`)
 
-State: `main` builds, `spotlessCheck` is clean and 172 tests pass.
+State: `main` builds, `spotlessCheck` is clean and 264 tests pass. The whole rules engine is ported and compiles.
 
 Done:
 
-- Foundations: `GridPoint`, `Money` formatting, `util` (Swift-faithful random, rounding, instant math, serializers).
-- Catalog: Cat, ChickenVariant, Dog, FenceColor, FencePiece, Fertilizer, FishKind, GroundCover, HarvestTool, HomeUpgrade, LandscapeTool, OreKind, Rarity, Rock, SeasonalSoundtrack, Tree, UnlockOrder, Crop, Building, Decoration (+farmyard and module tables, generated from the Swift by script), LivestockSpecies, Recipe, ArtisanGood, StorageItem.
-- Model: GameState (derived indexes, deep `copy()`), Plot, Holding and stock types, Livestock/Herd, Chicken/Coop, Pet, FishPond, AnimalMeal, TractorRun, MarketQuest, ShopItem, ReleasedButterfly, CareerRecord, Changelog, DaySales, DurationText, Egg, NameCleaning, Playlist, TimelapseSettings, WaterLayout, Lesson, PlayMode.
-- Rules: Season, DayNightCycle, Sun, Weather, Wind, ShadowProjection, PriceJitter, CropEconomy, LevelRules, LevelUnlocks, FarmlandRules (+watering), GrowthRules, QuestRules, StockMarketRules, ToolUpgrade data, Fireflies, Butterflies, NightPulse, Rejection, GameEvent, a `GameEngine` shell (state, copy, spend, credit, constants).
-- Feedback: AnimalChatter, MusicLoudness, PerformanceMetrics, RandomMomentTrigger, SoundFalloff, SoundPlacement, SoundSettingsMigration, VariantPicker, VoiceLimiter.
-- Presentation: LaunchSequence, TimelapsePlayback. Persistence: SaveBackup, SaveFileSystem, TimelapseStore. Market: StockQuoteError.
-- Tests ported: those for the above that do not need the engine (economy, growth, additional crops, season, soundtrack, plus the Codex-ported feedback, persistence and rules tests).
+- Foundations: `GridPoint`, `Money` formatting, `util` (Swift-faithful random, rounding, instant math, serializers), `GameStateJson` (save and load, rebuilds derived indexes).
+- Catalog, model, rules, feedback, presentation, market and persistence leaves, and the whole `GameEngine` (every `GameEngine+*.swift` extension as Kotlin extension functions in `rules/Engine*.kt`, plus `FishingContest`, world generation, wild growth, tool strokes and the timelapse schedule).
+- Tests ported (52 of the 136 Swift test files, about 260 tests): economy, growth, additional crops, seasons, soundtrack, the Wheat slice (`GameEngineTest`), storage and trash, shop, unlocks and seen-unlocks (incl. a JSON save round-trip), levels, plus everything Codex ported for the leaves.
 
-Not started (Swift file -> Kotlin), in a sensible order:
+Not started:
 
-1. Small leaves: Market `YahooChartParser` and `StockQuoteProvider`; Presentation `TractorBobbing`, `TractorMotion`, `FarmRenderChanges`; Rules `FishingContest`, `TractorNavigation`.
-2. Persistence: `GameState+Validation` (corrupt-save checks, port as a `validate()`), `SaveStore`, `SaveSlots`, `SaveCoordinator`, `FarmStartup`; Feedback `SoundCue` (+Events).
-3. The engine: the rest of `GameEngine.swift` (`tap`, `useTool`, selection, `setMode`) and its ~55 `GameEngine+*.swift` extensions, ported by feature together with their Swift tests. `WorldGeneration`, `WildGrowth`, `ToolStroke` and `TimelapseSchedule` call into these, so they come with them. Extensions become Kotlin extension functions on `GameEngine`; `internal` members stay `internal`.
-4. The remaining Swift tests (about 120 files), ported with each feature.
+1. Persistence still to port: `GameState+Validation` (corrupt-save checks, as a `validate()` run after load), `SaveStore`, `SaveSlots`, `SaveCoordinator`, `FarmStartup`; Feedback `SoundCue` (+Events); Presentation `FarmRenderChanges`; Market `StockQuoteProvider` implementation notes.
+2. The remaining ~84 Swift test files, which exercise the engine through gameplay (animals, buildings, decorations, fences, fish and rod, tractor, quests, stocks, workshops, trees, rocks, ore, wind, weather easing and more). Port each with its feature; a failing port test points at a real behavior difference to fix in the engine, which was written in one pass and has so far only been checked by the tests above.
+3. Swift behavior that depends on exact random draws (seeded tests) may need the generator mapping checked: `util/RandomSource.kt` follows Swift's documented algorithms but could not be compared against a Swift toolchain here.
 
-Deviations from the Swift, on purpose: old-save migrations are not ported (a new app has no old saves); `Date` is `Instant`, `Int` is `Long` where values can pass 2^31, and `GameState` is a mutable object with a deep `copy()` instead of a Swift value type (see AGENTS.md).
+Deviations from the Swift, on purpose: old-save migrations are not ported (a new app has no old saves); `Date` is `Instant`, `Int` is `Long` where values can pass 2^31; `GameState` is a mutable object with a deep `copy()` instead of a Swift value type (see AGENTS.md); the market-quest and tractor-save upgrade paths for old saves are dropped.
 
 ## App
 
@@ -33,4 +28,4 @@ Nothing built yet beyond the Compose shell. The Android SDK licenses must be acc
 
 | Feature | Rules (core) | UI | Verified |
 |---|---|---|---|
-| Plant, grow, Scythe harvest, Storage sale, save and relaunch (first slice) | partial | no | no |
+| Plant, grow, Scythe harvest, Storage sale, save and relaunch (first slice) | yes, tested | no | no |
