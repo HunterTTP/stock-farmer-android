@@ -11,6 +11,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
@@ -40,6 +42,7 @@ fun LessonGuide(
 @Composable
 fun Modifier.lessonPulse(
     enabled: Boolean,
+    shape: Shape = RectangleShape,
     reduceMotion: Boolean = !ValueAnimator.areAnimatorsEnabled(),
 ): Modifier {
     val swell: State<Float> =
@@ -61,6 +64,7 @@ fun Modifier.lessonPulse(
         val amount = swell.value
         scaleX = if (reduceMotion) 1f else 1 + 0.05f * amount
         scaleY = scaleX
+        this.shape = shape
         shadowElevation = 7.dp.toPx() * amount
         ambientShadowColor = Theme.gold.copy(alpha = 0.8f * amount)
         spotShadowColor = ambientShadowColor

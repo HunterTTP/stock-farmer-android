@@ -239,7 +239,7 @@ private fun RingFace(
 ) {
     Column(
         Modifier
-            .lessonPulse(pulses)
+            .lessonPulse(pulses, CircleShape)
             .size(size)
             .shadow(
                 4.dp,

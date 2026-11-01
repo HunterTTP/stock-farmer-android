@@ -39,7 +39,7 @@ class ToolDrag(
         tile: GridPoint?,
         now: Instant = Instant.now(),
     ) {
-        if (tile == null) {
+        if (tile == null || session.casts.value != null) {
             session.view.toolPreview = null
             return
         }
@@ -125,6 +125,7 @@ class ToolDrag(
                 }
             }
         val events = butterflies + stroke.use(engine, tiles, now)
+        session.hookFish(engine, events)
         val rejection =
             events.firstRejection
                 ?: if (events.isEmpty()) engine.missingHarvestToolRejection(tile, now) else null

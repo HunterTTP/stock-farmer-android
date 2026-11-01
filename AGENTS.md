@@ -18,8 +18,10 @@ An exact Android remake of the iOS game at `../stock-farmer-ios` (frozen referen
 2. Work in vertical slices: a feature's rules, tests and UI land together.
 3. Rules go test-first in `core`. Write tests that mirror the iOS tests' behavior.
 4. Run `./gradlew spotlessApply` to format, then `./gradlew spotlessCheck :core:test :app:testDebugUnitTest :app:assembleDebug :app:lintDebug`. Resolve failures before committing. Never claim an unrun check passed.
-5. Commit in meaningful pieces with clear messages, and `git push` as each piece of work completes. Never commit signing material or secrets.
-6. Keep `docs/FEATURES.md` current.
+5. Every change ships with its tests. All tests must pass and the app must build before a commit; never commit a red build.
+6. Commit in meaningful pieces with clear messages, then `git push` to `main` as each piece of work completes. Never commit signing material or secrets.
+7. After pushing, install the debug build on every connected phone and tablet (`adb devices`, then `./gradlew installDebug` per device with `ANDROID_SERIAL`). Skip a device that is not connected.
+8. Keep `docs/FEATURES.md` current.
 
 ## Code
 
@@ -36,4 +38,4 @@ An exact Android remake of the iOS game at `../stock-farmer-ios` (frozen referen
 
 Agents run on the Claude Max plan only. Opus 5.5 at high reasoning is for planning and very complex tasks; Sonnet 5.5 at medium does the rest. Start a fresh session per slice and keep context small.
 
-Run each slice in its own git worktree and branch. Slice agents must not push; review and merge each branch only after `spotlessCheck`, `:core:test`, `:app:testDebugUnitTest`, `:app:assembleDebug` and `:app:lintDebug` pass.
+Run each slice in its own git worktree and branch. Slice agents in worktrees must not push; the main session pushes after review. Review and merge each branch only after `spotlessCheck`, `:core:test`, `:app:testDebugUnitTest`, `:app:assembleDebug` and `:app:lintDebug` pass.
