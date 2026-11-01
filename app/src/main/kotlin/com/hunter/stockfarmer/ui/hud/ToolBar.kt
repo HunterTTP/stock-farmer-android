@@ -32,10 +32,12 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.Measurable
 import androidx.compose.ui.layout.Placeable
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -65,6 +67,7 @@ import com.hunter.stockfarmer.ui.menus.MenuPictures
 import com.hunter.stockfarmer.ui.menus.rememberMenuAssetLoader
 import com.hunter.stockfarmer.ui.rewards.HUDTarget
 import com.hunter.stockfarmer.ui.rewards.rewardTarget
+import com.hunter.stockfarmer.ui.screens.lessonPulse
 import com.hunter.stockfarmer.ui.theme.BuildingPriceLine
 import com.hunter.stockfarmer.ui.theme.ChoiceList
 import com.hunter.stockfarmer.ui.theme.CropPriceLine
@@ -76,7 +79,6 @@ import com.hunter.stockfarmer.ui.theme.MoneyPriceLine
 import com.hunter.stockfarmer.ui.theme.Theme
 import com.hunter.stockfarmer.ui.theme.hudPanel
 import com.hunter.stockfarmer.ui.theme.newDot
-import com.hunter.stockfarmer.ui.theme.pulsing
 import kotlinx.coroutines.flow.update
 
 /** What the ring's non-tool buttons open. */
@@ -101,6 +103,7 @@ internal fun ToolBar(
 ) {
     val scale = LocalHudScale.current
     val density = LocalDensity.current.density
+    val haptics = LocalHapticFeedback.current
     val loader = rememberMenuAssetLoader()
     val lesson = hud.lesson
     val lessonTool =
@@ -176,6 +179,7 @@ internal fun ToolBar(
                     onTap = {
                         openDropdown = null
                         isRingOpen = !isRingOpen
+                        haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                     },
                     onMove = { _, _ -> closeMenus() },
                     onDrag = { _, to -> drag.move(tileAt(to)) },
@@ -262,7 +266,7 @@ private fun Options(
                 isOpen = openDropdown == dropdown.id,
                 modifier =
                     Modifier
-                        .pulsing(dropdown.pulses, keepsPlace = false)
+                        .lessonPulse(dropdown.pulses)
                         .menuInteractionRegion(
                             regions,
                             "tool-dropdown-${dropdown.id}",

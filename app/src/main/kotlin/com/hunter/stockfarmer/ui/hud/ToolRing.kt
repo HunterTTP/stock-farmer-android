@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.sp
 import com.hunter.stockfarmer.core.rules.DayNightCycle
 import com.hunter.stockfarmer.ui.menus.MenuAssetLoader
 import com.hunter.stockfarmer.ui.menus.MenuImage
+import com.hunter.stockfarmer.ui.screens.lessonPulse
 import com.hunter.stockfarmer.ui.theme.HudIcon
 import com.hunter.stockfarmer.ui.theme.HudIcons
 import com.hunter.stockfarmer.ui.theme.HudType
@@ -46,7 +47,6 @@ import com.hunter.stockfarmer.ui.theme.LocalHudScale
 import com.hunter.stockfarmer.ui.theme.Theme
 import com.hunter.stockfarmer.ui.theme.darkGlass
 import com.hunter.stockfarmer.ui.theme.newDot
-import com.hunter.stockfarmer.ui.theme.pulsing
 import com.hunter.stockfarmer.ui.theme.rememberReduceMotion
 import kotlinx.coroutines.delay
 import java.time.Instant
@@ -239,7 +239,7 @@ private fun RingFace(
 ) {
     Column(
         Modifier
-            .pulsing(pulses)
+            .lessonPulse(pulses)
             .size(size)
             .shadow(
                 4.dp,

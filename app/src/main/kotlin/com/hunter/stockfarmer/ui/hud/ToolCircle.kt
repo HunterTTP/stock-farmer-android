@@ -39,10 +39,10 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import com.hunter.stockfarmer.ui.screens.lessonPulse
 import com.hunter.stockfarmer.ui.theme.LocalHudScale
 import com.hunter.stockfarmer.ui.theme.darkGlass
 import com.hunter.stockfarmer.ui.theme.newDot
-import com.hunter.stockfarmer.ui.theme.pulsing
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -173,7 +173,7 @@ fun ToolCircle(
                     scaleY = grown
                     alpha = if (isDragging) ToolCircleMetrics.DRAGGED_OPACITY else 1f
                 }.throb(shownThrob)
-                .pulsing(pulses && !isDragging)
+                .lessonPulse(pulses && !isDragging)
                 .newDot(isNew, Alignment.TopEnd, DpOffset((-4).dp, 4.dp))
                 .then(
                     if (isDragging) {

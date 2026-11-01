@@ -1,15 +1,15 @@
 package com.hunter.stockfarmer.ui.hud
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.text.BasicText
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.text.font.FontWeight
 import com.hunter.stockfarmer.game.FarmSlots
 import com.hunter.stockfarmer.game.GameSession
 import com.hunter.stockfarmer.ui.menus.ItemScreen
@@ -26,6 +26,10 @@ import com.hunter.stockfarmer.ui.screens.SaveSlotsScreen
 import com.hunter.stockfarmer.ui.screens.SettingsScreen
 import com.hunter.stockfarmer.ui.screens.SoundSettingsScreen
 import com.hunter.stockfarmer.ui.theme.HudSheet
+import com.hunter.stockfarmer.ui.theme.HudType
+import com.hunter.stockfarmer.ui.theme.PillButton
+import com.hunter.stockfarmer.ui.theme.PillRole
+import com.hunter.stockfarmer.ui.theme.Theme
 import com.hunter.stockfarmer.ui.timelapse.TimelapseScreen
 
 /**
@@ -81,9 +85,26 @@ internal fun ToolsSheet(
     photoMessage?.let { message ->
         AlertDialog(
             onDismissRequest = { photoMessage = null },
-            title = { Text("Farm Photo") },
-            text = { Text(message) },
-            confirmButton = { TextButton(onClick = { photoMessage = null }) { Text("OK") } },
+            containerColor = Theme.launchBackground,
+            title = {
+                BasicText(
+                    "Farm Photo",
+                    style = HudType.headline.copy(fontWeight = FontWeight.Bold, color = Theme.textPrimary),
+                )
+            },
+            text = {
+                BasicText(
+                    message,
+                    style = HudType.body.copy(color = Theme.textSecondary),
+                )
+            },
+            confirmButton = {
+                PillButton(
+                    title = "OK",
+                    role = PillRole.neutral,
+                    onClick = { photoMessage = null },
+                )
+            },
         )
     }
 }
