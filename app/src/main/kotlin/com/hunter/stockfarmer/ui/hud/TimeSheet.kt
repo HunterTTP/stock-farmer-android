@@ -46,6 +46,7 @@ import com.hunter.stockfarmer.ui.theme.categoryCard
 import kotlinx.coroutines.delay
 import java.time.Instant
 import kotlin.math.abs
+import com.hunter.stockfarmer.core.rules.setSeason as setEngineSeason
 
 /** A time of day the Time sheet can jump to, picked to try something out (iOS `TimePreset`). */
 enum class TimePreset(
@@ -77,7 +78,7 @@ fun GameSession.setTime(
     }
 }
 
-fun GameSession.setSeason(season: Season) = act { it.state.season = season }
+fun GameSession.setSeason(season: Season) = act { it.setEngineSeason(season) }
 
 /** The sky at a minute of the day: light blue by day, orange at dawn and dusk, deep blue at night and grey in the rain. */
 object TimeSky {

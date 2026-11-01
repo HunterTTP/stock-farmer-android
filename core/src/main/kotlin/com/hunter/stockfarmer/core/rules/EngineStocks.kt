@@ -153,5 +153,5 @@ private fun GameEngine.countProfitTowardsQuests(profitCents: Long) {
     if (profitCents <= 0) return
     val total = state.stockProfitRemainderCents + min(profitCents, StockMarketRules.MAX_PROFIT_CENTS)
     state.stockProfitRemainderCents = total % 100
-    recordQuestProgress(QuestGoal.StockProfit, (total / 100).toInt())
+    recordQuestProgress(QuestGoal.StockProfit, min(total / 100, Int.MAX_VALUE.toLong()).toInt())
 }

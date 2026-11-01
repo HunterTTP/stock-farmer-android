@@ -31,8 +31,13 @@ object YahooChartParser {
         val chart =
             runCatching { (Json.parseToJsonElement(data) as JsonObject)["chart"] as? JsonObject }.getOrNull()
                 ?: throw StockQuoteException(StockQuoteError.unavailable)
-        val meta =
-            ((chart["result"] as? JsonArray)?.firstOrNull() as? JsonObject)?.get("meta") as? JsonObject
+        val metas = chart["result"].metas()
+        if (chart["error"].isPresent() &&
+            chart["error"] !is JsonObject
+        ) {
+            throw StockQuoteException(StockQuoteError.unavailable)
+        }
+        val meta = metas.firstOrNull()
         if (chart["error"].isPresent() || meta == null) throw StockQuoteException(StockQuoteError.invalidTicker)
         val price = meta.number("regularMarketPrice")
         if (price == null || !price.isFinite() || price <= 0) throw StockQuoteException(StockQuoteError.unavailable)
@@ -57,5 +62,24 @@ object YahooChartParser {
 
     private fun JsonElement?.isPresent() = this != null && this !is JsonNull
 
+    /** Every result's meta; a result shaped any other way fails the whole decode, as it does on iOS. */
+    private fun JsonElement?.metas(): List<JsonObject> {
+        if (!isPresent()) return emptyList()
+        val results = this as? JsonArray ?: throw StockQuoteException(StockQuoteError.unavailable)
+        return results.map { result ->
+            val meta = (result as? JsonObject)?.get("meta") as? JsonObject
+            if (meta == null || !meta.hasOnlyNumbers()) throw StockQuoteException(StockQuoteError.unavailable)
+            meta
+        }
+    }
+
+    private fun JsonObject.hasOnlyNumbers() =
+        NUMBER_KEYS.all { key ->
+            val value = this[key]
+            !value.isPresent() || ((value as? JsonPrimitive)?.let { !it.isString && it.doubleOrNull != null } ?: false)
+        }
+
     private fun JsonObject.number(key: String): Double? = (this[key] as? JsonPrimitive)?.doubleOrNull
+
+    private val NUMBER_KEYS = listOf("regularMarketPrice", "regularMarketTime", "chartPreviousClose", "previousClose")
 }

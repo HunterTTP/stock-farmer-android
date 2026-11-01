@@ -4,13 +4,13 @@ Reference: iOS repo at commit `d01e7bb` (`../stock-farmer-ios`). Port convention
 
 ## Core port status (Swift `StockFarmerCore` -> `core`)
 
-State: `main` builds, `spotlessCheck` is clean and 1010 tests pass. The whole rules engine and the persistence layer are ported.
+State: `main` builds, `spotlessCheck` is clean and 1,248 core tests pass. The whole rules engine and the persistence layer are ported.
 
 Done:
 
 - Foundations: `GridPoint`, `Money` formatting, `util` (Swift-faithful random, rounding, instant math, serializers), `GameStateJson` (save and load, rebuilds derived indexes).
 - Catalog, model, rules, feedback, presentation, market and persistence leaves, and the whole `GameEngine` (every `GameEngine+*.swift` extension as Kotlin extension functions in `rules/Engine*.kt`, plus `FishingContest`, world generation, wild growth, tool strokes and the timelapse schedule).
-- Tests ported: all Swift gameplay test files except the ones listed under "Not started" (1010 Kotlin tests), covering economy, growth, crops, seasons, storage, shop, unlocks, buildings, landscape, decorations, animals, fish, tractor, quests, stocks, workshops, trees, rocks, ore, wind, career, persistence and sound cues. Old-save migration tests are left out on purpose.
+- Tests ported: all Swift gameplay test files except the ones listed under "Not started" (1,248 Kotlin tests, including the engine-level fish, rod, pet, dog, chicken, tree, rock, fence, shelter, stock, season, ground cover and home upgrade tests added by the core parity audit), covering economy, growth, crops, seasons, storage, shop, unlocks, buildings, landscape, decorations, animals, fish, tractor, quests, stocks, workshops, trees, rocks, ore, wind, career, persistence and sound cues. Old-save migration tests are left out on purpose.
 
 Not started:
 

@@ -1,5 +1,6 @@
 package com.hunter.stockfarmer.core.rules
 
+import com.hunter.stockfarmer.core.model.CareerRecord
 import kotlinx.serialization.Serializable
 
 /**
@@ -19,4 +20,11 @@ enum class Season {
 
         fun of(day: Int): Season = entries[(maxOf(day, 1) - 1) / DAYS_PER_SEASON % entries.size]
     }
+}
+
+/** Dresses the farm for a season, and notes the season it leaves and the one it takes as seen in the Career. */
+fun GameEngine.setSeason(season: Season) {
+    noteSeenEnvironment(CareerRecord.environmentID(state.season))
+    noteSeenEnvironment(CareerRecord.environmentID(season))
+    state.season = season
 }
