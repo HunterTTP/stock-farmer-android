@@ -31,6 +31,7 @@ Builds and runs in code but has never been run on a device. What is done, in fli
 | Plant, grow, Scythe harvest, Storage sale, save and relaunch (first slice) | yes, tested | no | no |
 | App save/load: active slot, backup recovery, autosave, pause/stop, clock on reopen | existing core rules; JVM integration tests added | wired, including load/save errors and backup recovery | device verification pending |
 | Build/decorate/terrain/storage | core + app tests | Compose host; HUD wiring pending | device pending |
+| Fishing mini-game | existing core contest/catch rules; app JVM session tests | Compose Canvas overlay; tap/HUD/tick wiring pending | device pending |
 
 Save/load uses `LocalSaveFileSystem` under the app's private `filesDir/Farms`. `FarmStartup` prepares the active farm on a worker; failed loads block play and preserve the original until the player explicitly restores a backup. The app snapshots through `GameSession.act`, debounces timer saves, flushes on pause/stop through the disk worker, and holds the farm clock while away. JVM tests cover startup, active-slot selection, backup restoration, corrupt/newer saves, snapshot isolation, lifecycle clocks, and failed-write retry. On-device relaunch, rotation, backgrounding, and storage-failure UI remain unverified (no device available).
 
