@@ -61,6 +61,7 @@ import com.hunter.stockfarmer.core.rules.LevelRules
 import com.hunter.stockfarmer.farm.FarmRenderer
 import com.hunter.stockfarmer.game.GameSession
 import com.hunter.stockfarmer.game.ToolDrag
+import com.hunter.stockfarmer.ui.fishing.FishingMode
 import com.hunter.stockfarmer.ui.menus.MenuAssetLoader
 import com.hunter.stockfarmer.ui.menus.MenuImage
 import com.hunter.stockfarmer.ui.menus.MenuPictures
@@ -100,6 +101,8 @@ internal fun ToolBar(
     newTools: Set<HudTool> = hud.newTools,
     onOpenRoute: (ToolRoute) -> Unit = {},
     onDraggingChanged: (Boolean) -> Unit = {},
+    /** The fishing mode this bar sits over, if a line is out: the circle then holds the rod and the ring offers only the way out. */
+    fishing: FishingMode? = null,
 ) {
     val scale = LocalHudScale.current
     val density = LocalDensity.current.density
@@ -108,7 +111,7 @@ internal fun ToolBar(
     val flights = LocalRewardFlights.current
     flights?.revision
     val storagePulse = flights?.tracker?.storagePulse ?: 0
-    val cast by session.casts.collectAsStateWithLifecycle()
+    val isFishing = fishing?.isFishing == true
     val lesson = hud.lesson
     val lessonTool =
         when (lesson.toolTarget) {
@@ -185,16 +188,24 @@ internal fun ToolBar(
                         isRingOpen = !isRingOpen
                         haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                     },
-                    onMove = { _, _ -> closeMenus() },
-                    onDrag = { _, to -> drag.move(tileAt(to)) },
-                    onHold = { drag.explain()?.let { session.publish(listOf(GameEvent.Rejected(it))) } },
-                    onDragEnded = { drag.end() },
+                    onMove = { to, phase ->
+                        closeMenus()
+                        // With a fish on the line the tool in hand is the rod, and where it is held decides whether the bar fills.
+                        if (isFishing) fishing?.moveRod(if (phase == ToolDragPhase.Inactive) null else to)
+                    },
+                    onDrag = { _, to -> if (!isFishing) drag.move(tileAt(to)) },
+                    onHold = {
+                        if (!isFishing) drag.explain()?.let { session.publish(listOf(GameEvent.Rejected(it))) }
+                    },
+                    onDragEnded = {
+                        if (isFishing) fishing?.moveRod(null) else drag.end()
+                    },
                     modifier =
                         Modifier
                             .menuInteractionRegion(regions, "tool-circle", (12 * scale).dp),
                     onDraggingChanged = onDraggingChanged,
                 ) { MenuImage(hud.toolPicture, loader, Modifier.fillMaxSize()) }
-                if (cast == null) {
+                if (!isFishing) {
                     Options(
                         hud = hud,
                         isRingOpen = isRingOpen,
@@ -244,8 +255,14 @@ internal fun ToolBar(
                         closeMenus()
                         onRingScreen(RingScreen.Time)
                     }
+
+                    Satellite.ExitFishing -> {
+                        closeMenus()
+                        fishing?.leave()
+                    }
                 }
             },
+            isFishing = isFishing,
             modifier = Modifier.align(Alignment.BottomStart).padding(start = (PHONE_LEADING_NUDGE * scale).dp),
         )
     }

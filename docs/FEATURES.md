@@ -10,7 +10,7 @@ Every row is implemented and covered by unit tests. Emulator and device verifica
 | Stock quotes & Stock Market screen | Tested | `StockMarketSession`, `StockQuoteProvider`, `NetworkMonitor`, `StockMarketScreen`, trade sheet (`QuantityControls`) & House upgrade link | Unit-tested |
 | Market Quest board & section | Tested | `MarketQuestScreen` and `MarketQuestSection` with objective artwork, progress bars, replacement controls & Market Stand upgrade link | Unit-tested |
 | Career screen | Tested | Level ring, stat cards, 9 searchable collections with a filter dropdown menu, and 4-tick X/Y charts | Unit-tested |
-| Fishing mini-game | Tested | `FishingOverlay`, `FishingSession`, `FishingCast`, quest-complete sound on catch, swam-away toast & reel/catch haptics | Unit-tested |
+| Fishing mini-game | Tested | `FishingMode`, `FishingCanvas`, `FishingSession`, `FishingCast`, quest-complete sound on catch, swam-away toast & reel/catch haptics | Unit-tested |
 | Timelapse capture and playback | Tested | `TimelapseRecorder`, `TimelapseStore`, `TimelapseScreen`, `TimelapseViewer` (pauses `GameTick` while open) | Unit-tested |
 | Performance, changelog, privacy, lesson guide & launch screens | Tested | `LaunchScreen`, `LessonGuide`, `PerformanceScreen` (with subsystem timings & sprite count), `ChangelogScreen`, `PrivacyScreen` | Unit-tested |
 | HUD visual primitives & in-game HUD | Tested | `StatusHud`, `ToolBar`, `ToolRing`, `ToolCircle`, `ToolsSheet`, `PlacementButtons`, `TimeSheet`, `SaveStatusView`, `HudTextField`/`HudSearchField` | Unit-tested |
