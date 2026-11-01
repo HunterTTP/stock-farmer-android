@@ -45,7 +45,8 @@ fun RandomSource.nextDouble(
     upper: Double,
 ): Double = lower + (upper - lower) * nextUnit()
 
-fun RandomSource.nextBoolean(): Boolean = nextLong() and 1L == 1L
+/** A coin flip from a middle bit of the draw, as Swift's `Bool.random(using:)` does. */
+fun RandomSource.nextBoolean(): Boolean = (nextLong() ushr 17) and 1L == 0L
 
 /** The list in a random order, by the Fisher-Yates shuffle Swift's `shuffled(using:)` performs. */
 fun <T> List<T>.shuffled(using: RandomSource): List<T> {
