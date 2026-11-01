@@ -1,3 +1,6 @@
+## 2026-11-01
+- The Career screen is now called Progress.
+
 ## 2026-10-22
 - Music is half as loud as it was.
 - The startup screen shows the carrot icon again, and its loading bar now fills smoothly instead of jumping and
@@ -19,7 +22,7 @@
   you take it with the Bucket.
 - A Chicken Coop holds 2 chickens at Level 1, 4 at Level 2 and 6 at Level 3.
 - Fish in Storage have Release instead of Trash, and Storage's Equip button now says Select.
-- Every Upgrade button just says Upgrade and opens a page with the details and the button that buys it; the Career's
+- Every Upgrade button just says Upgrade and opens a page with the details and the button that buys it; the Progress screen's
   Home Upgrades are now Building Upgrades.
 - The Tractor's countdown reads "Ready in" with the time left.
 - The Cuddle Clouds song is gone.
@@ -37,7 +40,7 @@
 - The new-day chime is tried again if it is dropped, so it plays every night.
 - Butterflies can be caught with the Bucket for XP, kept in Storage, equipped and released back onto the farm, up to 10
   at a time; released butterflies stay, never leave and rest in one spot at night and in rain or snow.
-- Butterfly wing colors in Career now count when you catch one.
+- Butterfly wing colors in Progress now count when you catch one.
 - Every new day animation grows new trees, rocks and ores as the wave passes (5 to 7 trees, 2 to 3 rocks and an ore),
   spread evenly all the way round the map and mostly toward its edge, instead of them coming back while you are away.
 - A fish you place never disappears, even if you let it go on the tile another fish started from.
@@ -75,7 +78,7 @@
   uses its usual look and the tool button does not cycle.
 - Chicken Coops, Rabbit Hutches, Sheep, Goat and Pig Barns, Stables and Luxury Barns now start with 4 animals and can
   be upgraded with a purple Upgrade button to 7 and then 10, each upgrade unlocking at its own level from 7 to 24; the
-  Career menu lists the levels reached.
+  Progress menu lists the levels reached.
 - Leveling up opens a screen listing what the level brings: new crops, farmland tiles, buildings, decorations, trees,
   recipes, tool and building upgrades, new kinds of fish and when rarer fish become more likely.
 - Added a Changelog to the About menu, first in the list. It has a search bar, a calendar button to pick a day or a
@@ -88,7 +91,7 @@
 - Every harvest tool has two upgrades: the Axe fells trees in fewer hits, the Scythe and Bucket sometimes give a second
   item, the Pickaxe breaks rocks in fewer hits and the Fishing Rod widens its circle.
 - Fish rarer than common ones become more likely every five levels up to level 30.
-- Added the Career menu from the level panel, with collections for crops, fish, animals, buildings, decorations,
+- Added the Progress menu from the level panel, with collections for crops, fish, animals, buildings, decorations,
   terrain, recipes, environment and tools, charts for level and money, and search and filters.
 - Finished quests are turned in automatically with a banner and the XP flying into the level panel.
 - Every building is limited to one except Pet Houses, Chicken Coops, Sheds and Silos, and the Barn is split into Sheep,
