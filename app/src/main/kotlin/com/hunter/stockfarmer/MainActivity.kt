@@ -22,6 +22,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLifecycleOwner
@@ -168,6 +169,10 @@ class MainActivity :
                             },
                         )
                     }
+                }
+                launch {
+                    // A farm switch reloads through not-ready; the next farm starts with fresh ambient moments.
+                    snapshotFlow { model.persistenceState.isReady }.collect { ready -> if (!ready) ambience.clear() }
                 }
                 launch {
                     while (true) {
