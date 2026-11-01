@@ -5,14 +5,18 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.hunter.stockfarmer.core.catalog.StorageItem
 import com.hunter.stockfarmer.core.model.durationText
@@ -24,14 +28,18 @@ import com.hunter.stockfarmer.ui.menus.MenuImage
 import com.hunter.stockfarmer.ui.menus.MenuPictures
 import com.hunter.stockfarmer.ui.menus.rememberMenuAssetLoader
 import com.hunter.stockfarmer.ui.screens.MarketQuestSection
+import com.hunter.stockfarmer.ui.screens.ScreenFormat
 import com.hunter.stockfarmer.ui.screens.ScreenIcon
 import com.hunter.stockfarmer.ui.theme.EffectsCard
+import com.hunter.stockfarmer.ui.theme.HudIcon
+import com.hunter.stockfarmer.ui.theme.HudIcons
 import com.hunter.stockfarmer.ui.theme.HudType
 import com.hunter.stockfarmer.ui.theme.LevelRequirementNotice
 import com.hunter.stockfarmer.ui.theme.NewDot
 import com.hunter.stockfarmer.ui.theme.PillButton
 import com.hunter.stockfarmer.ui.theme.PillRole
 import com.hunter.stockfarmer.ui.theme.Theme
+import com.hunter.stockfarmer.ui.theme.categoryCard
 import com.hunter.stockfarmer.ui.theme.glassCard
 
 @Composable
@@ -85,28 +93,45 @@ internal fun BuildingSections(
                         )
                     }
                 }
-                PillButton(
-                    "Summon",
-                    onClick = { act(SheetAction.Summon) },
-                    modifier = Modifier.fillMaxWidth(),
-                    role = PillRole.accent,
-                )
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 48.dp)
+                        .glassCard(14.dp)
+                        .clickable(role = Role.Button) { act(SheetAction.Summon) },
+                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    BasicText("↓", style = HudType.subheadline.copy(color = Theme.accent))
+                    BasicText(
+                        "Summon",
+                        style = HudType.subheadline.copy(fontWeight = FontWeight.SemiBold, color = Theme.accent),
+                    )
+                }
             }
         }
 
         building.isChickenCoop || building.livestockHome != null -> {
             state.homeMessage?.let {
                 SheetCard {
-                    BasicText(it, style = HudType.subheadline.copy(color = Theme.textPrimary))
+                    BasicText(
+                        it,
+                        style = HudType.subheadline.copy(color = Theme.textPrimary, textAlign = TextAlign.Center),
+                    )
                 }
             }
             if (building.isChickenCoop) {
-                PillButton(
-                    "Choose Next Chick",
-                    onClick = onChick,
-                    modifier = Modifier.fillMaxWidth(),
-                    role = PillRole.neutral,
-                )
+                Row(
+                    Modifier.fillMaxWidth().categoryCard(false).clickable(role = Role.Button, onClick = onChick),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    BasicText(
+                        "Choose Next Chick",
+                        Modifier.weight(1f),
+                        style = HudType.headline.copy(color = Theme.textPrimary),
+                    )
+                    HudIcon(HudIcons.chevronRight, Theme.textSecondary, size = 16.dp)
+                }
             }
             SheetCard {
                 state.homeLevel?.let {
@@ -122,9 +147,9 @@ internal fun BuildingSections(
                         PillButton(
                             title = "Upgrade",
                             onClick = onUpgrade,
-                            modifier = Modifier.fillMaxWidth(),
-                            role = PillRole.accent,
-                            enabled = state.upgrade.affordable,
+                            modifier = Modifier.fillMaxWidth().alpha(if (state.upgrade.affordable) 1f else 0.4f),
+                            fill = Theme.xp,
+                            text = Color.White,
                         )
                     }
                 }
@@ -160,10 +185,7 @@ private fun WorkshopSection(
                 style = HudType.headline.copy(color = Theme.textPrimary),
             )
             if (state.choices.any { it.isNew }) NewDot()
-            BasicText(
-                "›",
-                style = HudType.headline.copy(fontWeight = FontWeight.Bold, color = Theme.textSecondary),
-            )
+            HudIcon(HudIcons.chevronRight, Theme.textSecondary, size = 16.dp)
         }
     }
     val recipe = state.recipe
@@ -176,11 +198,11 @@ private fun WorkshopSection(
                     style = HudType.subheadline.copy(fontWeight = FontWeight.SemiBold, color = Theme.textPrimary),
                 )
                 BasicText(
-                    "${state.inputStored} in storage",
+                    "${ScreenFormat.number(state.inputStored.toLong())} in storage",
                     style = HudType.caption.copy(color = Theme.textSecondary),
                 )
             }
-            BasicText("→", style = HudType.title3.copy(color = Theme.textSecondary))
+            BasicText("→", style = HudType.title3.copy(fontWeight = FontWeight.Bold, color = Theme.textSecondary))
             Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
                 MenuImage(MenuPictures.stored(recipe.output), loader, Modifier.size(56.dp))
                 BasicText(
@@ -188,7 +210,7 @@ private fun WorkshopSection(
                     style = HudType.subheadline.copy(fontWeight = FontWeight.SemiBold, color = Theme.textPrimary),
                 )
                 BasicText(
-                    "${state.outputStored} in storage",
+                    "${ScreenFormat.number(state.outputStored.toLong())} in storage",
                     style = HudType.caption.copy(color = Theme.textSecondary),
                 )
             }
@@ -197,14 +219,17 @@ private fun WorkshopSection(
     SheetCard(
         highlighted = state.status == WorkshopStatus.Ready,
     ) {
-        BasicText(state.statusText, style = HudType.subheadline.copy(color = Theme.textPrimary))
+        BasicText(
+            state.statusText,
+            style = HudType.subheadline.copy(color = Theme.textPrimary, textAlign = TextAlign.Center),
+        )
     }
     PillButton(
         title = "Start",
         onClick = { act(SheetAction.StartWork) },
-        modifier = Modifier.fillMaxWidth(),
-        role = PillRole.accent,
-        enabled = state.startRefusal == null,
+        modifier = Modifier.fillMaxWidth().alpha(if (state.startRefusal == null) 1f else 0.4f),
+        fill = Theme.accent,
+        text = Theme.onAccent,
     )
 }
 
@@ -215,7 +240,19 @@ private fun TractorSection(
 ) {
     val loader = rememberMenuAssetLoader()
     SheetCard {
-        BasicText(state.farmland, style = HudType.headline.copy(color = Theme.textPrimary))
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            BasicText(
+                "Farmland tiles used",
+                Modifier.weight(1f),
+                style = HudType.body.copy(color = Theme.textSecondary),
+            )
+            BasicText(
+                state.farmland.substringAfter(": ").split(" / ").joinToString(" / ") {
+                    it.toLongOrNull()?.let(ScreenFormat::number) ?: it
+                },
+                style = HudType.headline.copy(color = Theme.textPrimary),
+            )
+        }
     }
     state.run?.let {
         SheetCard(highlighted = true) {
@@ -254,7 +291,7 @@ private fun TractorSection(
                     )
                     summary.remaining?.let {
                         BasicText(
-                            "${summary.plantedCount} planted",
+                            "${ScreenFormat.number(summary.plantedCount.toLong())} planted",
                             style = HudType.caption.copy(color = Theme.textSecondary),
                         )
                         BasicText(
@@ -268,7 +305,7 @@ private fun TractorSection(
                     }
                     if (summary.gathered > 0) {
                         BasicText(
-                            "${summary.gathered} gathered",
+                            "${ScreenFormat.number(summary.gathered.toLong())} gathered",
                             style =
                                 HudType.subheadline.copy(
                                     fontWeight = FontWeight.SemiBold,
@@ -279,7 +316,7 @@ private fun TractorSection(
                             PillButton(
                                 title = "Store",
                                 onClick = { act(SheetAction.Cargo(summary.crop.id, false)) },
-                                role = PillRole.neutral,
+                                role = PillRole.accent,
                             )
                             PillButton(
                                 title = "Sell · ${crop.sale}",

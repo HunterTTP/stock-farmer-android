@@ -2,6 +2,7 @@
 
 package com.hunter.stockfarmer.ui.sheets
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -85,6 +86,7 @@ internal fun recipeChoices(
 fun ChickAppearanceScreen(
     session: GameSession,
     origin: GridPoint,
+    onDismiss: (() -> Unit)? = null,
     onClose: () -> Unit,
 ) {
     var choices by remember(session, origin) { mutableStateOf(session.act { ChickChoice.all(it, origin) }) }
@@ -94,7 +96,7 @@ fun ChickAppearanceScreen(
             delay(250)
         }
     }
-    BuildingChoiceScreen("Next Chick", session, origin, onClose) { choose ->
+    BuildingChoiceScreen("Next Chick", session, origin, onClose, onDismiss = onDismiss ?: onClose) { choose ->
         Text(
             "Choose what future chicks grow into. Existing chickens keep their appearance. " +
                 "Roosters are ornamental and lay no eggs.",
@@ -138,6 +140,7 @@ fun ChickAppearanceScreen(
 fun WorkshopRecipeScreen(
     session: GameSession,
     origin: GridPoint,
+    onDismiss: (() -> Unit)? = null,
     onClose: () -> Unit,
 ) {
     var choices by remember(session, origin) { mutableStateOf(session.act { recipeChoices(it, origin) }) }
@@ -148,7 +151,7 @@ fun WorkshopRecipeScreen(
             delay(250)
         }
     }
-    BuildingChoiceScreen("Recipes", session, origin, onClose) { choose ->
+    BuildingChoiceScreen("Recipes", session, origin, onClose, onDismiss = onDismiss ?: onClose, spacing = 8) { choose ->
         choices.forEach { choice ->
             val recipe = choice.recipe
             val pick = { choose(SheetAction.Recipe(recipe.id)) }
@@ -177,6 +180,8 @@ private fun BuildingChoiceScreen(
     session: GameSession,
     origin: GridPoint,
     onClose: () -> Unit,
+    onDismiss: () -> Unit,
+    spacing: Int = 12,
     content: @Composable ((SheetAction) -> Unit) -> Unit,
 ) {
     var message by remember(session, origin) { mutableStateOf<String?>(null) }
@@ -185,7 +190,8 @@ private fun BuildingChoiceScreen(
         message = result.refusal
         if (result.refusal == null) onClose()
     }
-    HudSheet(onDismiss = onClose) {
+    HudSheet(onDismiss = onDismiss) {
+        BackHandler(onBack = onClose)
         Row(
             Modifier.fillMaxWidth().padding(horizontal = 20.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -199,7 +205,7 @@ private fun BuildingChoiceScreen(
             )
         }
         BarScrollView(Modifier.weight(1f)) {
-            Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) { content(choose) }
+            Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(spacing.dp)) { content(choose) }
         }
         message?.let { Text(it, Modifier.padding(20.dp), color = Theme.spend) }
     }

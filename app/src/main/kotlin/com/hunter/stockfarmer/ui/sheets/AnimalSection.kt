@@ -142,7 +142,7 @@ internal fun AnimalMenu(
 internal fun PetChoiceForm(onConfirm: (PetChoiceState) -> Unit) {
     var choice by remember { mutableStateOf(PetChoiceState()) }
     SheetCard {
-        ScreenIcon(SheetPictures.pet(choice.breed))
+        ScreenIcon(SheetPictures.pet(choice.breed), size = 72.dp)
         BasicText(
             "Who will live in this house?",
             style = HudType.headline.copy(fontWeight = FontWeight.Bold, color = Theme.textPrimary),
@@ -167,7 +167,8 @@ internal fun PetChoiceForm(onConfirm: (PetChoiceState) -> Unit) {
             title = "OK",
             onClick = { onConfirm(choice) },
             modifier = Modifier.fillMaxWidth(),
-            role = PillRole.accent,
+            fill = Theme.accent,
+            text = Theme.onAccent,
         )
     }
 }

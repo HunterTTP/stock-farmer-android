@@ -81,18 +81,12 @@ fun SheetHost(
         val origin = building.placed.origin
         when (page) {
             BuildingPage.CHICK -> {
-                HudSheet(onDismiss = onClose) {
-                    BackHandler { page = null }
-                    ChickAppearanceScreen(session, origin) { page = null }
-                }
+                ChickAppearanceScreen(session, origin, onDismiss = onClose) { page = null }
                 return
             }
 
             BuildingPage.RECIPES -> {
-                HudSheet(onDismiss = onClose) {
-                    BackHandler { page = null }
-                    WorkshopRecipeScreen(session, origin) { page = null }
-                }
+                WorkshopRecipeScreen(session, origin, onDismiss = onClose) { page = null }
                 return
             }
 

@@ -36,6 +36,7 @@ import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.semantics
@@ -154,11 +155,13 @@ fun LaunchScreen(
                             PillButton(
                                 title = "Choose Farm",
                                 onClick = onChooseFarm,
-                                role = PillRole.neutral,
+                                role = PillRole.accent,
                             )
                         }
                     }
                 } else {
+                    val messageSemantics =
+                        if (presentation.showsLoadingMessage) Modifier else Modifier.clearAndSetSemantics {}
                     Box(
                         Modifier
                             .width(iconWidth)
@@ -179,13 +182,16 @@ fun LaunchScreen(
                         )
                     }
                     BasicText(
-                        if (presentation.showsLoadingMessage) "Preparing your farm…" else "",
+                        "Preparing your farm…",
                         style =
                             HudType.subheadline.copy(
                                 color = Theme.textSecondary,
                                 textAlign = TextAlign.Center,
                             ),
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier =
+                            Modifier.fillMaxWidth().then(messageSemantics).graphicsLayer {
+                                alpha = if (presentation.showsLoadingMessage) 1f else 0f
+                            },
                     )
                 }
             }
