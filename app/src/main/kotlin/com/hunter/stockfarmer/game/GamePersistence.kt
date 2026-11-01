@@ -184,9 +184,10 @@ class GamePersistence(
         scheduler.execute {
             if (closed || active) return@execute
             active = true
+            // The clock is held before the game ticks again, so the time away never counts as play.
+            if (state.isReady) holdClock()
             session.isActive = state.isReady
             if (state.isReady) {
-                holdClock()
                 requestSave()
                 startTimer()
             }

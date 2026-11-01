@@ -41,11 +41,20 @@ class GameSession(
 
     private val days = MutableSharedFlow<DaySummary>(extraBufferCapacity = EVENT_BUFFER)
 
-    /** The day just over, with what sold in it, each time a new day begins. */
+    /** The day just over, with what sold in it, a little after each new day begins (as the banner fades in on iOS). */
     val newDays: SharedFlow<DaySummary> = days.asSharedFlow()
 
     fun announce(summary: DaySummary) {
         days.tryEmit(summary)
+    }
+
+    private val nights = MutableSharedFlow<Int?>(extraBufferCapacity = EVENT_BUFFER)
+
+    /** The night, counted in days of the farm's clock, each time a new day begins: the moment of the midnight chime. */
+    val dayBegins: SharedFlow<Int?> = nights.asSharedFlow()
+
+    fun beginDay(night: Int?) {
+        nights.tryEmit(night)
     }
 
     private val toastsFlow = MutableSharedFlow<ToastMessage>(extraBufferCapacity = EVENT_BUFFER)

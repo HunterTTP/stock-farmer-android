@@ -39,7 +39,8 @@ class GameViewModel(
     init {
         viewModelScope.launch {
             while (true) {
-                if (persistenceState.isReady) session.publish(tick.tick())
+                // A farm switch passes through not-ready, so the next farm starts with fresh clocks and no pending summary.
+                if (persistenceState.isReady) session.publish(tick.tick()) else tick.reset()
                 delay(TICK_MILLIS)
             }
         }

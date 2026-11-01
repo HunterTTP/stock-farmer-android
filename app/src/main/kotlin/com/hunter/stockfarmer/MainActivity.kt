@@ -2,7 +2,6 @@ package com.hunter.stockfarmer
 
 import android.os.Bundle
 import android.view.View
-import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Box
@@ -35,6 +34,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.badlogic.gdx.backends.android.AndroidFragmentApplication
+import com.hunter.stockfarmer.audio.NightChime
 import com.hunter.stockfarmer.audio.SoundCenter
 import com.hunter.stockfarmer.audio.ambienceDriver
 import com.hunter.stockfarmer.core.feedback.HapticCue
@@ -47,6 +47,7 @@ import com.hunter.stockfarmer.core.rules.minuteOfDay
 import com.hunter.stockfarmer.farm.FarmFragment
 import com.hunter.stockfarmer.farm.FarmRenderer
 import com.hunter.stockfarmer.farm.FarmWeather
+import com.hunter.stockfarmer.game.Feedback
 import com.hunter.stockfarmer.game.GameViewModel
 import com.hunter.stockfarmer.haptics.Haptics
 import com.hunter.stockfarmer.notifications.FieldReadyNotificationPermission
@@ -181,8 +182,9 @@ class MainActivity :
         val session = model.session
         val ambience =
             session.ambienceDriver(sound) { message ->
-                Toast.makeText(this@MainActivity, message, Toast.LENGTH_SHORT).show()
+                session.showToast(message, durationMillis = Feedback.TOAST_MILLIS)
             }
+        val nightChime = NightChime { sound.play(SoundCue.nightPulse) }
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
@@ -200,9 +202,7 @@ class MainActivity :
                     }
                 }
                 launch {
-                    session.newDays.collect {
-                        sound.play(SoundCue.nightPulse)
-                    }
+                    session.dayBegins.collect(nightChime::begin)
                 }
                 launch {
                     // A farm switch reloads through not-ready; the next farm starts with fresh ambient moments.
@@ -211,13 +211,16 @@ class MainActivity :
                 launch {
                     while (true) {
                         val now = Instant.now()
-                        val (season, minute, chimed) =
+                        val (season, minute, night) =
                             session.act { engine ->
-                                val minute = engine.minuteOfDay(now)
-                                val night = NightPulse.day(now, engine.state.clockOffset)
-                                Triple(engine.state.season, minute, engine.state.lastNewDayNight == night)
+                                Triple(
+                                    engine.state.season,
+                                    engine.minuteOfDay(now),
+                                    NightPulse.day(now, engine.state.clockOffset),
+                                )
                             }
-                        sound.updateMusic(season, minute, chimed)
+                        sound.updateMusic(season, minute, nightChime.hushes(night))
+                        nightChime.retry(minute)
                         if (model.persistenceState.isReady) ambience.tick(now)
                         delay(MUSIC_REFRESH_MILLIS)
                     }
