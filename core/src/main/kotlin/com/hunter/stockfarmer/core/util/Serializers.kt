@@ -38,6 +38,10 @@ object InstantSerializer : KSerializer<Instant> {
         val seconds = decoder.decodeDouble() + REFERENCE_EPOCH
         if (!seconds.isFinite()) throw SerializationException("Invalid date")
         val whole = floor(seconds)
-        return Instant.ofEpochSecond(whole.toLong(), ((seconds - whole) * 1_000_000_000).roundToLong())
+        return Instant
+            .ofEpochSecond(
+                whole.toLong(),
+                ((seconds - whole) * 1_000_000_000).roundToLong(),
+            ).roundedToMicroseconds()
     }
 }
