@@ -1,5 +1,6 @@
 package com.hunter.stockfarmer.ui.fishing
 
+import com.hunter.stockfarmer.core.feedback.HapticCue
 import com.hunter.stockfarmer.core.rules.FishingContest
 import com.hunter.stockfarmer.core.rules.GameEngine
 import com.hunter.stockfarmer.core.rules.GameEvent
@@ -14,6 +15,8 @@ class FishingSession(
     val cast: FishingCast,
     bounds: FishingContest.Bounds,
     private val random: RandomSource,
+    private val onHaptic: (HapticCue) -> Unit = {},
+    private val onReeling: (Double) -> Unit = {},
 ) {
     private val contest = FishingContest(cast.kind.rarity, bounds, cast.reachFactor, random)
     private var active = true
@@ -42,9 +45,13 @@ class FishingSession(
     /** Returns true only on the frame the fish is caught. Stalls never make it jump across the water. */
     fun advance(seconds: Double): Boolean {
         if (!active || phase != Phase.PLAYING || !seconds.isFinite() || seconds <= 0) return false
-        if (!contest.advance(seconds.coerceAtMost(0.05), rod, random)) return false
+        val before = contest.progress
+        val caught = contest.advance(seconds.coerceAtMost(0.05), rod, random)
+        if (contest.progress > before) onReeling(contest.progress)
+        if (!caught) return false
         phase = Phase.CAUGHT
         rod = null
+        onHaptic(HapticCue.Success)
         return true
     }
 

@@ -39,11 +39,9 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.contentDescription
@@ -100,7 +98,10 @@ fun FishingOverlay(
                     if (tablet) 1.3 else 1.0,
                 )
             }
-        val fishing = remember(session, cast) { FishingSession(cast, area.bounds, SystemRandomSource) }
+        val fishing =
+            remember(session, cast) {
+                FishingSession(cast, area.bounds, SystemRandomSource, session::haptic, session::reel)
+            }
         val reveal = remember(fishing) { Animatable(0f) }
         var closingEvents by remember(fishing) { mutableStateOf<List<GameEvent>?>(null) }
         var error by remember(fishing) { mutableStateOf<String?>(null) }
@@ -109,7 +110,6 @@ fun FishingOverlay(
         val finish by rememberUpdatedState(onFinish)
         val caughtSound by rememberUpdatedState(onCaught)
         val owner = LocalLifecycleOwner.current
-        val haptics = LocalHapticFeedback.current
         val caught = fishing.progress >= 1
         val closing = closingEvents != null
 
@@ -152,20 +152,14 @@ fun FishingOverlay(
             if (closing) return@LaunchedEffect
             owner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
                 var last: Long? = null
-                var lastPulse = Double.NEGATIVE_INFINITY
                 while (true) {
                     withFrameNanos { now ->
                         val elapsed = last?.let { (now - it) / 1_000_000_000.0 } ?: 0.0
                         last = now
                         seconds += elapsed.coerceIn(0.0, 0.05)
-                        val before = fishing.progress
                         if (fishing.advance(elapsed)) {
                             caughtAt = seconds
                             caughtSound()
-                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        } else if (fishing.progress > before && seconds - lastPulse >= 0.14 - 0.10 * fishing.progress) {
-                            lastPulse = seconds
-                            haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                         }
                     }
                 }

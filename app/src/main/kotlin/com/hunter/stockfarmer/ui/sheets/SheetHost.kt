@@ -98,9 +98,7 @@ fun SheetHost(
                 return
             }
 
-            null -> {
-                Unit
-            }
+            null -> {}
         }
         if (building.placed.building.isHouse) {
             HudSheet(onDismiss = onClose) {

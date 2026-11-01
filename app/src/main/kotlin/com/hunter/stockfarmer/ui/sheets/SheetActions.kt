@@ -3,6 +3,7 @@ package com.hunter.stockfarmer.ui.sheets
 import com.hunter.stockfarmer.core.catalog.HarvestTool
 import com.hunter.stockfarmer.core.catalog.PetBreed
 import com.hunter.stockfarmer.core.catalog.StorageItem
+import com.hunter.stockfarmer.core.feedback.HapticCue
 import com.hunter.stockfarmer.core.model.GridPoint
 import com.hunter.stockfarmer.core.rules.AnimalRef
 import com.hunter.stockfarmer.core.rules.GameEngine
@@ -114,6 +115,9 @@ internal fun GameSession.sheetAction(
 ): SheetResult =
     act { engine ->
         val result = SheetActions.perform(engine, target, action, now)
+        if (result.events.isEmpty() && (action is SheetAction.Recipe || action is SheetAction.NextChick)) {
+            haptic(HapticCue.Light)
+        }
         result.copy(events = result.events + engine.claimCompletedQuests(using))
     }.also { publish(it.events) }
 

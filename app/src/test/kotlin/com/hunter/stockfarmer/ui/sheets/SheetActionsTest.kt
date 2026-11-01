@@ -6,6 +6,7 @@ import com.hunter.stockfarmer.core.catalog.Crop
 import com.hunter.stockfarmer.core.catalog.PetBreed
 import com.hunter.stockfarmer.core.catalog.Recipe
 import com.hunter.stockfarmer.core.catalog.StorageItem
+import com.hunter.stockfarmer.core.feedback.HapticCue
 import com.hunter.stockfarmer.core.model.Chicken
 import com.hunter.stockfarmer.core.model.Coop
 import com.hunter.stockfarmer.core.model.GridPoint
@@ -21,6 +22,8 @@ import com.hunter.stockfarmer.core.rules.Rejection
 import com.hunter.stockfarmer.core.rules.buildingPlacement
 import com.hunter.stockfarmer.core.rules.storageCapacity
 import com.hunter.stockfarmer.game.GameSession
+import com.hunter.stockfarmer.game.HapticRequest
+import com.hunter.stockfarmer.game.collectingHaptics
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -47,6 +50,46 @@ class SheetActionsTest {
         action: SheetAction,
         time: Instant = now,
     ) = GameSession(engine).sheetAction(target, action, time)
+
+    @Test
+    fun `successful recipe and chick choices emit light feedback and refused choices do not`() {
+        val workshop = engine("grainMachine")
+        val workshopSession = GameSession(workshop)
+        val recipe = Recipe.named("grainMachine")!!
+        val light = listOf(HapticRequest.Cue(HapticCue.Light))
+        assertEquals(
+            light,
+            collectingHaptics(workshopSession) {
+                assertNull(workshopSession.sheetAction(target, SheetAction.Recipe(recipe.id), now).refusal)
+            },
+        )
+        workshop.state.storage[recipe.input.id] = recipe.inputCount
+        workshopSession.sheetAction(target, SheetAction.StartWork, now)
+        assertTrue(
+            collectingHaptics(workshopSession) {
+                assertEquals(
+                    Rejection.WorkInProgress.message,
+                    workshopSession.sheetAction(target, SheetAction.Recipe(recipe.id), now).refusal,
+                )
+            }.isEmpty(),
+        )
+
+        val coop = engine("chickenCoop")
+        coop.state.coops[origin] = Coop(nextChickAt = now)
+        val coopSession = GameSession(coop)
+        val variant = ChickenVariant.roosters.first()
+        assertEquals(
+            light,
+            collectingHaptics(coopSession) {
+                assertNull(coopSession.sheetAction(target, SheetAction.NextChick(variant.id), now).refusal)
+            },
+        )
+        assertTrue(
+            collectingHaptics(coopSession) {
+                assertNotNull(coopSession.sheetAction(target, SheetAction.NextChick("missing"), now).refusal)
+            }.isEmpty(),
+        )
+    }
 
     @Test
     fun `workshop actions choose start and collect using the bucket rules`() {

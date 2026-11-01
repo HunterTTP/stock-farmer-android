@@ -63,6 +63,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.hunter.stockfarmer.core.persistence.TimelapseArchive
 import com.hunter.stockfarmer.core.presentation.TimelapsePlayback
 import com.hunter.stockfarmer.core.rules.DayNightCycle
+import com.hunter.stockfarmer.game.GameSession
 import com.hunter.stockfarmer.ui.theme.HudIcon
 import com.hunter.stockfarmer.ui.theme.HudIcons
 import com.hunter.stockfarmer.ui.theme.HudMaterialTheme
@@ -85,6 +86,7 @@ private data class DisplayedFrame(
 /** Full-screen history player. Archive is an immutable snapshot for the duration of this presentation. */
 @Composable
 fun TimelapseViewer(
+    session: GameSession,
     recorder: TimelapseRecorder,
     archive: TimelapseArchive,
     farm: UUID,
@@ -129,7 +131,8 @@ fun TimelapseViewer(
         }
     }
 
-    DisposableEffect(recorder, player, owner) {
+    DisposableEffect(session, recorder, player, owner) {
+        session.isTimelapseViewerOpen = true
         recorder.setViewing(true)
         val observer =
             LifecycleEventObserver { _, event ->
@@ -140,6 +143,7 @@ fun TimelapseViewer(
         onDispose {
             owner.lifecycle.removeObserver(observer)
             recorder.setViewing(false)
+            session.isTimelapseViewerOpen = false
         }
     }
     LaunchedEffect(player, closing, reduceMotion) {

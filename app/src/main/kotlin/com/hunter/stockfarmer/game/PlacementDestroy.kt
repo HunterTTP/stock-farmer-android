@@ -30,7 +30,7 @@ internal fun GameEngine.refundText(building: Building): String {
 
 /** Asks whether to destroy the building, fruit tree, decoration or tree that is being moved, and says what comes back. */
 fun GameSession.askToDestroyWhilePlacing() {
-    val ask =
+    val question =
         act { engine ->
             engine.buildingPlacement?.replacing?.let { placed ->
                 Confirmation(
@@ -65,5 +65,5 @@ fun GameSession.askToDestroyWhilePlacing() {
                 }
             }
         }
-    confirmations.value = ask
+    if (question != null) ask(question) else confirmations.value = null
 }

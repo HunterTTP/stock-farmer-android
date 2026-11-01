@@ -204,7 +204,7 @@ data class ItemInfo(
                         if (building.placementLimit == 1) {
                             effect("Only one can be placed")
                         } else {
-                            effect("Up to ", green("${building.placementLimit ?: 0}"), " can be placed")
+                            effect("Up to ", green("${building.placementLimit}"), " can be placed")
                         },
                         effect("Can only be destroyed once its space in storage is empty"),
                     )

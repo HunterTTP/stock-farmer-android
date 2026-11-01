@@ -1,5 +1,6 @@
 package com.hunter.stockfarmer.game
 
+import com.hunter.stockfarmer.core.feedback.HapticCue
 import com.hunter.stockfarmer.core.model.GridPoint
 import com.hunter.stockfarmer.core.model.PlayMode
 import com.hunter.stockfarmer.core.rules.AnimalRef
@@ -109,13 +110,15 @@ private val sceneGestures = WeakHashMap<GameSession, AnimalSceneGestures>()
 val GameSession.animalGestures: AnimalSceneGestures
     get() = synchronized(sceneGestures) { sceneGestures.getOrPut(this) { AnimalSceneGestures() } }
 
-/** One-line SheetHost hook. Sound and haptics can accompany this presentation request in the caller. */
+/** SheetHost hook for the scene reaction and its direct feedback. */
 fun GameSession.interactWithAnimal(
     animal: AnimalRef,
     interaction: AnimalInteraction,
 ) {
     val gesture = if (interaction == AnimalInteraction.PET) AnimalGesture.PET else AnimalGesture.NUDGE
-    animalGestures.interact(animal, gesture, Instant.now())
+    if (animalGestures.interact(animal, gesture, Instant.now()) && gesture == AnimalGesture.PET) {
+        haptic(HapticCue.Light)
+    }
 }
 
 /** A farm tap opens the options; only the matching implement collects ready produce instead. */
@@ -131,6 +134,7 @@ internal fun GameSession.interactWithAnimal(
         ) {
             flash(listOf(point), engine.useTool(point, now), now)
         } else {
+            haptic(HapticCue.Light)
             sheets.value = SheetTarget.Animal(animal)
             emptyList()
         }

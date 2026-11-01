@@ -1,8 +1,11 @@
 package com.hunter.stockfarmer.ui.hud
 
 import android.content.ContextWrapper
+import com.hunter.stockfarmer.core.feedback.HapticCue
 import com.hunter.stockfarmer.core.rules.GameEngine
 import com.hunter.stockfarmer.game.GameSession
+import com.hunter.stockfarmer.game.HapticRequest
+import com.hunter.stockfarmer.game.collectingHaptics
 import com.hunter.stockfarmer.ui.PhotoSaver
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -36,12 +39,15 @@ class FarmPhotoTakerTest {
 
         val latch = CountDownLatch(1)
         var outcome = ""
-        takeFarmPhoto(context, session) { message ->
-            outcome = message
-            latch.countDown()
-        }
-
-        assertTrue(latch.await(5, TimeUnit.SECONDS))
+        val haptics =
+            collectingHaptics(session) {
+                takeFarmPhoto(context, session) { message ->
+                    outcome = message
+                    latch.countDown()
+                }
+                assertTrue(latch.await(5, TimeUnit.SECONDS))
+            }
+        assertEquals(listOf(HapticRequest.Cue(HapticCue.Success)), haptics)
         assertEquals("Farm photo saved", outcome)
         assertTrue(File(picturesDir, "Stock Farmer.png").exists())
     }
@@ -61,12 +67,15 @@ class FarmPhotoTakerTest {
 
         val latch = CountDownLatch(1)
         var outcome = ""
-        takeFarmPhoto(context, session) { message ->
-            outcome = message
-            latch.countDown()
-        }
-
-        assertTrue(latch.await(5, TimeUnit.SECONDS))
+        val haptics =
+            collectingHaptics(session) {
+                takeFarmPhoto(context, session) { message ->
+                    outcome = message
+                    latch.countDown()
+                }
+                assertTrue(latch.await(5, TimeUnit.SECONDS))
+            }
+        assertEquals(listOf(HapticRequest.Cue(HapticCue.Success)), haptics)
         assertEquals("Farm photo saved", outcome)
         assertEquals(listOf(4096, 2048), requestedSizes)
         assertTrue(File(picturesDir, "Stock Farmer.png").exists())
@@ -80,12 +89,15 @@ class FarmPhotoTakerTest {
         val context = FakePhotoContext(externalDir = tempDir.toFile())
         val latch = CountDownLatch(1)
         var outcome = ""
-        takeFarmPhoto(context, session) { message ->
-            outcome = message
-            latch.countDown()
-        }
-
-        assertTrue(latch.await(5, TimeUnit.SECONDS))
+        val haptics =
+            collectingHaptics(session) {
+                takeFarmPhoto(context, session) { message ->
+                    outcome = message
+                    latch.countDown()
+                }
+                assertTrue(latch.await(5, TimeUnit.SECONDS))
+            }
+        assertTrue(haptics.isEmpty())
         assertEquals("The farm photo could not be created. Please try again.", outcome)
     }
 
@@ -101,12 +113,15 @@ class FarmPhotoTakerTest {
 
         val latch = CountDownLatch(1)
         var outcome = ""
-        takeFarmPhoto(context, session) { message ->
-            outcome = message
-            latch.countDown()
-        }
-
-        assertTrue(latch.await(5, TimeUnit.SECONDS))
+        val haptics =
+            collectingHaptics(session) {
+                takeFarmPhoto(context, session) { message ->
+                    outcome = message
+                    latch.countDown()
+                }
+                assertTrue(latch.await(5, TimeUnit.SECONDS))
+            }
+        assertTrue(haptics.isEmpty())
         assertEquals("The farm photo could not be saved", outcome)
     }
 

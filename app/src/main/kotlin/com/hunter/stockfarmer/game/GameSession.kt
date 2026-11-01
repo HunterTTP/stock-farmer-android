@@ -1,6 +1,7 @@
 package com.hunter.stockfarmer.game
 
 import com.hunter.stockfarmer.core.catalog.HarvestTool
+import com.hunter.stockfarmer.core.feedback.HapticCue
 import com.hunter.stockfarmer.core.model.DaySummary
 import com.hunter.stockfarmer.core.model.GameState
 import com.hunter.stockfarmer.core.model.GridPoint
@@ -97,6 +98,22 @@ class GameSession(
     /** Something the player is asked to confirm before it happens; null when nothing is. */
     val confirmations = MutableStateFlow<Confirmation?>(null)
 
+    private val hapticRequests = MutableSharedFlow<HapticRequest>(extraBufferCapacity = EVENT_BUFFER)
+    val haptics: SharedFlow<HapticRequest> = hapticRequests.asSharedFlow()
+
+    fun haptic(cue: HapticCue) {
+        hapticRequests.tryEmit(HapticRequest.Cue(cue))
+    }
+
+    fun reel(progress: Double) {
+        hapticRequests.tryEmit(HapticRequest.Reeling(progress))
+    }
+
+    fun ask(confirmation: Confirmation) {
+        haptic(HapticCue.Medium)
+        confirmations.value = confirmation
+    }
+
     /** The building, animal or fish whose sheet is open; null when none is. */
     val sheets = MutableStateFlow<SheetTarget?>(null)
 
@@ -117,6 +134,8 @@ class GameSession(
     val tractor = TractorDriver()
 
     @Volatile var isActive = true
+
+    @Volatile var isTimelapseViewerOpen = false
 
     @Volatile var isSaveBlocked = false
 

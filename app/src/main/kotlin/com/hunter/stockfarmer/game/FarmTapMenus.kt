@@ -4,6 +4,7 @@ import com.hunter.stockfarmer.core.catalog.Decoration
 import com.hunter.stockfarmer.core.catalog.FenceColor
 import com.hunter.stockfarmer.core.catalog.HarvestTool
 import com.hunter.stockfarmer.core.catalog.PlacedDecoration
+import com.hunter.stockfarmer.core.feedback.HapticCue
 import com.hunter.stockfarmer.core.model.GridPoint
 import com.hunter.stockfarmer.core.model.PlayMode
 import com.hunter.stockfarmer.core.model.dollars
@@ -42,6 +43,7 @@ internal fun GameSession.openBuilding(
     if (takesGoods) return flash(placed.footprint, engine.useTool(point, now), now)
     sceneFeedback.interact(origin, building = true, now)
     sceneFeedback.flash(placed.footprint, false, now)
+    haptic(HapticCue.Light)
     sheets.value = SheetTarget.Building(origin)
     return emptyList()
 }
@@ -54,10 +56,11 @@ internal fun GameSession.askAboutLandscape(
     if (engine.isChopping) return false
     if (point in engine.state.fences) {
         sceneFeedback.flash(listOf(point), false, now)
-        confirmations.value =
+        ask(
             Confirmation("Sell fence?", "", "Sell · ${FenceColor.price.dollars}") {
                 publish(act { it.destroyFence(point) })
-            }
+            },
+        )
         return true
     }
     val site = engine.state.decoration(point) ?: return false
@@ -74,13 +77,14 @@ internal fun GameSession.askAboutLandscape(
         } else {
             null
         }
-    confirmations.value =
+    ask(
         Confirmation(
             "Destroy ${decoration.name.lowercase(Locale.US)}?",
             sprayMessage(placed, engine.state.sprinklersRunConstantly, now, engine.state.clockOffset),
             "Destroy · ${engine.refund(decoration).dollars}",
             alternative,
-        ) { publish(act { it.destroyDecoration(point, Instant.now()) }) }
+        ) { publish(act { it.destroyDecoration(point, Instant.now()) }) },
+    )
     return true
 }
 

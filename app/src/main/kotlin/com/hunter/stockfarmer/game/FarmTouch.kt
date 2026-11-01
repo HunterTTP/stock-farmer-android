@@ -1,6 +1,7 @@
 package com.hunter.stockfarmer.game
 
 import com.hunter.stockfarmer.core.catalog.Building
+import com.hunter.stockfarmer.core.feedback.HapticCue
 import com.hunter.stockfarmer.core.model.GridPoint
 import com.hunter.stockfarmer.core.model.PlayMode
 import com.hunter.stockfarmer.core.rules.GameEngine
@@ -21,7 +22,6 @@ import com.hunter.stockfarmer.core.rules.isPlacing
 import com.hunter.stockfarmer.core.rules.isPlacingFirstOfItsKind
 import com.hunter.stockfarmer.core.rules.isSprinklerSelected
 import com.hunter.stockfarmer.core.rules.liftTool
-import com.hunter.stockfarmer.core.rules.movePlacement
 import com.hunter.stockfarmer.core.rules.nudgePlacement
 import com.hunter.stockfarmer.core.rules.placementRejection
 import com.hunter.stockfarmer.core.rules.tapCrop
@@ -174,7 +174,10 @@ fun GameSession.cancelPlacement(now: Instant = Instant.now()) =
 fun GameSession.nudgePlacement(
     rows: Int,
     cols: Int,
-) = act { it.nudgePlacement(rows, cols) }
+) = act {
+    it.nudgePlacement(rows, cols)
+    haptic(HapticCue.Light)
+}
 
 /** Where the thing being placed would go, and whether it can go there; null when nothing is being placed. */
 fun GameSession.preview(now: Instant = Instant.now()): PlacementPreview? = placementPreview(now) ?: view.toolPreview

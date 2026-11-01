@@ -3,6 +3,7 @@ package com.hunter.stockfarmer.ui.hud
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
+import com.hunter.stockfarmer.core.feedback.HapticCue
 import com.hunter.stockfarmer.game.GameSession
 import com.hunter.stockfarmer.ui.PhotoSaver
 import java.util.concurrent.atomic.AtomicBoolean
@@ -36,6 +37,7 @@ internal fun takeFarmPhoto(
     fun save(png: ByteArray) =
         thread {
             val saved = PhotoSaver.save(context, png)
+            if (saved) session.haptic(HapticCue.Success)
             say(if (saved) "Farm photo saved" else "The farm photo could not be saved")
         }
 

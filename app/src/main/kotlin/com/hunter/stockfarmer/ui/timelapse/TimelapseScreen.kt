@@ -190,7 +190,7 @@ fun TimelapseScreen(
     }
     val farm = settings.historyID
     if (viewing && archive != null && farm != null) {
-        TimelapseViewer(recorder, archive, farm, settings.crossfades) { viewing = false }
+        TimelapseViewer(session, recorder, archive, farm, settings.crossfades) { viewing = false }
     }
 }
 

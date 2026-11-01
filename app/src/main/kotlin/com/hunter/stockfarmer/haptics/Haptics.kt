@@ -5,18 +5,38 @@ import android.os.SystemClock
 import android.view.HapticFeedbackConstants
 import android.view.View
 import com.hunter.stockfarmer.core.feedback.HapticCue
+import com.hunter.stockfarmer.game.HapticRequest
 
 /**
- * Buzzes the device through [view]. Taps fired closer together than [MINIMUM_TAP_MILLIS] are dropped, and so are
+ * Uses Android's native haptic feedback. Taps fired closer together than [MINIMUM_TAP_MILLIS] are dropped, and so are
  * alerts, each among their own kind, so a drag across many tiles doesn't buzz continuously and a tap never
  * swallows a warning.
  */
 class Haptics(
-    private val view: View,
-    private val uptimeMillis: () -> Long = SystemClock::uptimeMillis,
+    private val feedback: (Int) -> Unit,
+    private val uptimeMillis: () -> Long,
 ) {
+    constructor(view: View, uptimeMillis: () -> Long = SystemClock::uptimeMillis) :
+        this({ view.performHapticFeedback(it) }, uptimeMillis)
+
     private var lastTap = Long.MIN_VALUE / 2
     private var lastAlert = Long.MIN_VALUE / 2
+    private var lastReel = Long.MIN_VALUE / 2
+
+    fun play(request: HapticRequest) {
+        when (request) {
+            is HapticRequest.Cue -> play(request.cue)
+            is HapticRequest.Reeling -> reeling(request.progress)
+        }
+    }
+
+    private fun reeling(progress: Double) {
+        val interval = 140.0 - 100.0 * progress.coerceIn(0.0, 1.0)
+        val now = uptimeMillis()
+        if (now - lastReel < interval) return
+        lastReel = now
+        feedback(HapticFeedbackConstants.LONG_PRESS)
+    }
 
     fun play(cue: HapticCue) {
         when (cue) {
@@ -42,7 +62,7 @@ class Haptics(
         val now = uptimeMillis()
         if (now - (if (isAlert) lastAlert else lastTap) < interval) return
         if (isAlert) lastAlert = now else lastTap = now
-        view.performHapticFeedback(feedback)
+        this.feedback(feedback)
     }
 
     private fun confirm() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) HapticFeedbackConstants.CONFIRM else -1

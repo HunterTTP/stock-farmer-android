@@ -108,6 +108,69 @@ class GameTickTest {
     }
 
     @Test
+    fun `timelapse pauses rules and play time and restarts step clocks when closed`() {
+        val engine = GameEngine()
+        engine.tap(tile, planted)
+        val session = GameSession(engine)
+        val tick = GameTick(session, RandomSource(Random(42)::nextLong))
+        tick.tick(planted)
+        tick.tick(planted.plusSeconds(1))
+
+        session.isTimelapseViewerOpen = true
+        assertTrue(tick.tick(ripe).isEmpty())
+        assertTrue(tick.tick(ripe.plusSeconds(1)).isEmpty())
+        assertEquals(Lesson.grow, engine.currentLesson)
+        assertEquals(1.0, engine.state.playTime)
+
+        session.isTimelapseViewerOpen = false
+        tick.tick(ripe.plusSeconds(2))
+        assertEquals(Lesson.grow, engine.currentLesson)
+        assertEquals(1.0, engine.state.playTime)
+        tick.tick(ripe.plusSeconds(3))
+        assertEquals(Lesson.pickHarvest, engine.currentLesson)
+        assertEquals(2.0, engine.state.playTime)
+    }
+
+    @Test
+    fun `closing timelapse while inactive does not resume ticks or note weather`() {
+        val engine = GameEngine()
+        val session = GameSession(engine)
+        val tick = GameTick(session)
+        val raining = midnight.plusSeconds(900)
+        tick.tick(midnight)
+        session.isTimelapseViewerOpen = true
+        tick.tick(raining)
+        session.isActive = false
+        session.isTimelapseViewerOpen = false
+        tick.tick(raining.plusSeconds(1))
+        assertFalse(CareerRecord.RAIN_ID in engine.state.career.seenEnvironmentIDs)
+        assertEquals(0.0, engine.state.playTime)
+
+        session.isActive = true
+        tick.tick(raining.plusSeconds(2))
+        assertTrue(CareerRecord.RAIN_ID in engine.state.career.seenEnvironmentIDs)
+        assertEquals(0.0, engine.state.playTime)
+    }
+
+    @Test
+    fun `timelapse defers a pending day summary until closed`() {
+        val session = GameSession(GameEngine())
+        val tick = GameTick(session, RandomSource(Random(42)::nextLong))
+        tick.tick(midnight.minusSeconds(1))
+        tick.tick(midnight.plusSeconds(1))
+        val summaries =
+            collecting(session.newDays) { received ->
+                session.isTimelapseViewerOpen = true
+                tick.tick(midnight.plusSeconds(10))
+                yield()
+                assertTrue(received.isEmpty())
+                session.isTimelapseViewerOpen = false
+                tick.tick(midnight.plusSeconds(11))
+            }
+        assertEquals(1, summaries.size)
+    }
+
+    @Test
     fun `a gap longer than five seconds is not play but a shorter one is counted whole`() {
         val engine = GameEngine()
         val tick = GameTick(GameSession(engine))

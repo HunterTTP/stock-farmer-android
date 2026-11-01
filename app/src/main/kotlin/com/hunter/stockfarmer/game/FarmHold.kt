@@ -1,6 +1,7 @@
 package com.hunter.stockfarmer.game
 
 import com.hunter.stockfarmer.core.catalog.Crop
+import com.hunter.stockfarmer.core.feedback.HapticCue
 import com.hunter.stockfarmer.core.model.GridPoint
 import com.hunter.stockfarmer.core.model.durationText
 import com.hunter.stockfarmer.core.rules.GameEngine
@@ -44,8 +45,15 @@ fun GameSession.hold(
     publish(
         act { engine ->
             when {
-                engine.isPlacing -> emptyList()
-                else -> engine.pickUp(point) ?: askToDestroy(engine, point, now)
+                engine.isPlacing -> {
+                    emptyList()
+                }
+
+                else -> {
+                    engine.pickUp(point)?.also {
+                        if (it.isEmpty()) haptic(HapticCue.Medium)
+                    } ?: askToDestroy(engine, point, now)
+                }
             }
         },
     )
@@ -88,19 +96,21 @@ private fun GameSession.askToDestroy(
         val remaining = crops.mapNotNull { engine.remainingGrowTime(it, now) }.maxOrNull() ?: 0.0
         val label = if (plants == 1) "Grow time remaining" else "Longest grow time remaining"
         val timing = if (remaining > 0) "$label: ${remaining.durationText}" else "Ready to harvest"
-        confirmations.value =
+        ask(
             Confirmation(
                 "Destroy $plants ${if (plants == 1) "crop" else "crops"}?",
                 "No money will be earned.\n$timing",
                 "Destroy",
-            ) { publish(act { it.destroyCrops(crops) }) }
+            ) { publish(act { it.destroyCrops(crops) }) },
+        )
     } else {
         engine.fertilizerToDestroy(point)?.let { tile ->
             sceneFeedback.flash(listOf(tile), false, now)
-            confirmations.value =
+            ask(
                 Confirmation("Destroy fertilizer?", "No money will be returned.", "Destroy") {
                     publish(act { it.destroyFertilizer(tile) })
-                }
+                },
+            )
         }
     }
     return emptyList()

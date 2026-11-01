@@ -4,6 +4,7 @@ import com.hunter.stockfarmer.core.catalog.FishKind
 import com.hunter.stockfarmer.core.catalog.HarvestTool
 import com.hunter.stockfarmer.core.catalog.StorageItem
 import com.hunter.stockfarmer.core.catalog.WaterStyle
+import com.hunter.stockfarmer.core.feedback.HapticCue
 import com.hunter.stockfarmer.core.model.FishPond
 import com.hunter.stockfarmer.core.model.GameState
 import com.hunter.stockfarmer.core.model.GridPoint
@@ -50,6 +51,34 @@ class FishingSessionTest {
             fishing.advance(1.0 / 60)
         }
         assertTrue(fishing.isCaught)
+    }
+
+    @Test
+    fun `reeling feedback follows increasing progress and catching emits success once`() {
+        val engine = engine()
+        val pulses = mutableListOf<Double>()
+        val cues = mutableListOf<HapticCue>()
+        val cast = FishingCast.start(engine, engine.castRod(point))!!
+        val fishing = FishingSession(cast, bounds, SeededRandom(7), { cues += it }, { pulses += it })
+        fishing.advance(0.05)
+        assertTrue(pulses.isEmpty())
+        fishing.moveRod(fishing.fish)
+        fishing.advance(0.05)
+        assertEquals(listOf(fishing.progress), pulses)
+        fishing.moveRod(null)
+        fishing.advance(0.05)
+        assertEquals(1, pulses.size)
+        fishing.setActive(false)
+        fishing.advance(0.05)
+        assertEquals(1, pulses.size)
+        fishing.setActive(true)
+        catch(fishing)
+        assertEquals(1.0, pulses.last())
+        assertEquals(listOf(HapticCue.Success), cues)
+        val pulseCount = pulses.size
+        fishing.advance(0.05)
+        assertEquals(pulseCount, pulses.size)
+        assertEquals(listOf(HapticCue.Success), cues)
     }
 
     @Test

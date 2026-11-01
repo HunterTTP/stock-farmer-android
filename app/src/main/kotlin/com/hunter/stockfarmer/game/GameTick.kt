@@ -56,11 +56,11 @@ class GameTick(
 
     /**
      * Runs one step for the moment [now] and says what happened that the player should be told about. Nothing happens
-     * while the app is away, as on iOS where the paused scene never ticks; the clocks start over when it returns.
+     * while the app is away or the timelapse viewer is open; the clocks start over when play resumes.
      */
     fun tick(now: Instant = Instant.now()): List<GameEvent> =
         session.act { engine ->
-            if (!session.isActive) {
+            if (!session.isActive || session.isTimelapseViewerOpen) {
                 lastTend = null
                 lastPlayTick = null
                 return@act emptyList()

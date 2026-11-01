@@ -23,7 +23,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.fragment.app.FragmentActivity
@@ -31,6 +30,7 @@ import androidx.fragment.app.FragmentContainerView
 import androidx.fragment.app.commit
 import androidx.fragment.app.commitNow
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.badlogic.gdx.backends.android.AndroidFragmentApplication
@@ -200,6 +200,9 @@ class MainActivity :
                             },
                         )
                     }
+                }
+                launch {
+                    session.haptics.collect(haptics::play)
                 }
                 launch {
                     session.dayBegins.collect(nightChime::begin)

@@ -33,7 +33,7 @@ internal class AnimalShelter {
                 pose.col == entrance.front.col.toFloat() && !pose.walking
         if (entering && !inside) {
             inside = true
-            door = entrance?.door
+            door = entrance.door
             changedAt = if (initialized) now else now.minusSeconds(1)
         } else if (inside && (!sheltering || entrance == null)) {
             inside = false

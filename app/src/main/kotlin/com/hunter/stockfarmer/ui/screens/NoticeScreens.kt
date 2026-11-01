@@ -495,9 +495,7 @@ private fun NoticeSymbolIcon(
                     }
                 }
 
-                NoticeSymbol.CHART -> {
-                    Unit
-                }
+                NoticeSymbol.CHART -> {}
             }
         }
     }
