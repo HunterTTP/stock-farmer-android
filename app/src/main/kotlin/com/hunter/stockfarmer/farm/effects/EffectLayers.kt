@@ -41,6 +41,8 @@ class EffectLayers internal constructor(
     val photo: PhotoEffects,
     private val monitor: PerformanceMonitor? = null,
 ) {
+    private val overlaysByPhase = EffectPhase.entries.map { phase -> overlays.filter { it.phase == phase } }
+
     fun draw(
         phase: EffectPhase,
         batch: SpriteBatch,
@@ -48,7 +50,7 @@ class EffectLayers internal constructor(
         now: Instant,
         camera: OrthographicCamera,
     ) {
-        overlays.filter { it.phase == phase }.forEach { overlay ->
+        overlaysByPhase[phase.ordinal].forEach { overlay ->
             if (monitor != null) {
                 monitor.measure(overlay.work) {
                     overlay.draw(batch, state, now, camera)
