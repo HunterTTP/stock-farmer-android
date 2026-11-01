@@ -39,6 +39,9 @@ class GameSession(
         days.tryEmit(summary)
     }
 
+    /** Asks the farm for a picture of the whole map. */
+    val photos = PhotoRequests()
+
     /** Where the farm camera looks, so sounds can be placed to one side or made quieter when far away. */
     val view = FarmView()
 

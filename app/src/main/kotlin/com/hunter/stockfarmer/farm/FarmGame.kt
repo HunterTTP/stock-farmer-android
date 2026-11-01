@@ -30,6 +30,7 @@ class FarmGame(
     private lateinit var batch: SpriteBatch
     private lateinit var textures: TextureLibrary
     private lateinit var renderer: FarmRenderer
+    private lateinit var farmPhoto: FarmPhoto
     private val camera = OrthographicCamera()
     private val touch = Vector3()
 
@@ -38,6 +39,10 @@ class FarmGame(
         textures = TextureLibrary()
         renderer = FarmRenderer(textures, listOf(TractorLayer(textures)) + animalSources(textures))
         Gdx.input.inputProcessor = GestureDetector(Gestures())
+        farmPhoto = FarmPhoto(renderer, batch)
+        session.photos.handler = { pixels, done ->
+            Gdx.app.postRunnable { done(session.read { farmPhoto.render(it, pixels, Instant.now()) }) }
+        }
         placeCamera()
     }
 
@@ -135,6 +140,7 @@ class FarmGame(
     }
 
     override fun dispose() {
+        session.photos.handler = null
         batch.dispose()
         textures.dispose()
     }

@@ -1,5 +1,9 @@
 package com.hunter.stockfarmer.ui
 
+import android.content.Context
+import android.os.Handler
+import android.os.Looper
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,6 +30,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.hunter.stockfarmer.audio.SoundCenter
 import com.hunter.stockfarmer.core.catalog.Crop
@@ -57,6 +62,7 @@ import com.hunter.stockfarmer.ui.screens.SettingsScreen
 import com.hunter.stockfarmer.ui.screens.SoundCenterScreenAudio
 import com.hunter.stockfarmer.ui.screens.StockMarketScreen
 import kotlinx.coroutines.delay
+import kotlin.concurrent.thread
 
 /** What the heads-up display shows, read from the game a few times a second. */
 private data class HudState(
@@ -115,6 +121,7 @@ fun Hud(
     sound: SoundCenter,
     modifier: Modifier = Modifier,
 ) {
+    val context = LocalContext.current
     var hud by remember { mutableStateOf(session.hud()) }
     var menu by remember { mutableStateOf<Menu?>(null) }
     var screen by remember { mutableStateOf<HudScreen?>(null) }
@@ -140,7 +147,11 @@ fun Hud(
         Column(Modifier.fillMaxSize().padding(12.dp), verticalArrangement = Arrangement.SpaceBetween) {
             Column {
                 StatusBar(hud)
-                ScreenButtons(onStorage = { menu = Menu.Storage }, onScreen = { screen = it })
+                ScreenButtons(
+                    onStorage = { menu = Menu.Storage },
+                    onPhoto = { takeFarmPhoto(context, session) },
+                    onScreen = { screen = it },
+                )
             }
             Column {
                 if (hud.isPlacing) PlacementBar(session)
@@ -197,10 +208,12 @@ private fun StatusBar(hud: HudState) {
 @Composable
 private fun ScreenButtons(
     onStorage: () -> Unit,
+    onPhoto: () -> Unit,
     onScreen: (HudScreen) -> Unit,
 ) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
         TextButton(onClick = onStorage) { Text("Storage") }
+        TextButton(onClick = onPhoto) { Text("Photo") }
         HudScreen.entries.forEach { TextButton(onClick = { onScreen(it) }) { Text(it.label) } }
     }
 }
@@ -275,5 +288,32 @@ private fun PlacementBar(session: GameSession) {
     Row(Modifier.fillMaxWidth().padding(bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         Button(onClick = { session.confirmPlacement() }) { Text("Place") }
         OutlinedButton(onClick = { session.cancelPlacement() }) { Text("Cancel") }
+    }
+}
+
+private const val PHOTO_PIXELS = 4096
+private const val SMALLER_PHOTO_PIXELS = 2048
+
+/** Takes a picture of the whole farm and saves it to the gallery, trying a smaller one if the device is short of memory. */
+private fun takeFarmPhoto(
+    context: Context,
+    session: GameSession,
+) {
+    val main = Handler(Looper.getMainLooper())
+
+    fun tell(message: String) = main.post { Toast.makeText(context, message, Toast.LENGTH_SHORT).show() }
+
+    fun save(png: ByteArray) =
+        thread {
+            tell(if (PhotoSaver.save(context, png)) "Farm photo saved" else "The farm photo could not be saved")
+        }
+    session.photos.request(PHOTO_PIXELS) { large ->
+        if (large != null) {
+            save(large)
+        } else {
+            session.photos.request(SMALLER_PHOTO_PIXELS) { small ->
+                if (small != null) save(small) else tell("The farm photo could not be created. Please try again.")
+            }
+        }
     }
 }
