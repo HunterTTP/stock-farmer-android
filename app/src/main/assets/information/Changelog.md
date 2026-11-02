@@ -1,4 +1,6 @@
 ## 2026-11-01
+- The money and level panels no longer sit right against the top of the screen on some phones and tablets; there is
+  always a comfortable gap under the status bar or camera cutout.
 - The Career screen is now called Progress.
 - Ducks no longer lay eggs. Tap a duck and Sell it for $25 (toast "Sold for $25") instead of releasing it; every other animal still offers
   Release.

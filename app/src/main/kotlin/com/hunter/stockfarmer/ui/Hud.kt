@@ -11,9 +11,11 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.AlertDialog
@@ -30,6 +32,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.hunter.stockfarmer.audio.SoundCenter
@@ -55,6 +58,7 @@ import com.hunter.stockfarmer.ui.fishing.rememberFishingMode
 import com.hunter.stockfarmer.ui.hud.BannerBox
 import com.hunter.stockfarmer.ui.hud.HUD_REFRESH_MILLIS
 import com.hunter.stockfarmer.ui.hud.HudState
+import com.hunter.stockfarmer.ui.hud.HudTopSpacing
 import com.hunter.stockfarmer.ui.hud.LevelHud
 import com.hunter.stockfarmer.ui.hud.MenuInteractionRegions
 import com.hunter.stockfarmer.ui.hud.MoneyHud
@@ -82,6 +86,7 @@ import com.hunter.stockfarmer.ui.screens.QuestBanner
 import com.hunter.stockfarmer.ui.screens.QuestReward
 import com.hunter.stockfarmer.ui.screens.SoundCenterScreenAudio
 import com.hunter.stockfarmer.ui.sheets.SheetHost
+import com.hunter.stockfarmer.ui.theme.LocalHudScale
 import com.hunter.stockfarmer.ui.theme.PillButton
 import com.hunter.stockfarmer.ui.theme.PillRole
 import com.hunter.stockfarmer.ui.theme.PlacementButtons
@@ -305,10 +310,19 @@ private fun StatusAndBars(
     val flights = LocalRewardFlights.current
     val money = flights?.displayedMoney(hud.money) ?: hud.money
     val xp = flights?.displayedXP(hud.xp) ?: hud.xp
+    val density = LocalDensity.current
+    val insetTopDp =
+        with(density) {
+            WindowInsets.safeDrawing
+                .getTop(this)
+                .toDp()
+                .value
+        }
+    val topGap = HudTopSpacing.extraTopPaddingDp(insetTopDp, LocalHudScale.current).dp
     Box(Modifier.fillMaxSize()) {
         Box(Modifier.fillMaxSize().safeDrawingPadding()) {
             Column(
-                Modifier.fillMaxSize().padding(horizontal = 16.dp).padding(bottom = 8.dp),
+                Modifier.fillMaxSize().padding(horizontal = 16.dp).padding(top = topGap, bottom = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 // A fish on the line puts the catch meter in the place of the money and level.
