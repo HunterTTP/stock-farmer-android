@@ -1,5 +1,7 @@
 ## 2026-11-01
 - The Career screen is now called Progress.
+- Dragging a seed from the Plant button now starts planting as soon as your finger has moved further than the width of the
+  button, with no wait.
 - Ducks no longer lay eggs. Tap a duck and Sell it for $25 (toast "Sold for $25") instead of releasing it; every other animal still offers
   Release.
 - Trees and rocks you place yourself give no logs or stone when you chop or break them, even with full storage, and do not
