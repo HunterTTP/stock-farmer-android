@@ -4,6 +4,7 @@
   Release.
 - Trees and rocks you place yourself give no logs or stone when you chop or break them, even with full storage, and do not
   count as mined; only the ones that grew on their own do.
+- Harvesting into Storage now makes the same sound as selling the harvest.
 
 ## 2026-10-22
 - Music is half as loud as it was.

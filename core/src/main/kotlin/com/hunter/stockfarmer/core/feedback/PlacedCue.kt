@@ -71,7 +71,7 @@ private fun cuesOf(
         }
 
         is GameEvent.Stored -> {
-            at(event.point, SoundCue.cropPickup)
+            at(event.point, SoundCue.sell)
         }
 
         is GameEvent.TractorGathered -> {
@@ -79,7 +79,7 @@ private fun cuesOf(
         }
 
         is GameEvent.TractorCargoStored -> {
-            at(event.at, SoundCue.placeGround)
+            at(event.at, SoundCue.sell)
         }
 
         is GameEvent.TractorCargoSold -> {

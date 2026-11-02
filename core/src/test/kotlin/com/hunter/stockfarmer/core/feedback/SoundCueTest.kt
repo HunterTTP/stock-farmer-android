@@ -56,19 +56,23 @@ class SoundCueTest {
     }
 
     @Test
-    fun `gathering an item into storage picks it up where it was`() {
-        assertEquals(listOf(PlacedCue(SoundCue.cropPickup, here)), cues(listOf(GameEvent.Stored(here, "wheat", 1))))
+    fun `gathering an item into storage sounds the same as selling it`() {
+        val stored = cues(listOf(GameEvent.Stored(here, "wheat", 1)))
+        assertEquals(listOf(PlacedCue(SoundCue.sell, here)), stored)
+        assertEquals(stored, cues(listOf(GameEvent.Sold(here, "wheat", 1.0, 1))))
     }
 
     @Test
-    fun `many items stored in one stroke make one pickup sound`() {
+    fun `many items stored in one stroke make one sound`() {
         val events = listOf(GameEvent.Stored(here, "wheat", 1), GameEvent.Stored(there, "wheat", 1))
-        assertEquals(listOf(PlacedCue(SoundCue.cropPickup, here)), cues(events))
+        assertEquals(listOf(PlacedCue(SoundCue.sell, here)), cues(events))
     }
 
     @Test
-    fun `selling a gathered item sounds as a sale, not a pickup`() {
-        assertEquals(listOf(PlacedCue(SoundCue.sell, here)), cues(listOf(GameEvent.Sold(here, "wheat", 1.0, 1))))
+    fun `tractor cargo stored sounds the same as tractor cargo sold`() {
+        val stored = cues(listOf(GameEvent.TractorCargoStored("wheat", 1, here, 1)))
+        assertEquals(listOf(PlacedCue(SoundCue.sell, here)), stored)
+        assertEquals(stored, cues(listOf(GameEvent.TractorCargoSold("wheat", 1, 1.0, here, 1))))
     }
 
     @Test
