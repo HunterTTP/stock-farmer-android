@@ -63,8 +63,33 @@ class ToolCircleGestureTest {
     fun `a tool with no pause wakes the moment the distance is reached`() {
         tool = tool.copy(activationDelayMillis = null)
         gesture.change(start, Offset(120f, 100f))
-        gesture.change(start, Offset(190f, 100f))
+        assertFalse(gesture.isActive)
+        gesture.change(start, Offset(177f, 100f))
+        assertFalse(gesture.isActive)
+        gesture.change(start, Offset(178f, 100f))
         assertTrue(gesture.isActive)
+        assertTrue(pending.none { it.first != ToolCircleMetrics.EXPLAIN_DELAY_MILLIS })
+    }
+
+    @Test
+    fun `the distance is one button width scaled by the HUD`() {
+        val scaled =
+            ToolCircleGesture(
+                scale = { 2f },
+                tool = { tool.copy(activationDelayMillis = null) },
+                showsTile = { true },
+                schedule = { _, _ -> {} },
+                onTap = {},
+                onMove = { _, _ -> },
+                onDrag = { _, _ -> },
+                onHold = {},
+                onDragEnded = {},
+            )
+        scaled.change(start, Offset(120f, 100f))
+        scaled.change(start, Offset(255f, 100f))
+        assertFalse(scaled.isActive)
+        scaled.change(start, Offset(256f, 100f))
+        assertTrue(scaled.isActive)
     }
 
     @Test

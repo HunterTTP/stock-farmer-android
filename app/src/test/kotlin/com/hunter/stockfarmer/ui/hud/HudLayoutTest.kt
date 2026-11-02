@@ -60,7 +60,7 @@ class HudLayoutTest {
     fun `activation pauses follow the mode`() {
         val engine = GameEngine(GameState())
         engine.pickUp(HudTool.Planting)
-        assertEquals(40L, engine.activationDelayMillis)
+        assertNull(engine.activationDelayMillis)
         engine.pickUp(HudTool.Harvest)
         assertNull(engine.activationDelayMillis)
         engine.pickUp(HudTool.Building)

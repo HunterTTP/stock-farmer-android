@@ -34,14 +34,13 @@ val GameEngine.currentTool: HudTool
         }
 
 /**
- * How long a dragged tool must rest before it starts working: quick for crops, slower for land that is costly to mis-place.
- * Harvesting has no additional pause.
+ * How long a dragged tool must rest before it starts working, for tools that are costly to mis-place.
+ * Planting and harvesting have no pause: they start once the finger has gone one button width.
  */
 val GameEngine.activationDelayMillis: Long?
     get() =
         when (state.mode) {
-            PlayMode.harvest -> null
-            PlayMode.plant -> 40
+            PlayMode.harvest, PlayMode.plant -> null
             PlayMode.fertilize -> 70
             PlayMode.landscape -> if (state.selectedLandscape == LandscapeTool.farmland) 250 else 150
             PlayMode.build, PlayMode.decorate -> 120
