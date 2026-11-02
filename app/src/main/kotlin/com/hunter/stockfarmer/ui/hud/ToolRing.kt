@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.TextAutoSize
@@ -161,7 +162,7 @@ private fun RingButton(
                 translationY = ((span - inset) - spotY) * (1 - p) * density
                 alpha = progress.value.coerceIn(0f, 1f)
             },
-        ) { Face(slot, size.dp, state, loader, scale) }
+        ) { Face(slot, size.dp, state, loader) }
     }
 }
 
@@ -171,8 +172,8 @@ private fun Face(
     size: Dp,
     state: RingState,
     loader: MenuAssetLoader,
-    scale: Float,
 ) {
+    val metrics = RingFaceMetrics.of(size.value, LocalDensity.current.fontScale)
     when (val satellite = slot.satellite) {
         is Satellite.OfTool -> {
             val tool = satellite.tool
@@ -182,8 +183,8 @@ private fun Face(
                 isSelected = state.currentTool == tool,
                 isNew = if (state.lessonTool != null) state.lessonTool == tool else tool in state.newTools,
                 pulses = state.lessonTool == tool,
-                scale = scale,
-            ) { MenuImage(ToolPalette.menuPicture(tool), loader, Modifier.size((36 * scale).dp)) }
+                metrics = metrics,
+            ) { MenuImage(ToolPalette.menuPicture(tool), loader, Modifier.size(metrics.iconDp.dp)) }
         }
 
         Satellite.Storage -> {
@@ -192,20 +193,20 @@ private fun Face(
                 size,
                 isNew = state.isStorageLesson,
                 pulses = state.isStorageLesson,
-                scale = scale,
+                metrics = metrics,
                 detail = state.storageDescription,
             ) {
-                HudIcon(HudIcons.bagFill, Color.White, size = (30 * scale).dp)
+                HudIcon(HudIcons.bagFill, Color.White, size = metrics.glyphDp.dp)
             }
         }
 
         Satellite.Settings -> {
-            RingFace("Settings", size, scale = scale) { Symbol("⚙", scale, Color.White) }
+            RingFace("Settings", size, metrics = metrics) { Symbol("⚙", metrics, Color.White) }
         }
 
         Satellite.ExitFishing -> {
-            RingFace("Exit", size, scale = scale) {
-                HudIcon(HudIcons.xmark, Color.White, size = (30 * scale).dp)
+            RingFace("Exit", size, metrics = metrics) {
+                HudIcon(HudIcons.xmark, Color.White, size = metrics.glyphDp.dp)
             }
         }
 
@@ -219,8 +220,8 @@ private fun Face(
             }
             val minute = state.minuteOfDay(Instant.ofEpochMilli(now))
             val isNight = DayNightCycle.darkness(minute) > 0
-            RingFace(DayNightCycle.clockText(minute), size, scale = scale, detail = "Time of day") {
-                Symbol(if (isNight) "☾" else "☀", scale, if (isNight) Theme.blue else Theme.gold)
+            RingFace(DayNightCycle.clockText(minute), size, metrics = metrics, detail = "Time of day") {
+                Symbol(if (isNight) "☾" else "☀", metrics, if (isNight) Theme.blue else Theme.gold)
             }
         }
     }
@@ -229,10 +230,19 @@ private fun Face(
 @Composable
 private fun Symbol(
     text: String,
-    scale: Float,
+    metrics: RingFaceMetrics,
     color: Color,
 ) {
-    BasicText(text, style = HudType.title.copy(fontSize = (30 * scale).sp, color = color, textAlign = TextAlign.Center))
+    val fontScale = LocalDensity.current.fontScale
+    BasicText(
+        text,
+        style =
+            HudType.title.copy(
+                fontSize = (metrics.glyphDp / fontScale).sp,
+                color = color,
+                textAlign = TextAlign.Center,
+            ),
+    )
 }
 
 /** The face of one ring button: a glass circle with a small picture over its name. */
@@ -240,7 +250,7 @@ private fun Symbol(
 private fun RingFace(
     title: String,
     size: Dp,
-    scale: Float,
+    metrics: RingFaceMetrics,
     isSelected: Boolean = false,
     isNew: Boolean = false,
     pulses: Boolean = false,
@@ -265,14 +275,15 @@ private fun RingFace(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement =
             androidx.compose.foundation.layout.Arrangement
-                .spacedBy(1.dp, Alignment.CenterVertically),
+                .spacedBy(metrics.gapDp.dp, Alignment.CenterVertically),
     ) {
-        Box(Modifier.size((36 * scale).dp), contentAlignment = Alignment.Center) { icon() }
+        Box(Modifier.size(metrics.iconDp.dp), contentAlignment = Alignment.Center) { icon() }
         BasicText(
             title,
+            modifier = Modifier.width(metrics.textWidthDp.dp),
             maxLines = 1,
             overflow = TextOverflow.Clip,
-            autoSize = TextAutoSize.StepBased(minFontSize = (12 * scale * 0.6f).sp, maxFontSize = (12 * scale).sp),
+            autoSize = TextAutoSize.StepBased(minFontSize = metrics.minFontSp.sp, maxFontSize = metrics.maxFontSp.sp),
             style =
                 HudType.caption.copy(
                     fontWeight = FontWeight.SemiBold,

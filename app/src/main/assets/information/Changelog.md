@@ -1,6 +1,7 @@
 ## 2026-11-01
 - The money and level panels no longer sit right against the top of the screen on some phones and tablets; there is
   always a comfortable gap under the status bar or camera cutout.
+- The buttons that fan out from the tool circle keep their picture and name inside the circle on every screen size and with a large system font size.
 - The Career screen is now called Progress.
 - Dragging a seed from the Plant button now starts planting as soon as your finger has moved further than the width of the
   button, with no wait.
