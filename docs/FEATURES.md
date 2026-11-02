@@ -17,7 +17,7 @@ Every row is implemented and covered by unit tests. Emulator and device verifica
 | Item detail, tool upgrade, building & animal sheets | Tested | `ItemDetailScreens`, `BuildingSections`, `AnimalSection`, `BuildingChoiceScreens`, `SheetHost`, persisted unlock dots | Unit-tested |
 | Reward flights, audio, ambience, animal voices, chimes & haptics | Tested | `RewardFlights`, `SoundCenter`, `MusicPlayer`, `AmbienceDriver`, `AnimalVoices`, `ReadyChime`, `NightChime`, `Haptics` | Unit-tested |
 | Settings (Sound, Graphics, Gameplay) | Tested | `SettingsScreen`, `PlaySettings`, `PlaySettingsScreens` wired to `Hud` and `FarmGame` (`isDynamicShadowsEnabled`, `shadowIntensity`, `isGridShown`, `toolReach`) | Unit-tested |
-| Farm renderer, layers, weather & photo capture | Tested | `FarmRenderer`, `StandingLayout` (96 px/tile trees/rocks, 48 px/tile buildings/decorations/crops), `TreeLean`, `WeathercockTurn`, `TractorMovement`, `MovingOrigins`, `EffectLayers`, `ShadowLayer`, `FarmPhoto` | Unit-tested |
+| Farm renderer, layers, weather & photo capture | Tested | `FarmRenderer`, `StandingLayout` (96 px/tile trees/rocks, 48 px/tile buildings/decorations/crops), `TreeLean`, `WeathercockTurn`, `TractorMovement`, `MovingOrigins`, `EffectLayers`, `ShadowLayer`, `NightTint` (multiplies the view by `NightShade`, as iOS does), `FarmPhoto` | Unit-tested |
 | Natural vs. player-placed trees and rocks: only wild ones yield wood, stone and mined records | Tested (`EngineGathering`, `GameState.playerPlacedRocks`, `PlacedTree.isNaturallyGenerated`) | Nothing to show | Unit-tested |
 
 ## Assets

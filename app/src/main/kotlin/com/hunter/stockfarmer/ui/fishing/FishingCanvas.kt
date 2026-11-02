@@ -33,6 +33,7 @@ import com.hunter.stockfarmer.core.rules.DayNightCycle
 import com.hunter.stockfarmer.core.rules.Season
 import com.hunter.stockfarmer.core.rules.Weather
 import com.hunter.stockfarmer.farm.LocalFarmWeather
+import com.hunter.stockfarmer.farm.NightShade
 import com.hunter.stockfarmer.farm.drawFarmWeather
 import com.hunter.stockfarmer.game.GameSession
 import kotlinx.coroutines.Dispatchers
@@ -159,8 +160,9 @@ private data class FishingSky(
     val tint: Color
         get() {
             val rainy = if (snowing) doubleArrayOf(0.9, 0.93, 1.0) else doubleArrayOf(0.6, 0.67, 0.8)
-            val night = doubleArrayOf(0.42, 0.49, 0.72)
-            val channels = FloatArray(3) { ((1 + (night[it] - 1) * darkness) * (1 + (rainy[it] - 1) * rain)).toFloat() }
+            val night = doubleArrayOf(NightShade.DEEPEST_RED, NightShade.DEEPEST_GREEN, NightShade.DEEPEST_BLUE)
+            val channels =
+                FloatArray(3) { (NightShade.channel(night[it], darkness) * (1 + (rainy[it] - 1) * rain)).toFloat() }
             return Color(channels[0], channels[1], channels[2])
         }
 }

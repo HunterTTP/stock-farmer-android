@@ -4,6 +4,8 @@
   Release.
 - Trees and rocks you place yourself give no logs or stone when you chop or break them, even with full storage, and do not
   count as mined; only the ones that grew on their own do.
+- Night no longer looks foggy: the farm, water and sky now darken to a deep clear blue with true dark shadows, instead
+  of a hazy blue wash over everything.
 
 ## 2026-10-22
 - Music is half as loud as it was.
