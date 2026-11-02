@@ -9,6 +9,8 @@
 - Night no longer looks foggy: the farm, water and sky now darken to a deep clear blue with true dark shadows, instead
   of a hazy blue wash over everything.
 - Harvesting into Storage now makes the same sound as selling the harvest.
+- The Restore Backup list on the game load menu is now centred, with the backups and Cancel stacked in the middle of the
+  dialog instead of pushed to the right.
 
 ## 2026-10-22
 - Music is half as loud as it was.

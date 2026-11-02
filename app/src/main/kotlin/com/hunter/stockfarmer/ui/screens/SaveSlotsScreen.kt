@@ -211,22 +211,27 @@ fun SaveSlotsScreen(
                         text = "Restore \"${info.name}\"",
                         style = HudType.title3.copy(fontWeight = FontWeight.Bold),
                         color = Theme.textPrimary,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth(),
                     )
                 },
+                // Like the iOS dialog: message, each backup and Cancel are one centred stack.
                 text = {
-                    Text(
-                        text =
-                            if (backups.isEmpty()) {
-                                "No backups yet. They appear as the game saves."
-                            } else {
-                                "The game as it is now is kept as a backup, so you can undo this."
-                            },
-                        style = HudType.subheadline,
-                        color = Theme.textSecondary,
-                    )
-                },
-                confirmButton = {
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Text(
+                            text =
+                                if (backups.isEmpty()) {
+                                    "No backups yet. They appear as the game saves."
+                                } else {
+                                    "The game as it is now is kept as a backup, so you can undo this."
+                                },
+                            style = HudType.subheadline,
+                            color = Theme.textSecondary,
+                            textAlign = TextAlign.Center,
+                        )
                         backups.forEach { backup ->
                             TextButton(
                                 onClick = {
@@ -237,13 +242,12 @@ fun SaveSlotsScreen(
                                 Text(backupTitle(backup), style = HudType.subheadline, color = Theme.accent)
                             }
                         }
+                        TextButton(onClick = { restoring = null }) {
+                            Text("Cancel", style = HudType.subheadline, color = Theme.textSecondary)
+                        }
                     }
                 },
-                dismissButton = {
-                    TextButton(onClick = { restoring = null }) {
-                        Text("Cancel", style = HudType.subheadline, color = Theme.textSecondary)
-                    }
-                },
+                confirmButton = {},
             )
         }
     }
