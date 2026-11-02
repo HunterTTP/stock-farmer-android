@@ -4,6 +4,8 @@
   Release.
 - Trees and rocks you place yourself give no logs or stone when you chop or break them, even with full storage, and do not
   count as mined; only the ones that grew on their own do.
+- The Restore Backup list on the game load menu is now centred, with the backups and Cancel stacked in the middle of the
+  dialog instead of pushed to the right.
 
 ## 2026-10-22
 - Music is half as loud as it was.

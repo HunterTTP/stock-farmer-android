@@ -5,7 +5,7 @@ Every row is implemented and covered by unit tests. Emulator and device verifica
 | Feature | Rules (`core`) | App / UI (`app`) | Status |
 |---|---|---|---|
 | Plant, grow, Scythe harvest, Storage sale, save and relaunch | Tested | Wired end-to-end (`FarmGame`, `Hud`, `StorageMenuScreen`, `GamePersistence`) | Unit-tested |
-| App save/load: active slot, backup recovery, autosave, pause/stop, clock on reopen | Tested | Wired (`GamePersistence`, `FarmSlots`, `SaveSlotsScreen`, `LaunchScreen` failed-state farm picker) | Unit-tested |
+| App save/load: active slot, backup recovery (centred restore dialog), autosave, pause/stop, clock on reopen | Tested | Wired (`GamePersistence`, `FarmSlots`, `SaveSlotsScreen`, `LaunchScreen` failed-state farm picker) | Unit-tested |
 | Build, decorate, terrain, seeds, animals, trees & storage menus | Tested | `MenusHost`, `CatalogModels`, `StorageMenuScreen` with tutorial progression, `lessonPulse` & completion toast | Unit-tested |
 | Stock quotes & Stock Market screen | Tested | `StockMarketSession`, `StockQuoteProvider`, `NetworkMonitor`, `StockMarketScreen`, trade sheet (`QuantityControls`) & House upgrade link | Unit-tested |
 | Market Quest board & section | Tested | `MarketQuestScreen` and `MarketQuestSection` with objective artwork, progress bars, replacement controls & Market Stand upgrade link | Unit-tested |
