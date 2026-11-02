@@ -1,4 +1,5 @@
 ## 2026-11-01
+- The buttons that fan out from the tool circle keep their picture and name inside the circle on every screen size and with a large system font size.
 - The Career screen is now called Progress.
 - Ducks no longer lay eggs. Tap a duck and Sell it for $25 (toast "Sold for $25") instead of releasing it; every other animal still offers
   Release.
