@@ -67,8 +67,8 @@ class WaterLayoutCache {
 
     @Synchronized
     fun layout(water: Map<GridPoint, WaterStyle>): WaterLayout {
+        remembered?.let { if (it.first == water) return it.second }
         val snapshot = water.toMap()
-        remembered?.let { if (it.first == snapshot) return it.second }
         val layout = WaterLayout(snapshot)
         remembered = snapshot to layout
         return layout
