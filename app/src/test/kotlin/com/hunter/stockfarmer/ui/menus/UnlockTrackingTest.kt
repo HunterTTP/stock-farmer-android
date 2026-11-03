@@ -1,22 +1,13 @@
 package com.hunter.stockfarmer.ui.menus
 
-import com.hunter.stockfarmer.core.catalog.Crop
-import com.hunter.stockfarmer.core.catalog.GroundCover
 import com.hunter.stockfarmer.core.model.Lesson
 import com.hunter.stockfarmer.core.model.ShopItem
-import com.hunter.stockfarmer.core.persistence.GameStateJson
 import com.hunter.stockfarmer.core.rules.GameEngine
 import com.hunter.stockfarmer.core.rules.LevelRules
 import com.hunter.stockfarmer.core.rules.countCurrentUnlocksAsSeen
-import com.hunter.stockfarmer.core.rules.farmlandLimit
 import com.hunter.stockfarmer.core.rules.hasSeen
 import com.hunter.stockfarmer.core.rules.isNew
-import com.hunter.stockfarmer.core.rules.markSeen
-import com.hunter.stockfarmer.core.rules.unlockKey
-import com.hunter.stockfarmer.game.GameSession
-import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue

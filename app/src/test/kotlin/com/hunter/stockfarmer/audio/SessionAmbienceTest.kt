@@ -16,7 +16,6 @@ import com.hunter.stockfarmer.core.model.Plot
 import com.hunter.stockfarmer.core.rules.DayNightCycle
 import com.hunter.stockfarmer.core.rules.GameEngine
 import com.hunter.stockfarmer.core.rules.Season
-import com.hunter.stockfarmer.farm.FarmRenderer
 import com.hunter.stockfarmer.game.GameSession
 import com.hunter.stockfarmer.game.TILE
 import com.hunter.stockfarmer.game.ViewSnapshot

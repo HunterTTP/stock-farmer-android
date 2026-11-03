@@ -18,14 +18,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -37,15 +34,11 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.hunter.stockfarmer.audio.SoundCenter
 import com.hunter.stockfarmer.core.feedback.SoundCue
-import com.hunter.stockfarmer.core.model.DaySummary
-import com.hunter.stockfarmer.core.rules.GameEvent
-import com.hunter.stockfarmer.core.rules.LevelUnlocks
 import com.hunter.stockfarmer.core.rules.select
 import com.hunter.stockfarmer.diagnostics.PerformanceMonitor
 import com.hunter.stockfarmer.game.FarmSlots
 import com.hunter.stockfarmer.game.Feedback
 import com.hunter.stockfarmer.game.GameSession
-import com.hunter.stockfarmer.game.QuestReward
 import com.hunter.stockfarmer.game.SheetTarget
 import com.hunter.stockfarmer.game.ToastMessage
 import com.hunter.stockfarmer.game.askToDestroyWhilePlacing
@@ -89,13 +82,9 @@ import com.hunter.stockfarmer.ui.screens.QuestBanner
 import com.hunter.stockfarmer.ui.screens.SoundCenterScreenAudio
 import com.hunter.stockfarmer.ui.sheets.SheetHost
 import com.hunter.stockfarmer.ui.theme.LocalHudScale
-import com.hunter.stockfarmer.ui.theme.PillButton
-import com.hunter.stockfarmer.ui.theme.PillRole
 import com.hunter.stockfarmer.ui.theme.PlacementButtons
 import com.hunter.stockfarmer.ui.theme.ScalesHudForTablets
-import com.hunter.stockfarmer.ui.theme.Theme
 import com.hunter.stockfarmer.ui.theme.ToastView
-import kotlinx.coroutines.delay
 
 /**
  * The heads-up display over the farm, in composition order: the money and level panels on top, the

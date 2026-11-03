@@ -14,7 +14,6 @@ import com.hunter.stockfarmer.core.rules.isInside
 import com.hunter.stockfarmer.core.rules.isWholeFieldGrown
 import com.hunter.stockfarmer.core.rules.livestock
 import com.hunter.stockfarmer.core.rules.position
-import com.hunter.stockfarmer.farm.FarmRenderer
 import com.hunter.stockfarmer.game.GameSession
 import com.hunter.stockfarmer.game.TILE
 import com.hunter.stockfarmer.game.isOnScreen

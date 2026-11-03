@@ -9,7 +9,6 @@ import com.hunter.stockfarmer.core.model.MarketQuest
 import com.hunter.stockfarmer.core.model.QuestGoal
 import com.hunter.stockfarmer.core.model.dollars
 import com.hunter.stockfarmer.core.rules.GameEngine
-import com.hunter.stockfarmer.core.rules.GameEvent
 import com.hunter.stockfarmer.core.rules.LevelRules
 import com.hunter.stockfarmer.core.rules.QuestRules
 import com.hunter.stockfarmer.core.rules.marketUpgradeRejection

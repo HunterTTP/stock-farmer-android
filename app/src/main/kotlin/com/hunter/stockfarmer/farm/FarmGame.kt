@@ -2,13 +2,10 @@ package com.hunter.stockfarmer.farm
 
 import com.badlogic.gdx.ApplicationAdapter
 import com.badlogic.gdx.Gdx
-import com.badlogic.gdx.InputAdapter
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.OrthographicCamera
-import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.utils.TimeUtils
 import com.hunter.stockfarmer.core.catalog.HarvestTool
-import com.hunter.stockfarmer.core.model.GameState
 import com.hunter.stockfarmer.core.model.GridPoint
 import com.hunter.stockfarmer.core.model.PlayMode
 import com.hunter.stockfarmer.core.rules.DayNightCycle
@@ -22,24 +19,17 @@ import com.hunter.stockfarmer.farm.animals.AnimalArt
 import com.hunter.stockfarmer.farm.animals.animalSources
 import com.hunter.stockfarmer.farm.effects.EffectLayers
 import com.hunter.stockfarmer.farm.effects.EffectPhase
-import com.hunter.stockfarmer.farm.effects.FireworkArea
 import com.hunter.stockfarmer.farm.effects.effectLayers
 import com.hunter.stockfarmer.game.GameSession
 import com.hunter.stockfarmer.game.PlacementDrag
 import com.hunter.stockfarmer.game.TILE
 import com.hunter.stockfarmer.game.ViewSnapshot
 import com.hunter.stockfarmer.game.WATERING_INTERVAL_SECONDS
-import com.hunter.stockfarmer.game.hold
 import com.hunter.stockfarmer.game.preview
-import com.hunter.stockfarmer.game.touch
-import com.hunter.stockfarmer.game.touchAnimalAt
 import com.hunter.stockfarmer.game.waterWithSprinklers
 import com.hunter.stockfarmer.settings.PlaySettings
 import kotlinx.coroutines.flow.update
 import java.time.Instant
-import kotlin.math.floor
-import kotlin.math.hypot
-import kotlin.math.min
 
 /** The farm scene: draws the session's game and turns taps and drags into play and camera movement. */
 class FarmGame(

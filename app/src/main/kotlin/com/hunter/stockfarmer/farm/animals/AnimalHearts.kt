@@ -1,9 +1,7 @@
 package com.hunter.stockfarmer.farm.animals
 
-import com.hunter.stockfarmer.core.rules.AnimalRef
 import com.hunter.stockfarmer.core.util.secondsSince
 import java.time.Instant
-import kotlin.math.abs
 
 internal data class Heart(
     val rise: Float,

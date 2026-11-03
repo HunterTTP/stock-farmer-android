@@ -59,7 +59,6 @@ import com.hunter.stockfarmer.core.model.compactDurationText
 import com.hunter.stockfarmer.core.rules.DayNightCycle
 import com.hunter.stockfarmer.core.rules.GameEvent
 import com.hunter.stockfarmer.core.rules.LevelRules
-import com.hunter.stockfarmer.farm.FarmRenderer
 import com.hunter.stockfarmer.game.GameSession
 import com.hunter.stockfarmer.game.TILE
 import com.hunter.stockfarmer.game.ToolDrag
@@ -69,7 +68,6 @@ import com.hunter.stockfarmer.ui.menus.MenuImage
 import com.hunter.stockfarmer.ui.menus.MenuPictures
 import com.hunter.stockfarmer.ui.menus.rememberMenuAssetLoader
 import com.hunter.stockfarmer.ui.rewards.LocalRewardFlights
-import com.hunter.stockfarmer.ui.screens.lessonPulse
 import com.hunter.stockfarmer.ui.theme.BuildingPriceLine
 import com.hunter.stockfarmer.ui.theme.ChoiceList
 import com.hunter.stockfarmer.ui.theme.CropPriceLine
@@ -82,7 +80,6 @@ import com.hunter.stockfarmer.ui.theme.Theme
 import com.hunter.stockfarmer.ui.theme.hudPanel
 import com.hunter.stockfarmer.ui.theme.newDot
 import com.hunter.stockfarmer.ui.theme.pulsing
-import kotlinx.coroutines.flow.update
 
 /** What the ring's non-tool buttons open. */
 enum class RingScreen { Storage, Settings, Time }

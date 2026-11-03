@@ -10,7 +10,6 @@ import com.hunter.stockfarmer.core.util.secondsSince
 import com.hunter.stockfarmer.diagnostics.PerformanceMonitor
 import com.hunter.stockfarmer.diagnostics.PerformanceWork
 import com.hunter.stockfarmer.diagnostics.measureOrRun
-import com.hunter.stockfarmer.farm.FarmRenderer
 import com.hunter.stockfarmer.farm.StandingSource
 import com.hunter.stockfarmer.farm.TextureLibrary
 import java.time.Instant

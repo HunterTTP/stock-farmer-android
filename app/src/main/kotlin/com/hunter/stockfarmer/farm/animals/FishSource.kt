@@ -7,7 +7,6 @@ import com.hunter.stockfarmer.core.model.GameState
 import com.hunter.stockfarmer.core.model.GridPoint
 import com.hunter.stockfarmer.core.util.secondsSince
 import com.hunter.stockfarmer.diagnostics.PerformanceWork
-import com.hunter.stockfarmer.farm.FarmRenderer
 import com.hunter.stockfarmer.farm.Standing
 import com.hunter.stockfarmer.farm.StandingSource
 import com.hunter.stockfarmer.farm.TextureLibrary

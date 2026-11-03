@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -44,7 +43,6 @@ import com.hunter.stockfarmer.ui.theme.PillButton
 import com.hunter.stockfarmer.ui.theme.PillRole
 import com.hunter.stockfarmer.ui.theme.Theme
 import com.hunter.stockfarmer.ui.theme.categoryCard
-import kotlinx.coroutines.delay
 import java.time.Instant
 
 internal data class ChickChoice(

@@ -1,8 +1,6 @@
 package com.hunter.stockfarmer.ui.screens
 
 import com.hunter.stockfarmer.core.catalog.Building
-import com.hunter.stockfarmer.core.market.StockQuoteError
-import com.hunter.stockfarmer.core.market.StockQuoteException
 import com.hunter.stockfarmer.core.market.StockQuoteProvider
 import com.hunter.stockfarmer.core.model.GridPoint
 import com.hunter.stockfarmer.core.model.Holding

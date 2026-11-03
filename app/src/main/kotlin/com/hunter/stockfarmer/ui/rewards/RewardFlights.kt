@@ -45,7 +45,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hunter.stockfarmer.core.model.GameState
 import com.hunter.stockfarmer.core.model.dollars
-import com.hunter.stockfarmer.farm.FarmRenderer
 import com.hunter.stockfarmer.game.GameSession
 import com.hunter.stockfarmer.game.TILE
 import com.hunter.stockfarmer.game.screenPosition

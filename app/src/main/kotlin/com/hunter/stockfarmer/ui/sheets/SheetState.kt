@@ -19,7 +19,6 @@ import com.hunter.stockfarmer.core.rules.TractorCropSummary
 import com.hunter.stockfarmer.core.rules.WorkshopStatus
 import com.hunter.stockfarmer.core.rules.animals
 import com.hunter.stockfarmer.core.rules.chicken
-import com.hunter.stockfarmer.core.rules.demolishRejection
 import com.hunter.stockfarmer.core.rules.farmhouseUpgradeRejection
 import com.hunter.stockfarmer.core.rules.farmlandLimit
 import com.hunter.stockfarmer.core.rules.favoriteCrop
