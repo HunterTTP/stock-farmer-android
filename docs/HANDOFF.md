@@ -38,7 +38,7 @@ $env:JAVA_HOME = "C:\Program Files\Eclipse Adoptium\jdk-25.0.4.7-hotspot"
 ## Remaining steps (owned by the user)
 
 1. Physical phone and tablet pass with sound: the changes above, plus every new cue (Storage sale, panels, popups, photo saved, cancel), which no emulator run could hear.
-2. Decisions: system bars (libGDX forces immersive mode while the Activity sets edge-to-edge), Release has no confirmation (as on iOS; a quick second tap on an animal releases it), and 274 unreferenced sound effects plus other unused art kept in the APK (about 5 MB).
+2. Decided by the user: the game stays fullscreen with the Activity as sole owner of the system bars; Release keeps no confirmation, as on iOS (a quick second tap on an animal releases it); the 274 unreferenced sound effects and other unused art (about 5 MB) stay in the APK.
 
 ## Standing rules
 

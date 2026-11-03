@@ -18,4 +18,12 @@ internal class SystemBarsTest {
         val root = File("src/main/kotlin/com/hunter/stockfarmer/GameRoot.kt").readText()
         assertTrue(".background(Color.Black)" in root)
     }
+
+    @Test
+    fun `the activity alone hides the system bars, not libGDX`() {
+        val activity = File("src/main/kotlin/com/hunter/stockfarmer/MainActivity.kt").readText()
+        assertTrue("hide(WindowInsetsCompat.Type.systemBars())" in activity)
+        val farm = File("src/main/kotlin/com/hunter/stockfarmer/farm/FarmFragment.kt").readText()
+        assertTrue("useImmersiveMode = false" in farm)
+    }
 }

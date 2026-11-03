@@ -26,7 +26,7 @@ class FarmFragment : AndroidFragmentApplication() {
 
     private fun farmConfiguration() =
         // Nothing reads a sensor, libGDX audio or the depth buffer: sound is SoundPool and MediaPlayer, the farm is flat
-        // sprites. Without libGDX audio nobody sets the volume stream, so MainActivity does.
+        // sprites. Without libGDX audio nobody sets the volume stream, so MainActivity does, and it owns the system bars too.
         AndroidApplicationConfiguration().apply {
             useAccelerometer = false
             useCompass = false
@@ -34,6 +34,6 @@ class FarmFragment : AndroidFragmentApplication() {
             useRotationVectorSensor = false
             disableAudio = true
             depth = 0
-            useImmersiveMode = true
+            useImmersiveMode = false
         }
 }
