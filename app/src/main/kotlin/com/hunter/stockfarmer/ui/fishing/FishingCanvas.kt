@@ -7,7 +7,9 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -28,7 +30,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
 import com.hunter.stockfarmer.core.catalog.WaterStyle
+import com.hunter.stockfarmer.core.model.GameState
 import com.hunter.stockfarmer.core.rules.DayNightCycle
 import com.hunter.stockfarmer.core.rules.Season
 import com.hunter.stockfarmer.core.rules.Weather
@@ -37,6 +43,7 @@ import com.hunter.stockfarmer.farm.NightShade
 import com.hunter.stockfarmer.farm.drawFarmWeather
 import com.hunter.stockfarmer.game.GameSession
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.time.Instant
@@ -66,6 +73,17 @@ internal fun FishingCanvas(
     }
     val clip = remember { Path() }
     val weather = LocalFarmWeather.current
+    // The sky eases over minutes, so it is read at the weather's 4 Hz instead of taking the engine lock every frame.
+    val skyState = remember(session) { mutableStateOf(session.read { FishingSky.at(it, Instant.now()) }) }
+    val owner = LocalLifecycleOwner.current
+    LaunchedEffect(session, owner) {
+        owner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            while (true) {
+                skyState.value = session.read { FishingSky.at(it, Instant.now()) }
+                delay(SKY_SAMPLE_MILLIS)
+            }
+        }
+    }
     Canvas(
         modifier.pointerInput(Unit) {
             // The water is over the farm, which is not touched through it.
@@ -74,15 +92,7 @@ internal fun FishingCanvas(
     ) {
         val seconds = mode.seconds
         val caughtAt = mode.caughtAt
-        val sky =
-            session.read { state ->
-                val now = Instant.now()
-                FishingSky(
-                    DayNightCycle.darkness(now, state.clockOffset),
-                    Weather.eased(Weather.rainAmount(now, state.clockOffset)),
-                    state.season == Season.winter,
-                )
-            }
+        val sky = skyState.value
         clip.reset()
         val radius = hypot(size.width, size.height) / 2 * mode.reveal.value
         clip.addOval(
@@ -152,19 +162,38 @@ internal fun FishingCanvas(
     }
 }
 
-private data class FishingSky(
+/** The same quarter second the farm's weather samples at. */
+private const val SKY_SAMPLE_MILLIS = 250L
+
+internal data class FishingSky(
     val darkness: Double,
     val rain: Double,
     val snowing: Boolean,
 ) {
-    val tint: Color
-        get() {
+    val tint: Color = tintFor(darkness, rain, snowing)
+
+    companion object {
+        fun at(
+            state: GameState,
+            now: Instant,
+        ) = FishingSky(
+            DayNightCycle.darkness(now, state.clockOffset),
+            Weather.eased(Weather.rainAmount(now, state.clockOffset)),
+            state.season == Season.winter,
+        )
+
+        private fun tintFor(
+            darkness: Double,
+            rain: Double,
+            snowing: Boolean,
+        ): Color {
             val rainy = if (snowing) doubleArrayOf(0.9, 0.93, 1.0) else doubleArrayOf(0.6, 0.67, 0.8)
             val night = doubleArrayOf(NightShade.DEEPEST_RED, NightShade.DEEPEST_GREEN, NightShade.DEEPEST_BLUE)
             val channels =
                 FloatArray(3) { (NightShade.channel(night[it], darkness) * (1 + (rainy[it] - 1) * rain)).toFloat() }
             return Color(channels[0], channels[1], channels[2])
         }
+    }
 }
 
 private fun loadFishingArt(
