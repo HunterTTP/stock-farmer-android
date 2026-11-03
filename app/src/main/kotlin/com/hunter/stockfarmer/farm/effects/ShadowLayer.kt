@@ -1,6 +1,7 @@
 package com.hunter.stockfarmer.farm.effects
 
 import com.badlogic.gdx.graphics.OrthographicCamera
+import com.badlogic.gdx.graphics.Pixmap
 import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.hunter.stockfarmer.core.model.GameState
@@ -33,6 +34,8 @@ class ShadowLayer(
     )
 
     private val casters = ShadowCasters(textures)
+    private var wanted = emptyList<ShadowCaster>()
+    private var shapes = emptySet<ShadowShape>()
     private val masks = mutableMapOf<String, AlphaMask>()
     private val made = mutableMapOf<ShadowShape, Made>()
     private val waiting = linkedSetOf<ShadowShape>()
@@ -66,21 +69,26 @@ class ShadowLayer(
         val minute = DayNightCycle.minuteOfDay(now, state.clockOffset)
         val sun = Sun.shadow(minute)
         if (!enabled || intensity == 0.0 || sun.strength <= 0) return
-        val wanted = casters.collect(state, leftOut)
-        val shapes = wanted.map { it.shape }.toSet()
         val sunStep = Sun.step(minute)
         val softnessStep = (intensity * 4).roundToInt()
+        val rebuilt = true
+        if (rebuilt) {
+            wanted = casters.collect(state, leftOut)
+            shapes = wanted.map { it.shape }.toSet()
+        }
         if (step != sunStep || softness != softnessStep) {
             step = sunStep
             softness = softnessStep
             waiting.clear()
             waiting += shapes
         }
-        for (old in made.keys.toList()) {
-            if (old !in shapes) textures.releaseGenerated(made.remove(old)!!.key)
+        if (rebuilt) {
+            for (old in made.keys.toList()) {
+                if (old !in shapes) textures.releaseGenerated(made.remove(old)!!.key)
+            }
+            waiting.retainAll(shapes)
+            waiting += shapes.filter { it !in made }
         }
-        waiting.retainAll(shapes)
-        waiting += shapes.filter { it !in made }
         while (true) {
             val next = waiting.firstOrNull() ?: break
             val caster = wanted.first { it.shape == next }
@@ -88,22 +96,7 @@ class ShadowLayer(
             val image = ShadowRaster.render(next, Sun.shadow(sunStep * Sun.stepMinutes), intensity, mask)
             if (image != null) {
                 val key = "effects/shadow/${hashCode()}/${serial++}"
-                val texture =
-                    textures.generated(key, image.width, image.height, smooth = true) { x, y ->
-                        rgba(
-                            0,
-                            0,
-                            0,
-                            (
-                                image.alpha[
-                                    y *
-                                        image.width +
-                                        x,
-                                ] *
-                                    255
-                            ).roundToInt(),
-                        )
-                    }
+                val texture = textures.generatedPixels(key, image.width, image.height, smooth = true, image::writeRgba)
                 made.remove(next)?.let { textures.releaseGenerated(it.key) }
                 made[next] = Made(key, image, texture)
             }
@@ -131,16 +124,17 @@ class ShadowLayer(
         if (!data.isPrepared) data.prepare()
         val pixmap = data.consumePixmap()
         return try {
-            AlphaMask(
-                pixmap.width,
-                pixmap.height,
-                ByteArray(pixmap.width * pixmap.height) { index ->
-                    (
-                        pixmap.getPixel(index % pixmap.width, index / pixmap.width) and
-                            255
-                    ).toByte()
-                },
-            )
+            val width = pixmap.width
+            val height = pixmap.height
+            val alpha =
+                if (pixmap.format == Pixmap.Format.RGBA8888) {
+                    rgbaAlphaBytes(pixmap.pixels, width, height)
+                } else {
+                    ByteArray(
+                        width * height,
+                    ) { index -> (pixmap.getPixel(index % width, index / width) and 255).toByte() }
+                }
+            AlphaMask(width, height, alpha)
         } finally {
             if (data.disposePixmap()) pixmap.dispose()
         }

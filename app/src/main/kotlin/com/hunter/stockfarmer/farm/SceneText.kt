@@ -30,14 +30,16 @@ internal fun TextureLibrary.label(
             .ceil((metrics.descent - metrics.ascent).toDouble())
             .toInt()
             .coerceAtLeast(1)
-    val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-    try {
-        Canvas(bitmap).drawText(text, 0f, -metrics.ascent, paint)
-        return generated("label/$text/$size/$black", width, height, smooth = true) { x, y ->
-            val argb = bitmap.getPixel(x, y)
-            (argb shl 8) or (argb ushr 24)
+    return generatedPixels("label/$text/$size/$black", width, height, smooth = true) { pixels ->
+        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        try {
+            Canvas(bitmap).drawText(text, 0f, -metrics.ascent, paint)
+            pixels.fillRgba(width, height) { x, y ->
+                val argb = bitmap.getPixel(x, y)
+                (argb shl 8) or (argb ushr 24)
+            }
+        } finally {
+            bitmap.recycle()
         }
-    } finally {
-        bitmap.recycle()
     }
 }
