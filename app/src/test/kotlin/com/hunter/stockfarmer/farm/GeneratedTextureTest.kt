@@ -7,10 +7,7 @@ import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.Pixmap
 import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.utils.GdxNativesLoader
-import com.hunter.stockfarmer.farm.effects.ShadowImage
 import com.hunter.stockfarmer.farm.effects.rgba
-import com.hunter.stockfarmer.farm.effects.rgbaAlphaBytes
-import com.hunter.stockfarmer.farm.effects.writeRgba
 import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -20,7 +17,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.lang.reflect.Proxy
 import java.nio.ByteBuffer
-import kotlin.math.roundToInt
 import kotlin.random.Random
 
 /** Runs the real gdx2d natives, because what matters is what its `drawPixel` and `getPixel` put in memory. */
@@ -71,25 +67,6 @@ internal class GeneratedTextureTest {
     fun `filling memory gives the bytes drawPixel gave`() {
         val pixel = { x: Int, y: Int -> colors[y * 5 + x] }
         assertArrayEquals(drawn(5, 7, pixel), written(5, 7) { it.fillRgba(5, 7, pixel) })
-    }
-
-    @Test
-    fun `a shadow written to memory matches the per-pixel draw, whatever the buffer's byte order`() {
-        val image = ShadowImage(5, 7, 0.0, 0.0, FloatArray(35) { it / 34f })
-        val expected = drawn(5, 7) { x, y -> rgba(0, 0, 0, (image.alpha[y * 5 + x] * 255).roundToInt()) }
-        assertArrayEquals(expected, written(5, 7, image::writeRgba))
-    }
-
-    @Test
-    fun `reading alpha from memory matches getPixel`() {
-        val pixmap = Pixmap(5, 7, Pixmap.Format.RGBA8888)
-        try {
-            pixmap.pixels.fillRgba(5, 7) { x, y -> colors[y * 5 + x] }
-            val expected = ByteArray(35) { (pixmap.getPixel(it % 5, it / 5) and 255).toByte() }
-            assertArrayEquals(expected, rgbaAlphaBytes(pixmap.pixels, 5, 7))
-        } finally {
-            pixmap.dispose()
-        }
     }
 
     @Test

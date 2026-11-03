@@ -16,7 +16,6 @@ enum class PerformanceWork(
     crops("Crop visuals & growth"),
     animals("Animal & fish visuals"),
     tractor("Tractor rules & visuals"),
-    shadows("Shadows"),
     night("Night lighting & midnight wave"),
     wildlife("Fireflies & butterflies"),
     weather("Season, weather & decorations"),

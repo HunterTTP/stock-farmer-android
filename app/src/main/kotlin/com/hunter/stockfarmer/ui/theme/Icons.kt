@@ -365,18 +365,6 @@ object HudIcons {
             }
         }
 
-    val sunMaxFill =
-        icon("sun.max.fill") {
-            filled { circle(12f, 12f, 4.6f) }
-            stroked(2f) {
-                repeat(8) {
-                    val angle = it * PI / 4
-                    moveTo((12 + 7.6 * cos(angle)).toFloat(), (12 + 7.6 * sin(angle)).toFloat())
-                    lineTo((12 + 10.6 * cos(angle)).toFloat(), (12 + 10.6 * sin(angle)).toFloat())
-                }
-            }
-        }
-
     val grid =
         icon("grid") {
             stroked(1.8f) {

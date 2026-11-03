@@ -39,7 +39,7 @@ import com.hunter.stockfarmer.ui.theme.Theme
 import com.hunter.stockfarmer.ui.theme.glassCard
 import kotlin.math.roundToInt
 
-/** Shadows, grid lines and the money and level panels. */
+/** Grid lines and the money and level panels. */
 @Composable
 fun GraphicsSettingsScreen(
     session: GameSession,
@@ -48,20 +48,6 @@ fun GraphicsSettingsScreen(
     val settings = PlaySettings.of(LocalContext.current)
     SettingsPage("Graphics", session, onClose) {
         Column(Modifier.fillMaxWidth().glassCard(14.dp)) {
-            SettingToggle(
-                "Dynamic Shadows",
-                HudIcons.sunMaxFill,
-                settings.isDynamicShadowsEnabled,
-                settings::setDynamicShadows,
-            )
-            if (settings.isDynamicShadowsEnabled) {
-                Slider(
-                    value = settings.shadowIntensity,
-                    onValueChange = settings::setShadowIntensity,
-                    modifier = Modifier.padding(horizontal = 14.dp).padding(bottom = 10.dp),
-                    colors = settingSliderColors,
-                )
-            }
             SettingToggle("Grid Lines", HudIcons.grid, settings.isGridShown, settings::setGridShown)
             SettingToggle("Show Money", HudIcons.dollarsignCircle, settings.isMoneyShown, settings::setMoneyShown)
             SettingToggle("Show Level", HudIcons.starFill, settings.isLevelShown, settings::setLevelShown)

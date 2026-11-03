@@ -38,7 +38,6 @@ class EffectLayers internal constructor(
     val fireworks: FireworkLayer,
     val nightPulse: NightPulseLayer,
     val sprinklers: SprinklerLayer,
-    val shadows: ShadowLayer,
     val photo: PhotoEffects,
     private val monitor: PerformanceMonitor? = null,
 ) {
@@ -72,7 +71,6 @@ fun effectLayers(
     val wind = WindLayer(textures, onGust)
     val fireworks = FireworkLayer(textures)
     val nightPulse = NightPulseLayer(textures)
-    val shadows = ShadowLayer(textures)
     val sprinklers = SprinklerLayer(textures)
     return EffectLayers(
         sources = listOf(wind, butterflies, sprinklers),
@@ -81,7 +79,6 @@ fun effectLayers(
                 SeasonSky(textures),
                 WaterLayer(textures),
                 nightPulse,
-                shadows,
                 fireflies,
                 wind,
                 LeafLayer(textures, wind.motion),
@@ -93,22 +90,20 @@ fun effectLayers(
         fireworks = fireworks,
         nightPulse = nightPulse,
         sprinklers = sprinklers,
-        shadows = shadows,
-        photo = PhotoEffects(textures, SeasonSky(textures), WaterLayer(textures), shadows),
+        photo = PhotoEffects(textures, SeasonSky(textures), WaterLayer(textures)),
         monitor = monitor,
     )
 }
 
-/** The effects a farm photo keeps: they follow the photo's own camera, and shadows are finished before the shot. */
+/** The effects a farm photo keeps: they follow the photo's own camera. */
 class PhotoEffects internal constructor(
     private val textures: TextureLibrary,
     private val sky: SeasonSky,
     private val water: WaterLayer,
-    private val shadows: ShadowLayer,
 ) {
     private val rainTint = RainTint(textures)
 
-    internal fun fresh(): PhotoEffects = PhotoEffects(textures, SeasonSky(textures), WaterLayer(textures), shadows)
+    internal fun fresh(): PhotoEffects = PhotoEffects(textures, SeasonSky(textures), WaterLayer(textures))
 
     fun drawSky(
         batch: SpriteBatch,
@@ -122,10 +117,7 @@ class PhotoEffects internal constructor(
         state: GameState,
         now: Instant,
         camera: OrthographicCamera,
-    ) {
-        water.draw(batch, state, now, camera)
-        shadows.drawFinished(batch, state, now, camera)
-    }
+    ) = water.draw(batch, state, now, camera)
 
     /**
      * The rain's tint, the torches' glow and the rain or snow already falling, over the night's tint. The glow
