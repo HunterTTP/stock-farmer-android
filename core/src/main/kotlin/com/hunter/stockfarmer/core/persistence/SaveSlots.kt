@@ -8,6 +8,7 @@ import kotlinx.serialization.Serializable
 import java.nio.file.Path
 import java.time.Instant
 import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
 
 /** What the load menu shows about one saved game. */
 data class SaveSlotInfo(
@@ -24,7 +25,8 @@ data class SaveSlotInfo(
 
 /**
  * Ten places to keep a game each, with a name and a last-played time, and one of them being the game in play. Everything
- * lives in a folder: a manifest that also summarises each game, and one save file per slot.
+ * lives in a folder: a manifest that also summarises each game, and one save file per slot. What it remembers between
+ * calls only spares work: every memo is checked against the bytes on the disk or forgotten when the slot changes.
  */
 class SaveSlots(
     private val directory: Path,
@@ -51,6 +53,19 @@ class SaveSlots(
         val active: Int = 0,
         val records: Map<Int, Record> = emptyMap(),
     )
+
+    private class KnownManifest(
+        val bytes: ByteArray,
+        val manifest: Manifest,
+    )
+
+    private val stores = List(COUNT) { FileSaveStore(fileURL(it), files) }
+
+    /** Keyed by the manifest's bytes, so one written by anyone else simply misses it and is decoded. */
+    @Volatile private var knownManifest: KnownManifest? = null
+
+    /** What [saveIfChanged] last put in each slot, by [GameStateJson.contentHash]. */
+    private val writtenContent = ConcurrentHashMap<Int, ByteArray>()
 
     // MARK: Reading
 
@@ -84,6 +99,9 @@ class SaveSlots(
         now: Instant = Instant.now(),
     ) {
         if (!isValid(slot)) return
+        writtenContent.remove(slot)
+        // Before any backup moves: a game that could not be reopened must never push out one that can.
+        state.validate()
         createDirectory()
         val manifest = manifest()
         val existing =
@@ -96,10 +114,41 @@ class SaveSlots(
                 money = state.money,
                 playTime = state.playTime,
             )
-        store(slot).load()
-        changingSlot(slot, manifest.withRecord(slot, record), now, BackupRotation.SCHEDULED, state.day) {
-            store(slot).replace(state)
+        val store = store(slot)
+        val original = files.read(fileURL(slot))
+        if (original != null) {
+            // What becomes a long-kept backup is read back whatever the hash says, so no fault can outlast every backup.
+            if (isOlderBackupDue(record, now) || record.dailyBackupDay != state.day) {
+                store.load()
+            } else {
+                store.requireOpens(original)
+            }
         }
+        changingSlot(slot, manifest.withRecord(slot, record), now, BackupRotation.SCHEDULED, original, state.day) {
+            store.replace(state)
+        }
+    }
+
+    /**
+     * Saves unless the game holds nothing new since the last time this did, and says whether it wrote. As on iOS, time
+     * played alone is not worth a write: it goes along with the next one, and pause and stop flush with [save].
+     */
+    fun saveIfChanged(
+        state: GameState,
+        slot: Int,
+        now: Instant = Instant.now(),
+    ): Boolean {
+        if (!isValid(slot)) return false
+        // Forgotten first, so that any failure from here on makes the next autosave write and report.
+        val written = writtenContent.remove(slot)
+        val content = GameStateJson.contentHash(state)
+        if (written?.contentEquals(content) == true) {
+            writtenContent[slot] = written
+            return false
+        }
+        save(state, slot, now)
+        writtenContent[slot] = content
+        return true
     }
 
     /** Starts a new game in a slot under a name, replacing anything saved there. */
@@ -110,14 +159,18 @@ class SaveSlots(
         now: Instant = Instant.now(),
     ) {
         if (!isValid(slot)) return
+        writtenContent.remove(slot)
+        state.validate()
         createDirectory()
         val record = Record(cleaned(name, slot), now, state.level, state.money, playTime = state.playTime)
-        files.read(fileURL(slot))?.let { preserve(it, "slot-${slot + 1}") }
+        val original = files.read(fileURL(slot))
+        original?.let { preserve(it, "slot-${slot + 1}") }
         changingSlot(
             slot,
             manifest().withRecord(slot, record),
             now,
             BackupRotation.NEVER,
+            original,
         ) { store(slot).replace(state) }
     }
 
@@ -132,11 +185,17 @@ class SaveSlots(
 
     fun delete(slot: Int) {
         if (!isValid(slot)) return
+        writtenContent.remove(slot)
         val manifest = manifest()
-        files.read(fileURL(slot))?.let { preserve(it, "slot-${slot + 1}") }
-        changingSlot(slot, manifest.copy(records = manifest.records - slot), Instant.now(), BackupRotation.NEVER) {
-            files.remove(fileURL(slot))
-        }
+        val original = files.read(fileURL(slot))
+        original?.let { preserve(it, "slot-${slot + 1}") }
+        changingSlot(
+            slot,
+            manifest.copy(records = manifest.records - slot),
+            Instant.now(),
+            BackupRotation.NEVER,
+            original,
+        ) { files.remove(fileURL(slot)) }
     }
 
     // MARK: Backups
@@ -160,6 +219,7 @@ class SaveSlots(
     ): GameState {
         val slot = backup.slot
         val state = (if (isValid(slot)) loadBackup(backup.kind, slot) else null) ?: throw SaveRestoreException()
+        writtenContent.remove(slot)
         val manifest = manifest()
         val existing = manifest.records[slot] ?: Record(defaultName(slot), now, state.level, state.money)
         val record =
@@ -175,7 +235,7 @@ class SaveSlots(
         // A game that cannot be opened must not push a good backup out of the way.
         val keepsCurrent = original != null && runCatching { store(slot).load() }.getOrNull() != null
         val rotation = if (keepsCurrent) BackupRotation.ALWAYS else BackupRotation.NEVER
-        changingSlot(slot, manifest.withRecord(slot, record), now, rotation) { store(slot).replace(state) }
+        changingSlot(slot, manifest.withRecord(slot, record), now, rotation, original) { store(slot).replace(state) }
         return state
     }
 
@@ -200,24 +260,25 @@ class SaveSlots(
 
     private val manifestURL: Path get() = directory.resolve("slots.json")
 
-    private fun store(slot: Int) = FileSaveStore(fileURL(slot), files)
+    private fun store(slot: Int) = stores[slot]
 
     private fun createDirectory() = files.createDirectory(directory)
 
+    private fun decodedManifest(data: ByteArray): Manifest {
+        knownManifest?.takeIf { it.bytes.contentEquals(data) }?.let { return it.manifest }
+        return json
+            .decodeFromString<Manifest>(data.toString(Charsets.UTF_8))
+            .also { knownManifest = KnownManifest(data, it) }
+    }
+
     private fun manifest(): Manifest {
-        val saved =
-            runCatching {
-                files
-                    .read(
-                        manifestURL,
-                    )?.let { json.decodeFromString<Manifest>(it.toString(Charsets.UTF_8)) }
-            }
+        val saved = runCatching { files.read(manifestURL)?.let(::decodedManifest) }
         var result = saved.getOrNull() ?: Manifest()
         if (!isValid(result.active)) result = result.copy(active = 0)
         // The manifest is an index, not the only way to discover a farm after an interrupted write.
         val records = result.records.toMutableMap()
         for (slot in 0 until COUNT) {
-            if (slot in records) continue
+            if (slot in records || !files.exists(fileURL(slot))) continue
             val state = runCatching { load(slot) }.getOrNull()
             if (state != null) {
                 records[slot] =
@@ -238,12 +299,10 @@ class SaveSlots(
     private fun write(manifest: Manifest) {
         createDirectory()
         val original = files.read(manifestURL)
-        if (original != null &&
-            runCatching { json.decodeFromString<Manifest>(original.toString(Charsets.UTF_8)) }.isFailure
-        ) {
-            preserve(original, "manifest")
-        }
-        files.write(json.encodeToString(manifest).toByteArray(Charsets.UTF_8), manifestURL)
+        if (original != null && runCatching { decodedManifest(original) }.isFailure) preserve(original, "manifest")
+        val data = json.encodeToString(manifest).toByteArray(Charsets.UTF_8)
+        files.write(data, manifestURL)
+        knownManifest = KnownManifest(data, manifest)
     }
 
     private fun preserve(
@@ -259,23 +318,24 @@ class SaveSlots(
      * Retains the original as the latest backup before changing either file, moving the one it replaces to the older
      * backup when that one is due, and also as the daily backup when the farm's day has rolled over. A failed manifest
      * write rolls the slot back.
+     *
+     * The latest backup is a whole new file, never the old save moved aside: between a move and the next write the slot
+     * would have no file, and a crash there reads as an empty slot, which startup answers with a new farm.
      */
     private fun changingSlot(
         slot: Int,
         manifest: Manifest,
         now: Instant,
         rotation: BackupRotation,
+        original: ByteArray?,
         newDay: Int? = null,
         change: () -> Unit,
     ) {
         var current = manifest
         val url = fileURL(slot)
-        val original = files.read(url)
         if (original != null && rotation != BackupRotation.NEVER) {
             val latest = backupURL(SaveBackup.Kind.latest, slot)
-            val shiftedAt = current.records[slot]?.lastBackupShiftAt
-            val isDue = shiftedAt?.let { now.secondsSince(it) >= OLDER_BACKUP_INTERVAL } ?: true
-            if (rotation == BackupRotation.ALWAYS || isDue) {
+            if (rotation == BackupRotation.ALWAYS || isOlderBackupDue(current.records[slot], now)) {
                 files.read(latest)?.let { files.write(it, backupURL(SaveBackup.Kind.older, slot)) }
                 current = current.updating(slot) { it.copy(lastBackupShiftAt = now) }
             }
@@ -301,6 +361,11 @@ class SaveSlots(
             throw failure
         }
     }
+
+    private fun isOlderBackupDue(
+        record: Record?,
+        now: Instant,
+    ): Boolean = record?.lastBackupShiftAt?.let { now.secondsSince(it) >= OLDER_BACKUP_INTERVAL } ?: true
 
     private fun Manifest.updating(
         slot: Int,
