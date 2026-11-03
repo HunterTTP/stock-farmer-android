@@ -18,6 +18,9 @@ enum class HarvestTool(
     val id: HarvestTool get() = this
     val rawValue: String get() = name
 
+    /** The file name of its picture, which calls the scythe a harvester. */
+    val imageName: String get() = if (this == scythe) "harvester" else rawValue
+
     /** Logs and stones sell for nothing, so they are stored. */
     val canSell: Boolean get() = this != axe && this != pickaxe && this != rod
 }

@@ -149,12 +149,11 @@ internal object CareerCollections {
                                 .sorted()
                     val entries =
                         levels.map {
-                            val asset = if (tool == HarvestTool.scythe) "harvester" else tool.rawValue
                             CareerEntry(
                                 "${tool.rawValue}-$it",
                                 "Level $it",
                                 engine.level(tool) >= it,
-                                art = ScreenArt.image("tools", asset),
+                                art = ScreenArt.image("tools", tool.imageName),
                                 nameColor = Theme.toolLevel(it),
                             )
                         }

@@ -10,6 +10,7 @@ import com.hunter.stockfarmer.core.util.RandomSource
 import com.hunter.stockfarmer.core.util.SystemRandomSource
 import com.hunter.stockfarmer.core.util.nextDouble
 import com.hunter.stockfarmer.core.util.nextUnit
+import com.hunter.stockfarmer.core.util.smoothstep
 import java.util.UUID
 import kotlin.math.atan2
 import kotlin.math.cos
@@ -36,7 +37,7 @@ internal class FlightPath(
         val leg = arrivals.indexOfLast { it <= time }.coerceIn(0, points.size - 2)
         val duration = arrivals[leg + 1] - arrivals[leg]
         val progress = if (duration > 0) ((time - arrivals[leg]) / duration).coerceIn(0.0, 1.0) else 1.0
-        val mix = if (eased) smooth(progress) else progress
+        val mix = if (eased) smoothstep(progress) else progress
         val a = points[leg]
         val b = points[leg + 1]
         return TilePosition(a.row + (b.row - a.row) * mix, a.col + (b.col - a.col) * mix)

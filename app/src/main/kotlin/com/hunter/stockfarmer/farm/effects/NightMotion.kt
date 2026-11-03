@@ -4,6 +4,7 @@ import com.hunter.stockfarmer.core.model.GameState
 import com.hunter.stockfarmer.core.model.GridPoint
 import com.hunter.stockfarmer.core.rules.NightPulse
 import com.hunter.stockfarmer.core.rules.Season
+import com.hunter.stockfarmer.core.util.smoothstep
 import com.hunter.stockfarmer.farm.FarmRenderer
 import java.time.Instant
 import kotlin.math.abs
@@ -31,8 +32,8 @@ internal object NightLights {
             val tick = (time - phase).coerceAtLeast(0.0) % (0.85 + phase * 0.6)
             val blend =
                 when {
-                    tick < 0.35 -> 1 - smooth(tick / 0.35)
-                    tick < 0.85 -> smooth((tick - 0.35) / 0.5)
+                    tick < 0.35 -> 1 - smoothstep(tick / 0.35)
+                    tick < 0.85 -> smoothstep((tick - 0.35) / 0.5)
                     else -> 1.0
                 }
             Torch(

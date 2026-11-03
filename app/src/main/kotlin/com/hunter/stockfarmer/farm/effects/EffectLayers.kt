@@ -193,8 +193,6 @@ internal fun rain(
 internal const val TILE = FarmRenderer.TILE.toDouble()
 internal const val WORLD = FarmRenderer.WORLD.toDouble()
 
-internal fun smooth(value: Double): Double = value * value * (3 - 2 * value)
-
 internal fun envelope(
     age: Double,
     life: Double,

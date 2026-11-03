@@ -357,6 +357,5 @@ internal fun HarvestToolImage(
     modifier: Modifier = Modifier,
 ) {
     val loader = rememberMenuAssetLoader()
-    val asset = if (tool == HarvestTool.scythe) "harvester" else tool.rawValue
-    MenuImage(MenuPicture.Asset("images/tools/$asset.png"), loader, modifier)
+    MenuImage(MenuPicture.Asset("images/tools/${tool.imageName}.png"), loader, modifier)
 }
