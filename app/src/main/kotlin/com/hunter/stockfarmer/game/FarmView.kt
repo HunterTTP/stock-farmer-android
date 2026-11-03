@@ -47,9 +47,7 @@ class FarmView {
         val view = snapshot ?: return null
         val worldX = view.centerX + (screenX - view.widthPixels / 2f) * view.worldPerPixel
         val worldY = view.centerY - (screenY - view.heightPixels / 2f) * view.worldPerPixel
-        val col = floor(worldX / tileSize).toInt()
-        val row = gridSize - 1 - floor(worldY / tileSize).toInt()
-        return if (col in 0 until gridSize && row in 0 until gridSize) GridPoint(row, col) else null
+        return gridTileAt(worldX, worldY, tileSize, gridSize)
     }
 
     /** How a sound from a tile is heard: quieter and to one side when it is off to one side or far from the view. */
@@ -69,4 +67,16 @@ class FarmView {
             viewHeight = view.heightPixels.toDouble(),
         )
     }
+}
+
+/** The tile a point in world units falls on (the world has row 0 at the top), or null when it is off the map. */
+fun gridTileAt(
+    worldX: Float,
+    worldY: Float,
+    tileSize: Float,
+    gridSize: Int,
+): GridPoint? {
+    val col = floor(worldX / tileSize).toInt()
+    val row = gridSize - 1 - floor(worldY / tileSize).toInt()
+    return if (col in 0 until gridSize && row in 0 until gridSize) GridPoint(row, col) else null
 }

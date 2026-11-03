@@ -54,9 +54,8 @@ class FarmGame(
     private val camera = OrthographicCamera()
     private val cameraControls = FarmCamera(camera)
     private val cameraPreferences by lazy { Gdx.app.getPreferences("camera") }
-    private val touch = Vector3()
     private val tilePreview = TilePreview()
-    private val placementDrag = PlacementDrag(session)
+    private val input = FarmInput(session, camera, cameraControls, PlacementDrag(session), monitor, ::saveCamera)
     private var wateringDue = 0f
 
     override fun create() {
@@ -86,7 +85,7 @@ class FarmGame(
                 treeLean = treeLean,
                 monitor = monitor,
             )
-        Gdx.input.inputProcessor = FarmTouchProcessor()
+        Gdx.input.inputProcessor = input.processor
         session.sceneFeedback.catchButterfly = ::catchButterfly
         farmPhoto = FarmPhoto(renderer, batch, textures, effects.photo, animalArt)
         // This view's own queue: a request must not land on the next view's GL thread with this view's textures.
@@ -150,7 +149,7 @@ class FarmGame(
             batch.startCount()
             batch.begin()
             val now = Instant.now()
-            recognizer.update(TimeUtils.millis())
+            input.update(TimeUtils.millis())
             monitor.measureOrRun(PerformanceWork.tractor) { driveTractor(now) }
             session.act {
                 monitor.measureOrRun(PerformanceWork.animals) {
@@ -280,228 +279,8 @@ class FarmGame(
         textures.dispose()
     }
 
-    /** Routes libGDX touches into the recognizer, which alone decides between pan and pinch. */
-    private inner class FarmTouchProcessor : InputAdapter() {
-        override fun touchDown(
-            screenX: Int,
-            screenY: Int,
-            pointer: Int,
-            button: Int,
-        ): Boolean {
-            recognizer.touchDown(pointer, screenX.toFloat(), screenY.toFloat(), TimeUtils.millis())
-            return true
-        }
-
-        override fun touchDragged(
-            screenX: Int,
-            screenY: Int,
-            pointer: Int,
-        ): Boolean {
-            recognizer.touchDragged(pointer, screenX.toFloat(), screenY.toFloat())
-            return true
-        }
-
-        override fun touchUp(
-            screenX: Int,
-            screenY: Int,
-            pointer: Int,
-            button: Int,
-        ): Boolean {
-            recognizer.touchUp(pointer, screenX.toFloat(), screenY.toFloat())
-            return true
-        }
-
-        override fun touchCancelled(
-            screenX: Int,
-            screenY: Int,
-            pointer: Int,
-            button: Int,
-        ): Boolean {
-            recognizer.cancel()
-            return true
-        }
-    }
-
-    private val recognizer = FarmGestureRecognizer(Gestures())
-
-    private inner class Gestures : FarmGestureListener {
-        override fun touchDown(
-            x: Float,
-            y: Float,
-            isFirst: Boolean,
-        ) {
-            session.farmTouches.update { it + 1 }
-            if (isFirst) placementDrag.begin(tileAt(x, y))
-        }
-
-        override fun tap(
-            x: Float,
-            y: Float,
-        ) {
-            monitor.measureOrRun(PerformanceWork.tap) {
-                val tile = tileAt(x, y)
-                if (!session.touchAnimalAt(touch.x, touch.y)) tile?.let { session.touch(it) }
-            }
-        }
-
-        override fun longPress(
-            x: Float,
-            y: Float,
-        ) {
-            monitor.measureOrRun(PerformanceWork.tap) {
-                val tile = tileAt(x, y)
-                if (!session.touchAnimalAt(touch.x, touch.y)) tile?.let { session.hold(it) }
-            }
-        }
-
-        private fun tileAt(
-            x: Float,
-            y: Float,
-        ): GridPoint? {
-            camera.unproject(touch.set(x, y, 0f))
-            val col = floor(touch.x / FarmRenderer.TILE).toInt()
-            val row = GameState.GRID_SIZE - 1 - floor(touch.y / FarmRenderer.TILE).toInt()
-            return GridPoint(
-                row,
-                col,
-            ).takeIf { col in 0 until GameState.GRID_SIZE && row in 0 until GameState.GRID_SIZE }
-        }
-
-        override fun pan(
-            x: Float,
-            y: Float,
-            deltaX: Float,
-            deltaY: Float,
-        ) {
-            val moved = monitor.measureOrRun(PerformanceWork.drag) { placementDrag.move(tileAt(x, y)) }
-            if (!moved) cameraControls.pan(deltaX, deltaY)
-        }
-
-        override fun panStop() {
-            placementDrag.end()
-            saveCamera()
-        }
-
-        override fun pinchStop() {
-            placementDrag.end()
-            zoomAtStart = null
-            saveCamera()
-        }
-
-        private var zoomAtStart: Float? = null
-
-        override fun pinch(
-            initial1: FingerPoint,
-            initial2: FingerPoint,
-            current1: FingerPoint,
-            current2: FingerPoint,
-        ) {
-            val initialDistance = distance(initial1, initial2)
-            if (initialDistance <= 0f) return
-            val start = zoomAtStart ?: camera.zoom.also { zoomAtStart = it }
-            cameraControls.pinch(
-                start,
-                distance(current1, current2) / initialDistance,
-                (current1.x + current2.x) / 2,
-                (current1.y + current2.y) / 2,
-            )
-        }
-
-        private fun distance(
-            a: FingerPoint,
-            b: FingerPoint,
-        ) = hypot(a.x - b.x, a.y - b.y)
-    }
-
     override fun pause() {
-        recognizer.cancel()
+        input.cancel()
         saveCamera()
     }
-}
-
-/** SpriteKit scales are in logical points; libGDX's camera covers physical pixels. */
-internal class FarmCamera(
-    private val camera: OrthographicCamera,
-) {
-    private var density = 1f
-    var isPlaced = false
-        private set
-    val logicalScale: Float get() = camera.zoom * density
-    val zoomFraction: Float get() = ((logicalScale - MIN_SCALE) / (MAX_SCALE - MIN_SCALE)).coerceIn(0f, 1f)
-
-    fun resize(
-        width: Int,
-        height: Int,
-        density: Float,
-    ) {
-        if (width <= 0 || height <= 0) return
-        val previousScale = logicalScale
-        this.density = density.coerceAtLeast(0.1f)
-        camera.viewportWidth = width.toFloat()
-        camera.viewportHeight = height.toFloat()
-        if (!isPlaced) {
-            camera.position.set(FarmRenderer.WORLD / 2, FarmRenderer.WORLD / 2, 0f)
-            camera.zoom = 5 * FarmRenderer.TILE / min(width, height)
-            isPlaced = true
-        } else {
-            camera.zoom = previousScale / this.density
-        }
-        applyScale(camera.zoom)
-    }
-
-    fun restore(
-        x: Float,
-        y: Float,
-        logicalScale: Float,
-    ) {
-        camera.position.set(x, y, 0f)
-        applyScale(logicalScale / density)
-    }
-
-    fun pan(
-        deltaX: Float,
-        deltaY: Float,
-    ) {
-        camera.position.add(-deltaX * camera.zoom, deltaY * camera.zoom, 0f)
-        clampPosition()
-    }
-
-    fun pinch(
-        startScale: Float,
-        magnification: Float,
-        focusX: Float,
-        focusY: Float,
-    ) {
-        if (magnification <= 0f || !magnification.isFinite()) return
-        val before = camera.zoom
-        applyScale(startScale / magnification)
-        camera.position.add(
-            (focusX - camera.viewportWidth / 2) * (before - camera.zoom),
-            -(focusY - camera.viewportHeight / 2) * (before - camera.zoom),
-            0f,
-        )
-        clampPosition()
-    }
-
-    private fun applyScale(scale: Float) {
-        camera.zoom = scale.coerceIn(MIN_SCALE / density, MAX_SCALE / density)
-        clampPosition()
-    }
-
-    private fun clampPosition() {
-        camera.position.x = camera.position.x.coerceIn(0f, FarmRenderer.WORLD)
-        camera.position.y = camera.position.y.coerceIn(0f, FarmRenderer.WORLD)
-    }
-
-    companion object {
-        const val MIN_SCALE = 1f / 3
-        const val MAX_SCALE = 8f
-    }
-}
-
-/** The lower sixty percent of the camera view leaves room for the bursts overhead. */
-internal fun ViewSnapshot.fireworkGround(): FireworkArea {
-    val width = widthPixels * worldPerPixel.toDouble()
-    val height = heightPixels * worldPerPixel.toDouble()
-    return FireworkArea(centerX - width / 2, centerY - height / 2, width, height * 0.6)
 }
