@@ -178,7 +178,8 @@ private fun GameEngine.escapeSteps(
 }
 
 /** The chickens on a tile, which other chickens would rather not join. */
-internal fun GameEngine.chickenCount(point: GridPoint): Int = animals.count { isChicken(it) && position(it) == point }
+internal fun GameEngine.chickenCount(point: GridPoint): Int =
+    state.coops.values.sumOf { coop -> coop.chickens.count { it.position == point } }
 
 /** The tile directly in front of a coop, if nothing is blocking it; chicks only ever hatch there. */
 internal fun GameEngine.hatchTile(
@@ -224,22 +225,33 @@ fun GameEngine.wanderDirection(
     animal: AnimalRef,
     now: Instant,
     using: RandomSource,
+): GridPoint? = wanderDirection(animal, using, animalWalk(now))
+
+/** What one walk of all the animals at a moment shares, so that each does not work it out again; see [AnimalWalk]. */
+fun GameEngine.animalWalk(now: Instant): AnimalWalk = AnimalWalk(this, now)
+
+/** [wanderDirection] for one of the animals of a walk, between the steps of which only animals have moved. */
+fun GameEngine.wanderDirection(
+    animal: AnimalRef,
+    using: RandomSource,
+    walk: AnimalWalk,
 ): GridPoint? {
+    val now = walk.now
     val current = position(animal) ?: return null
     val escape = escapeSteps(animal, current)
-    (escape.firstOrNull { canStand(it, animal) } ?: escape.firstOrNull())?.let {
+    val waterfowl = isWaterfowl(animal)
+    (escape.firstOrNull { walk.canStand(it, waterfowl) } ?: escape.firstOrNull())?.let {
         return GridPoint(it.row - current.row, it.col - current.col)
     }
     if (isFarmAnimal(animal)) {
-        val gap = tractorGap(current)
-        if (gap != null && gap <= TRACTOR_FLEE_RADIUS) return directionAwayFromTractor(animal, current, gap)
+        val gap = tractorGap(current, walk)
+        if (gap != null && gap <= TRACTOR_FLEE_RADIUS) return directionAwayFromTractor(animal, current, gap, walk)
     }
-    if (needsShelter(now) && shelterTile(animal) != null) return directionToShelter(animal, current)
-    directionToFavoriteCrop(animal, now)?.let { return it }
-    val attractions = animalAttractions(state)
+    if (needsShelter(now) && shelterTile(animal) != null) return directionToShelter(animal, current, walk)
+    directionToFavoriteCrop(animal, walk)?.let { return it }
     val options =
-        current.neighbors.filter { canStand(it, animal) }.map {
-            GridPoint(it.row - current.row, it.col - current.col) to appeal(it, animal, attractions)
+        current.neighbors.filter { walk.canStand(it, waterfowl) }.map {
+            GridPoint(it.row - current.row, it.col - current.col) to appeal(it, animal, waterfowl, walk)
         }
     var roll = using.nextUnit() * max(options.sumOf { it.second }, java.lang.Double.MIN_VALUE)
     for ((direction, appeal) in options) {
@@ -253,19 +265,23 @@ fun GameEngine.wanderDirection(
 private fun isFarmAnimal(animal: AnimalRef): Boolean = animal !is AnimalRef.Pet
 
 /** How many tiles a tile is from the nearest tile the driving Tractor takes up, counting diagonals, if it is driving. */
-private fun GameEngine.tractorGap(point: GridPoint): Int? =
-    state.tractorOccupiedTiles.minOfOrNull { max(abs(it.row - point.row), abs(it.col - point.col)) }
+private fun tractorGap(
+    point: GridPoint,
+    walk: AnimalWalk,
+): Int? = walk.tractorTiles.minOfOrNull { max(abs(it.row - point.row), abs(it.col - point.col)) }
 
 /** The step to the open tile farthest from the Tractor, if it is farther than where the animal stands; null to stay put. */
 private fun GameEngine.directionAwayFromTractor(
     animal: AnimalRef,
     current: GridPoint,
     gap: Int,
+    walk: AnimalWalk,
 ): GridPoint? {
+    val waterfowl = isWaterfowl(animal)
     val options =
         current.neighbors.mapNotNull { tile ->
-            if (!canStand(tile, animal)) return@mapNotNull null
-            val tileGap = tractorGap(tile) ?: return@mapNotNull null
+            if (!walk.canStand(tile, waterfowl)) return@mapNotNull null
+            val tileGap = tractorGap(tile, walk) ?: return@mapNotNull null
             if (tileGap > gap) tile to tileGap else null
         }
     return options.maxByOrNull { it.second }?.let { GridPoint(it.first.row - current.row, it.first.col - current.col) }
@@ -295,14 +311,11 @@ fun GameEngine.move(
 private fun GameEngine.appeal(
     point: GridPoint,
     animal: AnimalRef,
-    attractions: List<GridPoint>,
+    waterfowl: Boolean,
+    walk: AnimalWalk,
 ): Double {
     // Ducks are free to go anywhere on the water.
-    if (isWaterfowl(animal)) return 1.0
-    val nearest = attractions.minOfOrNull { max(abs(it.row - point.row), abs(it.col - point.col)) } ?: 0
-    val base = max(0.5.pow(nearest), 0.001)
+    if (waterfowl) return 1.0
+    val base = max(0.5.pow(walk.tilesToNearestAttraction(point)), 0.001)
     return if (isChicken(animal) && chickenCount(point) > 0) base * CROWDED_TILE_APPEAL else base
 }
-
-internal fun animalAttractions(state: GameState): List<GridPoint> =
-    state.plots.keys.toList() + state.placedBuildings.flatMap { it.footprint }

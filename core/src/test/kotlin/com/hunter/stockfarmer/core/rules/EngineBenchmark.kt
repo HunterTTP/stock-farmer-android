@@ -28,9 +28,10 @@ class EngineBenchmark {
         now: Instant,
         random: RandomSource,
     ) {
+        val walk = engine.animalWalk(now)
         for (animal in engine.animals) {
             if (random.nextUnit() > STEP_CHANCE) continue
-            engine.wanderDirection(animal, now, random)?.let { engine.move(animal, it) }
+            engine.wanderDirection(animal, random, walk)?.let { engine.move(animal, it) }
         }
     }
 
@@ -136,7 +137,10 @@ class EngineBenchmark {
     @Test
     fun `report what the rules take on the late farm`() {
         timeWalks("walk: hungry, food fenced off (worst)", LateFarm.build())
-        timeWalks("walk: hungry, gate open (food reachable)", LateFarm.build().also { it.state.fences.remove(LateFarm.gate) })
+        timeWalks(
+            "walk: hungry, gate open (food reachable)",
+            LateFarm.build().also { it.state.fences.remove(LateFarm.gate) },
+        )
         timeWalks("walk: everyone fed (no search)", fedFarm())
         timeWalks("walk: hungry + Tractor driving", drivingFarm())
         timeFirstWalkHome()

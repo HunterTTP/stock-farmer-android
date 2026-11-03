@@ -37,43 +37,19 @@ fun GameEngine.isInside(
 internal fun GameEngine.directionToShelter(
     animal: AnimalRef,
     current: GridPoint,
+    walk: AnimalWalk,
 ): GridPoint? {
     val front = shelterTile(animal)
     if (front == null || current == front) return null
+    val waterfowl = isWaterfowl(animal)
     for (margin in listOf(SHELTER_SEARCH_MARGIN, GameState.GRID_SIZE)) {
         val rows = (min(current.row, front.row) - margin)..(max(current.row, front.row) + margin)
         val cols = (min(current.col, front.col) - margin)..(max(current.col, front.col) + margin)
-        val distance = distances(front, current, rows, cols) ?: continue
-        val here = distance[current] ?: continue
-        val nearer = current.neighbors.filter { (distance[it] ?: Int.MAX_VALUE) < here && canStand(it, animal) }
-        return nearer.minByOrNull { distance[it] ?: 0 }?.let { GridPoint(it.row - current.row, it.col - current.col) }
+        if (!walk.searchFromHome(front, current, rows, cols)) continue
+        val here = walk.stepsFromHome(current)
+        val nearer = current.neighbors.filter { walk.stepsFromHome(it) < here && walk.canStand(it, waterfowl) }
+        val nearest = nearer.minByOrNull { walk.stepsFromHome(it) } ?: return null
+        return GridPoint(nearest.row - current.row, nearest.col - current.col)
     }
     return null
-}
-
-/**
- * How many steps over open ground each tile is from [start], within the rows and columns given, worked out only as far as
- * [target], which is all that is needed to tell which of its neighbors are nearer; null if there is no way there inside them.
- */
-private fun GameEngine.distances(
-    start: GridPoint,
-    target: GridPoint,
-    rows: IntRange,
-    cols: IntRange,
-): Map<GridPoint, Int>? {
-    val distance = mutableMapOf(start to 0)
-    val queue = mutableListOf(start)
-    var index = 0
-    while (index < queue.size && target !in distance) {
-        val tile = queue[index]
-        index += 1
-        val next = (distance[tile] ?: 0) + 1
-        for (neighbor in tile.neighbors) {
-            if (neighbor.row in rows && neighbor.col in cols && neighbor !in distance && isOpenGround(neighbor)) {
-                distance[neighbor] = next
-                queue += neighbor
-            }
-        }
-    }
-    return if (target in distance) distance else null
 }

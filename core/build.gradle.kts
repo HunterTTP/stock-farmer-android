@@ -21,7 +21,10 @@ tasks.test {
 tasks.register<Test>("engineBenchmark") {
     group = "verification"
     description = "Times the costly rules on a fixed late farm, on this JVM."
-    testClassesDirs = sourceSets.test.get().output.classesDirs
+    testClassesDirs =
+        sourceSets.test
+            .get()
+            .output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     useJUnitPlatform { includeTags("benchmark") }
     testLogging.showStandardStreams = true
