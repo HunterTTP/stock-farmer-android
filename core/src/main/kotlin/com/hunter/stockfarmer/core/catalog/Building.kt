@@ -323,11 +323,13 @@ data class Building(
 
         val starter: Building = all[0]
 
+        private val byID = all.associateBy { it.id }
+
         fun named(id: String): Building? =
             when (id) {
                 upgradedMarketStand.id -> upgradedMarketStand
                 upgradedHouse.id -> upgradedHouse
-                else -> all.firstOrNull { it.id == id }
+                else -> byID[id]
             }
 
         private fun marketStyles(large: Boolean): List<BuildingStyle> =

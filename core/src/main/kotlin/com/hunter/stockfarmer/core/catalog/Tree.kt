@@ -123,7 +123,9 @@ data class Tree(
         val wild = all.filter { it.species == TreeSpecies.pine || it.species == TreeSpecies.oak }
         val starter = all[0]
 
-        fun named(id: String): Tree? = all.firstOrNull { it.id == id }
+        private val byID = all.associateBy { it.id }
+
+        fun named(id: String): Tree? = byID[id]
     }
 }
 
