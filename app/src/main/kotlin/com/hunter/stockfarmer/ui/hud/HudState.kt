@@ -37,6 +37,7 @@ internal fun GameSession.hud(reach: Float = ToolCircleMetrics.DEFAULT_REACH): Hu
         val state = engine.state
         val tool = engine.currentTool
         val placement = engine.buildingPlacement
+        val dropdowns = ToolPalette.dropdowns(state, tool)
         HudState(
             money = state.money,
             xp = state.xp,
@@ -44,7 +45,7 @@ internal fun GameSession.hud(reach: Float = ToolCircleMetrics.DEFAULT_REACH): Hu
             canDestroy = engine.canDestroyWhilePlacing,
             placementCost = placement?.takeIf { it.replacing == null && it.building.cost > 0 }?.building?.cost,
             tool = tool,
-            toolPicture = ToolPalette.picture(state, tool),
+            toolPicture = ToolPalette.picture(state, tool, dropdowns),
             circleTool =
                 ToolCircleTool(
                     activationDelayMillis = engine.activationDelayMillis,
@@ -52,7 +53,7 @@ internal fun GameSession.hud(reach: Float = ToolCircleMetrics.DEFAULT_REACH): Hu
                     isChopping = engine.isChopping,
                     reach = reach,
                 ),
-            dropdowns = ToolPalette.dropdowns(state, tool),
+            dropdowns = dropdowns,
             newTools =
                 buildSet {
                     if (engine.hasNewItems(UnlockCategory.PLANT)) add(HudTool.Planting)

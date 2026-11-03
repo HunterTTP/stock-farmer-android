@@ -49,34 +49,41 @@ fun GameSession.hasNewItems(category: UnlockCategory): Boolean = act { it.hasNew
 fun GameEngine.hasNewItems(category: UnlockCategory): Boolean = category.items.any(::isNew)
 
 private val UnlockCategory.items: List<ShopItem>
-    get() =
-        when (this) {
-            UnlockCategory.PLANT -> {
-                Crop.all.map { ShopItem.Seed(it.id) }
-            }
+    get() = unlockItems.getValue(this)
 
-            UnlockCategory.FERTILIZE -> {
-                Decoration.shopChoices
-                    .filter { it.isSprinkler }
-                    .map { ShopItem.DecorationItem(it.id) }
-            }
+/** The catalog never changes while the app runs, so each category's items are listed once. */
+private val unlockItems: Map<UnlockCategory, List<ShopItem>> by lazy {
+    UnlockCategory.entries.associateWith { it.catalogItems() }
+}
 
-            UnlockCategory.TERRAIN -> {
-                listOf(ShopItem.Farmland, ShopItem.Water) +
-                    GroundCover.entries.map { ShopItem.GroundCoverItem(it) } +
-                    TreeSpecies.all.map { ShopItem.Tree(it.id) }
-            }
-
-            UnlockCategory.BUILD -> {
-                Building.all.map { ShopItem.BuildingItem(it.id) }
-            }
-
-            UnlockCategory.DECORATE -> {
-                Decoration.shopChoices
-                    .filter { !it.isSprinkler }
-                    .map { ShopItem.DecorationItem(it.id) }
-            }
+private fun UnlockCategory.catalogItems(): List<ShopItem> =
+    when (this) {
+        UnlockCategory.PLANT -> {
+            Crop.all.map { ShopItem.Seed(it.id) }
         }
+
+        UnlockCategory.FERTILIZE -> {
+            Decoration.shopChoices
+                .filter { it.isSprinkler }
+                .map { ShopItem.DecorationItem(it.id) }
+        }
+
+        UnlockCategory.TERRAIN -> {
+            listOf(ShopItem.Farmland, ShopItem.Water) +
+                GroundCover.entries.map { ShopItem.GroundCoverItem(it) } +
+                TreeSpecies.all.map { ShopItem.Tree(it.id) }
+        }
+
+        UnlockCategory.BUILD -> {
+            Building.all.map { ShopItem.BuildingItem(it.id) }
+        }
+
+        UnlockCategory.DECORATE -> {
+            Decoration.shopChoices
+                .filter { !it.isSprinkler }
+                .map { ShopItem.DecorationItem(it.id) }
+        }
+    }
 
 private val allUnlockItems: List<ShopItem> by lazy {
     UnlockCategory.entries.flatMap { it.items }
