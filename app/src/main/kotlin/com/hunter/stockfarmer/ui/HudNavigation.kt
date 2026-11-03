@@ -27,6 +27,12 @@ class HudNavigation {
 
     val isOpen: Boolean get() = toolRoute != null || isTimeShown
 
+    /** Whether the Load Game screen is up; it shows the save error itself, so the HUD behind it stays quiet. */
+    var isLoadGameShown by mutableStateOf(false)
+
+    /** The save error the HUD shows over the farm: none while Load Game shows it. */
+    fun hudSaveError(error: String?): String? = error.takeUnless { isLoadGameShown }
+
     fun closeMenus() {
         closeRequests++
     }

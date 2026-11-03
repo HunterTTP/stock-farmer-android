@@ -158,6 +158,9 @@ fun Hud(
                         farms = farms,
                         performance = performance,
                         root = root,
+                        saveError = saveError,
+                        onRetrySave = onRetrySave,
+                        onLoadGameShown = { navigation.isLoadGameShown = it },
                         onTakePhoto = { report -> takeFarmPhoto(context, session, report) },
                         onClose = navigation::closeRoute,
                         onSelected = {
@@ -196,9 +199,9 @@ fun Hud(
             ToastBanner(session, messages.toast) { messages.toast = null }
             QuestBanner(session, onClose = { messages.rewards = emptyList() }, rewards = messages.rewards)
             DaySummaryBanner(session, onClose = { messages.daySummary = null }, summary = messages.daySummary)
-            if (saveError != null) {
+            navigation.hudSaveError(saveError)?.let { hudError ->
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    SaveStatusView(saveError, onRetrySave, Modifier.padding(16.dp))
+                    SaveStatusView(hudError, onRetrySave, Modifier.padding(16.dp))
                 }
             }
         }
