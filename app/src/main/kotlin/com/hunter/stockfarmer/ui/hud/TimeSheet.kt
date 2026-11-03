@@ -37,6 +37,7 @@ import com.hunter.stockfarmer.core.rules.setTimeOfDay
 import com.hunter.stockfarmer.core.rules.setTimeToMidnight
 import com.hunter.stockfarmer.core.rules.skipNewDayInProgress
 import com.hunter.stockfarmer.game.GameSession
+import com.hunter.stockfarmer.ui.rememberPolledState
 import com.hunter.stockfarmer.ui.theme.HudSheet
 import com.hunter.stockfarmer.ui.theme.HudType
 import com.hunter.stockfarmer.ui.theme.PillButton
@@ -133,13 +134,7 @@ fun TimeSheet(
     session: GameSession,
     onDismiss: () -> Unit,
 ) {
-    var now by remember { mutableStateOf(Instant.now()) }
-    LaunchedEffect(Unit) {
-        while (true) {
-            now = Instant.now()
-            delay(1_000)
-        }
-    }
+    val now by rememberPolledState(Unit, CLOCK_POLL_MILLIS) { Instant.now() }
     val (minute, day, season) = session.act { Triple(it.minuteOfDay(now), it.state.day, it.state.season) }
     HudSheet(onDismiss) {
         Column(
@@ -260,3 +255,5 @@ private fun seasonSymbol(season: Season) =
         Season.fall -> "💨"
         Season.winter -> "❄️"
     }
+
+private const val CLOCK_POLL_MILLIS = 1_000L

@@ -35,6 +35,7 @@ import com.hunter.stockfarmer.core.rules.sellShares
 import com.hunter.stockfarmer.game.GameSession
 import com.hunter.stockfarmer.market.NetworkMonitor
 import com.hunter.stockfarmer.market.StockPolling
+import com.hunter.stockfarmer.ui.rememberPolledState
 import com.hunter.stockfarmer.ui.theme.BarScrollView
 import com.hunter.stockfarmer.ui.theme.HudSheet
 import com.hunter.stockfarmer.ui.theme.HudType
@@ -70,7 +71,7 @@ fun StockMarketScreen(
 ) {
     val controller = remember(session, provider) { StockMarketController(session, provider) }
     val prices by controller.prices.collectAsStateWithLifecycle()
-    val state by rememberScreenState(session to controller) {
+    val state by rememberPolledState(session to controller) {
         session.act { StockMarketState.from(it, controller.prices.value, Instant.now()) }
     }
     var search by remember { mutableStateOf("") }
@@ -180,7 +181,12 @@ private fun StockTradeDialog(
 ) {
     var quantity by remember(row.quote.ticker, buying) { mutableLongStateOf(1L) }
     var failure by remember { mutableStateOf<String?>(null) }
-    val preview = session.act { StockTradeState.from(it, row, buying, quantity, Instant.now()) }
+    // The preview copies the whole game, so it runs again only when something it reads has changed.
+    val cash = session.read { it.money to it.holdings.size }
+    val preview =
+        remember(row, buying, quantity, cash) {
+            session.act { StockTradeState.from(it, row, buying, quantity, Instant.now()) }
+        }
     val verb = if (buying) "Buy" else "Sell"
     val owned = row.holding?.shares ?: 0L
     val change = StockMarketRules.dayChange(row.priceCents, row.quote.previousCloseCents)

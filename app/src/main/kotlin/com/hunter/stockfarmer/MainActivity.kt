@@ -60,6 +60,7 @@ import com.hunter.stockfarmer.notifications.FieldReadyNotificationPermission
 import com.hunter.stockfarmer.notifications.FieldReadyNotifier
 import com.hunter.stockfarmer.notifications.WorkManagerFieldReadyScheduler
 import com.hunter.stockfarmer.ui.Hud
+import com.hunter.stockfarmer.ui.rememberPolledState
 import com.hunter.stockfarmer.ui.rewards.RewardFlights
 import com.hunter.stockfarmer.ui.rewards.RewardFlightsHost
 import com.hunter.stockfarmer.ui.screens.LaunchPresentation
@@ -137,18 +138,17 @@ class MainActivity :
                     }
                     if (launching || !persistence.isReady) {
                         key(launchId) {
-                            var isSceneBuilt by remember { mutableStateOf(false) }
-                            var framesDrawn by remember { mutableIntStateOf(0) }
                             var choosingFarm by remember { mutableStateOf(false) }
-                            LaunchedEffect(Unit) {
-                                while (true) {
-                                    isSceneBuilt = model.session.view.isSceneBuilt
-                                    framesDrawn =
-                                        model.session.view.framesDrawn
-                                            .coerceAtMost(2)
-                                    delay(RENDERER_POLL_MILLIS)
-                                }
+                            // A failed load has no scene to wait for, so it only looks now and then.
+                            val failedToLoad = !persistence.isReady && !persistence.isLoading
+                            val rendered by rememberPolledState(
+                                Unit,
+                                if (failedToLoad) FAILED_POLL_MILLIS else RENDERER_POLL_MILLIS,
+                            ) {
+                                val view = model.session.view
+                                view.isSceneBuilt to view.framesDrawn.coerceAtMost(2)
                             }
+                            val (isSceneBuilt, framesDrawn) = rendered
                             val stage =
                                 LaunchPresentation.stage(
                                     persistence.isReady,
@@ -278,6 +278,7 @@ class MainActivity :
     private companion object {
         const val MUSIC_REFRESH_MILLIS = 1_000L
         const val RENDERER_POLL_MILLIS = 16L
+        const val FAILED_POLL_MILLIS = 500L
         const val FARM_TAG = "farm"
     }
 }

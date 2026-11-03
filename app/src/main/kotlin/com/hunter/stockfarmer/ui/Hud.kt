@@ -116,7 +116,7 @@ fun Hud(
 ) {
     val context = LocalContext.current
     val play = remember(context) { PlaySettings.of(context) }
-    var hud by remember { mutableStateOf(session.hud(play.toolReach)) }
+    val hud by rememberPolledState(session, HUD_REFRESH_MILLIS) { session.hud(play.toolReach) }
     var toolRoute by remember { mutableStateOf<ToolRoute?>(null) }
     var isShowingDetailFromList by remember { mutableStateOf(false) }
     var isTimeShown by remember { mutableStateOf(false) }
@@ -127,12 +127,6 @@ fun Hud(
     var isDraggingTool by remember { mutableStateOf(false) }
     var closeRequests by remember { mutableIntStateOf(0) }
     val regions = remember { MenuInteractionRegions() }
-    LaunchedEffect(session) {
-        while (true) {
-            hud = session.hud(play.toolReach)
-            delay(HUD_REFRESH_MILLIS)
-        }
-    }
     val cast by session.casts.collectAsStateWithLifecycle()
     val sheet by session.sheets.collectAsStateWithLifecycle()
     val confirmation by session.confirmations.collectAsStateWithLifecycle()
