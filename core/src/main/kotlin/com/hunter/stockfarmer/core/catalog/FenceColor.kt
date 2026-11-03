@@ -13,6 +13,8 @@ data class FenceColor(
         val starter = all[0]
         val price = 2.0
 
-        fun named(id: String): FenceColor? = all.firstOrNull { it.id == id }
+        private val byID = all.associateBy { it.id }
+
+        fun named(id: String): FenceColor? = byID[id]
     }
 }

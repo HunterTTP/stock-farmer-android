@@ -47,6 +47,20 @@ class TractorDriverTest {
     }
 
     @Test
+    fun `a queued notice still shows after the tractor has stopped`() {
+        val rej1 = GameEvent.Rejected(Rejection.TractorBusy)
+        val rej2 = GameEvent.Rejected(Rejection.TractorCannotReachCrops)
+        assertEquals(listOf(rej1), driver.present(listOf(rej1, rej2), now))
+        assertTrue(engine.state.tractorRun == null)
+        assertTrue(driver.advance(engine, 0.016, active = true, saveBlocked = false, now.plusSeconds(1)).isEmpty())
+        assertEquals(
+            listOf(rej2),
+            driver.advance(engine, 0.016, active = true, saveBlocked = false, now.plusMillis(2300)),
+        )
+        assertTrue(driver.advance(engine, 0.016, active = true, saveBlocked = false, now.plusSeconds(5)).isEmpty())
+    }
+
+    @Test
     fun `clear resets pending notices and delay`() {
         driver.present(
             listOf(GameEvent.Rejected(Rejection.TractorBusy), GameEvent.Rejected(Rejection.TractorCannotReachCrops)),

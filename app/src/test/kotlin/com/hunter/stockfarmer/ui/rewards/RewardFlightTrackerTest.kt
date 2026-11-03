@@ -14,6 +14,74 @@ class RewardFlightTrackerTest {
     private val tile = GridPoint(2, 3)
     private val position: (GridPoint) -> RewardPoint? = { RewardPoint(it.col * 100.0, it.row * 100.0) }
 
+    private data class Shown(
+        val money: Double,
+        val xp: Int,
+        val pulses: List<Int>,
+        val flights: List<Long>,
+        val tally: HarvestTally?,
+    )
+
+    private fun RewardFlightTracker.shown() =
+        Shown(
+            displayedMoney(100.0),
+            displayedXP(10),
+            listOf(moneyPulse, xpPulse, storagePulse),
+            flights.map { it.id },
+            tally,
+        )
+
+    @Test fun `the version moves exactly when something the HUD shows moves, never for time alone`() {
+        val tracker = RewardFlightTracker()
+        tracker.launch(
+            listOf(
+                GameEvent.Planted(tile, 2.0),
+                GameEvent.Sold(tile, "beetroot", 3.0, 2),
+                GameEvent.Sold(tile, "beetroot", 4.0, 3),
+                GameEvent.Stored(tile, "beetroot", 1),
+            ),
+            0.0,
+            position,
+        )
+        var shown = tracker.shown()
+        var version = tracker.version
+        var versionChanges = 0
+        var frames = 0
+        var time = 0.0
+        while (time < 6.0) {
+            time += 1.0 / 60
+            frames++
+            tracker.tick(time)
+            val now = tracker.shown()
+            if (now !=
+                shown
+            ) {
+                assertTrue(tracker.version != version, "shown state changed at $time without a new version")
+            }
+            if (tracker.version != version) versionChanges++
+            shown = now
+            version = tracker.version
+        }
+        assertTrue(versionChanges in 1..20, "changed $versionChanges times over $frames frames")
+        val settled = tracker.version
+        repeat(100) { tracker.tick(10.0 + it) }
+        assertEquals(settled, tracker.version)
+    }
+
+    @Test fun `an idle tracker and a tick before any deadline leave the version alone`() {
+        val tracker = RewardFlightTracker()
+        val start = tracker.version
+        tracker.tick(5.0)
+        assertEquals(start, tracker.version)
+        tracker.launch(listOf(GameEvent.Planted(tile, 2.0)), 0.0, position)
+        val launched = tracker.version
+        assertTrue(launched != start)
+        tracker.tick(0.1)
+        assertEquals(launched, tracker.version)
+        tracker.clear()
+        assertTrue(tracker.version != launched)
+    }
+
     @Test fun `spending is one flight from the mean of visible paid tiles`() {
         val tracker = RewardFlightTracker()
         tracker.launch(

@@ -37,6 +37,19 @@ class PerformanceMonitorTest {
     }
 
     @Test
+    fun `measureOrRun runs the action exactly once even when it returns null`() {
+        monitor.setVisible(true)
+        var runs = 0
+        assertNull(monitor.measureOrRun(PerformanceWork.tap) { runs++.let { null } })
+        assertEquals(1, runs)
+        val none: PerformanceMonitor? = null
+        assertNull(none.measureOrRun(PerformanceWork.tap) { runs++.let { null } })
+        assertEquals(2, runs)
+        assertEquals(7, none.measureOrRun(PerformanceWork.tap) { 7 })
+        assertEquals(7, monitor.measureOrRun(PerformanceWork.tap) { 7 })
+    }
+
+    @Test
     fun `recording includes menus excludes inactive time and resets frame clock on resume`() {
         monitor.start("Test farm")
         monitor.frame()

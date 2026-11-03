@@ -12,16 +12,15 @@ import com.hunter.stockfarmer.core.model.GameState
 import com.hunter.stockfarmer.core.model.GridPoint
 import com.hunter.stockfarmer.core.model.Plot
 import com.hunter.stockfarmer.core.rules.FruitTreePhase
-import com.hunter.stockfarmer.core.rules.GrowthConditions
 import com.hunter.stockfarmer.core.rules.GrowthPhase
 import com.hunter.stockfarmer.core.rules.GrowthTimelines
 import com.hunter.stockfarmer.core.rules.Season
 import com.hunter.stockfarmer.core.rules.fullBuildings
-import com.hunter.stockfarmer.core.rules.saturatedFarmland
 import com.hunter.stockfarmer.core.rules.workshopRecipe
 import com.hunter.stockfarmer.game.SceneInteractions
 import com.hunter.stockfarmer.ui.screens.PerformanceMonitor
 import com.hunter.stockfarmer.ui.screens.PerformanceWork
+import com.hunter.stockfarmer.ui.screens.measureOrRun
 import java.time.Instant
 import kotlin.math.max
 
@@ -45,6 +44,7 @@ class FarmRenderer(
     private val fenceFolders = HashMap<String, String>()
     private val fenceSprites = HashMap<String, String>()
     private val terrain = TerrainTextures(textures)
+    private val growthConditions = GrowthConditionsCache()
     val growth = GrowthReveal()
     val interactions = SceneInteractions()
     var gridShown = true
@@ -60,11 +60,6 @@ class FarmRenderer(
     /** What the camera shows; things wholly outside it are left out. A photo shows the whole map. */
     internal var view = ViewBounds.EVERYTHING
 
-    private fun <T> measure(
-        work: PerformanceWork,
-        action: () -> T,
-    ): T = monitor?.measure(work, action) ?: action()
-
     fun draw(
         batch: SpriteBatch,
         state: GameState,
@@ -72,30 +67,30 @@ class FarmRenderer(
         ground: ((SpriteBatch, GameState, Instant) -> Unit)? = groundEffects,
     ) {
         val season = state.season
-        measure(PerformanceWork.structure) {
+        monitor.measureOrRun(PerformanceWork.structure) {
             drawGround(batch, state, season)
             drawFertilizer(batch, state)
         }
         ground?.invoke(batch, state, now)
         if (gridShown) {
-            measure(
+            monitor.measureOrRun(
                 PerformanceWork.structure,
             ) { drawGrid(batch, textures, cameraScale, maxCameraScale, view) }
         }
         standing.clear()
         growth.prune(state.trees.keys, state.rocks.keys, now)
-        measure(PerformanceWork.structure) {
+        monitor.measureOrRun(PerformanceWork.structure) {
             collectBuildings(batch, state, now)
             collectTrees(batch, state, now)
             collectRocks(batch, state, now)
             collectDecorations(batch, state, now)
             collectFences(batch, state)
         }
-        measure(PerformanceWork.crops) {
+        monitor.measureOrRun(PerformanceWork.crops) {
             collectCrops(batch, state, now)
         }
         sources.forEach { source ->
-            measure(source.work) {
+            monitor.measureOrRun(source.work) {
                 source.collect(batch, state, now, standing)
             }
         }
@@ -110,8 +105,8 @@ class FarmRenderer(
     ) {
         val grass = textures.texture("terrain", "grass", "jpg", season, smooth = true)
         val farmland = textures.texture("terrain", "farmland", "jpg", smooth = true)
-        // Finding the watered farmland scans the whole map, so a farm with none skips it.
-        val saturatedTiles = if (state.farmland.isEmpty()) emptySet() else state.saturatedFarmland
+        // Finding the watered farmland scans the whole map, so a farm with none skips it and the rest reuse the last result.
+        val saturatedTiles = if (state.farmland.isEmpty()) emptySet() else growthConditions.of(state).saturatedTiles
         val saturated = textures.texture("terrain", "farmland_saturated", "jpg", smooth = true)
         if (grass != null) {
             for (row in view.rows) {
@@ -462,7 +457,7 @@ class FarmRenderer(
         now: Instant,
     ) {
         if (state.plots.isEmpty()) return
-        val conditions = GrowthConditions(state)
+        val conditions = growthConditions.of(state)
         // Planting or harvesting changes the count; a timeline kept past a swap at the same count only costs a little memory.
         if (state.plots.size != timelinesPrunedAt) {
             livePlots.clear()

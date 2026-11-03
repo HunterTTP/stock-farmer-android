@@ -1,6 +1,7 @@
 package com.hunter.stockfarmer.farm.effects
 
 import com.hunter.stockfarmer.core.catalog.Rarity
+import com.hunter.stockfarmer.core.catalog.RockSize
 import com.hunter.stockfarmer.core.model.GameState
 import com.hunter.stockfarmer.core.model.GridPoint
 import com.hunter.stockfarmer.core.model.ReleasedButterfly
@@ -89,14 +90,14 @@ internal class InsectMotionTest {
         assertTrue(wild.done)
         val released = ButterflyMotion(flight, emptyList(), wings, UUID(1, 2), seeded(3))
         val attractions = listOf(Butterflies.Attraction(GridPoint(10, 11)))
-        released.guide(false, attractions, emptyList())
+        released.guide(false, { attractions }, { emptyList() })
         repeat(100) { released.advance(0.1, false) }
         val settled = released.point
         repeat(100) { released.advance(0.1, false) }
         assertFalse(released.done)
         assertEquals(settled.x, released.point.x, 1e-6)
         assertEquals(settled.y, released.point.y, 1e-6)
-        released.guide(true, attractions, emptyList())
+        released.guide(true, { attractions }, { emptyList() })
         released.advance(1.0, true)
         assertTrue(released.point != settled)
     }
@@ -125,5 +126,71 @@ internal class InsectMotionTest {
         state.season = Season.winter
         repeat(10) { population.update(state, 0.1, 0.0, 0.0) }
         assertTrue(population.flies.isEmpty())
+    }
+
+    private class CountingRandom(
+        seed: Long,
+    ) : RandomSource {
+        private val generator = Random(seed)
+        var draws = 0
+            private set
+
+        override fun nextLong(): Long {
+            draws++
+            return generator.nextLong()
+        }
+    }
+
+    private fun busyFarm() =
+        GameState().apply {
+            for (index in 0 until 40) rocks[GridPoint(2 + index % 20, 3 + index * 7 % 19)] = RockSize.big
+            releasedButterflies = listOf(ReleasedButterfly(UUID(7, 7), wings, GridPoint(8, 8)))
+        }
+
+    private fun darknessAt(step: Int) = if (step / 300 % 2 == 0) 0.0 else 1.0
+
+    @Test
+    fun `attractions are built only when a butterfly needs them and the result is unchanged`() {
+        val state = busyFarm()
+        val lazyRandom = CountingRandom(31)
+        val eagerRandom = CountingRandom(31)
+        var built = 0
+        val lazyPopulation =
+            ButterflyPopulation(lazyRandom) { s ->
+                built++
+                Butterflies.attractions(s)
+            }
+        val eager = Butterflies.attractions(state)
+        val eagerPopulation = ButterflyPopulation(eagerRandom) { eager }
+        val updates = 3000
+        for (step in 0 until updates) {
+            val darkness = darknessAt(step)
+            lazyPopulation.update(state, 0.1, darkness, 0.0)
+            eagerPopulation.update(state, 0.1, darkness, 0.0)
+            assertEquals(eagerPopulation.flies.size, lazyPopulation.flies.size)
+            for ((a, b) in eagerPopulation.flies.zip(lazyPopulation.flies)) {
+                assertEquals(a.point, b.point)
+                assertEquals(a.age, b.age)
+                assertEquals(a.releasedID, b.releasedID)
+            }
+        }
+        assertEquals(eagerRandom.draws, lazyRandom.draws)
+        assertTrue(built > 0)
+        assertTrue(built < updates / 10, "built $built times in $updates updates")
+    }
+
+    @Test
+    fun `a quiet frame builds nothing and draws only the spawn roll`() {
+        val state = GameState().apply { season = Season.winter }
+        val random = CountingRandom(5)
+        var built = 0
+        val population =
+            ButterflyPopulation(random) {
+                built++
+                emptyList()
+            }
+        repeat(100) { population.update(state, 0.1, 0.0, 0.0) }
+        assertEquals(0, built)
+        assertEquals(100, random.draws)
     }
 }

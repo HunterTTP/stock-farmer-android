@@ -84,6 +84,7 @@ class ButterflyLayer(
     private val clock = EffectClock()
     private val population = ButterflyPopulation()
     private val color = Color()
+    private val region = TextureRegion()
 
     fun catchable(tile: GridPoint): Catchable? =
         population.flies.firstOrNull { it.alpha > 0.4 && it.tile == tile }?.let {
@@ -123,7 +124,7 @@ class ButterflyLayer(
                         }
                         val rows = ButterflyArt.frames[fly.frame]
                         val texture =
-                            textures.generated("effects/butterfly/${fly.frame}", 7, 5) { x, y ->
+                            textures.generated(ButterflyArt.keys[fly.frame], 7, 5) { x, y ->
                                 when (rows[y][x]) {
                                     'W' -> rgba(255, 255, 255)
                                     'B' -> rgba(10, 10, 13)
@@ -133,7 +134,8 @@ class ButterflyLayer(
                         batch.color = color
                         val x = (fly.point.x - 10.5).toFloat()
                         val y = (fly.point.y - 7.5).toFloat()
-                        batch.draw(TextureRegion(texture), x, y, 10.5f, 7.5f, 21f, 15f, 1f, 1f, fly.facing.toFloat())
+                        region.setRegion(texture)
+                        batch.draw(region, x, y, 10.5f, 7.5f, 21f, 15f, 1f, 1f, fly.facing.toFloat())
                     }
                 }
         }
@@ -141,6 +143,8 @@ class ButterflyLayer(
 }
 
 internal object ButterflyArt {
+    val keys = Array(3) { "effects/butterfly/$it" }
+
     val frames =
         listOf(
             listOf("WW...WW", "WWW.WWW", "WWWBWWW", ".WWBWW.", "..WBW.."),

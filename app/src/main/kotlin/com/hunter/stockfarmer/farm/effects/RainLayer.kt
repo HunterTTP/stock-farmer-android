@@ -169,11 +169,15 @@ class SeasonSky(
                 view.width.toFloat(),
                 view.height.toFloat(),
             )
+            // Loaded even by day, so the first dusk does not stall on decoding it.
             val space = textures.texture("backgrounds", "space", "jpg", smooth = true) ?: return@preserve
+            val alpha = darkness(state, now).toFloat()
+            // At alpha 0 the picture adds nothing to what is under it.
+            if (alpha <= 0f) return@preserve
             val scale = max(view.width / space.width, view.height / space.height)
             val width = space.width * scale
             val height = space.height * scale
-            batch.setColor(1f, 1f, 1f, darkness(state, now).toFloat())
+            batch.setColor(1f, 1f, 1f, alpha)
             batch.draw(
                 space,
                 (camera.position.x - width / 2).toFloat(),

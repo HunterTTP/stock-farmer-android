@@ -1,5 +1,6 @@
 package com.hunter.stockfarmer
 
+import android.media.AudioManager
 import android.os.Bundle
 import android.view.View
 import androidx.activity.SystemBarStyle
@@ -87,6 +88,8 @@ class MainActivity :
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge(navigationBarStyle = SystemBarStyle.dark(AndroidColor.BLACK))
+        // libGDX audio is off, and it was what routed the volume keys to the music stream.
+        volumeControlStream = AudioManager.STREAM_MUSIC
         sound = SoundCenter(this)
         haptics = Haptics(window.decorView)
         notifications = FieldReadyNotificationPermission(this, model.notificationPolicy)

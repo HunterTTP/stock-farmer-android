@@ -1,5 +1,6 @@
 package com.hunter.stockfarmer.farm.animals
 
+import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.g2d.TextureRegion
 import com.hunter.stockfarmer.core.model.GameState
@@ -27,6 +28,11 @@ internal class FishSource(
         var orientation = fishOrientation(kind, Facing.LEFT, false)
         var fromAngle = orientation.degrees
         var turned = appeared
+        private var region: TextureRegion? = null
+
+        /** The whole picture as a region, kept so a frame allocates none. */
+        fun regionOf(texture: Texture): TextureRegion =
+            region?.takeIf { it.texture === texture } ?: TextureRegion(texture).also { region = it }
     }
 
     private val nodes = mutableMapOf<GridPoint, Node>()
@@ -69,7 +75,7 @@ internal class FishSource(
                     try {
                         batch.setColor(0f, 0f, 0f, 0.3f * (age / 0.8).coerceIn(0.0, 1.0).toFloat())
                         batch.draw(
-                            TextureRegion(texture),
+                            node.regionOf(texture),
                             x,
                             y,
                             size / 2,

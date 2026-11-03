@@ -176,3 +176,9 @@ class PerformanceMonitor(
         state = state.copy(liveFPS = null, liveFrameMS = null, liveUpdateMS = null)
     }
 }
+
+/** Runs [action] once, timed under [work] when there is a monitor; a null result never makes it run again. */
+fun <T> PerformanceMonitor?.measureOrRun(
+    work: PerformanceWork,
+    action: () -> T,
+): T = if (this == null) action() else measure(work, action)

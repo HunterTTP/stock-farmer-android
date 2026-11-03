@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.withTransform
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntSize
@@ -37,6 +38,7 @@ import com.hunter.stockfarmer.farm.effects.WeatherLook
 import com.hunter.stockfarmer.farm.effects.WeatherPresentation
 import com.hunter.stockfarmer.farm.effects.snowAlpha
 import com.hunter.stockfarmer.game.GameSession
+import kotlinx.coroutines.delay
 import java.time.Instant
 import kotlin.math.hypot
 import kotlin.math.roundToInt
@@ -49,9 +51,6 @@ internal class WeatherFrame(
 /** Holds one [WeatherFrame] that is re-published each frame so only the draw phase observes the change. */
 internal val LocalFarmWeather =
     staticCompositionLocalOf<State<WeatherFrame>> { mutableStateOf(WeatherFrame(), neverEqualPolicy()) }
-
-/** How often the game state is sampled; the rain eases over minutes, so tenths of a second are invisible. */
-private const val SAMPLE_SECONDS = 0.25
 
 /** Remains mounted when fishing opens. Both canvases use the same particles at the same screen positions. */
 @Composable
@@ -68,27 +67,33 @@ fun FarmWeather(
     LaunchedEffect(session, owner, density) {
         owner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
             var last: Long? = null
-            var sampled = SAMPLE_SECONDS
+            val cadence = WeatherCadence()
             var look = WeatherLook(0.0, false, false)
             var showing = false
+
+            fun sample() {
+                val now = Instant.now()
+                look =
+                    session.read {
+                        presentation.update(
+                            now,
+                            Weather.rainAmount(now, it.clockOffset),
+                            it.season == Season.winter,
+                            Wind.pushesRight(now, it.clockOffset),
+                        )
+                    }
+            }
             while (true) {
+                if (cadence.canSleep(showing, look.amount)) {
+                    // Nothing falls and nothing will before the next sample, so skip the frames in between.
+                    delay(SAMPLE_MILLIS)
+                    last = null
+                    cadence.slept()
+                }
                 withFrameNanos { time ->
                     val elapsed = last?.let { ((time - it) / 1e9).coerceIn(0.0, 0.1) } ?: 0.0
                     last = time
-                    sampled += elapsed
-                    if (sampled >= SAMPLE_SECONDS) {
-                        sampled = 0.0
-                        val now = Instant.now()
-                        look =
-                            session.read {
-                                presentation.update(
-                                    now,
-                                    Weather.rainAmount(now, it.clockOffset),
-                                    it.season == Season.winter,
-                                    Wind.pushesRight(now, it.clockOffset),
-                                )
-                            }
-                    }
+                    if (cadence.advance(elapsed)) sample()
                     val size = dimensions.value
                     val count =
                         weather.motion.update(
@@ -107,7 +112,8 @@ fun FarmWeather(
     }
     CompositionLocalProvider(LocalFarmWeather provides frame) {
         Box(Modifier.fillMaxSize().onSizeChanged { dimensions.value = it }) {
-            Canvas(Modifier.fillMaxSize()) { drawFarmWeather(frame.value) }
+            // Its own layer, so a flake moving re-records this canvas and not the HUD sharing the parent layer.
+            Canvas(Modifier.fillMaxSize().graphicsLayer()) { drawFarmWeather(frame.value) }
             content()
         }
     }
