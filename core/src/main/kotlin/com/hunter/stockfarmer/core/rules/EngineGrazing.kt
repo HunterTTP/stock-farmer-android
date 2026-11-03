@@ -169,7 +169,7 @@ internal fun GameEngine.recordFavoriteEaten(animal: AnimalRef) {
     state.buildings[animal.home]?.let { recordQuestProgress(QuestGoal.Feed(it), 1) }
 }
 
-private fun GameEngine.edibleFavorite(
+internal fun GameEngine.edibleFavorite(
     point: GridPoint,
     crop: Crop,
     now: Instant,
@@ -184,30 +184,17 @@ private fun GameEngine.edibleFavorite(
 internal fun GameEngine.directionToFavoriteCrop(
     animal: AnimalRef,
     now: Instant,
+): GridPoint? = directionToFavoriteCrop(animal, animalWalk(now))
+
+internal fun GameEngine.directionToFavoriteCrop(
+    animal: AnimalRef,
+    walk: AnimalWalk,
 ): GridPoint? {
-    if (!canGraze(animal, now)) return null
+    // Only land animals eat crops: a duck never gets past this.
+    if (!canGraze(animal, walk.now)) return null
     val current = position(animal) ?: return null
     val favorite = favoriteCrop(animal) ?: return null
-    val conditions = GrowthConditions(state)
-    val food =
-        state.plots.keys
-            .filter { edibleFavorite(it, favorite, now, conditions) }
-            .toSet()
-    if (food.isEmpty()) return null
-    val seen = mutableSetOf(current)
-    val queue = mutableListOf<Pair<GridPoint, GridPoint?>>(current to null)
-    var index = 0
-    while (index < queue.size) {
-        val (point, firstStep) = queue[index]
-        index += 1
-        if (point in food || point.neighbors.any { it in food }) return firstStep
-        for (neighbor in point.neighbors) {
-            if (canStand(neighbor, animal) && seen.add(neighbor)) {
-                queue += neighbor to (firstStep ?: GridPoint(neighbor.row - current.row, neighbor.col - current.col))
-            }
-        }
-    }
-    return null
+    return walk.firstStepToward(favorite, current)
 }
 
 private val AnimalRef.kindOrder: Int

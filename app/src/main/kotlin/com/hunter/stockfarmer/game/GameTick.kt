@@ -11,6 +11,7 @@ import com.hunter.stockfarmer.core.rules.NightPulse
 import com.hunter.stockfarmer.core.rules.Season
 import com.hunter.stockfarmer.core.rules.Weather
 import com.hunter.stockfarmer.core.rules.addPlayTime
+import com.hunter.stockfarmer.core.rules.animalWalk
 import com.hunter.stockfarmer.core.rules.beginNewDayIfDue
 import com.hunter.stockfarmer.core.rules.eatFavoriteCrops
 import com.hunter.stockfarmer.core.rules.growTrees
@@ -174,10 +175,11 @@ internal fun walkAnimals(
         state.pets.keys.map { AnimalRef.Pet(it) } +
             state.coops.flatMap { (coop, value) -> value.chickens.map { AnimalRef.Chicken(coop, it.id) } } +
             state.herds.flatMap { (home, herd) -> herd.animals.map { AnimalRef.Livestock(home, it.id) } }
+    val walk = engine.animalWalk(now)
     for (animal in animals) {
         if (isNudging(animal)) continue
         if (random.nextUnit() > STEP_CHANCE) continue
-        engine.wanderDirection(animal, now, random)?.let { engine.move(animal, it) }
+        engine.wanderDirection(animal, random, walk)?.let { engine.move(animal, it) }
     }
 }
 

@@ -12,15 +12,17 @@ import com.hunter.stockfarmer.core.util.RandomSource
 import com.hunter.stockfarmer.core.util.advancedBy
 import com.hunter.stockfarmer.core.util.randomElement
 import com.hunter.stockfarmer.core.util.secondsSince
+import java.time.Duration
 import java.time.Instant
 import kotlin.math.max
 import kotlin.math.min
 
 /** How long a herd is brought up to date after the game has been closed; anything longer is treated as this long. */
-private const val LONGEST_HERD_CATCH_UP = 3.0 * 24 * 60 * 60
+internal const val LONGEST_HERD_CATCH_UP = 3.0 * 24 * 60 * 60
 
 /** Growth and production are worked out in steps of this size, so meal expiry and maturity boundaries are respected. */
-private const val HERD_STEP = 5.0
+internal const val HERD_STEP = 5.0
+private const val HERD_STEP_NANOS = 5_000_000_000L
 
 fun GameEngine.animals(home: GridPoint): List<Livestock> = state.herds[home]?.animals ?: emptyList()
 
@@ -63,13 +65,57 @@ private fun GameEngine.advanceHerd(
         time = minOf(now, time.advancedBy(HERD_STEP))
         growHerd(origin, time.secondsSince(previous), time)
         events += bearDueBabies(origin, home, time, using)
+        time = afterQuietSteps(origin, home, time, now)
     } while (time < now)
     state.herds[origin]?.let { state.herds[origin] = it.copy(processedAt = now) }
     return events
 }
 
+/**
+ * Where the steps after [time] would leave the herd as it is, the last of those steps; [time] itself if the next is not one
+ * of them. Such a step overlaps no meal and has no birth due, so it draws no random number and changes nothing a later step
+ * reads: a full home's next birth time is set again by the step that follows, and the step that reaches [now] always runs.
+ * The time stays on the grid of whole steps, so the steps left are the very ones stepping would have reached.
+ */
+private fun GameEngine.afterQuietSteps(
+    origin: GridPoint,
+    home: LivestockHome,
+    time: Instant,
+    now: Instant,
+): Instant {
+    val herd = state.herds[origin] ?: return time
+    var quietUntil = now
+    for (animal in herd.animals) {
+        val meal = animal.meal ?: continue
+        // A meal that is over never matters again; one still underway or to come does from when it starts.
+        if (meal.endsAt > time) quietUntil = minOf(quietUntil, meal.eatenAt)
+    }
+    nextBirthChance(origin, home, herd, time)?.let { quietUntil = minOf(quietUntil, it) }
+    if (quietUntil <= time) return time
+    // The steps that end strictly before the moment things can change.
+    val quietSteps = (Duration.between(time, quietUntil).toNanos() - 1) / HERD_STEP_NANOS
+    return time.plusNanos(quietSteps * HERD_STEP_NANOS)
+}
+
+/** When a herd's next birth could happen; null if none can before it has been brought up to date, nothing that decides it changing meanwhile. */
+private fun GameEngine.nextBirthChance(
+    origin: GridPoint,
+    home: LivestockHome,
+    herd: Herd,
+    time: Instant,
+): Instant? {
+    if (home == LivestockHome.pond) {
+        val layout = state.waterLayout
+        val body = layout.bodyIndexByTile[origin] ?: return null
+        return if (layout.bodies[body].interior.isEmpty()) null else herd.nextBirthAt
+    }
+    if (herd.animals.size >= homeCapacity(origin)) return null
+    // A baby still due after the step just taken has no tile to appear on, and will have none.
+    return herd.nextBirthAt.takeIf { it > time }
+}
+
 /** Applies only the meal time overlapping this step, to growth first and then production. */
-private fun GameEngine.growHerd(
+internal fun GameEngine.growHerd(
     origin: GridPoint,
     step: Double,
     time: Instant,
@@ -97,7 +143,7 @@ private fun GameEngine.growHerd(
         )
 }
 
-private fun GameEngine.bearDueBabies(
+internal fun GameEngine.bearDueBabies(
     origin: GridPoint,
     home: LivestockHome,
     time: Instant,

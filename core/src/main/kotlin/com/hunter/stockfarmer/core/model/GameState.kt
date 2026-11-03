@@ -240,9 +240,9 @@ class GameState {
 
     @Transient private var buildingIndexByBottomTile: Map<GridPoint, Int> = emptyMap()
 
-    @Transient private var treeOriginByTile: Map<GridPoint, GridPoint> = emptyMap()
+    @Transient private var treeOriginByTile: MutableMap<GridPoint, GridPoint> = mutableMapOf()
 
-    @Transient private var treeOriginByBottomTile: Map<GridPoint, GridPoint> = emptyMap()
+    @Transient private var treeOriginByBottomTile: MutableMap<GridPoint, GridPoint> = mutableMapOf()
 
     @Transient private var decorationOriginByTile: Map<GridPoint, GridPoint> = emptyMap()
 
@@ -319,6 +319,25 @@ class GameState {
         placedTrees = trees.toMutableMap()
         indexTrees()
     }
+
+    /**
+     * A tree grows, as [removeTree] then [putTree] would have it, without working every tree out again. Its new ground and
+     * bottom row take in all of its old, so whether a tree stands on a tile stays right and every tile names a tree that
+     * does; but where trees overlap it may not be the one in front, so a run of these must end with [settleTrees].
+     */
+    internal fun growTreeUnsettled(
+        from: GridPoint,
+        to: GridPoint,
+        grown: PlacedTree,
+    ) {
+        placedTrees.remove(from)
+        placedTrees[to] = grown
+        val ground = grown.tree.footprint(to)
+        for (tile in ground) treeOriginByTile[tile] = to
+        for (tile in ground.bottomRow) treeOriginByBottomTile[tile] = to
+    }
+
+    internal fun settleTrees() = indexTrees()
 
     fun putDecoration(
         origin: GridPoint,

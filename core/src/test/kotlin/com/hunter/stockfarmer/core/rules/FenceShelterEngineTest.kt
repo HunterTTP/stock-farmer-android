@@ -315,13 +315,13 @@ class FenceShelterEngineTest {
         val engine = shelterEngine(14.5 * 60, base)
         val pet = AnimalRef.Pet(house)
         for (row in 0 until 48) engine.state.fences[GridPoint(row, 30)] = "wood"
-        val step = engine.directionToShelter(pet, GridPoint(21, 40))!!
+        val step = engine.directionToShelter(pet, GridPoint(21, 40), engine.animalWalk(base))!!
         assertEquals(1, abs(step.row) + abs(step.col))
         // The way home is long, but following it step by step gets there.
         var spot = GridPoint(21, 40)
         var steps = 0
         while (spot != front && steps++ < 200) {
-            val way = engine.directionToShelter(pet, spot)!!
+            val way = engine.directionToShelter(pet, spot, engine.animalWalk(base))!!
             spot = GridPoint(spot.row + way.row, spot.col + way.col)
         }
         assertEquals(front, spot)
@@ -342,6 +342,6 @@ class FenceShelterEngineTest {
                 engine.state.fences[tile] = "wood"
             }
         }
-        assertNull(engine.directionToShelter(AnimalRef.Pet(house), GridPoint(30, 40)))
+        assertNull(engine.directionToShelter(AnimalRef.Pet(house), GridPoint(30, 40), engine.animalWalk(base)))
     }
 }

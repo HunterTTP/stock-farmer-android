@@ -97,20 +97,21 @@ fun GameEngine.growTrees(now: Instant): Boolean {
             val ground = next.footprint(newOrigin)
             val own = placed.tree.footprint(position).toSet()
             if (!ground.all { it in own || isBareGround(it) } || blocksAHomesFront(ground)) break
-            state.removeTree(position)
-            placed =
+            val grown =
                 PlacedTree(
                     next,
                     placed.color,
                     placed.grewAt.advancedBy(Tree.growthInterval),
                     placed.isNaturallyGenerated,
                 )
+            state.growTreeUnsettled(position, newOrigin, grown)
+            placed = grown
             position = newOrigin
-            state.putTree(position, placed)
             if (!placed.isNaturallyGenerated) noteTerrain(CareerRecord.terrainID(next, placed.color))
             didGrow = true
         }
     }
+    if (didGrow) state.settleTrees()
     return didGrow
 }
 
