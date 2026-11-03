@@ -218,16 +218,9 @@ class GamePersistence(
                 }
             slot = startup.slot
             session.act {
-                it.state = startup.engine.state
+                it.open(startup.engine.state)
                 it.countCurrentUnlocksAsSeen()
-                session.wildGrowth.clear()
-                session.tractor.clear()
-                session.sceneFeedback.clear()
-                session.celebrations.clear()
-                session.beginDay(null)
-                session.casts.value = null
-                session.sheets.value = null
-                session.confirmations.value = null
+                session.resetForNewFarm()
             }
             leftAt = startup.preparedAt
             if (active) holdClock()

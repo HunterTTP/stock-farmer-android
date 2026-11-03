@@ -132,6 +132,27 @@ class GameSession(
     val sceneFeedback = FarmSceneFeedback()
     val wildGrowth = WildGrowthDriver()
     val tractor = TractorDriver()
+    val animalGestures = AnimalSceneGestures()
+
+    /** Counts the farms opened, so a clock that runs on its own can tell its farm has been replaced. */
+    var farmGeneration = 0L
+        private set
+
+    /** Drops everything under way on the farm being left, in one step with the next farm going into play. */
+    fun resetForNewFarm() =
+        act {
+            wildGrowth.clear()
+            tractor.clear()
+            sceneFeedback.clear()
+            celebrations.clear()
+            animalGestures.clear()
+            beginDay(null)
+            casts.value = null
+            sheets.value = null
+            confirmations.value = null
+            farmGeneration++
+            Unit
+        }
 
     @Volatile var isActive = true
 
