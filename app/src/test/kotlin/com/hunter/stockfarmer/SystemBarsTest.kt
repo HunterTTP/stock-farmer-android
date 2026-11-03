@@ -15,6 +15,7 @@ internal class SystemBarsTest {
     fun `the activity asks for a dark black navigation bar and a black backdrop`() {
         val activity = File("src/main/kotlin/com/hunter/stockfarmer/MainActivity.kt").readText()
         assertTrue("navigationBarStyle = SystemBarStyle.dark(AndroidColor.BLACK)" in activity)
-        assertTrue(".background(Color.Black)" in activity)
+        val root = File("src/main/kotlin/com/hunter/stockfarmer/GameRoot.kt").readText()
+        assertTrue(".background(Color.Black)" in root)
     }
 }

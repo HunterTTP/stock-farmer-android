@@ -34,6 +34,8 @@ class UnlockTrackingTest {
     @Test
     fun `initial counting is once per farm and later unlocks stay new until opened`() {
         val engine = engine()
+        // A session counts what is unlocked as seen when a farm is opened.
+        engine.countCurrentUnlocksAsSeen()
         val crop = Crop.all.first { it.unlockLevel > 1 }
         val item = ShopItem.Seed(crop.id)
         assertFalse(engine.isNew(ShopItem.Seed(Crop.starter.id)))
