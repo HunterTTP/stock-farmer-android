@@ -1,13 +1,18 @@
 package com.hunter.stockfarmer.ui.hud
 
 import com.hunter.stockfarmer.core.catalog.Crop
+import com.hunter.stockfarmer.core.catalog.FenceColor
 import com.hunter.stockfarmer.core.catalog.HarvestTool
+import com.hunter.stockfarmer.core.catalog.StorageItem
 import com.hunter.stockfarmer.core.model.GameState
 import com.hunter.stockfarmer.core.model.Lesson
 import com.hunter.stockfarmer.core.model.ShopItem
 import com.hunter.stockfarmer.core.rules.GameEngine
 import com.hunter.stockfarmer.core.rules.LevelRules
 import com.hunter.stockfarmer.core.rules.Rejection
+import com.hunter.stockfarmer.core.rules.equip
+import com.hunter.stockfarmer.core.rules.isPlacingFromStorage
+import com.hunter.stockfarmer.core.rules.selectFertilizer
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -81,6 +86,53 @@ class ToolPaletteTest {
         val fertilize = ToolPalette.dropdowns(state, HudTool.Tilling).single()
         assertEquals("Fertilizer", fertilize.value)
         assertNull(fertilize.stock)
+    }
+
+    @Test
+    fun `a tool setting things down from storage lists what is in storage instead of its usual choices`() {
+        val state = GameState().apply { storage[StorageItem.Fertilizer.id] = 3 }
+        val engine = GameEngine(state)
+        engine.pickUp(HudTool.Tilling)
+        val usual = ToolPalette.dropdowns(state, HudTool.Tilling).single()
+        assertTrue(usual.choices.size > 1 && usual.choices.none { it.id.startsWith("stored-") })
+        assertTrue(engine.equip(StorageItem.Fertilizer))
+        assertTrue(engine.isPlacingFromStorage)
+        val stored = ToolPalette.dropdowns(state, HudTool.Tilling).single()
+        assertEquals(listOf("stored-${StorageItem.Fertilizer.id}"), stored.choices.map { it.id })
+        assertEquals(3, stored.stock)
+        assertTrue(stored.choices.single().isSelected)
+        // Another tool, which is not the one in hand, still lists its own choices.
+        assertTrue(
+            ToolPalette
+                .dropdowns(state, HudTool.Planting)
+                .single()
+                .choices
+                .none { it.id.startsWith("stored-") },
+        )
+        engine.selectFertilizer()
+        assertEquals(
+            usual.choices.map { it.id },
+            ToolPalette
+                .dropdowns(state, HudTool.Tilling)
+                .single()
+                .choices
+                .map { it.id },
+        )
+    }
+
+    @Test
+    fun `decorate lists decorations, and only what is stored once it sets down from storage`() {
+        val fence = StorageItem.Fence(FenceColor.starter)
+        val state = GameState().apply { storage[fence.id] = 2 }
+        val engine = GameEngine(state)
+        engine.pickUp(HudTool.Decorating)
+        val usual = ToolPalette.dropdowns(state, HudTool.Decorating).first()
+        assertTrue(usual.choices.isNotEmpty() && usual.choices.none { it.id.startsWith("stored-") })
+        assertTrue(engine.equip(fence))
+        val stored = ToolPalette.dropdowns(state, HudTool.Decorating).first()
+        assertEquals(listOf("stored-${fence.id}"), stored.choices.map { it.id })
+        assertEquals(2, stored.stock)
+        assertEquals(fence.name, stored.value)
     }
 
     @Test

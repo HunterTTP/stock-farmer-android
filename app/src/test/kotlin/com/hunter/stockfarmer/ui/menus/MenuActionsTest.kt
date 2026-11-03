@@ -13,6 +13,7 @@ import com.hunter.stockfarmer.core.model.dollars
 import com.hunter.stockfarmer.core.persistence.GameStateJson
 import com.hunter.stockfarmer.core.rules.Butterflies
 import com.hunter.stockfarmer.core.rules.GameEngine
+import com.hunter.stockfarmer.core.rules.GameEvent
 import com.hunter.stockfarmer.core.rules.Rejection
 import com.hunter.stockfarmer.core.rules.isEquipped
 import com.hunter.stockfarmer.core.rules.selectedBuilding
@@ -147,9 +148,10 @@ class MenuActionsTest {
                 },
             )
         val session = GameSession(engine)
-        val message = session.act { MenuActions.transact(it, StorageItem.Egg, 3, sell = true) }
+        val outcome = session.act { MenuActions.transact(it, StorageItem.Egg, 3, sell = true) }
         val expected = StorageItem.Egg.sellValue * 3
-        assertEquals("Sold 3 Egg for ${expected.dollars}", message)
+        assertEquals("Sold 3 Egg for ${expected.dollars}", outcome.message)
+        assertEquals(listOf(GameEvent.StorageSold(StorageItem.Egg.id, 3, expected)), outcome.events)
         assertEquals(expected, session.read { it.money })
         assertEquals(2, session.read { it.storage[StorageItem.Egg.id] })
     }
@@ -165,8 +167,8 @@ class MenuActionsTest {
                     storage[butterfly.id] = 2
                 },
             )
-        assertEquals("Trashed 3 Log", MenuActions.transact(engine, StorageItem.Log, 3, sell = false))
-        assertEquals("Released 2 Shifting Butterfly", MenuActions.transact(engine, butterfly, 2, sell = false))
+        assertEquals("Trashed 3 Log", MenuActions.transact(engine, StorageItem.Log, 3, sell = false).message)
+        assertEquals("Released 2 Shifting Butterfly", MenuActions.transact(engine, butterfly, 2, sell = false).message)
         assertTrue(engine.state.storage.isEmpty())
         assertEquals(0.0, engine.state.money)
         assertEquals("Release", butterfly.discardTitle)
@@ -178,9 +180,10 @@ class MenuActionsTest {
     fun `stale quantities and unsellable items leave storage and money alone`() {
         val engine = GameEngine(GameState().apply { storage[StorageItem.Log.id] = 2 })
         val before = GameStateJson.encode(engine.state)
-        assertNull(MenuActions.transact(engine, StorageItem.Log, 1, sell = true))
+        assertNull(MenuActions.transact(engine, StorageItem.Log, 1, sell = true).message)
+        assertTrue(MenuActions.transact(engine, StorageItem.Log, 1, sell = true).events.isEmpty())
         listOf(-1, 0, 3).forEach { quantity ->
-            assertNull(MenuActions.transact(engine, StorageItem.Log, quantity, sell = false))
+            assertNull(MenuActions.transact(engine, StorageItem.Log, quantity, sell = false).message)
         }
         assertEquals(before, GameStateJson.encode(engine.state))
         assertEquals(PlayMode.plant, engine.state.mode)

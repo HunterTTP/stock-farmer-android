@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import com.hunter.stockfarmer.core.feedback.HapticCue
+import com.hunter.stockfarmer.core.feedback.SoundCue
 import com.hunter.stockfarmer.game.GameSession
 import com.hunter.stockfarmer.ui.PhotoSaver
 import kotlin.concurrent.thread
@@ -33,7 +34,10 @@ internal fun takeFarmPhoto(
     fun save(png: ByteArray) =
         thread {
             val saved = PhotoSaver.save(context, png)
-            if (saved) session.haptic(HapticCue.Success)
+            if (saved) {
+                session.haptic(HapticCue.Success)
+                session.cue(SoundCue.photoSaved)
+            }
             say(if (saved) "Farm photo saved" else "The farm photo could not be saved")
         }
 

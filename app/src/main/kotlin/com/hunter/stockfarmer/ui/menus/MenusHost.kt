@@ -197,8 +197,10 @@ fun MenusHost(
             currentLesson = state.currentLesson,
             onDismiss = { transaction = null },
             onConfirm = { quantity ->
-                message = session.act { MenuActions.transact(it, action.item, quantity, action.sell) }
+                val outcome = session.act { MenuActions.transact(it, action.item, quantity, action.sell) }
+                message = outcome.message
                 messageIsRejection = false
+                session.publish(outcome.events)
                 state = session.menuState(openMenu)
                 transaction = null
             },

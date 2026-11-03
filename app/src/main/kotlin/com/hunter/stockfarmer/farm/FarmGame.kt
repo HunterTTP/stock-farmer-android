@@ -24,10 +24,12 @@ import com.hunter.stockfarmer.farm.effects.effectLayers
 import com.hunter.stockfarmer.game.GameSession
 import com.hunter.stockfarmer.game.PlacementDrag
 import com.hunter.stockfarmer.game.ViewSnapshot
+import com.hunter.stockfarmer.game.WATERING_INTERVAL_SECONDS
 import com.hunter.stockfarmer.game.hold
 import com.hunter.stockfarmer.game.preview
 import com.hunter.stockfarmer.game.touch
 import com.hunter.stockfarmer.game.touchAnimalAt
+import com.hunter.stockfarmer.game.waterWithSprinklers
 import com.hunter.stockfarmer.ui.screens.PerformanceMonitor
 import com.hunter.stockfarmer.ui.screens.PerformanceWork
 import com.hunter.stockfarmer.ui.screens.PlaySettings
@@ -55,6 +57,7 @@ class FarmGame(
     private val touch = Vector3()
     private val tilePreview = TilePreview()
     private val placementDrag = PlacementDrag(session)
+    private var wateringDue = 0f
 
     override fun create() {
         batch = CountingSpriteBatch()
@@ -155,6 +158,7 @@ class FarmGame(
                 }
                 if (session.isActive && !session.isSaveBlocked) session.wildGrowth.advance(it, now)
             }
+            monitor.measureOrRun(PerformanceWork.watering) { waterSoil(now) }
             session.sceneFeedback.drainFlashes().forEach { tilePreview.flash(it.tiles, it.allowed, it.at) }
             session.sceneFeedback.drainInteractions().forEach { renderer.interactions.interact(it) }
             session.read { state ->
@@ -167,6 +171,7 @@ class FarmGame(
             renderer.cameraScale = screenScale
             renderer.maxCameraScale = FarmCamera.MAX_SCALE
             renderer.view = visibleBounds()
+            effects.sprinklers.view = renderer.view
             session.read {
                 effects.nightPulse.sync(session.nightPulse, session.nightPulseRevision)
                 effects.draw(EffectPhase.BACKGROUND, batch, it, now, camera)
@@ -183,6 +188,14 @@ class FarmGame(
             session.view.drawnSprites = batch.sprites
             session.view.framesDrawn++
         }
+    }
+
+    /** Moves the land the sprinklers water on, a few times a second. */
+    private fun waterSoil(now: Instant) {
+        wateringDue += Gdx.graphics.deltaTime
+        if (wateringDue < WATERING_INTERVAL_SECONDS) return
+        wateringDue = 0f
+        if (session.isActive && !session.isSaveBlocked) session.waterWithSprinklers(now)
     }
 
     /** Read on the GL thread so settings changes reach both the next frame and any photo requested before it. */

@@ -1,5 +1,6 @@
 package com.hunter.stockfarmer.farm.animals
 
+import com.hunter.stockfarmer.farm.effects.WaterDrops
 import kotlin.math.hypot
 import kotlin.random.Random
 
@@ -8,10 +9,10 @@ internal data class WakePixel(
     val y: Float,
     val size: Float,
     val alpha: Float,
-    val spray: Boolean,
+    val tint: Int,
 )
 
-/** Six foam pixels per puff, every 0.07 seconds, drifting away for 0.7 seconds. All distances are world points. */
+/** Six foam pixels per puff, every 0.07 seconds, drifting away for 0.7 seconds, in the foam and spray colors of [WaterDrops]. */
 internal class DuckWake(
     seed: Int,
 ) {
@@ -25,7 +26,7 @@ internal class DuckWake(
         val swayY: Float,
         val size: Float,
         val alpha: Float,
-        val spray: Boolean,
+        val tint: Int,
     )
 
     private val random = Random(seed)
@@ -57,7 +58,7 @@ internal class DuckWake(
                 pixel.y + pixel.dy * (first + second) / 2 + pixel.swayY * (first - second),
                 pixel.size,
                 pixel.alpha * (1 - age),
-                pixel.spray,
+                pixel.tint,
             )
         }
     }
@@ -99,9 +100,9 @@ internal class DuckWake(
                         (-dy * reach + sideY * sign * spread) * 100,
                         sideX / sideLength * stray,
                         sideY / sideLength * stray,
-                        random.nextDouble(1.5, 3.5).toFloat(),
+                        WaterDrops.SIZE.toFloat(),
                         random.nextDouble(0.7, 0.95).toFloat(),
-                        random.nextBoolean(),
+                        random.nextInt(WaterDrops.wake.size),
                     )
             }
         }

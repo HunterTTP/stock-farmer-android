@@ -3,6 +3,13 @@
 - If renaming, deleting or restoring a farm fails, the message now stays up and says what went wrong, and the reason a farm
   could not be opened no longer disappears.
 - Switching farms no longer carries a day summary, an animal's walk or a half-placed building over to the next farm.
+- Finished quests are turned in the moment you complete them, from the farm as well as from menus, with the banner, XP and any level-up at once.
+- Selling or throwing away from Storage now plays its sound and haptic and sends the reward flights, like selling anywhere else.
+- Sprinklers now spray: drops arc out of the tips into every tile they water, with a blue mist behind them, every minute (not in rain; a fountain never stops), and the land they water soaks in tile by tile.
+- The wake behind a swimming duck is made of the same pale foam and water-blue pixels as the sprinkler drops.
+- Menus and sheets make their slide-in and slide-out sounds, the animal menu and confirmation questions make the popup sound, and saving a farm photo plays its chime.
+- While you set things down from Storage, the Decorate and Fertilize lists show only what is in Storage (and the Decorate list no longer mixes Stored items in the rest of the time), as on iOS.
+- On a new farm, the first planting drag now plants every tile your finger crosses: the question about notifications waits until you lift your finger.
 
 ## 2026-11-01
 - The money and level panels no longer sit right against the top of the screen on some phones and tablets; there is

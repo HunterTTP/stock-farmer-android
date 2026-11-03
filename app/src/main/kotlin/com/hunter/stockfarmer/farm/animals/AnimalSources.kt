@@ -16,6 +16,7 @@ import com.hunter.stockfarmer.farm.Standing
 import com.hunter.stockfarmer.farm.StandingSource
 import com.hunter.stockfarmer.farm.TextureLibrary
 import com.hunter.stockfarmer.farm.VisualTiming
+import com.hunter.stockfarmer.farm.effects.WaterDrops
 import com.hunter.stockfarmer.farm.label
 import com.hunter.stockfarmer.game.AnimalSceneGestures
 import com.hunter.stockfarmer.ui.screens.PerformanceWork
@@ -137,11 +138,13 @@ private class AnimalSource(
                     val oldColor = batch.packedColor
                     try {
                         for (pixel in wake) {
-                            if (pixel.spray) {
-                                batch.setColor(0.7f, 0.9f, 1f, pixel.alpha)
-                            } else {
-                                batch.setColor(0.9f, 0.97f, 1f, pixel.alpha)
-                            }
+                            val rgb = WaterDrops.wakeRgb
+                            batch.setColor(
+                                rgb[pixel.tint * 3],
+                                rgb[pixel.tint * 3 + 1],
+                                rgb[pixel.tint * 3 + 2],
+                                pixel.alpha,
+                            )
                             batch.draw(textures.white, pixel.x, pixel.y, pixel.size, pixel.size)
                         }
                         if (waterline == null && feet != null) {

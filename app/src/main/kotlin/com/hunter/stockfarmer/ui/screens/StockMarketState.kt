@@ -68,6 +68,7 @@ internal class StockMarketController(
         if (tickers.isEmpty()) return
         val quotes = market.pull(tickers, time, reportsFailure)
         session.act { it.updatePrices(quotes, time) }
+        session.commit()
     }
 }
 

@@ -2,12 +2,15 @@ package com.hunter.stockfarmer.game
 
 import com.hunter.stockfarmer.core.catalog.HarvestTool
 import com.hunter.stockfarmer.core.feedback.HapticCue
+import com.hunter.stockfarmer.core.feedback.SoundCue
 import com.hunter.stockfarmer.core.model.DaySummary
 import com.hunter.stockfarmer.core.model.GameState
 import com.hunter.stockfarmer.core.model.GridPoint
 import com.hunter.stockfarmer.core.rules.GameEngine
 import com.hunter.stockfarmer.core.rules.GameEvent
+import com.hunter.stockfarmer.core.rules.claimCompletedQuests
 import com.hunter.stockfarmer.core.rules.newGame
+import com.hunter.stockfarmer.core.util.RandomSource
 import com.hunter.stockfarmer.core.util.SystemRandomSource
 import com.hunter.stockfarmer.ui.fishing.FishingCast
 import com.hunter.stockfarmer.ui.menus.countCurrentUnlocksAsSeen
@@ -24,6 +27,7 @@ import java.time.Instant
  */
 class GameSession(
     private val engine: GameEngine = GameEngine(newGame(SystemRandomSource, Instant.now())),
+    private val random: RandomSource = SystemRandomSource,
 ) {
     init {
         engine.countCurrentUnlocksAsSeen()
@@ -95,6 +99,9 @@ class GameSession(
     /** The fish on the line while the fishing game is open; null otherwise. */
     val casts = MutableStateFlow<FishingCast?>(null)
 
+    /** True from the first tile a tool is dragged over until the finger lifts. */
+    val toolStrokes = MutableStateFlow(false)
+
     /** Something the player is asked to confirm before it happens; null when nothing is. */
     val confirmations = MutableStateFlow<Confirmation?>(null)
 
@@ -109,8 +116,18 @@ class GameSession(
         hapticRequests.tryEmit(HapticRequest.Reeling(progress))
     }
 
+    private val cueRequests = MutableSharedFlow<SoundCue>(extraBufferCapacity = EVENT_BUFFER)
+
+    /** Sounds the game asks for that no event carries, such as a popup opening. */
+    val cues: SharedFlow<SoundCue> = cueRequests.asSharedFlow()
+
+    fun cue(cue: SoundCue) {
+        cueRequests.tryEmit(cue)
+    }
+
     fun ask(confirmation: Confirmation) {
         haptic(HapticCue.Medium)
+        cue(SoundCue.openPopup)
         confirmations.value = confirmation
     }
 
@@ -163,12 +180,19 @@ class GameSession(
 
     @Volatile var isSaveBlocked = false
 
-    /** Tells everyone listening what just happened; nothing is sent for an empty batch. */
-    fun publish(batch: List<GameEvent>): List<GameEvent> =
-        batch.also {
-            if (it.any { event -> event is GameEvent.LeveledUp }) celebrations.celebrateAcross()
-            if (it.isNotEmpty()) published.tryEmit(it)
-        }
+    /**
+     * Tells everyone listening what just happened, turning in any quest it finished as the player never has to ask.
+     * An empty batch costs nothing, as the tractor publishes one every frame; use [commit] for a change without news.
+     */
+    fun publish(batch: List<GameEvent>): List<GameEvent> = if (batch.isEmpty()) batch else commit(batch)
+
+    /** Where every change lands: [batch] plus the quests it completed, sent out even when [batch] is empty. */
+    fun commit(batch: List<GameEvent> = emptyList()): List<GameEvent> {
+        val all = batch + act { it.claimCompletedQuests(random) }
+        if (all.any { it is GameEvent.LeveledUp }) celebrations.celebrateAcross()
+        if (all.isNotEmpty()) published.tryEmit(all)
+        return all
+    }
 
     /** A tap on the farm uses the selected tool on that tile. */
     fun tap(point: GridPoint): List<GameEvent> = publish(act { it.tap(point, Instant.now()) })

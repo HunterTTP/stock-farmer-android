@@ -58,6 +58,8 @@ fun SheetHost(
     target: SheetTarget,
     onClose: () -> Unit,
     onAnimalInteraction: ((AnimalRef, AnimalInteraction) -> Unit)? = null,
+    /** Closing because something done in the sheet already made its own sound. */
+    onCloseQuietly: () -> Unit = onClose,
 ) {
     var state by remember(session, target) { mutableStateOf(session.sheetState(target)) }
     var message by remember(session, target) { mutableStateOf<String?>(null) }
@@ -75,7 +77,7 @@ fun SheetHost(
         val result = session.sheetAction(target, action, Instant.now())
         message = result.refusal
         state = session.sheetState(target)
-        if (result.shouldClose) onClose()
+        if (result.shouldClose) onCloseQuietly()
     }
     state.building?.let { building ->
         val origin = building.placed.origin
@@ -93,7 +95,7 @@ fun SheetHost(
             BuildingPage.UPGRADE -> {
                 HudSheet(onDismiss = onClose) {
                     BackHandler { page = null }
-                    BuildingUpgradeScreen(session, { page = null }, origin, { session.publish(it) })
+                    BuildingUpgradeScreen(session, { page = null }, origin)
                 }
                 return
             }
@@ -102,7 +104,7 @@ fun SheetHost(
         }
         if (building.placed.building.isHouse) {
             HudSheet(onDismiss = onClose) {
-                StockMarketScreen(session, onClose, onEvents = { session.publish(it) })
+                StockMarketScreen(session, onClose)
             }
             return
         }
@@ -154,7 +156,6 @@ fun SheetHost(
                         onRecipes = { page = BuildingPage.RECIPES },
                         onUpgrade = { page = BuildingPage.UPGRADE },
                         onEvents = { events ->
-                            session.publish(events)
                             message = SheetResult(events).refusal
                         },
                     )

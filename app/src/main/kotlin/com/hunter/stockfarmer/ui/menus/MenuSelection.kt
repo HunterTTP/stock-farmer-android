@@ -151,24 +151,37 @@ internal object MenuActions {
         }
     }
 
+    /** Sells or throws away stored items; [StorageOutcome.events] holds the news to publish, nothing if it was refused. */
     fun transact(
         engine: GameEngine,
         item: StorageItem,
         quantity: Int,
         sell: Boolean,
-    ): String? {
+    ): StorageOutcome {
         val events = if (sell) engine.sellStored(item, quantity) else engine.trashStored(item, quantity)
-        return events.firstRejection?.message ?: when (val event = events.firstOrNull()) {
-            is GameEvent.StorageSold -> "Sold ${MenuNumbers.count(
-                event.quantity,
-            )} ${item.name} for ${event.value.dollars}"
+        val rejection = events.firstRejection?.message
+        val message =
+            rejection ?: when (val event = events.firstOrNull()) {
+                is GameEvent.StorageSold -> {
+                    "Sold ${MenuNumbers.count(event.quantity)} ${item.name} for ${event.value.dollars}"
+                }
 
-            is GameEvent.StorageTrashed -> "${item.discardedTitle} ${MenuNumbers.count(event.quantity)} ${item.name}"
+                is GameEvent.StorageTrashed -> {
+                    "${item.discardedTitle} ${MenuNumbers.count(event.quantity)} ${item.name}"
+                }
 
-            else -> null
-        }
+                else -> {
+                    null
+                }
+            }
+        return StorageOutcome(message, if (message == null || rejection != null) emptyList() else events)
     }
 }
+
+internal class StorageOutcome(
+    val message: String?,
+    val events: List<GameEvent>,
+)
 
 internal val MenuSelection.shopItem: ShopItem?
     get() =

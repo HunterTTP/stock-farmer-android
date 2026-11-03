@@ -274,13 +274,14 @@ private fun StockTradeDialog(
                     enabled = canConfirm,
                     onClick = {
                         val events =
-                            session.screenAction {
-                                if (buying) {
-                                    it.buyShares(row.quote, quantity, row.priceCents, Instant.now())
-                                } else {
-                                    it.sellShares(row.quote, quantity, row.priceCents, Instant.now())
-                                }
-                            }
+                            session
+                                .act {
+                                    if (buying) {
+                                        it.buyShares(row.quote, quantity, row.priceCents, Instant.now())
+                                    } else {
+                                        it.sellShares(row.quote, quantity, row.priceCents, Instant.now())
+                                    }
+                                }.let(session::publish)
                         onEvents(events)
                         val rejection =
                             events

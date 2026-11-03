@@ -8,6 +8,7 @@ import com.hunter.stockfarmer.core.model.GridPoint
 import com.hunter.stockfarmer.core.model.favoriteCrop
 import com.hunter.stockfarmer.core.rules.AnimalRef
 import com.hunter.stockfarmer.core.rules.GameEngine
+import com.hunter.stockfarmer.core.rules.hasEggWaiting
 import com.hunter.stockfarmer.core.rules.isHungry
 import java.time.Instant
 
@@ -39,19 +40,19 @@ internal data class AnimalSnapshot(
         ): List<AnimalSnapshot> =
             buildList {
                 val engine = GameEngine(state)
-                val eggs = state.eggs.map { it.coop to it.henID }.toSet()
                 for ((home, pet) in state.pets) {
                     add(AnimalSnapshot(AnimalKey("pet", home), pet.position, AnimalSprites.pet(pet)))
                 }
                 for ((home, coop) in state.coops) {
                     for (chicken in coop.chickens) {
+                        val egg = engine.hasEggWaiting(home, chicken.id)
                         add(
                             AnimalSnapshot(
                                 AnimalKey("chicken", home, chicken.id),
                                 chicken.position,
                                 AnimalSprites.chicken(chicken, now),
-                                (home to chicken.id) in eggs,
-                                if ((home to chicken.id) in eggs) {
+                                egg,
+                                if (egg) {
                                     StorageItem.Egg
                                 } else {
                                     if (engine.isHungry(AnimalRef.Chicken(home, chicken.id), now)) {

@@ -39,6 +39,7 @@ class ToolDrag(
         tile: GridPoint?,
         now: Instant = Instant.now(),
     ) {
+        session.toolStrokes.value = true
         if (tile == null || session.casts.value != null) {
             session.view.toolPreview = null
             return
@@ -62,6 +63,7 @@ class ToolDrag(
     /** The finger lifted: a carried thing stays put awaiting the player's OK, and the stroke is over. */
     fun end() {
         session.act { stroke.end(it) }
+        session.toolStrokes.value = false
         stroke = ToolStroke()
         last = null
         lastRejection = null

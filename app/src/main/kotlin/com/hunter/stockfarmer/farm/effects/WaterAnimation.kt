@@ -10,6 +10,13 @@ internal data class RGB(
     val green: Int,
     val blue: Int,
 ) {
+    fun channel(index: Int) =
+        when (index) {
+            0 -> red
+            1 -> green
+            else -> blue
+        }
+
     fun washed() =
         RGB(
             (red + (255 - red) * 0.6).roundToInt(),
@@ -32,6 +39,15 @@ internal object WaterDrops {
     val colors = WaterStyle.entries.flatMap { WaterPalette.colors(it).toList() }
     val spray = colors.map { it.washed() }
     val foam = listOf(RGB(237, 247, 255), RGB(204, 230, 255), RGB(173, 214, 250))
+
+    /** What the duck wake picks its pixels from: the foam and the washed water colors. */
+    val wake = foam + spray
+
+    /** Red, green and blue floats in a row for each of [colors] and [wake], so drawing sets a color without allocating. */
+    val colorsRgb = floats(colors)
+    val wakeRgb = floats(wake)
+
+    private fun floats(list: List<RGB>) = FloatArray(list.size * 3) { list[it / 3].channel(it % 3) / 255f }
 }
 
 /** Unsigned LCG, 16-square cells and 60-frame loop; the constants are part of the look. */
