@@ -37,7 +37,7 @@ private class AnimalSource(
 ) : StandingSource {
     override val work = PerformanceWork.animals
 
-    private data class Node(
+    private data class AnimalTrack(
         val look: AnimalSprites,
         val motion: AnimalMotion,
         val animation: AnimalAnimation,
@@ -49,7 +49,7 @@ private class AnimalSource(
         var shadowWidth: Float? = null,
     )
 
-    private val nodes = mutableMapOf<AnimalKey, Node>()
+    private val tracks = mutableMapOf<AnimalKey, AnimalTrack>()
     private val badges = ProduceBadge(textures)
     private val heartTexture by lazy { textures.label("❤️", 28f) }
 
@@ -70,10 +70,10 @@ private class AnimalSource(
         for (animal in AnimalSnapshot.all(state, now)) {
             val (key, point, look) = animal
             wanted += key
-            if (nodes[key]?.look?.copy(sheared = false) != look.copy(sheared = false)) nodes.remove(key)
+            if (tracks[key]?.look?.copy(sheared = false) != look.copy(sheared = false)) tracks.remove(key)
             val node =
-                nodes.getOrPut(key) {
-                    Node(
+                tracks.getOrPut(key) {
+                    AnimalTrack(
                         look,
                         AnimalMotion(point, look.defaultFacing, now),
                         AnimalAnimation(key.hashCode()),
@@ -187,7 +187,7 @@ private class AnimalSource(
                     }
                 }
         }
-        nodes.keys.retainAll(wanted)
+        tracks.keys.retainAll(wanted)
         gestures?.targets = targets.toList()
     }
 

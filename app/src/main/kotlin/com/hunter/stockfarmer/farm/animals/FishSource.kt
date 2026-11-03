@@ -18,7 +18,7 @@ internal class FishSource(
 ) : StandingSource {
     override val work = PerformanceWork.animals
 
-    private class Node(
+    private class AnimalTrack(
         val kind: String,
         val size: Double,
         point: GridPoint,
@@ -35,7 +35,7 @@ internal class FishSource(
             region?.takeIf { it.texture === texture } ?: TextureRegion(texture).also { region = it }
     }
 
-    private val nodes = mutableMapOf<GridPoint, Node>()
+    private val tracks = mutableMapOf<GridPoint, AnimalTrack>()
 
     override fun collect(
         batch: SpriteBatch,
@@ -49,10 +49,10 @@ internal class FishSource(
             val kind = fish.kind ?: continue
             val texture = textures.texture("animals/Fish", kind.assetName) ?: continue
             wanted += anchor
-            val old = nodes[anchor]
+            val old = tracks[anchor]
             val node =
                 if (old == null || old.kind != kind.id || old.size != fish.sizeFactor) {
-                    Node(kind.id, fish.sizeFactor, fish.position, now).also { nodes[anchor] = it }
+                    AnimalTrack(kind.id, fish.sizeFactor, fish.position, now).also { tracks[anchor] = it }
                 } else {
                     old
                 }
@@ -91,6 +91,6 @@ internal class FishSource(
                     }
                 }
         }
-        nodes.keys.retainAll(wanted)
+        tracks.keys.retainAll(wanted)
     }
 }
