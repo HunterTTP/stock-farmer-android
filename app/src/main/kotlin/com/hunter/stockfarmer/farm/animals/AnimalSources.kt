@@ -19,6 +19,7 @@ import com.hunter.stockfarmer.farm.TextureLibrary
 import com.hunter.stockfarmer.farm.VisualTiming
 import com.hunter.stockfarmer.farm.effects.WaterDrops
 import com.hunter.stockfarmer.farm.label
+import com.hunter.stockfarmer.game.AnimalHitTarget
 import com.hunter.stockfarmer.game.AnimalSceneGestures
 import java.time.Instant
 import kotlin.math.sqrt

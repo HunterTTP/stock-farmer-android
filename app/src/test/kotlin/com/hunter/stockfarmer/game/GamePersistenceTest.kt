@@ -16,8 +16,8 @@ import com.hunter.stockfarmer.core.rules.AnimalRef
 import com.hunter.stockfarmer.core.rules.GameEvent
 import com.hunter.stockfarmer.core.rules.beginMovingFruitTree
 import com.hunter.stockfarmer.core.util.RandomSource
-import com.hunter.stockfarmer.farm.animals.AnimalGesture
-import com.hunter.stockfarmer.farm.animals.AnimalHitTarget
+import com.hunter.stockfarmer.game.AnimalGesture
+import com.hunter.stockfarmer.game.AnimalHitTarget
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Assertions.assertEquals
