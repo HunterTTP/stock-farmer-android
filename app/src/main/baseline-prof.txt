@@ -14,3 +14,11 @@ Lcom/hunter/stockfarmer/farm/FarmFragment;
 Lcom/hunter/stockfarmer/farm/FarmGame;
 Lcom/hunter/stockfarmer/farm/FarmCamera;
 Lcom/hunter/stockfarmer/ui/HudKt;
+# The hot packages by wildcard: the render loop, the tick and its rules, saving, and the sprite batch they draw through.
+# HSP marks a method hot, startup and post-startup, so it is compiled ahead of time; ** spans packages and members.
+HSPLcom/hunter/stockfarmer/farm/**;->**(**)**
+HSPLcom/hunter/stockfarmer/game/**;->**(**)**
+HSPLcom/hunter/stockfarmer/core/rules/**;->**(**)**
+HSPLcom/hunter/stockfarmer/core/persistence/**;->**(**)**
+HSPLcom/hunter/stockfarmer/core/model/**;->**(**)**
+HSPLcom/badlogic/gdx/graphics/g2d/**;->**(**)**
