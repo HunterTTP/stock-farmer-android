@@ -33,8 +33,8 @@ import com.hunter.stockfarmer.core.rules.startWork
 import com.hunter.stockfarmer.core.rules.storeTractorCargo
 import com.hunter.stockfarmer.core.rules.summonPet
 import com.hunter.stockfarmer.core.rules.trashStored
-import com.hunter.stockfarmer.core.rules.upgradeHome
 import com.hunter.stockfarmer.core.rules.upgradeFarmhouse
+import com.hunter.stockfarmer.core.rules.upgradeHome
 import com.hunter.stockfarmer.game.GameSession
 import java.time.Instant
 

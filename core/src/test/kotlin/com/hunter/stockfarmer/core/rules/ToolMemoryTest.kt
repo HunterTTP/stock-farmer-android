@@ -33,15 +33,15 @@ class ToolMemoryTest {
     @Test
     fun `fertilize starts on fertilizer and remembers sprinklers`() {
         val engine = engine()
-        engine.selectTilling()
+        engine.selectFertilize()
         assertEquals(PlayMode.fertilize, engine.state.mode)
         engine.select(Decoration.named("sprinkler")!!)
         engine.select(LandscapeTool.water)
-        engine.selectTilling()
+        engine.selectFertilize()
         assertTrue(engine.state.mode == PlayMode.decorate && engine.selectedDecoration?.isSprinkler == true)
         engine.selectFertilizer()
         engine.select(LandscapeTool.water)
-        engine.selectTilling()
+        engine.selectFertilize()
         assertEquals(PlayMode.fertilize, engine.state.mode)
     }
 

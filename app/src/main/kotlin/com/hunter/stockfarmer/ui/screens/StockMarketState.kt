@@ -14,8 +14,8 @@ import com.hunter.stockfarmer.core.rules.PriceJitter
 import com.hunter.stockfarmer.core.rules.StockMarketRules
 import com.hunter.stockfarmer.core.rules.buyShares
 import com.hunter.stockfarmer.core.rules.claimStockPull
-import com.hunter.stockfarmer.core.rules.holdings
 import com.hunter.stockfarmer.core.rules.farmhouseUpgradeRejection
+import com.hunter.stockfarmer.core.rules.holdings
 import com.hunter.stockfarmer.core.rules.sellShares
 import com.hunter.stockfarmer.core.rules.stockSlotLimit
 import com.hunter.stockfarmer.core.rules.updatePrices

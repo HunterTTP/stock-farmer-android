@@ -8,8 +8,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.hunter.stockfarmer.core.model.GridPoint
 import com.hunter.stockfarmer.core.rules.GameEvent
-import com.hunter.stockfarmer.core.rules.upgradeHome
 import com.hunter.stockfarmer.core.rules.upgradeFarmhouse
+import com.hunter.stockfarmer.core.rules.upgradeHome
 import com.hunter.stockfarmer.core.rules.upgradeMarketStand
 import com.hunter.stockfarmer.core.util.SystemRandomSource
 import com.hunter.stockfarmer.game.GameSession

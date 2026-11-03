@@ -103,7 +103,7 @@ class MenuProgressionTest {
         engine.select(Decoration.named(Decoration.BIG_SPRINKLER_ID)!!)
         engine.select(Decoration.named("scarecrow")!!)
         engine = GameEngine(GameStateJson.decode(GameStateJson.encode(engine.state)))
-        engine.selectTilling()
+        engine.selectFertilize()
         assertEquals(Decoration.BIG_SPRINKLER_ID, engine.selectedDecoration?.id)
         assertEquals(Decoration.BIG_SPRINKLER_ID, engine.state.lastSprinklerID)
     }

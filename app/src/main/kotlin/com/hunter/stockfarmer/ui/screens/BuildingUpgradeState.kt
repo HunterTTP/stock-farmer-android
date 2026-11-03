@@ -6,8 +6,8 @@ import com.hunter.stockfarmer.core.model.GridPoint
 import com.hunter.stockfarmer.core.model.dollars
 import com.hunter.stockfarmer.core.rules.GameEngine
 import com.hunter.stockfarmer.core.rules.StockMarketRules
-import com.hunter.stockfarmer.core.rules.homeUpgradeRejection
 import com.hunter.stockfarmer.core.rules.farmhouseUpgradeRejection
+import com.hunter.stockfarmer.core.rules.homeUpgradeRejection
 import com.hunter.stockfarmer.core.rules.nextHomeUpgrade
 import java.time.Instant
 

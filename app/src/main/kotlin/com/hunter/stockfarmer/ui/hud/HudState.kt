@@ -57,7 +57,7 @@ internal fun GameSession.hud(reach: Float = ToolCircleMetrics.DEFAULT_REACH): Hu
             newTools =
                 buildSet {
                     if (engine.hasNewItems(UnlockCategory.PLANT)) add(HudTool.Planting)
-                    if (engine.hasNewItems(UnlockCategory.FERTILIZE)) add(HudTool.Tilling)
+                    if (engine.hasNewItems(UnlockCategory.FERTILIZE)) add(HudTool.Fertilizing)
                     if (engine.hasNewItems(UnlockCategory.TERRAIN)) add(HudTool.Terrain)
                     if (engine.hasNewItems(UnlockCategory.BUILD)) add(HudTool.Building)
                     if (engine.hasNewItems(UnlockCategory.DECORATE)) add(HudTool.Decorating)

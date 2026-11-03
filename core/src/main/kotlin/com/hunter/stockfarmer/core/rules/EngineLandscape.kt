@@ -21,7 +21,7 @@ fun GameEngine.select(tool: LandscapeTool) {
 }
 
 /** Picks up the Fertilize tool with whatever it last held, fertilizer or sprinklers. */
-fun GameEngine.selectTilling() {
+fun GameEngine.selectFertilize() {
     val sprinkler = Decoration.named(state.lastSprinklerID)
     if (state.fertilizesWithSprinklers && sprinkler != null &&
         isUnlocked(sprinkler)

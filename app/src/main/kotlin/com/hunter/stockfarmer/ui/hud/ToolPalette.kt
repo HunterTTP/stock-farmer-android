@@ -112,7 +112,7 @@ internal object ToolPalette {
         return when (tool) {
             HudTool.Planting -> planting(engine)
             HudTool.Harvest -> harvest(engine)
-            HudTool.Tilling -> tilling(engine, fromStorage)
+            HudTool.Fertilizing -> fertilizing(engine, fromStorage)
             HudTool.Terrain -> catalog(state, Menu.Terrain, "Terrain", setOf("Ground", "Trees"))
             HudTool.Building -> catalog(state, Menu.Build, "Build", setOf("Buildings"))
             HudTool.Decorating -> catalog(state, Menu.Decorate, "Decorate", setOf("Decorations"), fromStorage)
@@ -135,7 +135,7 @@ internal object ToolPalette {
         when (tool) {
             HudTool.Planting -> MenuPictures.stored(StorageItem.CropItem(Crop.starter))
             HudTool.Harvest -> harvestPicture(HarvestTool.scythe)
-            HudTool.Tilling -> fertilizerPicture
+            HudTool.Fertilizing -> fertilizerPicture
             HudTool.Terrain -> MenuPictures.terrain("farmland")
             HudTool.Building -> MenuPictures.building(Building.starter)
             HudTool.Decorating -> MenuPictures.decoration(requireNotNull(Decoration.named("scarecrow")))
@@ -266,7 +266,7 @@ internal object ToolPalette {
             destination
     }
 
-    private fun tilling(
+    private fun fertilizing(
         engine: GameEngine,
         fromStorage: Boolean,
     ): List<ToolDropdown> {
