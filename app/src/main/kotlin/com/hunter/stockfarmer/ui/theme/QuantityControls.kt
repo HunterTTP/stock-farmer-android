@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -16,6 +17,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.runtime.Composable
@@ -26,6 +28,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -98,6 +101,7 @@ fun QuantityControls(
 }
 
 /** Minus, the quantity, plus and Max, with a slider under them, for picking how many shares from 1 up to a maximum. */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun QuantityControls(
     quantity: Long,
@@ -169,6 +173,14 @@ fun QuantityControls(
             }
         }
         if (maximum > 1L) {
+            val colors =
+                SliderDefaults.colors(
+                    thumbColor = Color.White,
+                    activeTrackColor = Theme.accent,
+                    inactiveTrackColor = Color.White.copy(alpha = 0.2f),
+                    activeTickColor = Color.Transparent,
+                    inactiveTickColor = Color.Transparent,
+                )
             Slider(
                 value = quantity.coerceIn(1L, maximum).toFloat(),
                 onValueChange = {
@@ -179,14 +191,19 @@ fun QuantityControls(
                 modifier = Modifier.fillMaxWidth().semantics { contentDescription = "Quantity" },
                 valueRange = 1f..maximum.toFloat(),
                 steps = if (maximum in 2..100) maximum.toInt() - 2 else 0,
-                colors =
-                    SliderDefaults.colors(
-                        thumbColor = Theme.accent,
-                        activeTrackColor = Theme.accent,
-                        inactiveTrackColor = Color.White.copy(alpha = 0.2f),
-                        activeTickColor = Color.Transparent,
-                        inactiveTickColor = Color.Transparent,
-                    ),
+                thumb = { Box(Modifier.size(26.dp).shadow(3.dp, CircleShape).background(Color.White, CircleShape)) },
+                track = { state ->
+                    SliderDefaults.Track(
+                        sliderState = state,
+                        modifier = Modifier.height(6.dp),
+                        colors = colors,
+                        thumbTrackGapSize = 0.dp,
+                        trackInsideCornerSize = 0.dp,
+                        drawStopIndicator = null,
+                        drawTick = { _, _ -> },
+                    )
+                },
+                colors = colors,
             )
         }
     }

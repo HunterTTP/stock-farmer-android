@@ -1,3 +1,6 @@
+## 2026-11-03
+- The quantity slider has a round white handle on its track, the stock trade sheet is solid so it no longer shows the Stock Market behind it, and the Storage note, "Replace quest" and "Restore backup" links are easier to read.
+
 ## 2026-11-02
 - Your farm is safer if the battery dies mid-game, and a farm where nothing is happening no longer writes to storage every second.
 - If renaming, deleting or restoring a farm fails, the message now stays up and says what went wrong, and the reason a farm

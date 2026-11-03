@@ -45,6 +45,7 @@ fun Modifier.categoryCard(isHighlighted: Boolean): Modifier =
 fun HudSheet(
     onDismiss: () -> Unit,
     sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+    isOpaque: Boolean = false,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     HudMaterialTheme {
@@ -54,7 +55,11 @@ fun HudSheet(
             containerColor = Color.Transparent,
             scrimColor = Color.Black.copy(alpha = 0.32f),
             dragHandle = { SheetHandle() },
-            content = { Column(Modifier.fillMaxSize().glassSheetBackground(), content = content) },
+            content = {
+                // A sheet opened over another sheet needs a solid base, or the one beneath shows through.
+                val base = if (isOpaque) Modifier.background(Theme.glassBase.copy(alpha = 1f)) else Modifier
+                Column(Modifier.fillMaxSize().then(base).glassSheetBackground(), content = content)
+            },
         )
     }
 }

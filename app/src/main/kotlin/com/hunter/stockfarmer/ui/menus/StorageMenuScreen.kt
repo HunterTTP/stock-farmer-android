@@ -120,7 +120,7 @@ private fun CapacityCard(
             trackColor = Color.White.copy(alpha = 0.15f),
         )
         Text(
-            text = "Your backpack holds $BACKPACK_CAPACITY; each Shed adds 50 and each Silo adds 150",
+            text = "Your backpack holds $BACKPACK_CAPACITY;\neach Shed adds 50 and each Silo adds 150",
             style = HudType.caption,
             color = Theme.textSecondary,
             textAlign = TextAlign.Center,
