@@ -10,10 +10,14 @@ import com.hunter.stockfarmer.core.model.PlayMode
 import com.hunter.stockfarmer.core.model.ShopItem
 import com.hunter.stockfarmer.core.rules.GameEngine
 import com.hunter.stockfarmer.core.rules.Rejection
+import com.hunter.stockfarmer.core.rules.UnlockCategory
 import com.hunter.stockfarmer.core.rules.equippedStock
+import com.hunter.stockfarmer.core.rules.hasNewItems
+import com.hunter.stockfarmer.core.rules.isNew
 import com.hunter.stockfarmer.core.rules.isPlacingFromStorage
 import com.hunter.stockfarmer.core.rules.isSelling
 import com.hunter.stockfarmer.core.rules.level
+import com.hunter.stockfarmer.core.rules.markSeen
 import com.hunter.stockfarmer.core.rules.name
 import com.hunter.stockfarmer.core.rules.offersUpgrade
 import com.hunter.stockfarmer.core.rules.price
@@ -30,10 +34,6 @@ import com.hunter.stockfarmer.ui.menus.MenuPrice
 import com.hunter.stockfarmer.ui.menus.MenuSection
 import com.hunter.stockfarmer.ui.menus.MenuSelection
 import com.hunter.stockfarmer.ui.menus.MenuState
-import com.hunter.stockfarmer.ui.menus.UnlockCategory
-import com.hunter.stockfarmer.ui.menus.hasNewItems
-import com.hunter.stockfarmer.ui.menus.isNew
-import com.hunter.stockfarmer.ui.menus.markSeen
 import com.hunter.stockfarmer.ui.menus.shopItem
 import com.hunter.stockfarmer.ui.screens.LessonGuideState
 import java.util.Locale

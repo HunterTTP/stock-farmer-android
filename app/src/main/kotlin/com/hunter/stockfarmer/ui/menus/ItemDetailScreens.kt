@@ -41,6 +41,7 @@ import com.hunter.stockfarmer.core.model.dollars
 import com.hunter.stockfarmer.core.rules.GameEngine
 import com.hunter.stockfarmer.core.rules.farmlandLimit
 import com.hunter.stockfarmer.core.rules.isSelling
+import com.hunter.stockfarmer.core.rules.markSeen
 import com.hunter.stockfarmer.core.rules.placedOnMap
 import com.hunter.stockfarmer.core.rules.requiredLevel
 import com.hunter.stockfarmer.core.rules.select

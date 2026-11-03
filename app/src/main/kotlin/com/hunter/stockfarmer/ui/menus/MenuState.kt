@@ -19,6 +19,7 @@ import com.hunter.stockfarmer.core.rules.currentLesson
 import com.hunter.stockfarmer.core.rules.equippedItem
 import com.hunter.stockfarmer.core.rules.hasReachedPlacementLimit
 import com.hunter.stockfarmer.core.rules.isEquipped
+import com.hunter.stockfarmer.core.rules.isNew
 import com.hunter.stockfarmer.core.rules.itemToLearnSellingWith
 import com.hunter.stockfarmer.core.rules.name
 import com.hunter.stockfarmer.core.rules.placedOnMap

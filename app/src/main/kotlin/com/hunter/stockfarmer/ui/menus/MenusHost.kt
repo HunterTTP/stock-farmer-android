@@ -44,6 +44,7 @@ import com.hunter.stockfarmer.core.catalog.StorageItem
 import com.hunter.stockfarmer.core.model.Lesson
 import com.hunter.stockfarmer.core.model.ShopItem
 import com.hunter.stockfarmer.core.rules.currentLesson
+import com.hunter.stockfarmer.core.rules.isNew
 import com.hunter.stockfarmer.core.rules.learn
 import com.hunter.stockfarmer.game.GameSession
 import com.hunter.stockfarmer.game.learnLesson

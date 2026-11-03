@@ -17,6 +17,7 @@ import com.hunter.stockfarmer.core.rules.GameEvent
 import com.hunter.stockfarmer.core.rules.Rejection
 import com.hunter.stockfarmer.core.rules.equip
 import com.hunter.stockfarmer.core.rules.firstRejection
+import com.hunter.stockfarmer.core.rules.markSeen
 import com.hunter.stockfarmer.core.rules.requiredLevel
 import com.hunter.stockfarmer.core.rules.select
 import com.hunter.stockfarmer.core.rules.selectFertilizer

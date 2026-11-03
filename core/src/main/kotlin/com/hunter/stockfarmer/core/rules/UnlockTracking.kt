@@ -1,4 +1,4 @@
-package com.hunter.stockfarmer.ui.menus
+package com.hunter.stockfarmer.core.rules
 
 import com.hunter.stockfarmer.core.catalog.Building
 import com.hunter.stockfarmer.core.catalog.Crop
@@ -6,14 +6,6 @@ import com.hunter.stockfarmer.core.catalog.Decoration
 import com.hunter.stockfarmer.core.catalog.GroundCover
 import com.hunter.stockfarmer.core.catalog.TreeSpecies
 import com.hunter.stockfarmer.core.model.ShopItem
-import com.hunter.stockfarmer.core.rules.GameEngine
-import com.hunter.stockfarmer.core.rules.countAsSeen
-import com.hunter.stockfarmer.core.rules.currentLesson
-import com.hunter.stockfarmer.core.rules.farmlandLimit
-import com.hunter.stockfarmer.core.rules.hasCountedUnlocks
-import com.hunter.stockfarmer.core.rules.hasSeen
-import com.hunter.stockfarmer.core.rules.requiredLevel
-import com.hunter.stockfarmer.game.GameSession
 
 /** Keys are stable saved strings; farmland gets a fresh dot whenever its allowance increases. */
 fun GameEngine.unlockKey(item: ShopItem): String? =
@@ -43,8 +35,6 @@ fun GameEngine.countCurrentUnlocksAsSeen() {
 }
 
 enum class UnlockCategory { PLANT, FERTILIZE, TERRAIN, BUILD, DECORATE }
-
-fun GameSession.hasNewItems(category: UnlockCategory): Boolean = act { it.hasNewItems(category) }
 
 fun GameEngine.hasNewItems(category: UnlockCategory): Boolean = category.items.any(::isNew)
 
