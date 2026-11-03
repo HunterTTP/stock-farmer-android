@@ -28,9 +28,11 @@ import com.hunter.stockfarmer.core.rules.GameEngine
 import com.hunter.stockfarmer.core.rules.hasSeen
 import com.hunter.stockfarmer.core.rules.workshopRecipe
 import com.hunter.stockfarmer.game.GameSession
+import com.hunter.stockfarmer.ui.FAST_POLL_MILLIS
 import com.hunter.stockfarmer.ui.menus.MenuImage
 import com.hunter.stockfarmer.ui.menus.MenuPictures
 import com.hunter.stockfarmer.ui.menus.rememberMenuAssetLoader
+import com.hunter.stockfarmer.ui.rememberPolledState
 import com.hunter.stockfarmer.ui.screens.ScreenIcon
 import com.hunter.stockfarmer.ui.theme.BarScrollView
 import com.hunter.stockfarmer.ui.theme.ChoiceRow
@@ -89,12 +91,8 @@ fun ChickAppearanceScreen(
     onDismiss: (() -> Unit)? = null,
     onClose: () -> Unit,
 ) {
-    var choices by remember(session, origin) { mutableStateOf(session.act { ChickChoice.all(it, origin) }) }
-    LaunchedEffect(session, origin) {
-        while (true) {
-            choices = session.act { ChickChoice.all(it, origin) }
-            delay(250)
-        }
+    val choices by rememberPolledState(session to origin, FAST_POLL_MILLIS) {
+        session.act { ChickChoice.all(it, origin) }
     }
     BuildingChoiceScreen("Next Chick", session, origin, onClose, onDismiss = onDismiss ?: onClose) { choose ->
         Text(
@@ -143,14 +141,10 @@ fun WorkshopRecipeScreen(
     onDismiss: (() -> Unit)? = null,
     onClose: () -> Unit,
 ) {
-    var choices by remember(session, origin) { mutableStateOf(session.act { recipeChoices(it, origin) }) }
-    val loader = rememberMenuAssetLoader()
-    LaunchedEffect(session, origin) {
-        while (true) {
-            choices = session.act { recipeChoices(it, origin) }
-            delay(250)
-        }
+    val choices by rememberPolledState(session to origin, FAST_POLL_MILLIS) {
+        session.act { recipeChoices(it, origin) }
     }
+    val loader = rememberMenuAssetLoader()
     BuildingChoiceScreen("Recipes", session, origin, onClose, onDismiss = onDismiss ?: onClose, spacing = 8) { choose ->
         choices.forEach { choice ->
             val recipe = choice.recipe

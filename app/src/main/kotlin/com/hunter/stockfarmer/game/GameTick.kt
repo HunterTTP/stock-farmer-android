@@ -59,6 +59,16 @@ class GameTick(
     }
 
     /**
+     * Starts the clocks over, as when play resumes after the tick was stopped. Unlike [forgetFarm] it keeps a day summary
+     * still to come, which belongs to the same farm.
+     */
+    fun forgetClocks() =
+        session.act {
+            lastTend = null
+            lastPlayTick = null
+        }
+
+    /**
      * Runs one step for the moment [now] and says what happened that the player should be told about. Nothing happens
      * while the app is away or the timelapse viewer is open; the clocks start over when play resumes.
      */
@@ -69,8 +79,7 @@ class GameTick(
                 forgetFarm()
             }
             if (!session.isActive || session.isTimelapseViewerOpen) {
-                lastTend = null
-                lastPlayTick = null
+                forgetClocks()
                 return@act emptyList()
             }
             countPlayTime(engine, now)

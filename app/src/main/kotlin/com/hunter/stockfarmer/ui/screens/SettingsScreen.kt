@@ -33,6 +33,7 @@ import com.hunter.stockfarmer.audio.SoundSettings
 import com.hunter.stockfarmer.core.feedback.SoundCue
 import com.hunter.stockfarmer.game.GameSession
 import com.hunter.stockfarmer.ui.hud.ToolRoute
+import com.hunter.stockfarmer.ui.rememberPolledState
 import com.hunter.stockfarmer.ui.theme.HudIcon
 import com.hunter.stockfarmer.ui.theme.HudIcons
 import com.hunter.stockfarmer.ui.theme.HudType
@@ -216,7 +217,7 @@ fun SoundSettingsScreen(
     val audio = remember(context, provided) { provided ?: PreferenceScreenAudio(context) }
     val controls = remember(audio) { SoundControls(audio.settings) }
     var settings by remember(audio) { mutableStateOf(controls.settings) }
-    val track by rememberScreenState(audio) { audio.trackName }
+    val track by rememberPolledState(audio) { audio.trackName }
 
     fun applyControls() {
         val next = controls.settings

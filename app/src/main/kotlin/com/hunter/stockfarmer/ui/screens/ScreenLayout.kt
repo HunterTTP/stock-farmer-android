@@ -19,12 +19,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,11 +29,9 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.repeatOnLifecycle
 import com.hunter.stockfarmer.core.model.dollars
 import com.hunter.stockfarmer.game.GameSession
+import com.hunter.stockfarmer.ui.rememberPolledState
 import com.hunter.stockfarmer.ui.theme.HudMaterialTheme
 import com.hunter.stockfarmer.ui.theme.HudType
 import com.hunter.stockfarmer.ui.theme.PillButton
@@ -53,7 +48,7 @@ internal fun ScreenLayout(
     closeLabel: String = "Close",
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    val money = session?.let { s -> rememberScreenState(s) { s.read { it.money.dollars } }.value }.orEmpty()
+    val money = session?.let { s -> rememberPolledState(s) { s.read { it.money.dollars } }.value }.orEmpty()
     BackHandler(onBack = onClose)
     HudMaterialTheme {
         Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background.copy(alpha = 0.97f))) {
@@ -104,24 +99,6 @@ internal fun Figure(
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(label, Modifier.weight(1f), color = MaterialTheme.colorScheme.onSurfaceVariant)
         Text(value, color = color)
-    }
-}
-
-/** Read a projection while visible; nothing mutable from GameState escapes the session lock. */
-@Composable
-internal fun <T> rememberScreenState(
-    key: Any,
-    read: () -> T,
-): State<T> {
-    val currentRead by rememberUpdatedState(read)
-    val owner = LocalLifecycleOwner.current
-    return produceState(read(), key, owner) {
-        owner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
-            while (true) {
-                value = currentRead()
-                delay(500)
-            }
-        }
     }
 }
 

@@ -47,6 +47,8 @@ import com.hunter.stockfarmer.core.rules.select
 import com.hunter.stockfarmer.core.rules.setSelling
 import com.hunter.stockfarmer.core.rules.setSprinklersRunConstantly
 import com.hunter.stockfarmer.game.GameSession
+import com.hunter.stockfarmer.ui.FAST_POLL_MILLIS
+import com.hunter.stockfarmer.ui.rememberPolledState
 import com.hunter.stockfarmer.ui.screens.ScreenArt
 import com.hunter.stockfarmer.ui.screens.ScreenIcon
 import com.hunter.stockfarmer.ui.sheets.SheetChoice
@@ -165,14 +167,13 @@ fun ItemDetailScreen(
     onSelect: () -> Unit,
     onMessage: (String) -> Unit = {},
 ) {
-    var state by remember(session, item) { mutableStateOf(session.act { ItemDetailState.from(it, item) }) }
+    val polledState =
+        rememberPolledState(session to item, FAST_POLL_MILLIS) { session.act { ItemDetailState.from(it, item) } }
+    val state by polledState
     val loader = rememberMenuAssetLoader()
     LaunchedEffect(session, item) {
         session.act { it.markSeen(item) }
-        while (true) {
-            state = session.act { ItemDetailState.from(it, item) }
-            delay(250)
-        }
+        polledState.refresh()
     }
     DetailLayout(
         name = state.info.name,
@@ -192,7 +193,7 @@ fun ItemDetailScreen(
                         { it.title },
                     ) { variant ->
                         session.act { selectItemDetailColor(it, variant.selection) }
-                        state = session.act { ItemDetailState.from(it, item) }
+                        polledState.refresh()
                     }
                 }
             },
@@ -233,7 +234,7 @@ fun ItemDetailScreen(
                 }
                 Switch(runs, { value ->
                     session.act { it.setSprinklersRunConstantly(value) }
-                    state = session.act { ItemDetailState.from(it, item) }
+                    polledState.refresh()
                 }, colors = SwitchDefaults.colors(checkedTrackColor = Theme.accent))
             }
         }
@@ -305,12 +306,8 @@ fun ToolUpgradeScreen(
     onBought: (String) -> Unit,
     onMessage: (String) -> Unit = {},
 ) {
-    var state by remember(session, tool) { mutableStateOf(session.act { ToolUpgradeState.from(it, tool) }) }
-    LaunchedEffect(session, tool) {
-        while (true) {
-            state = session.act { ToolUpgradeState.from(it, tool) }
-            delay(250)
-        }
+    val state by rememberPolledState(session to tool, FAST_POLL_MILLIS) {
+        session.act { ToolUpgradeState.from(it, tool) }
     }
     BarScrollView {
         Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {

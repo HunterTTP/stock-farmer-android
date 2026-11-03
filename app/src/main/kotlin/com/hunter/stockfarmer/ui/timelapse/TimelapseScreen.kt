@@ -34,10 +34,10 @@ import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.hunter.stockfarmer.core.rules.DayNightCycle
 import com.hunter.stockfarmer.game.GameSession
+import com.hunter.stockfarmer.ui.rememberPolledState
 import com.hunter.stockfarmer.ui.screens.Figure
 import com.hunter.stockfarmer.ui.screens.ScreenCard
 import com.hunter.stockfarmer.ui.screens.ScreenLayout
-import com.hunter.stockfarmer.ui.screens.rememberScreenState
 import com.hunter.stockfarmer.ui.theme.HudType
 import com.hunter.stockfarmer.ui.theme.PillButton
 import com.hunter.stockfarmer.ui.theme.PillRole
@@ -56,7 +56,7 @@ fun TimelapseScreen(
 ) {
     val recorder = LocalTimelapseRecorder.current
     val recording by recorder.state.collectAsStateWithLifecycle()
-    val settings by rememberScreenState(session) { session.read { it.timelapse } }
+    val settings by rememberPolledState(session) { session.read { it.timelapse } }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     var confirmsClear by remember(recorder) { mutableStateOf(false) }

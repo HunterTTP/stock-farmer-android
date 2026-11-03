@@ -46,6 +46,8 @@ import com.hunter.stockfarmer.core.model.ShopItem
 import com.hunter.stockfarmer.core.rules.currentLesson
 import com.hunter.stockfarmer.core.rules.learn
 import com.hunter.stockfarmer.game.GameSession
+import com.hunter.stockfarmer.ui.FAST_POLL_MILLIS
+import com.hunter.stockfarmer.ui.rememberPolledState
 import com.hunter.stockfarmer.ui.theme.BuildingPriceLine
 import com.hunter.stockfarmer.ui.theme.ChoiceRow
 import com.hunter.stockfarmer.ui.theme.HudChoice
@@ -62,6 +64,7 @@ import com.hunter.stockfarmer.ui.theme.glassCard
 import com.hunter.stockfarmer.ui.theme.lessonPulse
 import com.hunter.stockfarmer.ui.theme.newDot
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
 
 /** The caller owns which menu is open; a successful selection returns the player to the farm. */
 @Composable
@@ -71,7 +74,8 @@ fun MenusHost(
     onClose: () -> Unit,
     onToast: (String) -> Unit = {},
 ) {
-    var state by remember(session, openMenu) { mutableStateOf(session.menuState(openMenu)) }
+    val polledState = rememberPolledState(session to openMenu, FAST_POLL_MILLIS) { session.menuState(openMenu) }
+    var state by polledState
     var message by remember(session, openMenu) { mutableStateOf<String?>(null) }
     var messageIsRejection by remember(session, openMenu) { mutableStateOf(false) }
     var transaction by remember(session, openMenu) { mutableStateOf<StorageTransaction?>(null) }
@@ -82,25 +86,19 @@ fun MenusHost(
     LaunchedEffect(openMenu) {
         if (openMenu == Menu.Storage) {
             session.act { it.learn(Lesson.openStorage) }
-            state = session.menuState(openMenu)
+            polledState.refresh()
         }
     }
     LaunchedEffect(session) {
-        session.toasts.collect { toast ->
+        session.toasts.collectLatest { toast ->
             toastText = toast.text
             delay(toast.durationMillis)
             if (toastText == toast.text) toastText = null
         }
     }
-    LaunchedEffect(session, openMenu) {
-        while (true) {
-            state = session.menuState(openMenu)
-            delay(250)
-        }
-    }
     val choose: (MenuSelection) -> Unit = { selection ->
         val rejection = session.act { MenuActions.choose(it, selection) }
-        state = session.menuState(openMenu)
+        polledState.refresh()
         if (rejection == null) {
             onClose()
         } else {
@@ -147,7 +145,7 @@ fun MenusHost(
                             val isLesson = state.stored.firstOrNull { it.item == action.item }?.isLesson == true
                             if (isLesson) {
                                 session.act { it.learn(Lesson.sellItem) }
-                                state = session.menuState(openMenu)
+                                polledState.refresh()
                             }
                         }
                         transaction = action
@@ -385,13 +383,7 @@ fun MenusHost(
     onUpgradeResult: (ToolUpgradeResult) -> Unit = {},
 ) {
     var message by remember(session, screen) { mutableStateOf<String?>(null) }
-    var money by remember(session, screen) { mutableStateOf(session.read { it.money }) }
-    LaunchedEffect(session, screen) {
-        while (true) {
-            money = session.read { it.money }
-            delay(250)
-        }
-    }
+    val money by rememberPolledState(session to screen, FAST_POLL_MILLIS) { session.read { it.money } }
     HudSheet(onDismiss = onClose) {
         Row(
             Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp),

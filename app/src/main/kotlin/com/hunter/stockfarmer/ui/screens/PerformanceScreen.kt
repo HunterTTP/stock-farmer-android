@@ -21,6 +21,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.hunter.stockfarmer.game.GameSession
+import com.hunter.stockfarmer.ui.rememberPolledState
 import com.hunter.stockfarmer.ui.theme.HudType
 import com.hunter.stockfarmer.ui.theme.PillButton
 import com.hunter.stockfarmer.ui.theme.PillRole
@@ -35,7 +36,7 @@ fun PerformanceScreen(
     recordingContext: () -> String,
     onShare: ((String) -> Unit)? = null,
 ) {
-    val state by rememberScreenState(monitor) { monitor.snapshot }
+    val state by rememberPolledState(monitor) { monitor.snapshot }
     val context = LocalContext.current
     DisposableEffect(monitor) {
         monitor.setVisible(true)

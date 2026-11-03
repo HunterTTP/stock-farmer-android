@@ -13,6 +13,7 @@ import com.hunter.stockfarmer.core.rules.upgradeHouse
 import com.hunter.stockfarmer.core.rules.upgradeMarketStand
 import com.hunter.stockfarmer.core.util.SystemRandomSource
 import com.hunter.stockfarmer.game.GameSession
+import com.hunter.stockfarmer.ui.rememberPolledState
 import com.hunter.stockfarmer.ui.theme.HudType
 import com.hunter.stockfarmer.ui.theme.Theme
 import java.time.Instant
@@ -24,7 +25,7 @@ fun BuildingUpgradeScreen(
     origin: GridPoint? = null,
     onEvents: (List<GameEvent>) -> Unit = {},
 ) {
-    val buildings by rememberScreenState(session) { session.act { BuildingUpgradeState.all(it, Instant.now()) } }
+    val buildings by rememberPolledState(session) { session.act { BuildingUpgradeState.all(it, Instant.now()) } }
     var message by remember { mutableStateOf<String?>(null) }
     ScreenLayout("Upgrade", session, onClose) {
         val offered = buildings.filter { origin == null || it.origin == origin }

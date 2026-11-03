@@ -47,6 +47,7 @@ import com.hunter.stockfarmer.core.rules.quests
 import com.hunter.stockfarmer.core.rules.replaceQuest
 import com.hunter.stockfarmer.core.util.SystemRandomSource
 import com.hunter.stockfarmer.game.GameSession
+import com.hunter.stockfarmer.ui.rememberPolledState
 import com.hunter.stockfarmer.ui.screens.BuildingUpgradeScreen
 import com.hunter.stockfarmer.ui.screens.PillButton
 import com.hunter.stockfarmer.ui.screens.QuestBoardState
@@ -56,7 +57,6 @@ import com.hunter.stockfarmer.ui.screens.ScreenArt
 import com.hunter.stockfarmer.ui.screens.ScreenIcon
 import com.hunter.stockfarmer.ui.screens.iconSymbol
 import com.hunter.stockfarmer.ui.screens.item
-import com.hunter.stockfarmer.ui.screens.rememberScreenState
 import com.hunter.stockfarmer.ui.theme.HudIcon
 import com.hunter.stockfarmer.ui.theme.HudIcons
 import com.hunter.stockfarmer.ui.theme.HudMaterialTheme
@@ -73,7 +73,7 @@ fun MarketQuestSection(
     origin: GridPoint,
     onEvents: (List<GameEvent>) -> Unit = {},
 ) {
-    val presentation by rememberScreenState(session to origin) {
+    val presentation by rememberPolledState(session to origin) {
         session.act { engine ->
             QuestBoardState.all(engine, Instant.now()).firstOrNull { it.origin == origin } to
                 engine.quests(origin).associate { quest ->

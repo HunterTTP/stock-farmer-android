@@ -115,14 +115,15 @@ internal object ToolPalette {
         }
     }
 
-    /** The picture on the tool circle: what the tool holds right now. */
+    /** The picture on the tool circle: what the tool holds right now, read from the tool's [dropdowns]. */
     fun picture(
         state: GameState,
         tool: HudTool,
+        dropdowns: List<ToolDropdown>,
     ): MenuPicture =
         when (tool) {
             HudTool.Harvest -> harvestPicture(state.harvestTool)
-            else -> dropdowns(state, tool).firstOrNull()?.selected?.picture ?: menuPicture(tool)
+            else -> dropdowns.firstOrNull()?.selected?.picture ?: menuPicture(tool)
         }
 
     /** The picture on the ring's tile for a tool, which stays the same whatever the tool holds. */

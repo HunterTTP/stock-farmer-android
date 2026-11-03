@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import com.hunter.stockfarmer.core.model.ValueSample
 import com.hunter.stockfarmer.core.rules.CareerSeries
 import com.hunter.stockfarmer.game.GameSession
+import com.hunter.stockfarmer.ui.rememberPolledState
 import com.hunter.stockfarmer.ui.theme.HudIcon
 import com.hunter.stockfarmer.ui.theme.HudIcons
 import com.hunter.stockfarmer.ui.theme.HudMaterialTheme
@@ -50,7 +51,7 @@ fun CareerScreen(
     session: GameSession,
     onClose: () -> Unit,
 ) {
-    val state by rememberScreenState(session) { session.act(CareerState::from) }
+    val state by rememberPolledState(session) { session.act(CareerState::from) }
     var collection by remember { mutableStateOf<CareerCollection?>(null) }
     var series by remember { mutableStateOf<CareerSeries?>(null) }
     val title =
