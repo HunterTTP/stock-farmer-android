@@ -86,8 +86,8 @@ open class LocalSaveFileSystem : SaveFileSystem {
     protected open fun syncDirectory(directory: Path) {
         try {
             FileChannel.open(directory, StandardOpenOption.READ).use { it.force(true) }
-        } catch (_: IOException) {
-            // See above.
+        } catch (_: Exception) {
+            // See above. Broad on purpose: nothing that goes wrong here may ever turn into a failed save.
         }
     }
 

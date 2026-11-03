@@ -10,7 +10,7 @@ How Android does it underneath is its own. Rendering, threading, caching, persis
 
 ## Stack
 
-- `core`: pure Kotlin/JVM, no Android imports. Catalog, rules, persistence, sound and drag policies. `GameEngine` is an immutable value; preview an action by running it on a copy.
+- `core`: pure Kotlin/JVM, no Android imports. Catalog, rules, persistence, sound and drag policies. `GameEngine` owns a mutable `GameState`; preview an action by running it on `engine.copy()`.
 - `app`: single-activity Android app. Jetpack Compose for menus and HUD, libGDX for the farm, MediaPlayer for music, SoundPool for effects.
 - Gradle Kotlin DSL with a version catalog (`gradle/libs.versions.toml`). Build JDK 25. minSdk 26, targetSdk 36.
 
