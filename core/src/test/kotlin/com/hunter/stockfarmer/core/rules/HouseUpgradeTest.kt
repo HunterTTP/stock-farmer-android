@@ -55,18 +55,18 @@ class HouseUpgradeTest {
     @Test
     fun `upgrading costs fifty thousand and swaps the house`() {
         val engine = engine()
-        assertNull(engine.houseUpgradeRejection(origin, now))
-        assertEquals(listOf<GameEvent>(GameEvent.Built(origin, 50_000.0)), engine.upgradeHouse(origin, now))
+        assertNull(engine.farmhouseUpgradeRejection(origin, now))
+        assertEquals(listOf<GameEvent>(GameEvent.Built(origin, 50_000.0)), engine.upgradeFarmhouse(origin, now))
         assertEquals(50_000.0, engine.state.money)
         assertEquals("house2", engine.building(origin)?.building?.id)
-        assertEquals(Rejection.AlreadyUpgraded, engine.houseUpgradeRejection(origin, now))
+        assertEquals(Rejection.AlreadyUpgraded, engine.farmhouseUpgradeRejection(origin, now))
     }
 
     @Test
     fun `upgrading still needs level twenty four and the money`() {
-        assertEquals(Rejection.NeedLevel(24), engine(level = 23).houseUpgradeRejection(origin, now))
-        assertEquals(Rejection.NeedMoney(50_000.0), engine(money = 49_999.0).houseUpgradeRejection(origin, now))
-        assertEquals(Rejection.NothingHere, engine(house = "marketStand").houseUpgradeRejection(origin, now))
+        assertEquals(Rejection.NeedLevel(24), engine(level = 23).farmhouseUpgradeRejection(origin, now))
+        assertEquals(Rejection.NeedMoney(50_000.0), engine(money = 49_999.0).farmhouseUpgradeRejection(origin, now))
+        assertEquals(Rejection.NothingHere, engine(house = "marketStand").farmhouseUpgradeRejection(origin, now))
     }
 
     @Test
@@ -74,7 +74,7 @@ class HouseUpgradeTest {
         val engine = engine()
         engine.state.putBuilding(GridPoint(14, 10), "petHouse")
         val before = engine.state.copy()
-        val events = engine.upgradeHouse(origin, now)
+        val events = engine.upgradeFarmhouse(origin, now)
         assertTrue(events.any { it is GameEvent.Rejected })
         assertTrue(sameState(before, engine.state))
     }
@@ -85,7 +85,7 @@ class HouseUpgradeTest {
         assertEquals(5, base.stockSlotLimit)
         for (ticker in listOf("A", "B", "C", "D", "E")) base.buyOne(ticker)
         assertEquals(listOf<GameEvent>(GameEvent.Rejected(Rejection.StockSlotsFull(5))), base.buyOne("F"))
-        base.upgradeHouse(origin, now)
+        base.upgradeFarmhouse(origin, now)
         assertEquals(10, base.stockSlotLimit)
         for (ticker in listOf("F", "G", "H", "I", "J")) base.buyOne(ticker)
         assertEquals(10, base.stockSlotsUsed)

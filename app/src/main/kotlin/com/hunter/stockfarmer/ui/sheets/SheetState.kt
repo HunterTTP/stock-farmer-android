@@ -25,7 +25,7 @@ import com.hunter.stockfarmer.core.rules.favoriteCrop
 import com.hunter.stockfarmer.core.rules.homeCapacity
 import com.hunter.stockfarmer.core.rules.homeLevel
 import com.hunter.stockfarmer.core.rules.homeUpgradeRejection
-import com.hunter.stockfarmer.core.rules.houseUpgradeRejection
+import com.hunter.stockfarmer.core.rules.farmhouseUpgradeRejection
 import com.hunter.stockfarmer.core.rules.livestock
 import com.hunter.stockfarmer.core.rules.materialRefund
 import com.hunter.stockfarmer.core.rules.meal
@@ -175,7 +175,7 @@ internal data class SheetState(
                             "Upgrade to Luxury House · ${StockMarketRules.HOUSE_UPGRADE_COST.dollars}",
                             "${StockMarketRules.UPGRADED_SLOT_LIMIT} stock slots · " +
                                 "Unlocks at Level ${StockMarketRules.HOUSE_UPGRADE_LEVEL}",
-                            engine.houseUpgradeRejection(origin, now)?.message,
+                            engine.farmhouseUpgradeRejection(origin, now)?.message,
                         )
                     }
 

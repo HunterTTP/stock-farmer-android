@@ -34,7 +34,7 @@ import com.hunter.stockfarmer.core.rules.storeTractorCargo
 import com.hunter.stockfarmer.core.rules.summonPet
 import com.hunter.stockfarmer.core.rules.trashStored
 import com.hunter.stockfarmer.core.rules.upgradeHome
-import com.hunter.stockfarmer.core.rules.upgradeHouse
+import com.hunter.stockfarmer.core.rules.upgradeFarmhouse
 import com.hunter.stockfarmer.game.GameSession
 import java.time.Instant
 
@@ -166,7 +166,7 @@ internal object SheetActions {
                 }
 
                 SheetAction.Upgrade -> {
-                    if (placed.building.isHouse) engine.upgradeHouse(origin, now) else engine.upgradeHome(origin)
+                    if (placed.building.isHouse) engine.upgradeFarmhouse(origin, now) else engine.upgradeHome(origin)
                 }
 
                 is SheetAction.NextChick -> {

@@ -7,7 +7,7 @@ import com.hunter.stockfarmer.core.model.dollars
 import com.hunter.stockfarmer.core.rules.GameEngine
 import com.hunter.stockfarmer.core.rules.StockMarketRules
 import com.hunter.stockfarmer.core.rules.homeUpgradeRejection
-import com.hunter.stockfarmer.core.rules.houseUpgradeRejection
+import com.hunter.stockfarmer.core.rules.farmhouseUpgradeRejection
 import com.hunter.stockfarmer.core.rules.nextHomeUpgrade
 import java.time.Instant
 
@@ -81,7 +81,7 @@ internal data class BuildingUpgradeState(
                                         "Level ${StockMarketRules.HOUSE_UPGRADE_LEVEL}",
                                 ),
                                 StockMarketRules.HOUSE_UPGRADE_COST.dollars,
-                                engine.houseUpgradeRejection(origin, now)?.message,
+                                engine.farmhouseUpgradeRejection(origin, now)?.message,
                             ),
                         )
                     }
