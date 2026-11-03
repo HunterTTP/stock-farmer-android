@@ -41,6 +41,7 @@ import com.hunter.stockfarmer.core.model.DaySummary
 import com.hunter.stockfarmer.core.rules.GameEvent
 import com.hunter.stockfarmer.core.rules.LevelUnlocks
 import com.hunter.stockfarmer.core.rules.select
+import com.hunter.stockfarmer.diagnostics.PerformanceMonitor
 import com.hunter.stockfarmer.game.FarmSlots
 import com.hunter.stockfarmer.game.Feedback
 import com.hunter.stockfarmer.game.GameSession
@@ -81,7 +82,6 @@ import com.hunter.stockfarmer.ui.rewards.rewardTarget
 import com.hunter.stockfarmer.ui.screens.DaySummaryBanner
 import com.hunter.stockfarmer.ui.screens.LevelUpScreen
 import com.hunter.stockfarmer.ui.screens.LocalScreenAudio
-import com.hunter.stockfarmer.ui.screens.PerformanceMonitor
 import com.hunter.stockfarmer.ui.screens.PlaySettings
 import com.hunter.stockfarmer.ui.screens.QuestBanner
 import com.hunter.stockfarmer.ui.screens.QuestReward

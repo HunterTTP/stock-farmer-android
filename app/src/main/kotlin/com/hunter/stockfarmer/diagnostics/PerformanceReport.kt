@@ -1,4 +1,4 @@
-package com.hunter.stockfarmer.ui.screens
+package com.hunter.stockfarmer.diagnostics
 
 import com.hunter.stockfarmer.core.feedback.PerformanceDurations
 import com.hunter.stockfarmer.core.feedback.PerformanceFrames

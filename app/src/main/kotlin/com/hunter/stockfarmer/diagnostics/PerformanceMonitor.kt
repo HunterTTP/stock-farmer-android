@@ -1,7 +1,10 @@
-package com.hunter.stockfarmer.ui.screens
+package com.hunter.stockfarmer.diagnostics
 
 import com.hunter.stockfarmer.core.feedback.PerformanceDurations
 import com.hunter.stockfarmer.core.feedback.PerformanceFrames
+import com.hunter.stockfarmer.diagnostics.PerformanceHitch
+import com.hunter.stockfarmer.diagnostics.PerformanceReport
+import com.hunter.stockfarmer.diagnostics.PerformanceWork
 import java.time.Instant
 
 data class PerformanceResources(

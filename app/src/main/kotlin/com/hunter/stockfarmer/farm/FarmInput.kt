@@ -6,15 +6,15 @@ import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.utils.TimeUtils
 import com.hunter.stockfarmer.core.model.GameState
 import com.hunter.stockfarmer.core.model.GridPoint
+import com.hunter.stockfarmer.diagnostics.PerformanceMonitor
+import com.hunter.stockfarmer.diagnostics.PerformanceWork
+import com.hunter.stockfarmer.diagnostics.measureOrRun
 import com.hunter.stockfarmer.game.GameSession
 import com.hunter.stockfarmer.game.PlacementDrag
 import com.hunter.stockfarmer.game.gridTileAt
 import com.hunter.stockfarmer.game.hold
 import com.hunter.stockfarmer.game.touch
 import com.hunter.stockfarmer.game.touchAnimalAt
-import com.hunter.stockfarmer.ui.screens.PerformanceMonitor
-import com.hunter.stockfarmer.ui.screens.PerformanceWork
-import com.hunter.stockfarmer.ui.screens.measureOrRun
 import kotlinx.coroutines.flow.update
 import kotlin.math.hypot
 

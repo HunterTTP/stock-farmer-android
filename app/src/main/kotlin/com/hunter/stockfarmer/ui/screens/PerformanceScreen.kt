@@ -20,6 +20,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.hunter.stockfarmer.diagnostics.PerformanceMonitor
+import com.hunter.stockfarmer.diagnostics.PerformanceReport
+import com.hunter.stockfarmer.diagnostics.PerformanceState
 import com.hunter.stockfarmer.game.GameSession
 import com.hunter.stockfarmer.ui.rememberPolledState
 import com.hunter.stockfarmer.ui.theme.HudType

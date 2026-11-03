@@ -1,4 +1,4 @@
-package com.hunter.stockfarmer.ui.screens
+package com.hunter.stockfarmer.diagnostics
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse

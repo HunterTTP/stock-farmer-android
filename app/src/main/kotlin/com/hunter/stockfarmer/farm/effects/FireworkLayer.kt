@@ -4,8 +4,8 @@ import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.hunter.stockfarmer.core.model.GameState
 import com.hunter.stockfarmer.core.model.GridPoint
+import com.hunter.stockfarmer.diagnostics.PerformanceWork
 import com.hunter.stockfarmer.farm.TextureLibrary
-import com.hunter.stockfarmer.ui.screens.PerformanceWork
 import java.time.Instant
 
 class FireworkLayer(

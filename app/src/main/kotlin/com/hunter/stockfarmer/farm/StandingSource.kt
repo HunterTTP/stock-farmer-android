@@ -2,7 +2,7 @@ package com.hunter.stockfarmer.farm
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.hunter.stockfarmer.core.model.GameState
-import com.hunter.stockfarmer.ui.screens.PerformanceWork
+import com.hunter.stockfarmer.diagnostics.PerformanceWork
 import java.time.Instant
 
 /** One thing standing on the map, drawn when its turn comes in the back to front order. */

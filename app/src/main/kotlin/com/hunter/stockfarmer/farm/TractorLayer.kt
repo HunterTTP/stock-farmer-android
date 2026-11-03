@@ -11,10 +11,10 @@ import com.hunter.stockfarmer.core.model.TractorRules
 import com.hunter.stockfarmer.core.presentation.TilePoint
 import com.hunter.stockfarmer.core.presentation.TractorMotion
 import com.hunter.stockfarmer.core.util.secondsSince
+import com.hunter.stockfarmer.diagnostics.PerformanceWork
 import com.hunter.stockfarmer.farm.effects.EffectOverlay
 import com.hunter.stockfarmer.farm.effects.EffectPhase
 import com.hunter.stockfarmer.farm.effects.preserve
-import com.hunter.stockfarmer.ui.screens.PerformanceWork
 import java.time.Instant
 import kotlin.math.ceil
 

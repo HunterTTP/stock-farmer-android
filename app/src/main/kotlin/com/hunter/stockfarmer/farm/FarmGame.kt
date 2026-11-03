@@ -15,6 +15,9 @@ import com.hunter.stockfarmer.core.rules.DayNightCycle
 import com.hunter.stockfarmer.core.rules.catchButterfly
 import com.hunter.stockfarmer.core.rules.containsRejection
 import com.hunter.stockfarmer.core.rules.minuteOfDay
+import com.hunter.stockfarmer.diagnostics.PerformanceMonitor
+import com.hunter.stockfarmer.diagnostics.PerformanceWork
+import com.hunter.stockfarmer.diagnostics.measureOrRun
 import com.hunter.stockfarmer.farm.animals.AnimalArt
 import com.hunter.stockfarmer.farm.animals.animalSources
 import com.hunter.stockfarmer.farm.effects.EffectLayers
@@ -30,10 +33,7 @@ import com.hunter.stockfarmer.game.preview
 import com.hunter.stockfarmer.game.touch
 import com.hunter.stockfarmer.game.touchAnimalAt
 import com.hunter.stockfarmer.game.waterWithSprinklers
-import com.hunter.stockfarmer.ui.screens.PerformanceMonitor
-import com.hunter.stockfarmer.ui.screens.PerformanceWork
 import com.hunter.stockfarmer.ui.screens.PlaySettings
-import com.hunter.stockfarmer.ui.screens.measureOrRun
 import kotlinx.coroutines.flow.update
 import java.time.Instant
 import kotlin.math.floor

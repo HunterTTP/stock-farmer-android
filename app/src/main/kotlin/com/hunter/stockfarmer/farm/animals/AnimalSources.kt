@@ -10,6 +10,7 @@ import com.hunter.stockfarmer.core.rules.Sun
 import com.hunter.stockfarmer.core.rules.SunShadow
 import com.hunter.stockfarmer.core.rules.needsShelter
 import com.hunter.stockfarmer.core.util.secondsSince
+import com.hunter.stockfarmer.diagnostics.PerformanceWork
 import com.hunter.stockfarmer.farm.FarmRenderer
 import com.hunter.stockfarmer.farm.ProduceBadge
 import com.hunter.stockfarmer.farm.Standing
@@ -19,7 +20,6 @@ import com.hunter.stockfarmer.farm.VisualTiming
 import com.hunter.stockfarmer.farm.effects.WaterDrops
 import com.hunter.stockfarmer.farm.label
 import com.hunter.stockfarmer.game.AnimalSceneGestures
-import com.hunter.stockfarmer.ui.screens.PerformanceWork
 import java.time.Instant
 import kotlin.math.sqrt
 

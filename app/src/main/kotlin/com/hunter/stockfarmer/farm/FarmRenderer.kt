@@ -17,10 +17,10 @@ import com.hunter.stockfarmer.core.rules.GrowthTimelines
 import com.hunter.stockfarmer.core.rules.Season
 import com.hunter.stockfarmer.core.rules.fullBuildings
 import com.hunter.stockfarmer.core.rules.workshopRecipe
+import com.hunter.stockfarmer.diagnostics.PerformanceMonitor
+import com.hunter.stockfarmer.diagnostics.PerformanceWork
+import com.hunter.stockfarmer.diagnostics.measureOrRun
 import com.hunter.stockfarmer.game.SceneInteractions
-import com.hunter.stockfarmer.ui.screens.PerformanceMonitor
-import com.hunter.stockfarmer.ui.screens.PerformanceWork
-import com.hunter.stockfarmer.ui.screens.measureOrRun
 import java.time.Instant
 import kotlin.math.max
 
