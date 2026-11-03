@@ -25,6 +25,7 @@ import com.hunter.stockfarmer.core.catalog.Cat
 import com.hunter.stockfarmer.core.catalog.DogBreed
 import com.hunter.stockfarmer.core.model.Pet
 import com.hunter.stockfarmer.core.model.PetSpecies
+import com.hunter.stockfarmer.game.AnimalInteraction
 import com.hunter.stockfarmer.ui.screens.ScreenIcon
 import com.hunter.stockfarmer.ui.theme.HudTextField
 import com.hunter.stockfarmer.ui.theme.HudType

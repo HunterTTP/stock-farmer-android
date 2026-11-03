@@ -44,6 +44,7 @@ import com.hunter.stockfarmer.core.rules.tractorCropOverview
 import com.hunter.stockfarmer.core.rules.workshopRecipe
 import com.hunter.stockfarmer.core.rules.workshopStatus
 import com.hunter.stockfarmer.core.util.secondsSince
+import com.hunter.stockfarmer.game.SheetTarget
 import java.time.Instant
 
 internal data class RecipeChoice(

@@ -20,8 +20,8 @@ import com.hunter.stockfarmer.farm.animals.AnimalGesture
 import com.hunter.stockfarmer.farm.animals.AnimalHitTarget
 import com.hunter.stockfarmer.farm.animals.AnimalReaction
 import com.hunter.stockfarmer.farm.animals.animalReaction
-import com.hunter.stockfarmer.ui.sheets.AnimalInteraction
-import com.hunter.stockfarmer.ui.sheets.SheetTarget
+import com.hunter.stockfarmer.game.AnimalInteraction
+import com.hunter.stockfarmer.game.SheetTarget
 import java.time.Instant
 import java.util.concurrent.ConcurrentLinkedQueue
 

@@ -33,6 +33,7 @@ import com.hunter.stockfarmer.core.rules.StockMarketRules
 import com.hunter.stockfarmer.core.rules.buyShares
 import com.hunter.stockfarmer.core.rules.sellShares
 import com.hunter.stockfarmer.game.GameSession
+import com.hunter.stockfarmer.game.QuestReward
 import com.hunter.stockfarmer.market.NetworkMonitor
 import com.hunter.stockfarmer.market.StockPolling
 import com.hunter.stockfarmer.ui.rememberPolledState

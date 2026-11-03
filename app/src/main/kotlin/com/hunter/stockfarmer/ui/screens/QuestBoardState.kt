@@ -161,13 +161,3 @@ internal data class UpgradeState(
     val cost: String,
     val lockReason: String?,
 )
-
-data class QuestReward(
-    val summary: String,
-    val xp: Int,
-) {
-    companion object {
-        fun from(events: List<GameEvent>): List<QuestReward> =
-            events.filterIsInstance<GameEvent.QuestCompleted>().map { QuestReward(it.summary, it.xp) }
-    }
-}

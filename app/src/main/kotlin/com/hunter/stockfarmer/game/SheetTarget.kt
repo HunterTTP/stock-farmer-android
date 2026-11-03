@@ -1,11 +1,10 @@
-package com.hunter.stockfarmer.ui.sheets
+package com.hunter.stockfarmer.game
 
 import com.hunter.stockfarmer.core.model.GridPoint
 import com.hunter.stockfarmer.core.rules.AnimalRef
 import com.hunter.stockfarmer.core.rules.GameEngine
 import com.hunter.stockfarmer.core.rules.animalStandingAt
 import com.hunter.stockfarmer.core.rules.building
-import com.hunter.stockfarmer.game.GameSession
 
 /** Stable identities, so a moving animal's menu follows the animal rather than its old tile. */
 sealed interface SheetTarget {

@@ -27,6 +27,7 @@ import com.hunter.stockfarmer.core.rules.Rejection
 import com.hunter.stockfarmer.core.rules.WorkshopStatus
 import com.hunter.stockfarmer.core.rules.buildingPlacement
 import com.hunter.stockfarmer.core.rules.startWork
+import com.hunter.stockfarmer.game.SheetTarget
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull

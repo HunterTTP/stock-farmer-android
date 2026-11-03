@@ -53,6 +53,7 @@ import com.hunter.stockfarmer.core.model.DaySummary
 import com.hunter.stockfarmer.core.model.dollars
 import com.hunter.stockfarmer.core.rules.LevelUnlocks
 import com.hunter.stockfarmer.game.GameSession
+import com.hunter.stockfarmer.game.QuestReward
 import com.hunter.stockfarmer.ui.hud.BannerBox
 import com.hunter.stockfarmer.ui.hud.ToolPalette
 import com.hunter.stockfarmer.ui.menus.MenuImage

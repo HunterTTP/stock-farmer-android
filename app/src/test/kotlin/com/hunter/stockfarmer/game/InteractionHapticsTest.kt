@@ -13,7 +13,7 @@ import com.hunter.stockfarmer.core.rules.AnimalRef
 import com.hunter.stockfarmer.core.rules.GameEngine
 import com.hunter.stockfarmer.core.rules.buildingPlacement
 import com.hunter.stockfarmer.farm.animals.AnimalHitTarget
-import com.hunter.stockfarmer.ui.sheets.AnimalInteraction
+import com.hunter.stockfarmer.game.AnimalInteraction
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test

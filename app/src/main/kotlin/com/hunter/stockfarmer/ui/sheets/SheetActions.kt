@@ -36,6 +36,7 @@ import com.hunter.stockfarmer.core.rules.trashStored
 import com.hunter.stockfarmer.core.rules.upgradeFarmhouse
 import com.hunter.stockfarmer.core.rules.upgradeHome
 import com.hunter.stockfarmer.game.GameSession
+import com.hunter.stockfarmer.game.SheetTarget
 import java.time.Instant
 
 internal sealed interface SheetAction {

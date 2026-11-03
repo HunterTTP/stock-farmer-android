@@ -1,4 +1,4 @@
-package com.hunter.stockfarmer.ui.sheets
+package com.hunter.stockfarmer.game
 
 import com.hunter.stockfarmer.core.catalog.Building
 import com.hunter.stockfarmer.core.catalog.Cat

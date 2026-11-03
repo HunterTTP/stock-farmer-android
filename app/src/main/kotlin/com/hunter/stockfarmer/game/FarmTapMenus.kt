@@ -22,7 +22,7 @@ import com.hunter.stockfarmer.core.rules.isMining
 import com.hunter.stockfarmer.core.rules.refund
 import com.hunter.stockfarmer.core.rules.setSprinklersRunConstantly
 import com.hunter.stockfarmer.core.rules.workshopStatus
-import com.hunter.stockfarmer.ui.sheets.SheetTarget
+import com.hunter.stockfarmer.game.SheetTarget
 import java.time.Instant
 import java.util.Locale
 

@@ -17,6 +17,7 @@ import com.hunter.stockfarmer.core.rules.castRod
 import com.hunter.stockfarmer.core.rules.firstRejection
 import com.hunter.stockfarmer.core.rules.fishingReachFactor
 import com.hunter.stockfarmer.core.util.RandomSource
+import com.hunter.stockfarmer.game.FishingCast
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull

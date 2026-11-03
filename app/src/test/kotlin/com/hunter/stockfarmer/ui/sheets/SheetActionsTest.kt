@@ -23,6 +23,7 @@ import com.hunter.stockfarmer.core.rules.buildingPlacement
 import com.hunter.stockfarmer.core.rules.storageCapacity
 import com.hunter.stockfarmer.game.GameSession
 import com.hunter.stockfarmer.game.HapticRequest
+import com.hunter.stockfarmer.game.SheetTarget
 import com.hunter.stockfarmer.game.collectingHaptics
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse

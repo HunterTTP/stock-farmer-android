@@ -27,6 +27,7 @@ import com.hunter.stockfarmer.core.rules.FishingContest
 import com.hunter.stockfarmer.core.rules.GameEvent
 import com.hunter.stockfarmer.core.rules.containsRejection
 import com.hunter.stockfarmer.core.util.SystemRandomSource
+import com.hunter.stockfarmer.game.FishingCast
 import com.hunter.stockfarmer.game.GameSession
 import com.hunter.stockfarmer.ui.theme.LocalHudScale
 import kotlinx.coroutines.delay

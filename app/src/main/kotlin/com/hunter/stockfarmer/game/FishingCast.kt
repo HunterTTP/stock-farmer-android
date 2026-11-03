@@ -1,4 +1,4 @@
-package com.hunter.stockfarmer.ui.fishing
+package com.hunter.stockfarmer.game
 
 import com.hunter.stockfarmer.core.catalog.FishKind
 import com.hunter.stockfarmer.core.catalog.WaterStyle

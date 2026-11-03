@@ -21,9 +21,9 @@ import com.hunter.stockfarmer.core.rules.placementRejection
 import com.hunter.stockfarmer.core.rules.selectionPlaces
 import com.hunter.stockfarmer.core.rules.tapCrop
 import com.hunter.stockfarmer.farm.animals.animalAtTouch
-import com.hunter.stockfarmer.ui.fishing.FishingCast
-import com.hunter.stockfarmer.ui.sheets.SheetTarget
-import com.hunter.stockfarmer.ui.sheets.SheetTargets
+import com.hunter.stockfarmer.game.FishingCast
+import com.hunter.stockfarmer.game.SheetTarget
+import com.hunter.stockfarmer.game.SheetTargets
 import java.time.Instant
 
 /** What a touch on a tile does: carry a thing being placed there, start placing the selected one, or use the tool. */

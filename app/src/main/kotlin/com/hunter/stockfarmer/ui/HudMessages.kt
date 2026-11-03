@@ -12,8 +12,8 @@ import com.hunter.stockfarmer.core.rules.GameEvent
 import com.hunter.stockfarmer.core.rules.LevelUnlocks
 import com.hunter.stockfarmer.game.Feedback
 import com.hunter.stockfarmer.game.GameSession
+import com.hunter.stockfarmer.game.QuestReward
 import com.hunter.stockfarmer.game.ToastMessage
-import com.hunter.stockfarmer.ui.screens.QuestReward
 import kotlinx.coroutines.delay
 
 /** What the game has to tell the player over the farm: the toast, quest rewards, the level-up and the day summary. */
