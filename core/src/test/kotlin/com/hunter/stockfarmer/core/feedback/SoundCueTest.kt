@@ -45,7 +45,7 @@ class SoundCueTest {
 
     @Test
     fun `a level up replaces the other cues`() {
-        val events = listOf(GameEvent.Planted(here, 1.0), GameEvent.LeveledUp(2, emptyList(), 0, 1))
+        val events = listOf(GameEvent.Planted(here, 1.0), GameEvent.LeveledUp(2, 0, 1))
         assertEquals(listOf(PlacedCue(SoundCue.levelUp)), cues(events))
     }
 

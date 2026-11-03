@@ -71,8 +71,6 @@ internal class FarmGestureRecognizer(
     private var initial1 = FingerPoint(0f, 0f)
     private var initial2 = FingerPoint(0f, 0f)
 
-    val fingerCount: Int get() = fingers.size
-
     fun touchDown(
         id: Int,
         x: Float,

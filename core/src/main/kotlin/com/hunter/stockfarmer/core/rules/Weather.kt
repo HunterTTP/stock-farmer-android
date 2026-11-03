@@ -1,5 +1,6 @@
 package com.hunter.stockfarmer.core.rules
 
+import com.hunter.stockfarmer.core.util.smoothstep
 import java.time.Instant
 import kotlin.math.min
 
@@ -17,7 +18,7 @@ object Weather {
     }
 
     /** Picture and sound follow the same easing so neither runs ahead of the other. */
-    fun eased(amount: Double): Double = amount * amount * (3 - 2 * amount)
+    fun eased(amount: Double): Double = smoothstep(amount)
 
     /** Animals remain sheltered from halfway through the build-up until the rain stops. */
     fun isPouring(minuteOfDay: Double): Boolean {

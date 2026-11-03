@@ -39,8 +39,6 @@ data class SoundSettings private constructor(
         level: Double,
     ): SoundSettings = SoundSettings(levels + (channel to clamp(level)))
 
-    fun toPreferences(): Map<String, Double> = levels.mapKeys { it.key.preferenceKey }
-
     companion object {
         fun from(preferences: Map<String, *>): SoundSettings =
             SoundSettings(

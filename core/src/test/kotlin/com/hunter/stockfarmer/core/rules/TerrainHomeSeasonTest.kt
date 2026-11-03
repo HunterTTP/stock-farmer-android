@@ -233,13 +233,11 @@ class TerrainHomeSeasonTest {
     @Test fun `an upgrade waits for its player level and the money and is recorded in career`() {
         val upgrade = HomeUpgrade.upgrade("chickenCoop", 2)!!
         val early = homeEngine("chickenCoop", upgrade.unlockLevel - 1)
-        assertFalse(early.offersHomeUpgrade(origin))
         assertEquals(
             listOf<GameEvent>(GameEvent.Rejected(Rejection.NeedLevel(upgrade.unlockLevel))),
             early.upgradeHome(origin),
         )
         val poor = homeEngine("chickenCoop", upgrade.unlockLevel, upgrade.cost - 1)
-        assertTrue(poor.offersHomeUpgrade(origin))
         assertEquals(listOf<GameEvent>(GameEvent.Rejected(Rejection.NeedMoney(upgrade.cost))), poor.upgradeHome(origin))
         val ready = homeEngine("chickenCoop", upgrade.unlockLevel, upgrade.cost)
         assertFalse(ready.hasReached(upgrade))

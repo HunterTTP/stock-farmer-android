@@ -1,5 +1,6 @@
 package com.hunter.stockfarmer.core.rules
 
+import com.hunter.stockfarmer.core.util.smoothstep
 import java.time.Instant
 import java.util.Locale
 
@@ -27,8 +28,8 @@ object DayNightCycle {
         val sinceDusk = (minuteOfDay - dusk + minutesPerDay) % minutesPerDay
         val nightLength = (nightEnd - nightStart + minutesPerDay) % minutesPerDay + twilight * 1.5
         if (!(sinceDusk < nightLength)) return 0.0
-        if (sinceDusk < twilight) return smooth(sinceDusk / twilight)
-        if (sinceDusk > nightLength - twilight) return smooth((nightLength - sinceDusk) / twilight)
+        if (sinceDusk < twilight) return smoothstep(sinceDusk / twilight)
+        if (sinceDusk > nightLength - twilight) return smoothstep((nightLength - sinceDusk) / twilight)
         return 1.0
     }
 
@@ -48,6 +49,4 @@ object DayNightCycle {
         val twelveHour = if (hour % 12 == 0L) 12L else hour % 12
         return "$twelveHour:" + String.format(Locale.US, "%02d", whole % 60) + if (hour < 12) " AM" else " PM"
     }
-
-    private fun smooth(x: Double): Double = x * x * (3 - 2 * x)
 }

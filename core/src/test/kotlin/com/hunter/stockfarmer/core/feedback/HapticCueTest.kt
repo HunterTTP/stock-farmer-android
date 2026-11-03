@@ -24,7 +24,7 @@ class HapticCueTest {
 
     @Test
     fun `a level reached is success and beats money`() {
-        val events = listOf(sold, GameEvent.LeveledUp(2, emptyList(), 0, 1))
+        val events = listOf(sold, GameEvent.LeveledUp(2, 0, 1))
         assertEquals(HapticCue.Success, HapticCue.cue(events))
     }
 

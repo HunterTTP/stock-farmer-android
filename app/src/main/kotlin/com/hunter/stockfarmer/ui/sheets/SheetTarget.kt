@@ -22,8 +22,6 @@ sealed interface SheetTarget {
     ) : SheetTarget
 }
 
-fun GameSession.targetAt(tile: GridPoint): SheetTarget? = act { SheetTargets.at(it, tile) }
-
 internal object SheetTargets {
     fun at(
         engine: GameEngine,

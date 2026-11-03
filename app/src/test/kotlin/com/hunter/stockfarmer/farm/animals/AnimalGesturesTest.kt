@@ -27,10 +27,7 @@ internal class AnimalGesturesTest {
     @Test
     fun `pet carries on at once while a nudge waits for the current step`() {
         val targets = listOf(AnimalHitTarget(pet, 100f, 100f, stepRemaining = 0.2))
-        assertEquals(
-            AnimalReaction(pet, AnimalGesture.PET, 0.0),
-            reactionAtTouch(100f, 100f, AnimalGesture.PET, targets),
-        )
+        assertEquals(AnimalReaction(pet, AnimalGesture.PET, 0.0), animalReaction(pet, AnimalGesture.PET, targets))
         assertEquals(AnimalReaction(pet, AnimalGesture.NUDGE, 0.2), animalReaction(pet, AnimalGesture.NUDGE, targets))
         assertNull(animalReaction(hen, AnimalGesture.PET, targets))
     }

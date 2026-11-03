@@ -27,60 +27,6 @@ import com.hunter.stockfarmer.ui.theme.Theme
 import kotlinx.coroutines.delay
 import java.time.Instant
 
-@Composable
-fun MarketQuestScreen(
-    session: GameSession,
-    onClose: () -> Unit,
-    onEvents: (List<GameEvent>) -> Unit = {},
-) {
-    val reportEvents by rememberUpdatedState(onEvents)
-    var rewards by remember(session) { mutableStateOf(emptyList<QuestReward>()) }
-    val boards by rememberScreenState(session) {
-        session.act { QuestBoardState.all(it, Instant.now()) }
-    }
-    val owner = LocalLifecycleOwner.current
-    LaunchedEffect(session, owner) {
-        owner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
-            while (true) {
-                val events =
-                    session.act { engine ->
-                        QuestBoardState.all(engine, Instant.now()).forEach {
-                            engine.prepareQuests(it.origin, SystemRandomSource)
-                        }
-                        engine.claimCompletedQuests(SystemRandomSource)
-                    }
-                QuestReward.from(events).takeIf { it.isNotEmpty() }?.let { rewards = it }
-                if (events.isNotEmpty()) reportEvents(events)
-                delay(500)
-            }
-        }
-    }
-    LaunchedEffect(rewards) {
-        if (rewards.isNotEmpty()) {
-            delay(4000)
-            rewards = emptyList()
-        }
-    }
-    ScreenLayout("Farm quests", session, onClose) {
-        if (rewards.isNotEmpty()) QuestRewardCard(rewards)
-        if (boards.isEmpty()) {
-            Text(
-                "Build a Market Stand to get farm quests.",
-                style = HudType.subheadline,
-                color = Theme.textSecondary,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
-            )
-        }
-        boards.forEach { board ->
-            MarketQuestSection(session, board.origin) {
-                QuestReward.from(it).takeIf { claimed -> claimed.isNotEmpty() }?.let { claimed -> rewards = claimed }
-                onEvents(it)
-            }
-        }
-    }
-}
-
 /** Can also be embedded in the building menu for a particular stand. */
 @Composable
 fun MarketQuestSection(

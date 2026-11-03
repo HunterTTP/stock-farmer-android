@@ -237,17 +237,6 @@ class StockTradingTest {
         assertEquals(10_000L, engine.state.holdings["AAPL"]?.lastPriceCents)
     }
 
-    @Test fun `cost basis is what the shares owned cost`() {
-        val engine = engine(money = 10_000.0)
-        engine.buyShares(quote("AAPL", 10_000), 2, now = now)
-        engine.buyShares(quote("TSLA", 5_000), 1, now = now)
-        assertEquals(25_000L, engine.costBasisCents)
-        engine.sellShares(quote("AAPL", 12_000), 1, now = now)
-        assertEquals(15_000L, engine.costBasisCents)
-        engine.sellShares(quote("AAPL", 12_000), 1, now = now)
-        assertEquals(5_000L, engine.costBasisCents)
-    }
-
     @Test fun `day change is measured from the previous close`() {
         assertEquals(0.0125, StockMarketRules.dayChange(10_125, 10_000))
         assertEquals(-0.01, StockMarketRules.dayChange(9_900, 10_000))

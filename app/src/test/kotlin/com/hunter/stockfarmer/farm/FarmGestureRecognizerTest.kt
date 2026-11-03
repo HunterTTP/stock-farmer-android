@@ -120,6 +120,5 @@ internal class FarmGestureRecognizerTest {
     fun `an up for an unknown pointer is ignored`() {
         recognizer.touchUp(1, 0f, 0f)
         assertEquals(emptyList<String>(), events)
-        assertEquals(0, recognizer.fingerCount)
     }
 }

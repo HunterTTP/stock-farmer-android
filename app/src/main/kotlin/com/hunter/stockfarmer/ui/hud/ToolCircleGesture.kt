@@ -8,10 +8,6 @@ enum class ToolDragPhase { Inactive, Began, Changed }
 object ToolCircleMetrics {
     const val DIAMETER = 78f
 
-    /** How far past its edge a touch still counts as on the circle. */
-    const val TOUCH_MARGIN = 12f
-    const val TOUCH_MARGIN_TOWARD_NEIGHBORS = 4f
-
     /** Movement under this many points still counts as a tap. */
     const val TAP_SLOP = 8f
 

@@ -17,9 +17,6 @@ data class RingFaceMetrics(
     val gapDp: Float,
     val textWidthDp: Float,
 ) {
-    /** The height of the picture, gap and one line of text stacked together. */
-    val contentHeightDp: Float get() = iconDp + gapDp + fontDp * LINE_HEIGHT_EM
-
     companion object {
         private const val REFERENCE_DIAMETER = 68f
         private const val ICON = 36f

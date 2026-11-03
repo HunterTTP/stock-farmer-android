@@ -15,7 +15,6 @@ enum class PerformanceWork(
     structure("Farm structure sync"),
     crops("Crop visuals & growth"),
     animals("Animal & fish visuals"),
-    animalRules("Animal production & movement"),
     tractor("Tractor rules & visuals"),
     shadows("Shadows"),
     night("Night lighting & midnight wave"),
@@ -30,8 +29,6 @@ enum class PerformanceWork(
     drag("Tool strokes (includes state & feedback)", true),
     preview("Tool & placement previews"),
     commit("State sync & feedback"),
-    saveQueue("Save snapshot & enqueue"),
-    saveFlush("Save flush / waiting for disk"),
 }
 
 data class PerformanceHitch(

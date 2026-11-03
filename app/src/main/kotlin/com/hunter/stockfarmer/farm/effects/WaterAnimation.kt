@@ -10,8 +10,6 @@ internal data class RGB(
     val green: Int,
     val blue: Int,
 ) {
-    fun packed(alpha: Int = 255) = rgba(red, green, blue, alpha)
-
     fun washed() =
         RGB(
             (red + (255 - red) * 0.6).roundToInt(),

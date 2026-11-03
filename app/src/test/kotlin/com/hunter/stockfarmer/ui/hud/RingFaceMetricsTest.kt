@@ -49,8 +49,9 @@ class RingFaceMetricsTest {
             for (fontScale in fontScales) {
                 val d = diameter(width)
                 val metrics = RingFaceMetrics.of(d, fontScale)
-                val half = metrics.contentHeightDp / 2
-                assertTrue(metrics.contentHeightDp < d * 0.85f)
+                val contentHeight = metrics.iconDp + metrics.gapDp + metrics.fontDp * RingFaceMetrics.LINE_HEIGHT_EM
+                val half = contentHeight / 2
+                assertTrue(contentHeight < d * 0.85f)
                 // The lower corners of the name's row sit inside the circle.
                 val corner = sqrt(half * half + (metrics.textWidthDp / 2) * (metrics.textWidthDp / 2))
                 assertTrue(corner <= d / 2 + 0.001f, "width $width font $fontScale")

@@ -584,32 +584,3 @@ fun HudIcon(
 ) {
     Image(icon, contentDescription, modifier.size(size), colorFilter = ColorFilter.tint(tint))
 }
-
-private val butterflyPattern = listOf("WW...WW", "WWW.WWW", "WWWBWWW", ".WWBWW.", "..WBW..")
-private val shiftingWings = listOf(Color.Red, Color.Yellow, Color.Green, Color.Cyan, Color(0.5f, 0f, 0.5f))
-
-/** A butterfly like the ones on the farm: a black body and wings in one color, or all the hues for a [wing] of null. */
-@Composable
-fun ButterflyIcon(
-    wing: Color?,
-    modifier: Modifier = Modifier,
-) {
-    Canvas(modifier.aspectRatio(7f / 5f)) {
-        val cell = minOf(size.width / 7, size.height / 5)
-        val origin = Offset((size.width - cell * 7) / 2, (size.height - cell * 5) / 2)
-        val wingBrush =
-            wing?.let { SolidColor(it) }
-                ?: Brush.linearGradient(shiftingWings, origin, Offset(origin.x + cell * 7, origin.y + cell * 5))
-        butterflyPattern.forEachIndexed { row, line ->
-            line.forEachIndexed { column, mark ->
-                if (mark == '.') return@forEachIndexed
-                val topLeft = Offset(origin.x + column * cell, origin.y + row * cell)
-                if (mark == 'B') {
-                    drawRect(Color(0.12f, 0.12f, 0.12f), topLeft, Size(cell, cell))
-                } else {
-                    drawRect(wingBrush, topLeft, Size(cell, cell))
-                }
-            }
-        }
-    }
-}

@@ -136,14 +136,7 @@ internal object ToolPalette {
             HudTool.Decorating -> MenuPictures.decoration(requireNotNull(Decoration.named("scarecrow")))
         }
 
-    fun harvestPicture(tool: HarvestTool): MenuPicture =
-        when (tool) {
-            HarvestTool.scythe -> MenuPicture.Asset("images/tools/harvester.png")
-            HarvestTool.axe -> MenuPicture.Asset("images/tools/axe.png")
-            HarvestTool.pickaxe -> MenuPicture.Asset("images/tools/pickaxe.png")
-            HarvestTool.bucket -> MenuPicture.Asset("images/tools/bucket.png")
-            HarvestTool.rod -> MenuPicture.Asset("images/tools/rod.png")
-        }
+    fun harvestPicture(tool: HarvestTool): MenuPicture = MenuPicture.Asset("images/tools/${tool.imageName}.png")
 
     /** Applies a pick. A row that is not unlocked yet only says what unlocks it. */
     fun perform(

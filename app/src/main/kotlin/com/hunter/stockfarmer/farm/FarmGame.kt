@@ -60,22 +60,6 @@ class FarmGame(
         action: () -> T,
     ): T = monitor?.measure(work, action) ?: action()
 
-    fun flashPreview(
-        points: List<GridPoint>,
-        allowed: Boolean,
-        now: Instant = Instant.now(),
-    ) {
-        Gdx.app.postRunnable { tilePreview.flash(points, allowed, now) }
-    }
-
-    fun revealGrowth(
-        trees: Set<GridPoint>,
-        rocks: Set<GridPoint>,
-        now: Instant = Instant.now(),
-    ) {
-        Gdx.app.postRunnable { session.read { renderer.growth.reveal(trees, rocks, it.season, now) } }
-    }
-
     override fun create() {
         batch = CountingSpriteBatch()
         textures = TextureLibrary()

@@ -51,8 +51,6 @@ class SoundPlaybackTest {
         assertEquals(1.0, settings[AudioChannel.farm])
         assertEquals(1.0, settings.withLevel(AudioChannel.farm, 2.0)[AudioChannel.farm])
         assertEquals(1.0, settings.withLevel(AudioChannel.farm, Double.NaN)[AudioChannel.farm])
-        assertEquals(settings, SoundSettings.from(settings.toPreferences()))
-        assertEquals(5, settings.toPreferences().size)
     }
 
     @Test fun `only animals fall off but every placed cue pans`() {
@@ -187,7 +185,7 @@ class SoundPlaybackTest {
                     .second.right,
         )
         h.player.react(
-            listOf(GameEvent.Planted(point, 1.0), GameEvent.LeveledUp(2, emptyList(), 0, 1)),
+            listOf(GameEvent.Planted(point, 1.0), GameEvent.LeveledUp(2, 0, 1)),
             LandscapeTool.water,
             { null },
             { error("Fanfare must be centered") },
