@@ -5,6 +5,7 @@
 - The wake behind a swimming duck is made of the same pale foam and water-blue pixels as the sprinkler drops.
 - Menus and sheets make their slide-in and slide-out sounds, the animal menu and confirmation questions make the popup sound, and saving a farm photo plays its chime.
 - While you set things down from Storage, the Decorate and Fertilize lists show only what is in Storage (and the Decorate list no longer mixes Stored items in the rest of the time), as on iOS.
+- On a new farm, the first planting drag now plants every tile your finger crosses: the question about notifications waits until you lift your finger.
 
 ## 2026-11-01
 - The money and level panels no longer sit right against the top of the screen on some phones and tablets; there is

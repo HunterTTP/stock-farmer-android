@@ -99,6 +99,9 @@ class GameSession(
     /** The fish on the line while the fishing game is open; null otherwise. */
     val casts = MutableStateFlow<FishingCast?>(null)
 
+    /** True from the first tile a tool is dragged over until the finger lifts. */
+    val toolStrokes = MutableStateFlow(false)
+
     /** Something the player is asked to confirm before it happens; null when nothing is. */
     val confirmations = MutableStateFlow<Confirmation?>(null)
 

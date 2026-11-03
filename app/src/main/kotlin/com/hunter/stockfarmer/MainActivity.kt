@@ -56,6 +56,7 @@ import com.hunter.stockfarmer.farm.FarmWeather
 import com.hunter.stockfarmer.game.Feedback
 import com.hunter.stockfarmer.game.GameViewModel
 import com.hunter.stockfarmer.haptics.Haptics
+import com.hunter.stockfarmer.notifications.DeferredPrompt
 import com.hunter.stockfarmer.notifications.FieldReadyNotificationPermission
 import com.hunter.stockfarmer.notifications.FieldReadyNotifier
 import com.hunter.stockfarmer.notifications.WorkManagerFieldReadyScheduler
@@ -82,6 +83,7 @@ class MainActivity :
     private lateinit var sound: SoundCenter
     private lateinit var haptics: Haptics
     private lateinit var notifications: FieldReadyNotificationPermission
+    private lateinit var notificationPrompt: DeferredPrompt
     private lateinit var fieldReady: FieldReadyNotifier
     private val farmContainerId = View.generateViewId()
 
@@ -93,6 +95,9 @@ class MainActivity :
         sound = SoundCenter(this)
         haptics = Haptics(window.decorView)
         notifications = FieldReadyNotificationPermission(this, model.notificationPolicy)
+        // The dialog takes the touch, so it waits for a planting drag to finish rather than cut it short.
+        notificationPrompt =
+            DeferredPrompt({ model.session.toolStrokes.value }) { notifications.requestIfNeeded(hasCrops = true) }
         fieldReady = FieldReadyNotifier(WorkManagerFieldReadyScheduler(applicationContext))
         lifecycle.addObserver(sound)
         listenForSound()
@@ -203,7 +208,7 @@ class MainActivity :
                 launch {
                     session.events.collect { events ->
                         HapticCue.cue(events)?.let(haptics::play)
-                        if (events.any { it is GameEvent.Planted }) notifications.requestIfNeeded(hasCrops = true)
+                        if (events.any { it is GameEvent.Planted }) notificationPrompt.request()
                         sound.react(
                             events,
                             landscapeTool = session.read { it.selectedLandscape },
@@ -219,6 +224,9 @@ class MainActivity :
                 }
                 launch {
                     session.cues.collect { sound.play(it) }
+                }
+                launch {
+                    session.toolStrokes.collect { notificationPrompt.whenIdle() }
                 }
                 launch {
                     session.dayBegins.collect(nightChime::begin)
