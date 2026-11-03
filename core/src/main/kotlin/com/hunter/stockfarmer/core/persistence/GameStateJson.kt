@@ -27,15 +27,18 @@ object GameStateJson {
         }
 
     /**
-     * Names everything a farm holds except what moves while nothing is happening: the time played and when it was last
-     * saved. It reads the encoded farm, so a field added later counts without anyone having to remember it. Equal maps in
-     * another order hash differently, which costs one needless write and loses nothing.
+     * Names everything a farm holds except what moves while nothing is happening: the time played, when it was last saved
+     * and how far each herd has been brought up to date. A herd whose steps changed nothing else ends the same when caught
+     * up from the older time, so that time can wait for the next write. It reads the encoded farm, so a field added later
+     * counts without anyone having to remember it. Equal maps in another order hash differently, which costs one needless
+     * write and loses nothing.
      */
     internal fun contentHash(state: GameState): ByteArray {
         val still =
             state.saveSnapshot().apply {
                 playTime = 0.0
                 lastSavedAt = null
+                herds.replaceAll { _, herd -> herd.copy(processedAt = null) }
             }
         return sha256(encode(still).toByteArray(Charsets.UTF_8))
     }
