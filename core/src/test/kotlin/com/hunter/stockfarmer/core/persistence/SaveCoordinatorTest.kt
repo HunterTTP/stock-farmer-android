@@ -17,7 +17,10 @@ import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
-/** Holds the first write of slot 1 until the test lets it go. */
+/**
+ * Holds the first write of slot 1 until the test lets it go. The long waits only matter when a test fails: on a busy
+ * machine a disk thread at minimum priority can take seconds over a save.
+ */
 private class SlowSaveFiles : SaveFileSystem {
     val entered = Semaphore(0)
     val release = Semaphore(0)
@@ -38,7 +41,7 @@ private class SlowSaveFiles : SaveFileSystem {
     ) {
         if (to.fileName.toString() == "slot-1.json" && writes.incrementAndGet() == 1) {
             entered.release()
-            if (!release.tryAcquire(10, TimeUnit.SECONDS)) throw IOException("never released")
+            if (!release.tryAcquire(60, TimeUnit.SECONDS)) throw IOException("never released")
         }
         local.write(data, to)
     }
@@ -55,11 +58,11 @@ class SaveCoordinatorTest {
         val saver = SaveCoordinator(SaveSlots(directory, files)) { _, _ -> completed.countDown() }
         try {
             saver.saveSoon(stateWith(money = 42.0), 0)
-            assertTrue(files.entered.tryAcquire(5, TimeUnit.SECONDS))
+            assertTrue(files.entered.tryAcquire(60, TimeUnit.SECONDS))
             saver.close()
             assertThrows(RejectedExecutionException::class.java) { saver.whenIdle { } }
             files.release.release()
-            assertTrue(completed.await(5, TimeUnit.SECONDS))
+            assertTrue(completed.await(60, TimeUnit.SECONDS))
             assertEquals(42.0, SaveSlots(directory).load(0)?.money)
         } finally {
             files.release.release()
@@ -74,7 +77,7 @@ class SaveCoordinatorTest {
         val saver = SaveCoordinator(slots)
         try {
             saver.saveSoon(stateWith(money = 1.0), 0)
-            assertTrue(files.entered.tryAcquire(5, TimeUnit.SECONDS))
+            assertTrue(files.entered.tryAcquire(60, TimeUnit.SECONDS))
             for (value in 2..100) saver.saveSoon(stateWith(money = value.toDouble()), 0)
             saver.saveSoon(stateWith(money = 500.0), 1)
             files.release.release()
@@ -124,7 +127,7 @@ class SaveCoordinatorTest {
         val saver = SaveCoordinator(SaveSlots(directory, files))
         val farm = stateWith(money = 1.0)
         saver.saveIfChanged(farm, 0)
-        assertTrue(files.entered.tryAcquire(5, TimeUnit.SECONDS))
+        assertTrue(files.entered.tryAcquire(60, TimeUnit.SECONDS))
         // While the first write is held, a flush queues and an autosave arrives on top of it.
         saver.saveSoon(farm, 0)
         saver.saveIfChanged(farm, 0)
@@ -168,7 +171,7 @@ class SaveCoordinatorTest {
         assertEquals(Thread.NORM_PRIORITY, blocked)
 
         saver.saveSoon(stateWith(money = 1.0), 0)
-        assertTrue(files.written.tryAcquire(5, TimeUnit.SECONDS))
+        assertTrue(files.written.tryAcquire(60, TimeUnit.SECONDS))
         assertEquals(Thread.MIN_PRIORITY, files.priority)
 
         saver.saveNow(stateWith(money = 2.0), 0)

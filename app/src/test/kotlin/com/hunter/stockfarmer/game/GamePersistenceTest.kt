@@ -39,6 +39,9 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
 
+/** Only ever waited out by a failing test: on a busy machine the disk thread, at minimum priority, can take seconds. */
+private const val WAIT_SECONDS = 60L
+
 class GamePersistenceTest {
     @TempDir
     lateinit var directory: Path
@@ -247,7 +250,7 @@ class GamePersistenceTest {
         scheduler.runCurrent()
         files.saved.drainPermits()
         scheduler.advance(250)
-        assertTrue(files.saved.tryAcquire(5, TimeUnit.SECONDS))
+        assertTrue(files.saved.tryAcquire(WAIT_SECONDS, TimeUnit.SECONDS))
         // Block disk access before the snapshot is serialized, then mutate the live maps.
         files.blockReads = true
         persistence.session.act {
@@ -255,13 +258,13 @@ class GamePersistenceTest {
             it.state.storage["wheat"] = 7
         }
         scheduler.advance(1_000)
-        assertTrue(files.entered.await(5, TimeUnit.SECONDS))
+        assertTrue(files.entered.await(WAIT_SECONDS, TimeUnit.SECONDS))
         persistence.session.act {
             it.state.money = 99.0
             it.state.storage["wheat"] = 9
         }
         files.release.countDown()
-        assertTrue(files.written.await(5, TimeUnit.SECONDS))
+        assertTrue(files.written.await(WAIT_SECONDS, TimeUnit.SECONDS))
         val snapshot = slots.load(0)
         assertEquals(42.0, snapshot?.money)
         assertEquals(7, snapshot?.storage?.get("wheat"))
@@ -500,7 +503,7 @@ class GamePersistenceTest {
     }
 
     @Test
-    fun `a farm that is not saved by a failing autosave keeps trying and recovers without a change`() {
+    fun `a failing autosave keeps trying and recovers with no new change to prompt it`() {
         startPlaying()
         files.failWrites = true
         persistence.session.act { it.state.money = 4_321.0 }
@@ -768,7 +771,7 @@ class GamePersistenceTest {
         override fun read(url: Path): ByteArray? {
             if (blockReads && url.fileName.toString() == "slot-1.json") {
                 entered.countDown()
-                check(release.await(5, TimeUnit.SECONDS))
+                check(release.await(WAIT_SECONDS, TimeUnit.SECONDS))
             }
             return local.read(url)
         }
