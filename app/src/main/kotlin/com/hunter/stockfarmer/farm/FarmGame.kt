@@ -31,6 +31,7 @@ import com.hunter.stockfarmer.game.touchAnimalAt
 import com.hunter.stockfarmer.ui.screens.PerformanceMonitor
 import com.hunter.stockfarmer.ui.screens.PerformanceWork
 import com.hunter.stockfarmer.ui.screens.PlaySettings
+import com.hunter.stockfarmer.ui.screens.measureOrRun
 import kotlinx.coroutines.flow.update
 import java.time.Instant
 import kotlin.math.floor
@@ -54,11 +55,6 @@ class FarmGame(
     private val touch = Vector3()
     private val tilePreview = TilePreview()
     private val placementDrag = PlacementDrag(session)
-
-    private fun <T> measure(
-        work: PerformanceWork,
-        action: () -> T,
-    ): T = monitor?.measure(work, action) ?: action()
 
     fun flashPreview(
         points: List<GridPoint>,
@@ -154,7 +150,7 @@ class FarmGame(
 
     override fun render() {
         monitor?.frame()
-        measure(PerformanceWork.scene) {
+        monitor.measureOrRun(PerformanceWork.scene) {
             applyGraphicsSettings()
             Gdx.gl.glClearColor(0.05f, 0.08f, 0.12f, 1f)
             Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT)
@@ -165,9 +161,9 @@ class FarmGame(
             batch.begin()
             val now = Instant.now()
             recognizer.update(TimeUtils.millis())
-            measure(PerformanceWork.tractor) { driveTractor(now) }
+            monitor.measureOrRun(PerformanceWork.tractor) { driveTractor(now) }
             session.act {
-                measure(PerformanceWork.animals) {
+                monitor.measureOrRun(PerformanceWork.animals) {
                     session.animalGestures.advance(it, now)
                 }
                 if (session.isActive && !session.isSaveBlocked) session.wildGrowth.advance(it, now)
@@ -190,10 +186,10 @@ class FarmGame(
                 renderer.draw(batch, it, now)
                 effects.draw(EffectPhase.BEFORE_TINT, batch, it, now, camera)
             }
-            measure(PerformanceWork.night) { drawNightTint(now) }
+            monitor.measureOrRun(PerformanceWork.night) { drawNightTint(now) }
             session.read { effects.draw(EffectPhase.AFTER_TINT, batch, it, now, camera) }
             celebrate(now)
-            measure(PerformanceWork.preview) {
+            monitor.measureOrRun(PerformanceWork.preview) {
                 tilePreview.draw(batch, textures, session.preview(now), now, screenScale)
             }
             batch.end()
@@ -341,7 +337,7 @@ class FarmGame(
             x: Float,
             y: Float,
         ) {
-            measure(PerformanceWork.tap) {
+            monitor.measureOrRun(PerformanceWork.tap) {
                 val tile = tileAt(x, y)
                 if (!session.touchAnimalAt(touch.x, touch.y)) tile?.let { session.touch(it) }
             }
@@ -351,7 +347,7 @@ class FarmGame(
             x: Float,
             y: Float,
         ) {
-            measure(PerformanceWork.tap) {
+            monitor.measureOrRun(PerformanceWork.tap) {
                 val tile = tileAt(x, y)
                 if (!session.touchAnimalAt(touch.x, touch.y)) tile?.let { session.hold(it) }
             }
@@ -376,7 +372,7 @@ class FarmGame(
             deltaX: Float,
             deltaY: Float,
         ) {
-            val moved = measure(PerformanceWork.drag) { placementDrag.move(tileAt(x, y)) }
+            val moved = monitor.measureOrRun(PerformanceWork.drag) { placementDrag.move(tileAt(x, y)) }
             if (!moved) cameraControls.pan(deltaX, deltaY)
         }
 

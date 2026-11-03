@@ -12,6 +12,7 @@ import com.hunter.stockfarmer.farm.StandingSource
 import com.hunter.stockfarmer.farm.TextureLibrary
 import com.hunter.stockfarmer.ui.screens.PerformanceMonitor
 import com.hunter.stockfarmer.ui.screens.PerformanceWork
+import com.hunter.stockfarmer.ui.screens.measureOrRun
 import java.time.Instant
 import kotlin.math.hypot
 import kotlin.math.roundToInt
@@ -51,11 +52,7 @@ class EffectLayers internal constructor(
         camera: OrthographicCamera,
     ) {
         overlaysByPhase[phase.ordinal].forEach { overlay ->
-            if (monitor != null) {
-                monitor.measure(overlay.work) {
-                    overlay.draw(batch, state, now, camera)
-                }
-            } else {
+            monitor.measureOrRun(overlay.work) {
                 overlay.draw(batch, state, now, camera)
             }
         }
