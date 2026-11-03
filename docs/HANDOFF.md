@@ -11,9 +11,16 @@ $env:JAVA_HOME = "C:\Program Files\Eclipse Adoptium\jdk-25.0.4.7-hotspot"
 
 ## Verified state
 
-`main` passes the gate above with fresh runs: 1,286 core tests, 586 app tests, lint with no errors, debug APK 82 MB and release APK 69 MB (R8 and resource shrinking on). The debug build has been run on a device once, before the audit changes below.
+`main` is expected to pass the gate above; the latest gate run is the record, so counts and APK sizes are not kept here. The debug build has been run on a device once, before the changes below.
 
-## Audit changes that need a device check
+## Structure
+
+`game` holds the session and the shared view state and imports neither `ui` nor `farm` (`PackageLayeringTest` scans the imports and lists no exceptions). Placement routing (`selectionPlaces`, `beginPlacingSelection`, `currentPlacementOrigin`) and unlock tracking are `core/rules`. `MainActivity` is split into `GameRoot`, `LaunchOverlay` and `GameFeedbackDriver`; `Hud` into `ConfirmationDialog`, `HudMessages` and `HudNavigation`; `FarmGame` into `FarmCamera` and `FarmInput`; the item screen host is `ItemScreenHost`. `TILE` and `WORLD` are in `game/FarmProjection.kt`. Left alone on purpose: `FarmRenderer` and the long stable composables (`SaveSlotsScreen`, `TimelapseViewer`).
+
+## Changes that need a device check
+
+- Cancelling or dismissing a confirmation plays the cancel sound.
+- A sprinkler picked up or removed mid-spray lets its drops and mist finish.
 
 - The farm shows after switching farms or retrying a failed load (the farm fragment is now always re-attached).
 - Rotating the device, and split-screen play: the game now pauses on stop, not pause, and the manifest handles configuration changes.
