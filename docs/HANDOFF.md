@@ -25,7 +25,6 @@ $env:JAVA_HOME = "C:\Program Files\Eclipse Adoptium\jdk-25.0.4.7-hotspot"
 - Camera culling: no pop-in at the screen edges while panning and zooming, and a farm photo still captures everything.
 - Timelapse frames still look right (they are now subsampled to the display size).
 - Saves now fsync the data and the folder. Check what a save costs on real flash, as only a Windows JVM has timed it (about 7 ms more per save for a 134 KB farm). The folder sync is best effort and silently does nothing if Android refuses it, so check it succeeds too.
-- A failed rename, delete or restore from the Load Game screen should show its message there; iOS shows it inside that screen, Android only on the HUD behind it.
 
 ## Open items
 

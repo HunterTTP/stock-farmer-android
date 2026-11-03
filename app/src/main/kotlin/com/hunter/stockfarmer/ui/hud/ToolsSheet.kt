@@ -5,6 +5,7 @@ import androidx.compose.foundation.text.BasicText
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -46,6 +47,9 @@ internal fun ToolsSheet(
     farms: FarmSlots,
     performance: PerformanceMonitor,
     root: ToolRoute,
+    saveError: String?,
+    onRetrySave: () -> Unit,
+    onLoadGameShown: (Boolean) -> Unit,
     onTakePhoto: ((String) -> Unit) -> Unit,
     onClose: () -> Unit,
     onSelected: () -> Unit = onClose,
@@ -57,6 +61,11 @@ internal fun ToolsSheet(
     val open = { route: ToolRoute -> stack = stack.push(route) }
     var photoMessage by remember { mutableStateOf<String?>(null) }
     val route = stack.current
+    val isLoadGame = route == ToolRoute.LoadGame
+    DisposableEffect(isLoadGame) {
+        onLoadGameShown(isLoadGame)
+        onDispose { onLoadGameShown(false) }
+    }
     if (route == ToolRoute.Storage) {
         BackHandler(enabled = stack.canGoBack, onBack = back)
         MenusHost(session, Menu.Storage, onClose = back, onToast = onToast)
@@ -83,7 +92,9 @@ internal fun ToolsSheet(
     }
     HudSheet(onDismiss = onClose) {
         BackHandler(enabled = stack.canGoBack, onBack = back)
-        RouteScreen(route, session, farms, performance, open, { onTakePhoto { photoMessage = it } }, back)
+        RouteScreen(route, session, farms, performance, saveError, onRetrySave, open, {
+            onTakePhoto { photoMessage = it }
+        }, back)
     }
     photoMessage?.let { message ->
         AlertDialog(
@@ -118,6 +129,8 @@ private fun RouteScreen(
     session: GameSession,
     farms: FarmSlots,
     performance: PerformanceMonitor,
+    saveError: String?,
+    onRetrySave: () -> Unit,
     open: (ToolRoute) -> Unit,
     onPhoto: () -> Unit,
     back: () -> Unit,
@@ -139,7 +152,7 @@ private fun RouteScreen(
 
         ToolRoute.Timelapse -> TimelapseScreen(session, back)
 
-        ToolRoute.LoadGame -> SaveSlotsScreen(session, farms, back)
+        ToolRoute.LoadGame -> SaveSlotsScreen(session, farms, back, saveError, onRetrySave)
 
         ToolRoute.Privacy -> PrivacyScreen(session, back)
 

@@ -1,4 +1,5 @@
 ## 2026-11-03
+- A failed rename, delete or restore on the Load Game screen now shows its message at the top of that screen, with Retry, instead of only behind it.
 - The quantity slider has a round white handle on its track, the stock trade sheet is solid so it no longer shows the Stock Market behind it, and the Storage note, "Replace quest" and "Restore backup" links are easier to read.
 
 ## 2026-11-02

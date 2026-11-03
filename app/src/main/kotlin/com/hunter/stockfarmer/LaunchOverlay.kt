@@ -83,6 +83,8 @@ fun BoxScope.LaunchOverlay(model: GameViewModel) {
                     SaveSlotsScreen(
                         model.farms,
                         onClose = { choosingFarm = false },
+                        saveError = persistence.error,
+                        onRetrySave = model::retry,
                     )
                 }
             }

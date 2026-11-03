@@ -36,6 +36,7 @@ import com.hunter.stockfarmer.core.persistence.SaveSlots
 import com.hunter.stockfarmer.game.FarmSlots
 import com.hunter.stockfarmer.game.GameSession
 import com.hunter.stockfarmer.game.SavedGames
+import com.hunter.stockfarmer.ui.hud.SaveStatusView
 import com.hunter.stockfarmer.ui.theme.HudMaterialTheme
 import com.hunter.stockfarmer.ui.theme.HudTextField
 import com.hunter.stockfarmer.ui.theme.HudType
@@ -63,13 +64,18 @@ private sealed interface NamePrompt {
 fun SaveSlotsScreen(
     farms: FarmSlots,
     onClose: () -> Unit,
-) = SaveSlotsScreen(session = null, farms = farms, onClose = onClose)
+    saveError: String? = null,
+    onRetrySave: () -> Unit = {},
+) = SaveSlotsScreen(session = null, farms = farms, onClose = onClose, saveError = saveError, onRetrySave = onRetrySave)
 
 @Composable
 fun SaveSlotsScreen(
     session: GameSession?,
     farms: FarmSlots,
     onClose: () -> Unit,
+    /** Why a change or save failed; shown at the top, as iOS does, until a retry or the next change clears it. */
+    saveError: String? = null,
+    onRetrySave: () -> Unit = {},
 ) {
     var games by remember { mutableStateOf<SavedGames?>(null) }
     var prompt by remember { mutableStateOf<NamePrompt?>(null) }
@@ -80,6 +86,7 @@ fun SaveSlotsScreen(
     LaunchedEffect(Unit) { refresh() }
 
     ScreenLayout("Load Game", session, onClose) {
+        if (saveError != null) SaveStatusView(saveError, onRetrySave)
         val saved = games
         saved?.slots?.filterNotNull()?.forEach { info ->
             SlotCard(
