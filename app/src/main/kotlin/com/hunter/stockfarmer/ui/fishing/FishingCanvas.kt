@@ -38,11 +38,11 @@ import com.hunter.stockfarmer.core.model.GameState
 import com.hunter.stockfarmer.core.rules.DayNightCycle
 import com.hunter.stockfarmer.core.rules.Season
 import com.hunter.stockfarmer.core.rules.Weather
-import com.hunter.stockfarmer.farm.LocalFarmWeather
-import com.hunter.stockfarmer.farm.NightShade
-import com.hunter.stockfarmer.farm.drawFarmWeather
 import com.hunter.stockfarmer.game.FishingCast
 import com.hunter.stockfarmer.game.GameSession
+import com.hunter.stockfarmer.ui.weather.LocalFarmWeather
+import com.hunter.stockfarmer.ui.weather.NightShade
+import com.hunter.stockfarmer.ui.weather.drawFarmWeather
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext

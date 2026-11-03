@@ -1,4 +1,4 @@
-package com.hunter.stockfarmer.farm
+package com.hunter.stockfarmer.ui.weather
 
 import android.graphics.Bitmap
 import androidx.compose.foundation.Canvas
@@ -33,6 +33,9 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.hunter.stockfarmer.core.rules.Season
 import com.hunter.stockfarmer.core.rules.Weather
 import com.hunter.stockfarmer.core.rules.Wind
+import com.hunter.stockfarmer.farm.Box
+import com.hunter.stockfarmer.farm.SAMPLE_MILLIS
+import com.hunter.stockfarmer.farm.WeatherCadence
 import com.hunter.stockfarmer.farm.effects.RainMotion
 import com.hunter.stockfarmer.farm.effects.WeatherLook
 import com.hunter.stockfarmer.farm.effects.WeatherPresentation

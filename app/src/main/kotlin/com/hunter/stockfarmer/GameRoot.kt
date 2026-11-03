@@ -13,7 +13,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import com.hunter.stockfarmer.audio.SoundCenter
-import com.hunter.stockfarmer.farm.FarmWeather
 import com.hunter.stockfarmer.game.GameViewModel
 import com.hunter.stockfarmer.ui.Hud
 import com.hunter.stockfarmer.ui.rewards.RewardFlights
@@ -21,6 +20,7 @@ import com.hunter.stockfarmer.ui.rewards.RewardFlightsHost
 import com.hunter.stockfarmer.ui.screens.PerformanceSampling
 import com.hunter.stockfarmer.ui.timelapse.LocalTimelapseRecorder
 import com.hunter.stockfarmer.ui.timelapse.TimelapseRecorder
+import com.hunter.stockfarmer.ui.weather.FarmWeather
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import java.time.Instant
