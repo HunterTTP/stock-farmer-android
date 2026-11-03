@@ -11,6 +11,7 @@ import com.hunter.stockfarmer.core.model.ShopItem
 import com.hunter.stockfarmer.core.rules.GameEngine
 import com.hunter.stockfarmer.core.rules.Rejection
 import com.hunter.stockfarmer.core.rules.equippedStock
+import com.hunter.stockfarmer.core.rules.isPlacingFromStorage
 import com.hunter.stockfarmer.core.rules.isSelling
 import com.hunter.stockfarmer.core.rules.level
 import com.hunter.stockfarmer.core.rules.name
@@ -26,6 +27,7 @@ import com.hunter.stockfarmer.ui.menus.MenuChoice
 import com.hunter.stockfarmer.ui.menus.MenuPicture
 import com.hunter.stockfarmer.ui.menus.MenuPictures
 import com.hunter.stockfarmer.ui.menus.MenuPrice
+import com.hunter.stockfarmer.ui.menus.MenuSection
 import com.hunter.stockfarmer.ui.menus.MenuSelection
 import com.hunter.stockfarmer.ui.menus.MenuState
 import com.hunter.stockfarmer.ui.menus.UnlockCategory
@@ -105,13 +107,15 @@ internal object ToolPalette {
         tool: HudTool,
     ): List<ToolDropdown> {
         val engine = GameEngine(state)
+        // A tool setting things down from storage lists what is in storage instead of its usual choices.
+        val fromStorage = tool == engine.currentTool && engine.isPlacingFromStorage
         return when (tool) {
             HudTool.Planting -> planting(engine)
             HudTool.Harvest -> harvest(engine)
-            HudTool.Tilling -> tilling(engine)
+            HudTool.Tilling -> tilling(engine, fromStorage)
             HudTool.Terrain -> catalog(state, Menu.Terrain, "Terrain", setOf("Ground", "Trees"))
             HudTool.Building -> catalog(state, Menu.Build, "Build", setOf("Buildings"))
-            HudTool.Decorating -> catalog(state, Menu.Decorate, "Decorate", setOf("Decorations", "Stored items"))
+            HudTool.Decorating -> catalog(state, Menu.Decorate, "Decorate", setOf("Decorations"), fromStorage)
         }
     }
 
@@ -261,15 +265,13 @@ internal object ToolPalette {
             destination
     }
 
-    private fun tilling(engine: GameEngine): List<ToolDropdown> {
+    private fun tilling(
+        engine: GameEngine,
+        fromStorage: Boolean,
+    ): List<ToolDropdown> {
         val state = engine.state
-        val sprinklers =
-            MenuState
-                .from(state, Menu.Decorate)
-                .sections
-                .firstOrNull { it.title == "Sprinklers" }
-                ?.choices
-                .orEmpty()
+        val sections = MenuState.from(state, Menu.Decorate).sections
+        val sprinklers = sections.firstOrNull { it.title == "Sprinklers" }?.choices.orEmpty()
         val fertilizer =
             ToolChoice(
                 id = "Fertilizer",
@@ -280,9 +282,10 @@ internal object ToolPalette {
                 isAffordable = state.money >= engine.price(ShopItem.Fertilizer),
                 detail = ToolRoute.Item(ShopItem.Fertilizer),
             )
-        val choices = listOf(fertilizer) + sprinklers.map { it.toToolChoice() }
-        val held = choices.firstOrNull { it.isSelected } ?: fertilizer
-        val stock = if (held === fertilizer) null else engine.equippedStock
+        val regular = listOf(fertilizer) + sprinklers.map { it.toToolChoice() }
+        val choices = if (fromStorage) sections.storedChoices() else regular
+        val held = regular.firstOrNull { it.isSelected } ?: fertilizer
+        val stock = if (held === fertilizer && !fromStorage) null else engine.equippedStock
         return listOf(
             ToolDropdown(
                 "Fertilize",
@@ -300,20 +303,19 @@ internal object ToolPalette {
         menu: Menu,
         id: String,
         sections: Set<String>,
+        fromStorage: Boolean = false,
     ): List<ToolDropdown> {
-        val choices =
-            MenuState
-                .from(state, menu)
-                .sections
-                .filter { it.title in sections }
-                .flatMap { it.choices }
+        val all = MenuState.from(state, menu).sections
+        val choices = all.filter { it.title in sections }.flatMap { it.choices }
         val selected = choices.firstOrNull { it.selected }
         val stock = if (menu == Menu.Decorate) GameEngine(state).equippedStock else null
+        val listed = if (fromStorage) all.storedChoices() else choices.map { it.toToolChoice() }
         val main =
             ToolDropdown(
                 id,
-                selected?.title ?: choices.firstOrNull()?.title.orEmpty(),
-                choices.map { it.toToolChoice() },
+                (if (fromStorage) listed.firstOrNull { it.isSelected }?.title else selected?.title)
+                    ?: choices.firstOrNull()?.title.orEmpty(),
+                listed,
                 stock,
                 hasNew = choices.any { it.isNew },
             )
@@ -322,6 +324,10 @@ internal object ToolPalette {
         val chosen = variants.firstOrNull { it.selected } ?: variants.first()
         return listOf(main, ToolDropdown(selected.variantTitle, chosen.title, variants.map { it.toToolChoice() }))
     }
+
+    /** Everything in storage that can be set down, which is what a tool setting things down from storage offers. */
+    private fun List<MenuSection>.storedChoices() =
+        firstOrNull { it.title == "Stored items" }?.choices.orEmpty().map { it.toToolChoice() }
 
     private fun MenuChoice.toToolChoice() =
         ToolChoice(
