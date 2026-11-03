@@ -159,6 +159,7 @@ fun TimeSheet(
                     title = "Close",
                     onClick = onDismiss,
                     role = PillRole.neutral,
+                    fillWidth = false,
                 )
             }
             val sky = TimeSky.color(minute)

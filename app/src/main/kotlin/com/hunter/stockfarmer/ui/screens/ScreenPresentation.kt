@@ -20,11 +20,19 @@ internal object ScreenFormat {
     fun compact(
         value: Double,
         money: Boolean = false,
+        fractionDigits: Int = 0,
     ): String {
         val magnitude = abs(value)
         val steps = listOf(1e12 to "T", 1e9 to "B", 1e6 to "M", 1e3 to "K")
         val step = steps.firstOrNull { magnitude >= it.first }
-        val formatter = DecimalFormat(if (step == null) "#,##0" else "0.#", DecimalFormatSymbols(Locale.US))
+        val optional = "#".repeat(fractionDigits)
+        val pattern =
+            if (step == null) {
+                if (fractionDigits > 0) "#,##0.$optional" else "#,##0"
+            } else {
+                "0." + optional.ifEmpty { "#" }
+            }
+        val formatter = DecimalFormat(pattern, DecimalFormatSymbols(Locale.US))
         val sign = if (value < -1e-9) "-" else ""
         return sign + (if (money) "$" else "") +
             formatter.format(magnitude / (step?.first ?: 1.0)) + (step?.second ?: "")
@@ -83,12 +91,7 @@ internal data class CareerChartState(
                         (1 - (sample.value * scale - minimum) / span).toFloat().coerceIn(0f, 1f),
                     )
                 }
-            val yLabels =
-                (0..3).map { index ->
-                    val fraction = (3 - index) / 3.0
-                    val tickVal = minimum + (maximum - minimum) * fraction
-                    ScreenFormat.compact(tickVal, money)
-                }
+            val yLabels = distinctTickLabels((0..3).map { minimum + (maximum - minimum) * ((3 - it) / 3.0) }, money)
             val xLabels =
                 (0..3).map { index ->
                     val fraction = index / 3.0
@@ -159,3 +162,24 @@ internal data class DaySummaryState(
             )
     }
 }
+
+/**
+ * Labels for evenly spaced axis ticks. Whole-number rounding can print two different ticks the same (a range of 2 gives
+ * 2, 1, 1, 0), so decimals are added until every different tick reads differently.
+ */
+internal fun distinctTickLabels(
+    ticks: List<Double>,
+    money: Boolean,
+): List<String> {
+    val wanted = ticks.map { Math.round(it * TICK_RESOLUTION) }.distinct().size
+    var labels = ticks.map { ScreenFormat.compact(it, money) }
+    var digits = 1
+    while (labels.distinct().size < wanted && digits <= MAX_TICK_DIGITS) {
+        labels = ticks.map { ScreenFormat.compact(it, money, digits) }
+        digits++
+    }
+    return labels
+}
+
+private const val TICK_RESOLUTION = 1e6
+private const val MAX_TICK_DIGITS = 3

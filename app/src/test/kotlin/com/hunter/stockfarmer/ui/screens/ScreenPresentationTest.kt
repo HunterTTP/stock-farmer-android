@@ -40,6 +40,17 @@ class ScreenPresentationTest {
     }
 
     @Test
+    fun `chart ticks stay distinct when whole numbers would repeat`() {
+        val level = CareerChartState.from(listOf(ValueSample(0.0, 0), ValueSample(600.0, 2)))
+        assertEquals(listOf("2", "1.3", "0.7", "0"), level.yLabels)
+        val flat = CareerChartState.from(listOf(ValueSample(0.0, 1)))
+        assertEquals(listOf("1", "0.7", "0.3", "0"), flat.yLabels)
+        val money = CareerChartState.from(listOf(ValueSample(0.0, 0), ValueSample(60.0, 2)), money = true)
+        assertEquals(listOf("$2", "$1.3", "$0.7", "$0"), money.yLabels)
+        assertEquals(listOf("3K", "2K", "1K", "0"), CareerChartState.from(listOf(ValueSample(1.0, 3000))).yLabels)
+    }
+
+    @Test
     fun `empty axes and all negative money axes include zero`() {
         val empty = CareerChartState.from(emptyList(), money = true)
         assertEquals(List(4) { "$0" }, empty.yLabels)

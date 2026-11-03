@@ -179,7 +179,14 @@ fun QuantityControls(
                 modifier = Modifier.fillMaxWidth().semantics { contentDescription = "Quantity" },
                 valueRange = 1f..maximum.toFloat(),
                 steps = if (maximum in 2..100) maximum.toInt() - 2 else 0,
-                colors = SliderDefaults.colors(thumbColor = Theme.accent, activeTrackColor = Theme.accent),
+                colors =
+                    SliderDefaults.colors(
+                        thumbColor = Theme.accent,
+                        activeTrackColor = Theme.accent,
+                        inactiveTrackColor = Color.White.copy(alpha = 0.2f),
+                        activeTickColor = Color.Transparent,
+                        inactiveTickColor = Color.Transparent,
+                    ),
             )
         }
     }

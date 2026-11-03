@@ -151,11 +151,13 @@ fun LaunchScreen(
                                 title = "Retry",
                                 onClick = onRetry,
                                 role = PillRole.accent,
+                                fillWidth = false,
                             )
                             PillButton(
                                 title = "Choose Farm",
                                 onClick = onChooseFarm,
                                 role = PillRole.accent,
+                                fillWidth = false,
                             )
                         }
                     }

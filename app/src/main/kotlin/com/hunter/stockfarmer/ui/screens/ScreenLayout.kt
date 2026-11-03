@@ -133,8 +133,7 @@ internal fun UpgradeCard(
     Column(
         Modifier
             .fillMaxWidth()
-            .categoryCard(isHighlighted = false)
-            .padding(16.dp),
+            .categoryCard(isHighlighted = false),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         Text(

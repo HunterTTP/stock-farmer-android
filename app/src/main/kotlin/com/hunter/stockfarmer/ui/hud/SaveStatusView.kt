@@ -34,8 +34,15 @@ fun SaveStatusView(
             style = HudType.body.copy(color = Theme.textPrimary, textAlign = TextAlign.Center),
         )
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            PillButton(title = "Retry", onClick = onRetry, role = PillRole.accent)
-            onChooseFarm?.let { PillButton(title = "Choose Farm", onClick = it, role = PillRole.neutral) }
+            PillButton(title = "Retry", onClick = onRetry, role = PillRole.accent, fillWidth = false)
+            onChooseFarm?.let {
+                PillButton(
+                    title = "Choose Farm",
+                    onClick = it,
+                    role = PillRole.neutral,
+                    fillWidth = false,
+                )
+            }
         }
     }
 }
