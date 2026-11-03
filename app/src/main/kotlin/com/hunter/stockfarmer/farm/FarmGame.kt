@@ -99,6 +99,8 @@ class FarmGame(
                 }
             }
         }
+        val graphics = Gdx.graphics
+        session.farmCover.attach { covered -> graphics.isContinuousRendering = !covered }
         placeCamera()
         session.view.framesDrawn = 0
         session.view.isSceneBuilt = true
@@ -258,6 +260,7 @@ class FarmGame(
     override fun dispose() {
         saveCamera()
         session.photos.handler = null
+        session.farmCover.attach(null)
         session.view.isSceneBuilt = false
         session.view.framesDrawn = 0
         session.sceneFeedback.catchButterfly = null
