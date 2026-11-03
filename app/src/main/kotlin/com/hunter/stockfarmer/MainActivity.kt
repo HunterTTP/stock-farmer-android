@@ -109,7 +109,7 @@ class MainActivity :
                     FarmHost()
                     if (persistence.isReady) {
                         val recorder = rememberTimelapseRecorder(model.session)
-                        TimelapseCapture(recorder, ready = persistence.error == null)
+                        TimelapseCapture(recorder, ready = !persistence.isSaveBlocked)
                         FarmWeather(model.session) {
                             RewardFlightsHost(model.session) {
                                 CompositionLocalProvider(LocalTimelapseRecorder provides recorder) {
