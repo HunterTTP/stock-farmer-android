@@ -99,6 +99,10 @@ internal data class AnimalSprites(
     companion object {
         const val STEP_DURATION = 0.5
 
+        // Constants, so choosing a width for each animal each frame builds no list.
+        private val WIDE_WHEN_GROWN = setOf("cow", "donkey")
+        private val NARROW_WHEN_BABY = setOf("duck", "rabbit")
+
         fun pet(pet: Pet): AnimalSprites =
             if (pet.species == PetSpecies.cat) {
                 AnimalSprites("Cats", pet.cat.assetName, AnimalSheet(32, 9), AnimalKind.CAT, 100f)
@@ -138,8 +142,8 @@ internal data class AnimalSprites(
             val shearedSheet = animal.look.hasShearedPictures && !baby
             val width =
                 when {
-                    !baby && species.id in listOf("cow", "donkey") -> 144
-                    baby && species.id in listOf("duck", "rabbit") -> 48
+                    !baby && species.id in WIDE_WHEN_GROWN -> 144
+                    baby && species.id in NARROW_WHEN_BABY -> 48
                     else -> 96
                 }
             return AnimalSprites(
