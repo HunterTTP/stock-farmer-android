@@ -73,6 +73,7 @@ class LeafLayer internal constructor(
 ) : EffectOverlay {
     override val phase = EffectPhase.BEFORE_TINT
     override val work = PerformanceWork.weather
+    private val region = TextureRegion()
 
     override fun draw(
         batch: SpriteBatch,
@@ -89,7 +90,8 @@ class LeafLayer internal constructor(
                 val count = texture.width / 48
                 if (count == 0) continue
                 val frame = (age / leaf.frameTime).toInt() % count
-                val region = TextureRegion(texture, frame * 48, 0, 48, minOf(48, texture.height))
+                region.texture = texture
+                region.setRegion(frame * 48, 0, 48, minOf(48, texture.height))
                 val point = leaf.point(age, camera.viewportWidth.toDouble())
                 val side = leaf.side * camera.zoom
                 batch.draw(

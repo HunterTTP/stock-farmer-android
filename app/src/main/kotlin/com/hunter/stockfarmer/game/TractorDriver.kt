@@ -21,6 +21,8 @@ class TractorDriver {
         now: Instant,
     ): List<GameEvent> {
         if (!active || saveBlocked) return emptyList()
+        // Every frame without a tractor lands here; only a queued notice still has something to say.
+        if (engine.state.tractorRun == null && notices.isEmpty()) return emptyList()
         val events =
             if (engine.state.tractorRun != null && elapsed.isFinite() && elapsed > 0) {
                 engine.advanceTractor(elapsed.coerceAtMost(0.1), true, now)
