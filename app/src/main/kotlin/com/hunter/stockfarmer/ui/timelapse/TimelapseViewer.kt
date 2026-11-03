@@ -149,14 +149,17 @@ fun TimelapseViewer(
             owner.lifecycle.removeObserver(observer)
             recorder.setViewing(false)
             session.isTimelapseViewerOpen = false
+            session.farmCover.cover(false)
         }
     }
     LaunchedEffect(player, closing, reduceMotion) {
+        // The farm shows through the reveal, so it stops only once fully hidden and starts again before it can show.
+        if (closing) session.farmCover.cover(false)
         reveal.animateTo(
             if (closing) 0f else 1f,
             tween(if (reduceMotion) 150 else 550, easing = CubicBezierEasing(0.42f, 0f, 0.58f, 1f)),
         )
-        if (closing) finish()
+        if (closing) finish() else session.farmCover.cover(true)
     }
     LaunchedEffect(images, playback.index) {
         val index = playback.index

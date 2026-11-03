@@ -15,6 +15,7 @@ import com.hunter.stockfarmer.core.rules.DayNightCycle
 import com.hunter.stockfarmer.core.rules.catchButterfly
 import com.hunter.stockfarmer.core.rules.containsRejection
 import com.hunter.stockfarmer.core.rules.minuteOfDay
+import com.hunter.stockfarmer.farm.animals.AnimalArt
 import com.hunter.stockfarmer.farm.animals.animalSources
 import com.hunter.stockfarmer.farm.effects.EffectLayers
 import com.hunter.stockfarmer.farm.effects.EffectPhase
@@ -72,10 +73,11 @@ class FarmGame(
                 },
                 monitor = monitor,
             )
+        val animalArt = AnimalArt(textures)
         renderer =
             FarmRenderer(
                 textures,
-                listOf(tractor) + animalSources(textures, session.animalGestures) + effects.sources,
+                listOf(tractor) + animalSources(textures, session.animalGestures, animalArt) + effects.sources,
                 groundEffects = { batch, state, now -> effects.draw(EffectPhase.GROUND, batch, state, now, camera) },
                 weathercocks = weathercocks,
                 treeLean = treeLean,
@@ -83,19 +85,21 @@ class FarmGame(
             )
         Gdx.input.inputProcessor = FarmTouchProcessor()
         session.sceneFeedback.catchButterfly = ::catchButterfly
-        farmPhoto = FarmPhoto(renderer, batch, textures, effects.photo)
-        session.photos.handler = { request, done ->
-            Gdx.app.postRunnable {
-                applyGraphicsSettings()
-                val png =
-                    if (request.state != null) {
-                        farmPhoto.render(request.state, request.pixels, request.at ?: Instant.now())
-                    } else {
-                        session.read { farmPhoto.render(it, request.pixels, Instant.now()) }
-                    }
-                done(png)
+        farmPhoto = FarmPhoto(renderer, batch, textures, effects.photo, animalArt)
+        // This view's own queue: a request must not land on the next view's GL thread with this view's textures.
+        val app = Gdx.app
+        session.photos.handler = { request, pending ->
+            app.postRunnable {
+                if (pending.begin()) {
+                    applyGraphicsSettings()
+                    // A snapshot, so the engine lock is held for the copy and not for the whole map's draw.
+                    val state = request.state ?: session.read { it.copy() }
+                    farmPhoto.render(state, request.pixels, request.at ?: Instant.now(), pending)
+                }
             }
         }
+        val graphics = Gdx.graphics
+        session.farmCover.attach { covered -> graphics.isContinuousRendering = !covered }
         placeCamera()
         session.view.framesDrawn = 0
         session.view.isSceneBuilt = true
@@ -255,6 +259,7 @@ class FarmGame(
     override fun dispose() {
         saveCamera()
         session.photos.handler = null
+        session.farmCover.attach(null)
         session.view.isSceneBuilt = false
         session.view.framesDrawn = 0
         session.sceneFeedback.catchButterfly = null

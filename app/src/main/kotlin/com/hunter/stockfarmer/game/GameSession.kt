@@ -123,6 +123,9 @@ class GameSession(
     /** Asks the farm for a picture of the whole map. */
     val photos = PhotoRequests()
 
+    /** Pauses the farm's frame loop while something opaque hides it. */
+    val farmCover = FarmCover()
+
     /** Where the farm camera looks, so sounds can be placed to one side or made quieter when far away. */
     val view = FarmView()
 

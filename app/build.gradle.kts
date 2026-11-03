@@ -74,5 +74,7 @@ dependencies {
     implementation(libs.gdx.backend.android)
     testImplementation(libs.junit.jupiter)
     testRuntimeOnly(libs.junit.platform.launcher)
+    // The real gdx2d, so tests can check what drawPixel and getPixel do in memory.
+    testRuntimeOnly("com.badlogicgames.gdx:gdx-platform:${libs.versions.gdx.get()}:natives-desktop")
     nativeAbis.forEach { natives("com.badlogicgames.gdx:gdx-platform:${libs.versions.gdx.get()}:natives-$it") }
 }

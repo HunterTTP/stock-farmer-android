@@ -6,15 +6,10 @@ import android.os.Looper
 import com.hunter.stockfarmer.core.feedback.HapticCue
 import com.hunter.stockfarmer.game.GameSession
 import com.hunter.stockfarmer.ui.PhotoSaver
-import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.concurrent.thread
 
 private const val PHOTO_PIXELS = 4096
 private const val SMALLER_PHOTO_PIXELS = 2048
-
-internal object FarmPhotoTaker {
-    val isTakingPhoto = AtomicBoolean(false)
-}
 
 /**
  * Takes a picture of the whole farm and saves it to the gallery, trying a smaller one if the device is short of memory.
@@ -25,12 +20,13 @@ internal fun takeFarmPhoto(
     session: GameSession,
     tell: (String) -> Unit,
 ) {
-    if (!FarmPhotoTaker.isTakingPhoto.compareAndSet(false, true)) return
+    val taking = session.photos.isTakingPhoto
+    if (!taking.compareAndSet(false, true)) return
 
     val main = runCatching { Handler(Looper.getMainLooper()) }.getOrNull()
 
     fun say(message: String) {
-        FarmPhotoTaker.isTakingPhoto.set(false)
+        taking.set(false)
         if (main != null) main.post { tell(message) } else tell(message)
     }
 

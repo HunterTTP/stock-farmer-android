@@ -2,10 +2,13 @@ package com.hunter.stockfarmer.farm.effects
 
 import com.hunter.stockfarmer.core.rules.ShadowProjection
 import com.hunter.stockfarmer.core.rules.SunShadow
+import java.nio.ByteBuffer
+import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.cos
 import kotlin.math.floor
 import kotlin.math.hypot
+import kotlin.math.roundToInt
 import kotlin.math.sin
 
 internal enum class ShadowKind(
@@ -74,6 +77,10 @@ internal data class ShadowImage(
 internal object ShadowRaster {
     const val RESOLUTION = 0.25
 
+    private const val RING_STEPS = 12
+    private const val OFFSETS = 1 + 2 * RING_STEPS
+    private const val NO_LEAN = 1e-9
+
     fun render(
         shape: ShadowShape,
         sun: SunShadow,
@@ -83,8 +90,10 @@ internal object ShadowRaster {
         if (shape.width <= 0 || shape.height <= 0) return null
         val softnessScale = 1.6 - 1.2 * (intensity * 4).let { floor(it + 0.5) / 4 }
         val projection = ShadowProjection(sun.dx to sun.dy, sun.length * 0.4 * if (shape.picture) 2 else 1, 0.55)
-        val tipX = projection.leanX * shape.height
-        val tipY = projection.leanY * shape.height
+        val leanX = projection.leanX
+        val leanY = projection.leanY
+        val tipX = leanX * shape.height
+        val tipY = leanY * shape.height
         val blur = maxOf(14.0, minOf(shape.width, shape.height) * 0.3) * softnessScale
         val spread = 24 * softnessScale
         val margin = blur * 1.5 + spread
@@ -102,10 +111,14 @@ internal object ShadowRaster {
                 val x = left + (col + 0.5) / RESOLUTION
                 val alpha =
                     if (shape.picture) {
-                        val up = (y - shape.castFrom) / projection.leanY
-                        val across = x - up * projection.leanX
-                        mask?.at((across + shape.width / 2) / shape.width, up / shape.height) ?: 0.0
-                    } else if (inBlock(x, y, shape, projection)) {
+                        if (mask != null) {
+                            val up = (y - shape.castFrom) / leanY
+                            val across = x - up * leanX
+                            mask.at((across + shape.width / 2) / shape.width, up / shape.height)
+                        } else {
+                            0.0
+                        }
+                    } else if (inBlock(x, y, shape, leanX, leanY)) {
                         1.0
                     } else {
                         0.0
@@ -113,36 +126,19 @@ internal object ShadowRaster {
                 silhouette[row * width + col] = alpha.toFloat()
             }
         }
-        val offsets =
-            listOf(0 to 0) +
-                listOf(spread, spread / 2).flatMap { ring ->
-                    (0 until 12).map { step ->
-                        val angle = step * Math.PI / 6
-                        floor(ring * RESOLUTION * cos(angle) + 0.5).toInt() to
-                            floor(ring * RESOLUTION * sin(angle) + 0.5).toInt()
-                    }
-                }
-        var blurred =
-            FloatArray(width * height) { index ->
-                val x = index % width
-                val y = index / width
-                offsets.maxOf { (dx, dy) ->
-                    if (x + dx in 0 until width &&
-                        y + dy in 0 until height
-                    ) {
-                        silhouette[(y + dy) * width + x + dx]
-                    } else {
-                        0f
-                    }
-                }
-            }
+        val blurred = FloatArray(width * height)
+        grow(silhouette, blurred, width, height, spread)
         val radius = maxOf(1, (blur * RESOLUTION / 3).toInt())
-        repeat(3) { blurred = boxBlur(boxBlur(blurred, width, height, radius, true), width, height, radius, false) }
+        val prefix = DoubleArray(maxOf(width, height) + 1)
+        repeat(3) {
+            boxBlur(blurred, silhouette, width, height, radius, true, prefix)
+            boxBlur(silhouette, blurred, width, height, radius, false, prefix)
+        }
+        val tipLength = hypot(tipX, tipY)
         for (row in 0 until height) {
             val y = top - (row + 0.5) / RESOLUTION
             for (col in 0 until width) {
                 val x = left + (col + 0.5) / RESOLUTION
-                val tipLength = hypot(tipX, tipY)
                 val along =
                     if (tipLength >
                         0
@@ -172,53 +168,106 @@ internal object ShadowRaster {
         return ShadowImage(width, height, left, top - height / RESOLUTION, blurred)
     }
 
+    /** Each output pixel takes the strongest input at the center or on either of two rings of 12 offsets around it. */
+    private fun grow(
+        input: FloatArray,
+        output: FloatArray,
+        width: Int,
+        height: Int,
+        spread: Double,
+    ) {
+        val offsetX = IntArray(OFFSETS)
+        val offsetY = IntArray(OFFSETS)
+        for (step in 0 until RING_STEPS) {
+            val angle = step * Math.PI / 6
+            offsetX[1 + step] = floor(spread * RESOLUTION * cos(angle) + 0.5).toInt()
+            offsetY[1 + step] = floor(spread * RESOLUTION * sin(angle) + 0.5).toInt()
+            offsetX[1 + RING_STEPS + step] = floor(spread / 2 * RESOLUTION * cos(angle) + 0.5).toInt()
+            offsetY[1 + RING_STEPS + step] = floor(spread / 2 * RESOLUTION * sin(angle) + 0.5).toInt()
+        }
+        // Most of a silhouette's box is empty, so spreading from the filled pixels beats gathering at every pixel.
+        for (y in 0 until height) {
+            for (x in 0 until width) {
+                val value = input[y * width + x]
+                if (value <= 0f) continue
+                for (offset in 0 until OFFSETS) {
+                    val toX = x - offsetX[offset]
+                    val toY = y - offsetY[offset]
+                    if (toX < 0 || toX >= width || toY < 0 || toY >= height) continue
+                    val index = toY * width + toX
+                    if (value > output[index]) output[index] = value
+                }
+            }
+        }
+    }
+
     private fun inBlock(
         x: Double,
         y: Double,
         shape: ShadowShape,
-        projection: ShadowProjection,
+        leanX: Double,
+        leanY: Double,
     ): Boolean {
         var low = 0.0
         var high = shape.height
-
-        fun clip(
-            value: Double,
-            from: Double,
-            to: Double,
-            lean: Double,
-        ): Boolean {
-            if (kotlin.math.abs(lean) < 1e-9) return value in from..to
-            val a = (value - from) / lean
-            val b = (value - to) / lean
+        val right = shape.baseLeft + shape.width
+        if (abs(leanX) < NO_LEAN) {
+            if (x !in shape.baseLeft..right) return false
+        } else {
+            val a = (x - shape.baseLeft) / leanX
+            val b = (x - right) / leanX
             low = maxOf(low, minOf(a, b))
             high = minOf(high, maxOf(a, b))
-            return low <= high
+            if (low > high) return false
         }
-        return clip(x, shape.baseLeft, shape.baseLeft + shape.width, projection.leanX) &&
-            clip(y, shape.baseBottom, shape.baseBottom + shape.baseHeight, projection.leanY)
+        val top = shape.baseBottom + shape.baseHeight
+        if (abs(leanY) < NO_LEAN) return y in shape.baseBottom..top
+        val a = (y - shape.baseBottom) / leanY
+        val b = (y - top) / leanY
+        low = maxOf(low, minOf(a, b))
+        high = minOf(high, maxOf(a, b))
+        return low <= high
     }
 
+    /** Writes into [output]; [prefix] is scratch space at least one longer than the longer side. */
     private fun boxBlur(
         input: FloatArray,
+        output: FloatArray,
         width: Int,
         height: Int,
         radius: Int,
         horizontal: Boolean,
-    ): FloatArray {
-        val result = FloatArray(input.size)
+        prefix: DoubleArray,
+    ) {
         val lines = if (horizontal) height else width
         val length = if (horizontal) width else height
         val stride = if (horizontal) 1 else width
         for (line in 0 until lines) {
             val start = if (horizontal) line * width else line
-            val prefix = DoubleArray(length + 1)
             for (i in 0 until length) prefix[i + 1] = prefix[i] + input[start + i * stride]
             for (i in 0 until length) {
                 val a = maxOf(0, i - radius)
                 val b = minOf(length, i + radius + 1)
-                result[start + i * stride] = ((prefix[b] - prefix[a]) / (radius * 2 + 1)).toFloat()
+                output[start + i * stride] = ((prefix[b] - prefix[a]) / (radius * 2 + 1)).toFloat()
             }
         }
-        return result
     }
 }
+
+/** Writes a shadow as black with its alpha, in the R, G, B, A byte order of an RGBA8888 pixmap's memory. */
+internal fun ShadowImage.writeRgba(pixels: ByteBuffer) {
+    for (index in alpha.indices) {
+        val at = index * 4
+        pixels.put(at, 0)
+        pixels.put(at + 1, 0)
+        pixels.put(at + 2, 0)
+        pixels.put(at + 3, (alpha[index] * 255).roundToInt().coerceIn(0, 255).toByte())
+    }
+}
+
+/** The alpha of each pixel in an RGBA8888 pixmap's memory, where every fourth byte is alpha. */
+internal fun rgbaAlphaBytes(
+    pixels: ByteBuffer,
+    width: Int,
+    height: Int,
+): ByteArray = ByteArray(width * height) { index -> pixels.get(index * 4 + 3) }

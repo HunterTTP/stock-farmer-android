@@ -23,14 +23,16 @@ import java.time.Instant
 import kotlin.math.sqrt
 
 /** Add these to FarmRenderer's sources, using the renderer's TextureLibrary on the GL thread. */
-fun animalSources(
+internal fun animalSources(
     textures: TextureLibrary,
     gestures: AnimalSceneGestures? = null,
-): List<StandingSource> = listOf(AnimalSource(textures, gestures), FishSource(textures))
+    art: AnimalArt,
+): List<StandingSource> = listOf(AnimalSource(textures, gestures, art), FishSource(textures))
 
 private class AnimalSource(
     private val textures: TextureLibrary,
     private val gestures: AnimalSceneGestures?,
+    private val art: AnimalArt,
 ) : StandingSource {
     override val work = PerformanceWork.animals
 
@@ -46,7 +48,6 @@ private class AnimalSource(
         var shadowWidth: Float? = null,
     )
 
-    private val art = AnimalArt(textures)
     private val nodes = mutableMapOf<AnimalKey, Node>()
     private val badges = ProduceBadge(textures)
     private val heartTexture by lazy { textures.label("❤️", 28f) }

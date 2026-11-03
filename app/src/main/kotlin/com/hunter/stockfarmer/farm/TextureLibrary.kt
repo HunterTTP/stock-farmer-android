@@ -1,10 +1,10 @@
 package com.hunter.stockfarmer.farm
 
 import com.badlogic.gdx.Gdx
-import com.badlogic.gdx.graphics.Pixmap
 import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.utils.Disposable
 import com.hunter.stockfarmer.core.rules.Season
+import java.nio.ByteBuffer
 
 /** The farm's pictures, loaded from the bundled images the first time they are drawn and kept. */
 class TextureLibrary : Disposable {
@@ -69,20 +69,23 @@ class TextureLibrary : Disposable {
         height: Int,
         smooth: Boolean = false,
         pixel: (Int, Int) -> Int,
+    ): Texture = generatedPixels(key, width, height, smooth) { it.fillRgba(width, height, pixel) }
+
+    /**
+     * Procedural art written straight into RGBA8888 memory. [fill] runs again if the GL context is lost, so it opens
+     * whatever it reads itself rather than closing over something since released.
+     */
+    fun generatedPixels(
+        key: String,
+        width: Int,
+        height: Int,
+        smooth: Boolean = false,
+        fill: (ByteBuffer) -> Unit,
     ): Texture =
         generated.getOrPut(key) {
-            val pixmap = Pixmap(width, height, Pixmap.Format.RGBA8888)
-            try {
-                pixmap.setBlending(Pixmap.Blending.None)
-                for (y in 0 until height) {
-                    for (x in 0 until width) pixmap.drawPixel(x, y, pixel(x, y))
-                }
-                Texture(pixmap).apply {
-                    val filter = if (smooth) Texture.TextureFilter.Linear else Texture.TextureFilter.Nearest
-                    setFilter(filter, filter)
-                }
-            } finally {
-                pixmap.dispose()
+            Texture(GeneratedTextureData(width, height, fill)).apply {
+                val filter = if (smooth) Texture.TextureFilter.Linear else Texture.TextureFilter.Nearest
+                setFilter(filter, filter)
             }
         }
 
