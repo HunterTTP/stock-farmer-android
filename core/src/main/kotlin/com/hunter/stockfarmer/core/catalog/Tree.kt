@@ -123,6 +123,9 @@ data class Tree(
         val wild = all.filter { it.species == TreeSpecies.pine || it.species == TreeSpecies.oak }
         val starter = all[0]
 
+        /** No tree's ground is wider or taller than this. */
+        val largestSide = all.maxOf { it.side }
+
         private val byID = all.associateBy { it.id }
 
         fun named(id: String): Tree? = byID[id]

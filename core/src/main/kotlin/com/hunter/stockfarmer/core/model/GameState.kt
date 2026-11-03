@@ -240,9 +240,9 @@ class GameState {
 
     @Transient private var buildingIndexByBottomTile: Map<GridPoint, Int> = emptyMap()
 
-    @Transient private var treeOriginByTile: Map<GridPoint, GridPoint> = emptyMap()
+    @Transient private var treeOriginByTile: MutableMap<GridPoint, GridPoint> = mutableMapOf()
 
-    @Transient private var treeOriginByBottomTile: Map<GridPoint, GridPoint> = emptyMap()
+    @Transient private var treeOriginByBottomTile: MutableMap<GridPoint, GridPoint> = mutableMapOf()
 
     @Transient private var decorationOriginByTile: Map<GridPoint, GridPoint> = emptyMap()
 
@@ -318,6 +318,58 @@ class GameState {
     fun replaceTrees(trees: Map<GridPoint, PlacedTree>) {
         placedTrees = trees.toMutableMap()
         indexTrees()
+    }
+
+    /**
+     * Takes one tree away and sets another down, as [removeTree] then [putTree] would, without working every tree out again.
+     * Whether a tree stands on a tile stays right, and each tile names a tree that does; but where trees overlap it may not
+     * be the one in front, so a run of these must end with [settleTrees] before anything else asks.
+     */
+    internal fun moveTreeUnsettled(
+        from: GridPoint,
+        to: GridPoint,
+        placed: PlacedTree,
+    ) {
+        placedTrees.remove(from)?.let { unindexTree(from, it) }
+        placedTrees.put(to, placed)?.let { unindexTree(to, it) }
+        val ground = placed.tree.footprint(to)
+        for (tile in ground) treeOriginByTile[tile] = to
+        for (tile in ground.bottomRow) treeOriginByBottomTile[tile] = to
+    }
+
+    internal fun settleTrees() = indexTrees()
+
+    private fun unindexTree(
+        origin: GridPoint,
+        placed: PlacedTree,
+    ) {
+        val ground = placed.tree.footprint(origin)
+        for (tile in ground) {
+            if (treeOriginByTile[tile] != origin) continue
+            val other = treeOriginOver(tile, bottomRowOnly = false)
+            if (other == null) treeOriginByTile.remove(tile) else treeOriginByTile[tile] = other
+        }
+        for (tile in ground.bottomRow) {
+            if (treeOriginByBottomTile[tile] != origin) continue
+            val other = treeOriginOver(tile, bottomRowOnly = true)
+            if (other == null) treeOriginByBottomTile.remove(tile) else treeOriginByBottomTile[tile] = other
+        }
+    }
+
+    /** The origin of a tree standing on a tile, or with its bottom row on it, found among those near enough to reach it. */
+    private fun treeOriginOver(
+        tile: GridPoint,
+        bottomRowOnly: Boolean,
+    ): GridPoint? {
+        for (rowShift in 0 until Tree.largestSide) {
+            for (colShift in 0 until Tree.largestSide) {
+                val origin = GridPoint(tile.row - rowShift, tile.col - colShift)
+                val side = placedTrees[origin]?.tree?.side ?: continue
+                if (colShift >= side || rowShift >= side) continue
+                if (!bottomRowOnly || rowShift == side - 1) return origin
+            }
+        }
+        return null
     }
 
     fun putDecoration(
