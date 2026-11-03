@@ -50,6 +50,7 @@ import com.hunter.stockfarmer.game.askToDestroyWhilePlacing
 import com.hunter.stockfarmer.game.cancelPlacement
 import com.hunter.stockfarmer.game.confirmPlacement
 import com.hunter.stockfarmer.game.interactWithAnimal
+import com.hunter.stockfarmer.settings.PlaySettings
 import com.hunter.stockfarmer.ui.fishing.FishingCanvas
 import com.hunter.stockfarmer.ui.fishing.FishingCatch
 import com.hunter.stockfarmer.ui.fishing.FishingMode
@@ -82,7 +83,6 @@ import com.hunter.stockfarmer.ui.rewards.rewardTarget
 import com.hunter.stockfarmer.ui.screens.DaySummaryBanner
 import com.hunter.stockfarmer.ui.screens.LevelUpScreen
 import com.hunter.stockfarmer.ui.screens.LocalScreenAudio
-import com.hunter.stockfarmer.ui.screens.PlaySettings
 import com.hunter.stockfarmer.ui.screens.QuestBanner
 import com.hunter.stockfarmer.ui.screens.QuestReward
 import com.hunter.stockfarmer.ui.screens.SoundCenterScreenAudio

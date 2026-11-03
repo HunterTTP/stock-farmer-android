@@ -33,7 +33,7 @@ import com.hunter.stockfarmer.game.preview
 import com.hunter.stockfarmer.game.touch
 import com.hunter.stockfarmer.game.touchAnimalAt
 import com.hunter.stockfarmer.game.waterWithSprinklers
-import com.hunter.stockfarmer.ui.screens.PlaySettings
+import com.hunter.stockfarmer.settings.PlaySettings
 import kotlinx.coroutines.flow.update
 import java.time.Instant
 import kotlin.math.floor

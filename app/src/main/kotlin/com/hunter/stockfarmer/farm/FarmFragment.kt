@@ -8,7 +8,7 @@ import androidx.fragment.app.activityViewModels
 import com.badlogic.gdx.backends.android.AndroidApplicationConfiguration
 import com.badlogic.gdx.backends.android.AndroidFragmentApplication
 import com.hunter.stockfarmer.game.GameViewModel
-import com.hunter.stockfarmer.ui.screens.PlaySettings
+import com.hunter.stockfarmer.settings.PlaySettings
 
 /** Hosts the libGDX farm so Compose can place it on screen like any other view. */
 class FarmFragment : AndroidFragmentApplication() {

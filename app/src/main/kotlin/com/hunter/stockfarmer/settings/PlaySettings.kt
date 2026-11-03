@@ -1,4 +1,4 @@
-package com.hunter.stockfarmer.ui.screens
+package com.hunter.stockfarmer.settings
 
 import android.content.Context
 import android.content.SharedPreferences
