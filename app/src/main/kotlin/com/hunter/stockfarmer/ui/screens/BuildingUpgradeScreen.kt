@@ -35,21 +35,22 @@ fun BuildingUpgradeScreen(
         offered.forEach { building ->
             UpgradeCard(building.upgrade) {
                 val events =
-                    session.screenAction {
-                        when (building.kind) {
-                            BuildingUpgradeKind.MARKET -> {
-                                it.upgradeMarketStand(building.origin, Instant.now(), SystemRandomSource)
-                            }
+                    session
+                        .act {
+                            when (building.kind) {
+                                BuildingUpgradeKind.MARKET -> {
+                                    it.upgradeMarketStand(building.origin, Instant.now(), SystemRandomSource)
+                                }
 
-                            BuildingUpgradeKind.HOUSE -> {
-                                it.upgradeHouse(building.origin, Instant.now())
-                            }
+                                BuildingUpgradeKind.HOUSE -> {
+                                    it.upgradeHouse(building.origin, Instant.now())
+                                }
 
-                            BuildingUpgradeKind.HOME -> {
-                                it.upgradeHome(building.origin)
+                                BuildingUpgradeKind.HOME -> {
+                                    it.upgradeHome(building.origin)
+                                }
                             }
-                        }
-                    }
+                        }.let(session::publish)
                 onEvents(events)
                 message =
                     events

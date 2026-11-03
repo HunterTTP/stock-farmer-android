@@ -93,7 +93,7 @@ fun SheetHost(
             BuildingPage.UPGRADE -> {
                 HudSheet(onDismiss = onClose) {
                     BackHandler { page = null }
-                    BuildingUpgradeScreen(session, { page = null }, origin, { session.publish(it) })
+                    BuildingUpgradeScreen(session, { page = null }, origin)
                 }
                 return
             }
@@ -102,7 +102,7 @@ fun SheetHost(
         }
         if (building.placed.building.isHouse) {
             HudSheet(onDismiss = onClose) {
-                StockMarketScreen(session, onClose, onEvents = { session.publish(it) })
+                StockMarketScreen(session, onClose)
             }
             return
         }
@@ -154,7 +154,6 @@ fun SheetHost(
                         onRecipes = { page = BuildingPage.RECIPES },
                         onUpgrade = { page = BuildingPage.UPGRADE },
                         onEvents = { events ->
-                            session.publish(events)
                             message = SheetResult(events).refusal
                         },
                     )

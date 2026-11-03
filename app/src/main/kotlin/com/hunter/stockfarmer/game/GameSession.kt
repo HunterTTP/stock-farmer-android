@@ -7,7 +7,9 @@ import com.hunter.stockfarmer.core.model.GameState
 import com.hunter.stockfarmer.core.model.GridPoint
 import com.hunter.stockfarmer.core.rules.GameEngine
 import com.hunter.stockfarmer.core.rules.GameEvent
+import com.hunter.stockfarmer.core.rules.claimCompletedQuests
 import com.hunter.stockfarmer.core.rules.newGame
+import com.hunter.stockfarmer.core.util.RandomSource
 import com.hunter.stockfarmer.core.util.SystemRandomSource
 import com.hunter.stockfarmer.ui.fishing.FishingCast
 import com.hunter.stockfarmer.ui.menus.countCurrentUnlocksAsSeen
@@ -24,6 +26,7 @@ import java.time.Instant
  */
 class GameSession(
     private val engine: GameEngine = GameEngine(newGame(SystemRandomSource, Instant.now())),
+    private val random: RandomSource = SystemRandomSource,
 ) {
     init {
         engine.countCurrentUnlocksAsSeen()
@@ -139,12 +142,19 @@ class GameSession(
 
     @Volatile var isSaveBlocked = false
 
-    /** Tells everyone listening what just happened; nothing is sent for an empty batch. */
-    fun publish(batch: List<GameEvent>): List<GameEvent> =
-        batch.also {
-            if (it.any { event -> event is GameEvent.LeveledUp }) celebrations.celebrateAcross()
-            if (it.isNotEmpty()) published.tryEmit(it)
-        }
+    /**
+     * Tells everyone listening what just happened, turning in any quest it finished as the player never has to ask.
+     * An empty batch costs nothing, as the tractor publishes one every frame; use [commit] for a change without news.
+     */
+    fun publish(batch: List<GameEvent>): List<GameEvent> = if (batch.isEmpty()) batch else commit(batch)
+
+    /** Where every change lands: [batch] plus the quests it completed, sent out even when [batch] is empty. */
+    fun commit(batch: List<GameEvent> = emptyList()): List<GameEvent> {
+        val all = batch + act { it.claimCompletedQuests(random) }
+        if (all.any { it is GameEvent.LeveledUp }) celebrations.celebrateAcross()
+        if (all.isNotEmpty()) published.tryEmit(all)
+        return all
+    }
 
     /** A tap on the farm uses the selected tool on that tile. */
     fun tap(point: GridPoint): List<GameEvent> = publish(act { it.tap(point, Instant.now()) })

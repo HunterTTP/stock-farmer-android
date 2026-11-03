@@ -15,7 +15,6 @@ import com.hunter.stockfarmer.core.rules.buildingPlacement
 import com.hunter.stockfarmer.core.rules.cancelTractorHarvest
 import com.hunter.stockfarmer.core.rules.chooseChickVariant
 import com.hunter.stockfarmer.core.rules.chooseRecipe
-import com.hunter.stockfarmer.core.rules.claimCompletedQuests
 import com.hunter.stockfarmer.core.rules.demolish
 import com.hunter.stockfarmer.core.rules.equip
 import com.hunter.stockfarmer.core.rules.liftTool
@@ -36,8 +35,6 @@ import com.hunter.stockfarmer.core.rules.summonPet
 import com.hunter.stockfarmer.core.rules.trashStored
 import com.hunter.stockfarmer.core.rules.upgradeHome
 import com.hunter.stockfarmer.core.rules.upgradeHouse
-import com.hunter.stockfarmer.core.util.RandomSource
-import com.hunter.stockfarmer.core.util.SystemRandomSource
 import com.hunter.stockfarmer.game.GameSession
 import java.time.Instant
 
@@ -114,15 +111,14 @@ internal fun GameSession.sheetAction(
     target: SheetTarget,
     action: SheetAction,
     now: Instant,
-    using: RandomSource = SystemRandomSource,
 ): SheetResult =
     act { engine ->
         val result = SheetActions.perform(engine, target, action, now)
         if (result.events.isEmpty() && (action is SheetAction.Recipe || action is SheetAction.NextChick)) {
             haptic(HapticCue.Light)
         }
-        result.copy(events = result.events + engine.claimCompletedQuests(using))
-    }.also { publish(it.events) }
+        result
+    }.let { it.copy(events = commit(it.events)) }
 
 internal object SheetActions {
     fun perform(

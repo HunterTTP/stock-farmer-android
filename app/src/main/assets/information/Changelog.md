@@ -1,3 +1,7 @@
+## 2026-11-02
+- Finished quests are turned in the moment you complete them, from the farm as well as from menus, with the banner, XP and any level-up at once.
+- Selling or throwing away from Storage now plays its sound and haptic and sends the reward flights, like selling anywhere else.
+
 ## 2026-11-01
 - The money and level panels no longer sit right against the top of the screen on some phones and tablets; there is
   always a comfortable gap under the status bar or camera cutout.

@@ -84,7 +84,7 @@ fun MarketQuestSection(
     val (board, icons) = presentation
     var replacing by remember(session, origin) { mutableStateOf<UUID?>(null) }
     var upgrading by remember(session, origin) { mutableStateOf(false) }
-    LaunchedEffect(session, origin) { session.act { it.prepareQuests(origin, SystemRandomSource) } }
+    LaunchedEffect(session, origin) { session.prepareQuests(origin) }
     board?.let { state ->
         Column(
             modifier = Modifier.fillMaxWidth(),
@@ -149,6 +149,7 @@ fun MarketQuestSection(
                 confirmButton = {
                     TextButton(onClick = {
                         session.act { it.replaceQuest(id, origin, SystemRandomSource) }
+                        session.commit()
                         replacing = null
                     }) {
                         Text(
@@ -346,4 +347,15 @@ internal fun questObjectiveIcons(goal: QuestGoal): List<QuestObjectiveIcon> {
             }
         }
     }
+}
+
+/** Fills the stand's board, committing only when the board changed, as iOS does. */
+private fun GameSession.prepareQuests(origin: GridPoint) {
+    val changed =
+        act {
+            val before = it.state.marketQuests.toMap()
+            it.prepareQuests(origin, SystemRandomSource)
+            it.state.marketQuests != before
+        }
+    if (changed) commit()
 }
