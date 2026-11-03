@@ -1,5 +1,6 @@
 package com.hunter.stockfarmer.farm.animals
 
+import com.hunter.stockfarmer.farm.effects.WaterDrops
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -61,5 +62,17 @@ internal class WaterAnimationTest {
         assertEquals(first.update(10.0, 0f, 0f, Facing.UP, true), second.update(10.0, 0f, 0f, Facing.UP, true))
         assertFalse(first.update(10.1, 0f, 0f, Facing.UP, false).isEmpty())
         assertTrue(first.update(0.0, 0f, 0f, Facing.UP, false).isEmpty())
+    }
+
+    @Test
+    fun `duck wake pixels are the size of a water drop in the foam and spray colors`() {
+        val wake = DuckWake(7).apply { halfWidth = 29.12f }
+        val pixels = (0..20).flatMap { wake.update(it * 0.07, 0f, 0f, Facing.LEFT, true) }
+        assertTrue(pixels.all { it.size == WaterDrops.SIZE.toFloat() })
+        assertTrue(pixels.all { it.tint in WaterDrops.wake.indices })
+        assertEquals(WaterDrops.foam.size + WaterDrops.spray.size, WaterDrops.wake.size)
+        assertEquals(WaterDrops.wake.size * 3, WaterDrops.wakeRgb.size)
+        assertEquals(WaterDrops.foam[0].red / 255f, WaterDrops.wakeRgb[0])
+        assertTrue(pixels.map { it.tint }.toSet().size > 3)
     }
 }

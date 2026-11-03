@@ -1,6 +1,8 @@
 ## 2026-11-02
 - Finished quests are turned in the moment you complete them, from the farm as well as from menus, with the banner, XP and any level-up at once.
 - Selling or throwing away from Storage now plays its sound and haptic and sends the reward flights, like selling anywhere else.
+- Sprinklers now spray: drops arc out of the tips into every tile they water, with a blue mist behind them, every minute (not in rain; a fountain never stops), and the land they water soaks in tile by tile.
+- The wake behind a swimming duck is made of the same pale foam and water-blue pixels as the sprinkler drops.
 
 ## 2026-11-01
 - The money and level panels no longer sit right against the top of the screen on some phones and tablets; there is
