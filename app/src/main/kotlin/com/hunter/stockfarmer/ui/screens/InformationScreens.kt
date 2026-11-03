@@ -75,7 +75,7 @@ fun ChangelogScreen(
     onClose: () -> Unit,
 ) {
     val text by rememberInformationAsset("Changelog.md")
-    val days = remember(text) { text?.mapCatching(ScreenInformation::changelog) }
+    val days = remember(text) { text?.mapCatching(ChangelogParser::changelog) }
     var state by remember(days) { mutableStateOf(ChangelogState(days?.getOrNull().orEmpty())) }
     ScreenLayout("Changelog", session, onClose) {
         when {

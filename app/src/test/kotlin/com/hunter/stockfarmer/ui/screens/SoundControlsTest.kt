@@ -13,7 +13,7 @@ class SoundControlsTest {
         val text = "## 2026-10-22\r\n- First sentence\r\n  continues here.\r\n- Next entry\r\n"
         assertEquals(
             listOf("First sentence continues here.", "Next entry"),
-            ScreenInformation.changelog(text).single().lines,
+            ChangelogParser.changelog(text).single().lines,
         )
     }
 
@@ -30,7 +30,7 @@ class SoundControlsTest {
     @Test
     fun `bundled changelog is valid core markdown and privacy describes Android storage`() {
         val folder = File("src/main/assets/information")
-        val days = ScreenInformation.changelog(File(folder, "Changelog.md").readText())
+        val days = ChangelogParser.changelog(File(folder, "Changelog.md").readText())
         assertTrue(days.isNotEmpty())
         assertTrue(days.zipWithNext().all { (first, second) -> first.date > second.date })
         val privacy = File(folder, "Privacy.md").readText()
