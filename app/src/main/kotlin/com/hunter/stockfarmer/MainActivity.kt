@@ -218,6 +218,9 @@ class MainActivity :
                     session.haptics.collect(haptics::play)
                 }
                 launch {
+                    session.cues.collect { sound.play(it) }
+                }
+                launch {
                     session.dayBegins.collect(nightChime::begin)
                 }
                 launch {

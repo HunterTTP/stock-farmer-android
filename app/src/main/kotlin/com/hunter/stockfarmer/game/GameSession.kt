@@ -2,6 +2,7 @@ package com.hunter.stockfarmer.game
 
 import com.hunter.stockfarmer.core.catalog.HarvestTool
 import com.hunter.stockfarmer.core.feedback.HapticCue
+import com.hunter.stockfarmer.core.feedback.SoundCue
 import com.hunter.stockfarmer.core.model.DaySummary
 import com.hunter.stockfarmer.core.model.GameState
 import com.hunter.stockfarmer.core.model.GridPoint
@@ -112,8 +113,18 @@ class GameSession(
         hapticRequests.tryEmit(HapticRequest.Reeling(progress))
     }
 
+    private val cueRequests = MutableSharedFlow<SoundCue>(extraBufferCapacity = EVENT_BUFFER)
+
+    /** Sounds the game asks for that no event carries, such as a popup opening. */
+    val cues: SharedFlow<SoundCue> = cueRequests.asSharedFlow()
+
+    fun cue(cue: SoundCue) {
+        cueRequests.tryEmit(cue)
+    }
+
     fun ask(confirmation: Confirmation) {
         haptic(HapticCue.Medium)
+        cue(SoundCue.openPopup)
         confirmations.value = confirmation
     }
 

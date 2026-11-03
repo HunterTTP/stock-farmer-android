@@ -58,6 +58,8 @@ fun SheetHost(
     target: SheetTarget,
     onClose: () -> Unit,
     onAnimalInteraction: ((AnimalRef, AnimalInteraction) -> Unit)? = null,
+    /** Closing because something done in the sheet already made its own sound. */
+    onCloseQuietly: () -> Unit = onClose,
 ) {
     var state by remember(session, target) { mutableStateOf(session.sheetState(target)) }
     var message by remember(session, target) { mutableStateOf<String?>(null) }
@@ -75,7 +77,7 @@ fun SheetHost(
         val result = session.sheetAction(target, action, Instant.now())
         message = result.refusal
         state = session.sheetState(target)
-        if (result.shouldClose) onClose()
+        if (result.shouldClose) onCloseQuietly()
     }
     state.building?.let { building ->
         val origin = building.placed.origin

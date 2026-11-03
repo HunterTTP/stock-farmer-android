@@ -62,6 +62,7 @@ import com.hunter.stockfarmer.ui.hud.HudTopSpacing
 import com.hunter.stockfarmer.ui.hud.LevelHud
 import com.hunter.stockfarmer.ui.hud.MenuInteractionRegions
 import com.hunter.stockfarmer.ui.hud.MoneyHud
+import com.hunter.stockfarmer.ui.hud.PanelCues
 import com.hunter.stockfarmer.ui.hud.RingScreen
 import com.hunter.stockfarmer.ui.hud.SaveStatusView
 import com.hunter.stockfarmer.ui.hud.TimeSheet
@@ -86,6 +87,7 @@ import com.hunter.stockfarmer.ui.screens.QuestBanner
 import com.hunter.stockfarmer.ui.screens.QuestReward
 import com.hunter.stockfarmer.ui.screens.SoundCenterScreenAudio
 import com.hunter.stockfarmer.ui.sheets.SheetHost
+import com.hunter.stockfarmer.ui.sheets.SheetTarget
 import com.hunter.stockfarmer.ui.theme.LocalHudScale
 import com.hunter.stockfarmer.ui.theme.PillButton
 import com.hunter.stockfarmer.ui.theme.PillRole
@@ -160,6 +162,9 @@ fun Hud(
             closeRequests++
         }
     }
+    val panels = remember(sound) { PanelCues { sound.play(it) } }
+    val isPanelOpen = toolRoute != null || isTimeShown || sheet is SheetTarget.Building
+    LaunchedEffect(isPanelOpen) { panels.update(isPanelOpen) }
     ScalesHudForTablets {
         BoxWithConstraints(modifier) {
             val fishing =
@@ -219,6 +224,7 @@ fun Hud(
                         onTakePhoto = { report -> takeFarmPhoto(context, session, report) },
                         onClose = { toolRoute = null },
                         onSelected = {
+                            panels.closeQuietly()
                             toolRoute = null
                             closeRequests++
                         },
@@ -276,6 +282,10 @@ fun Hud(
                     session = session,
                     target = open,
                     onClose = { session.sheets.value = null },
+                    onCloseQuietly = {
+                        panels.closeQuietly()
+                        session.sheets.value = null
+                    },
                     onAnimalInteraction = session::interactWithAnimal,
                 )
             }

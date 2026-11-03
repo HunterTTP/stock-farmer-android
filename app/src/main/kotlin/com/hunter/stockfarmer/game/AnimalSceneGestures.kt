@@ -1,6 +1,7 @@
 package com.hunter.stockfarmer.game
 
 import com.hunter.stockfarmer.core.feedback.HapticCue
+import com.hunter.stockfarmer.core.feedback.SoundCue
 import com.hunter.stockfarmer.core.model.GridPoint
 import com.hunter.stockfarmer.core.model.PlayMode
 import com.hunter.stockfarmer.core.rules.AnimalRef
@@ -135,6 +136,7 @@ internal fun GameSession.interactWithAnimal(
             flash(listOf(point), engine.useTool(point, now), now)
         } else {
             haptic(HapticCue.Light)
+            cue(SoundCue.openPopup)
             sheets.value = SheetTarget.Animal(animal)
             emptyList()
         }
