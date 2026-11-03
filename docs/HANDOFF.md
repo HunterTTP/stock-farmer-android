@@ -11,7 +11,7 @@ $env:JAVA_HOME = "C:\Program Files\Eclipse Adoptium\jdk-25.0.4.7-hotspot"
 
 ## Verified state
 
-`main` is expected to pass the gate above; the latest gate run is the record, so counts and APK sizes are not kept here. The debug build has been run on a device once, before the changes below.
+`main` is expected to pass the gate above; the latest gate run is the record, so counts and APK sizes are not kept here. Screens and mechanics have had emulator passes on the `StockFarmerTablet` and `StockFarmerPhone` AVDs (no audio, software GPU). The gate does not launch the release build, and R8 once crashed it at launch while every check passed: after dependency or keep-rule changes, sign it with the debug key and launch it on an emulator.
 
 ## Structure
 
@@ -22,31 +22,24 @@ $env:JAVA_HOME = "C:\Program Files\Eclipse Adoptium\jdk-25.0.4.7-hotspot"
 - Cancelling or dismissing a confirmation plays the cancel sound.
 - A sprinkler picked up or removed mid-spray lets its drops and mist finish.
 
-- The farm shows after switching farms or retrying a failed load (the farm fragment is now always re-attached).
-- Rotating the device, and split-screen play: the game now pauses on stop, not pause, and the manifest handles configuration changes.
-- Edge-to-edge insets and the new app theme: no overlap, no white flash on launch.
 - Camera culling: no pop-in at the screen edges while panning and zooming, and a farm photo still captures everything.
-- The release build launches under R8 (`app/proguard-rules.pro` keeps libGDX and serialization classes).
 - Timelapse frames still look right (they are now subsampled to the display size).
 - Saves now fsync the data and the folder. Check what a save costs on real flash, as only a Windows JVM has timed it (about 7 ms more per save for a 134 KB farm). The folder sync is best effort and silently does nothing if Android refuses it, so check it succeeds too.
-- The disk thread now runs at `MIN_PRIORITY` (nice 19 on Android), raised while a load or flush waits on it. On a saturated Windows JVM one small save took 2.5 s against 0.28 s at normal priority, so autosaves can run later than the 1 s they aim for when the CPU is busy. Measure autosave delay during heavy play on a slow device; `THREAD_PRIORITY_BACKGROUND` (nice 10) is the next thing to try.
-- A quiet farm should not write at all: watch `write_bytes` in `/proc/<pid>/io` with no animals on the farm. Home, then relaunch, should restore the time played.
 - A failed rename, delete or restore from the Load Game screen should show its message there; iOS shows it inside that screen, Android only on the HUD behind it.
 
 ## Open items
 
-- **Panning stops at the farm edge** (reported from a device run). The camera center is clamped to the farm square, as on iOS, so the edge should reach screen center. The code and its test agree, so the cause is not yet known. Reproduce with the zoom level and the tool or placement mode active, and check whether a drag is being taken by tile placement (`FarmGame` `pan` tries `placementDrag` first).
+- **Panning stops at the farm edge** (reported from a device run). Not reproduced on emulators at default zoom: the edge reaches screen centre. A drag starting on a placement footprint moves the placement instead of panning, as on iOS, so a large footprint while zoomed in is the likely cause (inferred). Minimum zoom and pinch were not driven.
 - **A hard crash on a quiet farm loses more than a second of clock.** Autosave skips a farm where nothing but time played has changed, as iOS does, and a relaunch holds the farm's clock from the last write. So after a crash with no `onStop` (power loss, force stop), the farm's clock and time played go back to the last real change, however long ago; real changes are never more than a second behind. A slow heartbeat write would bound this, if wanted.
 - **Saves written before the audit may not load.** The old-save migrations were removed (a new app has no old saves) and the save decoder rejects unknown keys, so a test save from an earlier debug build (for example one with a tractor run in progress) can fail to load and offer the backup flow. Start a new farm on devices that ran earlier builds.
 - **Music is 55 MB** of the assets; re-encoding would change how it sounds, so it needs a decision.
-- **ABIs:** three are bundled; dropping `armeabi-v7a` would shrink the APK but exclude old 32-bit devices.
-- **Not done:** texture atlases (860 separate PNGs), exact-time field-ready reminders (needs a permission decision), audio focus for effects, the engine lock held during draw, `OldTargetApi`.
+- **Not done:** texture atlases (860 separate PNGs), background shadow raster, a two-phase frame so the engine lock is not held across the draw (GL holds of 100-560 ms seen on a software GPU; measure on hardware first), a frame rate cap, exact-time field-ready reminders (needs a permission decision), audio focus for effects, `OldTargetApi`.
 - **Wall-clock tests:** several core tests still use `Instant.now()` for tree planting (`HarvesterTest`, `PondDuckTest`, `RodFishingEngineTest`, `TreeRockEngineTest`).
 
 ## Remaining steps (owned by the user)
 
-1. Emulator pass on the `StockFarmerTablet` AVD: install `app/build/outputs/apk/debug/app-debug.apk`, play the first session and every screen, menu and sheet, and check `logcat`.
-2. Physical-tablet pass.
+1. Physical phone and tablet pass with sound: the changes above, plus every new cue (Storage sale, panels, popups, photo saved, cancel), which no emulator run could hear.
+2. Decisions: system bars (libGDX forces immersive mode while the Activity sets edge-to-edge), Release has no confirmation (as on iOS; a quick second tap on an animal releases it), and 274 unreferenced sound effects plus other unused art kept in the APK (about 5 MB).
 
 ## Standing rules
 

@@ -22,3 +22,7 @@
 -keepclassmembers class <1> {
     static <1>$Companion Companion;
 }
+
+# Room builds WorkManager's database by reflection. Room's own rule keeps the class but, under R8 full mode, not its
+# constructor, which crashes the release build at launch.
+-keep class * extends androidx.room.RoomDatabase { <init>(); }
