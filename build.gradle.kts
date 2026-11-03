@@ -8,13 +8,11 @@ plugins {
 
 spotless {
     kotlin {
-        target("**/*.kt")
-        targetExclude("**/build/**", ".claude/**")
+        target("app/src/**/*.kt", "core/src/**/*.kt")
         ktlint(libs.versions.ktlint.get())
     }
     kotlinGradle {
-        target("**/*.kts")
-        targetExclude("**/build/**", ".claude/**")
+        target("*.kts", "app/*.kts", "core/*.kts")
         ktlint(libs.versions.ktlint.get())
     }
 }
