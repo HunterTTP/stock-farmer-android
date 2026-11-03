@@ -3,6 +3,7 @@ package com.hunter.stockfarmer.game
 import com.hunter.stockfarmer.audio.AmbienceDriver
 import com.hunter.stockfarmer.audio.ambienceSnapshot
 import com.hunter.stockfarmer.core.catalog.Cat
+import com.hunter.stockfarmer.core.catalog.WaterStyle
 import com.hunter.stockfarmer.core.feedback.SoundCue
 import com.hunter.stockfarmer.core.model.GameState
 import com.hunter.stockfarmer.core.model.GridPoint
@@ -394,6 +395,48 @@ class GamePersistenceTest {
         assertEquals(writes, files.allWrites)
         assertArrayEquals(saved, Files.readAllBytes(activeFile))
         assertNull(status.error)
+    }
+
+    @Test
+    fun `a quiet farm with a pond writes nothing while its herds are stepped, and stopping saves how far they got`() {
+        val farm = GameState().apply { money = 100.0 }
+        for (row in 19..21) for (col in 19..21) farm.water[GridPoint(row, col)] = WaterStyle.deep
+        startPlaying(farm)
+        val session = persistence.session
+        val tick = GameTick(session, RandomSource(Random(7)::nextLong))
+        ticksPassing(tick, 3)
+        val writes = files.allWrites
+        val saved = Files.readAllBytes(activeFile)
+        val stale =
+            slots
+                .load(0)!!
+                .herds.values
+                .single()
+                .processedAt
+
+        ticksPassing(tick, 60)
+
+        assertEquals(writes, files.allWrites)
+        assertArrayEquals(saved, Files.readAllBytes(activeFile))
+        val reached =
+            session.read {
+                it.herds.values
+                    .single()
+                    .processedAt
+            }
+        assertTrue(reached!! > stale!!)
+
+        persistence.pause()
+        scheduler.runCurrent()
+
+        assertEquals(
+            reached,
+            slots
+                .load(0)!!
+                .herds.values
+                .single()
+                .processedAt,
+        )
     }
 
     @ParameterizedTest
