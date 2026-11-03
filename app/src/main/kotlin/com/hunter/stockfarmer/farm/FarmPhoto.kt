@@ -21,7 +21,7 @@ import java.time.Instant
 
 /**
  * A picture of the whole farm, drawn off screen on the graphics thread and encoded as a PNG off it. It keeps
- * the season's sky, water, finished shadows, the night's darkness and the rain or snow of the moment, and leaves out the effects that
+ * the season's sky, water, the night's darkness and the rain or snow of the moment, and leaves out the effects that
  * move with the live view. [state] must not change while drawing: pass a copy, not the live farm.
  */
 internal class FarmPhoto(

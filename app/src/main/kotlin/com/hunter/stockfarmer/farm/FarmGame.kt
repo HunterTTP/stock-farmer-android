@@ -156,7 +156,6 @@ class FarmGame(
             }
             val moving = session.act { MovingOrigins.of(it) }
             renderer.moving = moving
-            effects.shadows.moving = moving
             val screenScale = camera.zoom * Gdx.graphics.density
             renderer.cameraScale = screenScale
             renderer.maxCameraScale = FarmCamera.MAX_SCALE
@@ -191,8 +190,6 @@ class FarmGame(
     /** Read on the GL thread so settings changes reach both the next frame and any photo requested before it. */
     private fun applyGraphicsSettings() {
         renderer.gridShown = play.isGridShown
-        effects.shadows.enabled = play.isDynamicShadowsEnabled
-        effects.shadows.intensity = play.shadowIntensity.toDouble()
     }
 
     /** Sets off the fireworks the game side asked for since the last frame. */
