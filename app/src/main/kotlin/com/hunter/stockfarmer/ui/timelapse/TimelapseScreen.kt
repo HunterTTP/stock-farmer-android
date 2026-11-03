@@ -32,7 +32,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.hunter.stockfarmer.core.persistence.TimelapseStore
 import com.hunter.stockfarmer.core.rules.DayNightCycle
 import com.hunter.stockfarmer.game.GameSession
 import com.hunter.stockfarmer.ui.screens.Figure
@@ -47,28 +46,15 @@ import com.hunter.stockfarmer.ui.theme.glassCard
 import kotlinx.coroutines.launch
 import java.util.Locale
 
-/** Provide the same recorder that the active-play coroutine ticks so viewing suspends capture. */
-val LocalTimelapseRecorder = staticCompositionLocalOf<TimelapseRecorder?> { null }
-
-/** The fallback supports a standalone history screen; the host should provide its active recorder. */
-@Composable
-fun rememberTimelapseRecorder(session: GameSession): TimelapseRecorder {
-    val provided = LocalTimelapseRecorder.current
-    val directory =
-        LocalContext.current.applicationContext.filesDir
-            .toPath()
-            .resolve("Timelapse")
-    return remember(session, provided, directory) {
-        provided ?: TimelapseRecorder(session, TimelapseStore(directory))
-    }
-}
+/** The recorder that the active-play coroutine ticks, so that viewing suspends capture. */
+val LocalTimelapseRecorder = staticCompositionLocalOf<TimelapseRecorder> { error("The host provides the recorder") }
 
 @Composable
 fun TimelapseScreen(
     session: GameSession,
     onClose: () -> Unit,
 ) {
-    val recorder = rememberTimelapseRecorder(session)
+    val recorder = LocalTimelapseRecorder.current
     val recording by recorder.state.collectAsStateWithLifecycle()
     val settings by rememberScreenState(session) { session.read { it.timelapse } }
     val scope = rememberCoroutineScope()

@@ -24,10 +24,13 @@ class GameViewModel(
         private set
 
     private val main = Handler(Looper.getMainLooper())
+
+    /** The one store over its directory: it takes turns only with itself, and both persistence and capture write there. */
+    val timelapseStore = TimelapseStore(application.filesDir.toPath().resolve("Timelapse"))
     private val persistence =
         GamePersistence(
             SaveSlots(application.filesDir.toPath().resolve("Farms")),
-            timelapseStore = TimelapseStore(application.filesDir.toPath().resolve("Timelapse")),
+            timelapseStore = timelapseStore,
             onState = { state -> main.post { persistenceState = state } },
         )
     val session get() = persistence.session
