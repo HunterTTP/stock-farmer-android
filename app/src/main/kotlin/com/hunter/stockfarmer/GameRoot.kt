@@ -34,7 +34,7 @@ fun GameRoot(
 ) {
     Box(Modifier.fillMaxSize().background(Color.Black)) {
         val persistence = model.persistenceState
-        PerformanceSampling(model.performance, nodeCount = { model.session.view.drawnSprites })
+        PerformanceSampling(model.performance, spriteCount = { model.session.view.drawnSprites })
         // The farm stays mounted through a farm switch: removing its view while the game thread is paused
         // leaves libGDX waiting for a pause that never completes, and it kills the process.
         farmHost()

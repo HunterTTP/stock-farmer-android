@@ -29,7 +29,7 @@ class FarmView {
     @Volatile
     var framesDrawn: Int = 0
 
-    /** Sprites drawn in the last frame, for the performance screen's node count. */
+    /** Sprites drawn in the last frame, for the performance screen's sprite count. */
     @Volatile
     var drawnSprites: Int = 0
 
