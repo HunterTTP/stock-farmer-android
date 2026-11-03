@@ -82,7 +82,11 @@ private fun SummaryRow(
     weight: FontWeight = FontWeight.Bold,
     style: TextStyle = HudType.headline,
 ) {
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+    Row(
+        Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         Text(title, Modifier.weight(1f), color = Theme.textSecondary, style = HudType.subheadline, maxLines = 1)
         Text(value, color = color, style = style.copy(fontWeight = weight), maxLines = 1)
     }
@@ -171,7 +175,7 @@ internal fun PillButton(
     cornerRadius: androidx.compose.ui.unit.Dp = 16.dp,
     onClick: () -> Unit,
 ) = com.hunter.stockfarmer.ui.theme
-    .PillButton(title, fill, text, modifier, enabled, cornerRadius, onClick)
+    .PillButton(title, fill, text, modifier, enabled, cornerRadius, onClick = onClick)
 
 @Composable
 internal fun PillButton(
@@ -181,7 +185,7 @@ internal fun PillButton(
     enabled: Boolean = true,
     onClick: () -> Unit,
 ) = com.hunter.stockfarmer.ui.theme
-    .PillButton(title, role, modifier, enabled, onClick)
+    .PillButton(title, role, modifier, enabled, onClick = onClick)
 
 @Composable
 internal fun TradePriceRow(

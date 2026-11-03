@@ -202,6 +202,7 @@ private fun BuildingChoiceScreen(
                 title = "Back",
                 onClick = onClose,
                 role = PillRole.neutral,
+                fillWidth = false,
             )
         }
         BarScrollView(Modifier.weight(1f)) {

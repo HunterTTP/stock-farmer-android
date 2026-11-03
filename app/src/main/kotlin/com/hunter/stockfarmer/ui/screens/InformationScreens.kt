@@ -196,6 +196,7 @@ private fun ChangelogContent(
                 onClick = { onChange(state.goToPage(state.page - 1)) },
                 role = PillRole.neutral,
                 enabled = state.page > 0,
+                fillWidth = false,
             )
             Text(
                 "Page ${state.page + 1} of ${state.pageCount}",
@@ -207,6 +208,7 @@ private fun ChangelogContent(
                 onClick = { onChange(state.goToPage(state.page + 1)) },
                 role = PillRole.neutral,
                 enabled = state.page < state.pageCount - 1,
+                fillWidth = false,
             )
         }
     }

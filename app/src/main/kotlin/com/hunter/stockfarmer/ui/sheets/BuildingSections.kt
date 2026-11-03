@@ -321,11 +321,13 @@ private fun TractorSection(
                                 title = "Store",
                                 onClick = { act(SheetAction.Cargo(summary.crop.id, false)) },
                                 role = PillRole.accent,
+                                fillWidth = false,
                             )
                             PillButton(
                                 title = "Sell · ${crop.sale}",
                                 onClick = { act(SheetAction.Cargo(summary.crop.id, true)) },
                                 role = PillRole.earn,
+                                fillWidth = false,
                             )
                         }
                     }

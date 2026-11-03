@@ -37,7 +37,7 @@ fun Modifier.glassSheetBackground(): Modifier =
 
 /** A tile for one category or option in a menu; the highlighted one is warmed with the accent. */
 fun Modifier.categoryCard(isHighlighted: Boolean): Modifier =
-    padding(14.dp).glassCard(18.dp, if (isHighlighted) Theme.accent else null)
+    glassCard(18.dp, if (isHighlighted) Theme.accent else null).padding(14.dp)
 
 /** A full-height menu sheet in dark glass with a visible drag handle. */
 @OptIn(ExperimentalMaterial3Api::class)

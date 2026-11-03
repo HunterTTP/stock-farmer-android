@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -94,7 +95,7 @@ fun MoneyHud(
         text,
         modifier
             .throb(pulse)
-            .height(52.dp)
+            .heightIn(min = 52.dp)
             .hudPanel(16.dp)
             .padding(horizontal = 14.dp)
             .wrapContentHeight(Alignment.CenterVertically)
@@ -126,7 +127,7 @@ fun LevelHud(
         modifier
             .throb(pulse)
             .width(118.dp)
-            .height(52.dp)
+            .heightIn(min = 52.dp)
             .hudPanel(16.dp)
             .clip(RoundedCornerShape(16.dp))
             .clickable(

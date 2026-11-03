@@ -306,48 +306,49 @@ internal fun StorageTransactionDialog(
                 }
             },
             confirmButton = {
-                val pulsesConfirm = transaction.sell && currentLesson == Lesson.sell
-                Box(
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .heightIn(min = 52.dp)
-                            .lessonPulse(pulsesConfirm, shape = RoundedCornerShape(16.dp))
-                            .background(
-                                if (transaction.sell) Theme.accent else Theme.danger,
-                                RoundedCornerShape(16.dp),
-                            ).clickable(role = Role.Button, enabled = quantity > 0) {
+                Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    val pulsesConfirm = transaction.sell && currentLesson == Lesson.sell
+                    Box(
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 52.dp)
+                                .lessonPulse(pulsesConfirm, shape = RoundedCornerShape(16.dp))
+                                .background(
+                                    if (transaction.sell) Theme.accent else Theme.danger,
+                                    RoundedCornerShape(16.dp),
+                                ).clickable(role = Role.Button, enabled = quantity > 0) {
+                                    if (transaction.sell) {
+                                        session.act { it.learn(Lesson.sell) }
+                                    }
+                                    onConfirm(quantity)
+                                },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text =
                                 if (transaction.sell) {
-                                    session.act { it.learn(Lesson.sell) }
-                                }
-                                onConfirm(quantity)
-                            },
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        text =
-                            if (transaction.sell) {
-                                transaction.title
-                            } else {
-                                "${transaction.title} ${MenuNumbers.count(
-                                    quantity,
-                                )}"
-                            },
-                        style = HudType.headline,
-                        color = if (transaction.sell) Theme.onAccent else Theme.onDanger,
-                    )
-                }
-            },
-            dismissButton = {
-                Box(
-                    modifier =
-                        Modifier
-                            .glassCard(12.dp)
-                            .clickable(role = Role.Button, onClick = onDismiss)
-                            .padding(horizontal = 16.dp, vertical = 10.dp),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text("Cancel", style = HudType.subheadline, color = Theme.textSecondary)
+                                    transaction.title
+                                } else {
+                                    "${transaction.title} ${MenuNumbers.count(
+                                        quantity,
+                                    )}"
+                                },
+                            style = HudType.headline,
+                            color = if (transaction.sell) Theme.onAccent else Theme.onDanger,
+                        )
+                    }
+                    Box(
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .glassCard(12.dp)
+                                .clickable(role = Role.Button, onClick = onDismiss)
+                                .padding(horizontal = 16.dp, vertical = 10.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text("Cancel", style = HudType.subheadline, color = Theme.textSecondary)
+                    }
                 }
             },
         )

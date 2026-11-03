@@ -98,6 +98,7 @@ fun PillButton(
     role: PillRole,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    fillWidth: Boolean = true,
     onClick: () -> Unit,
 ) {
     PillButton(
@@ -106,6 +107,7 @@ fun PillButton(
         text = role.text,
         modifier = modifier,
         enabled = enabled,
+        fillWidth = fillWidth,
         onClick = onClick,
     )
 }
@@ -118,11 +120,12 @@ fun PillButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     cornerRadius: Dp = 16.dp,
+    fillWidth: Boolean = true,
     onClick: () -> Unit,
 ) {
     Box(
         Modifier
-            .fillMaxWidth()
+            .then(if (fillWidth) Modifier.fillMaxWidth() else Modifier)
             .heightIn(min = 52.dp)
             .then(modifier)
             .alpha(if (enabled) 1f else 0.4f)

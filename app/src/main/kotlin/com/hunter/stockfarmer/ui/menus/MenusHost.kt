@@ -73,6 +73,7 @@ fun MenusHost(
 ) {
     var state by remember(session, openMenu) { mutableStateOf(session.menuState(openMenu)) }
     var message by remember(session, openMenu) { mutableStateOf<String?>(null) }
+    var messageIsRejection by remember(session, openMenu) { mutableStateOf(false) }
     var transaction by remember(session, openMenu) { mutableStateOf<StorageTransaction?>(null) }
     var detail by remember(session, openMenu) { mutableStateOf<ItemScreen?>(null) }
     var toastText by remember(session) { mutableStateOf<String?>(null) }
@@ -100,7 +101,12 @@ fun MenusHost(
     val choose: (MenuSelection) -> Unit = { selection ->
         val rejection = session.act { MenuActions.choose(it, selection) }
         state = session.menuState(openMenu)
-        if (rejection == null) onClose() else message = rejection.message
+        if (rejection == null) {
+            onClose()
+        } else {
+            message = rejection.message
+            messageIsRejection = true
+        }
     }
     detail?.let { screen ->
         MenusHost(session, screen, onClose = { detail = null }, onSelected = onClose)
@@ -152,18 +158,19 @@ fun MenusHost(
                 CatalogMenuScreen(state, loader, choose, onInfo = { detail = it }, Modifier.weight(1f))
             }
             message?.let { text ->
+                val tone = if (messageIsRejection) Theme.spend else Theme.textPrimary
                 Box(
                     modifier =
                         Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp, vertical = 8.dp)
-                            .glassCard(12.dp, tint = Theme.spend)
+                            .glassCard(12.dp, tint = if (messageIsRejection) Theme.spend else null)
                             .padding(14.dp),
                 ) {
                     Text(
                         text,
                         style = HudType.body,
-                        color = Theme.spend,
+                        color = tone,
                         modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
                     )
                 }
@@ -193,6 +200,7 @@ fun MenusHost(
             onDismiss = { transaction = null },
             onConfirm = { quantity ->
                 message = session.act { MenuActions.transact(it, action.item, quantity, action.sell) }
+                messageIsRejection = false
                 state = session.menuState(openMenu)
                 transaction = null
             },
