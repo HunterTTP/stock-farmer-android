@@ -21,6 +21,7 @@ import com.hunter.stockfarmer.farm.effects.WaterDrops
 import com.hunter.stockfarmer.farm.label
 import com.hunter.stockfarmer.game.AnimalHitTarget
 import com.hunter.stockfarmer.game.AnimalSceneGestures
+import com.hunter.stockfarmer.game.TILE
 import java.time.Instant
 import kotlin.math.sqrt
 
@@ -94,8 +95,8 @@ private class AnimalSource(
                 targets +=
                     AnimalHitTarget(
                         key.ref,
-                        (pose.col + 0.5f) * FarmRenderer.TILE,
-                        (GameState.GRID_SIZE - pose.row - 0.5f) * FarmRenderer.TILE,
+                        (pose.col + 0.5f) * TILE,
+                        (GameState.GRID_SIZE - pose.row - 0.5f) * TILE,
                         inside = true,
                     )
                 continue
@@ -110,8 +111,8 @@ private class AnimalSource(
             val waterline = look.waterline(pose.facing)
             val center = feet?.center(waterline, look.duck && pose.facing == Facing.UP) ?: (0.5f to 0.5f)
             val mirror = look.kind == AnimalKind.CAT && pose.mirrored
-            val centerX = (pose.col + 0.5f) * FarmRenderer.TILE
-            val centerY = (GameState.GRID_SIZE - pose.row - 0.5f) * FarmRenderer.TILE
+            val centerX = (pose.col + 0.5f) * TILE
+            val centerY = (GameState.GRID_SIZE - pose.row - 0.5f) * TILE
             targets +=
                 AnimalHitTarget(
                     key.ref,

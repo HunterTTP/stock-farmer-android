@@ -14,6 +14,8 @@ import com.hunter.stockfarmer.core.rules.DayNightCycle
 import com.hunter.stockfarmer.farm.animals.AnimalArt
 import com.hunter.stockfarmer.farm.animals.animalSources
 import com.hunter.stockfarmer.farm.effects.PhotoEffects
+import com.hunter.stockfarmer.game.TILE
+import com.hunter.stockfarmer.game.WORLD
 import java.io.ByteArrayOutputStream
 import java.time.Instant
 
@@ -61,7 +63,7 @@ internal class FarmPhoto(
         val side = layout.worldSide
         val camera =
             OrthographicCamera(side, side).apply {
-                position.set(FarmRenderer.WORLD / 2, FarmRenderer.WORLD / 2, 0f)
+                position.set(WORLD / 2, WORLD / 2, 0f)
                 update()
             }
         val target = FrameBuffer(Pixmap.Format.RGBA8888, pixels, pixels, false)
@@ -114,6 +116,6 @@ internal class FarmPhoto(
 internal class FarmPhotoLayout(
     pixels: Int,
 ) {
-    val worldSide = FarmRenderer.WORLD + 4 * FarmRenderer.TILE
+    val worldSide = WORLD + 4 * TILE
     val worldPerPixel = worldSide / pixels
 }

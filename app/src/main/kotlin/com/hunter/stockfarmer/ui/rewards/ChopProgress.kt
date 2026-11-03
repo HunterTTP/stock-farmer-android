@@ -39,6 +39,7 @@ import com.hunter.stockfarmer.core.model.GridPoint
 import com.hunter.stockfarmer.core.rules.GameEvent
 import com.hunter.stockfarmer.farm.FarmRenderer
 import com.hunter.stockfarmer.game.GameSession
+import com.hunter.stockfarmer.game.TILE
 import com.hunter.stockfarmer.game.screenPosition
 import kotlinx.coroutines.delay
 
@@ -124,10 +125,10 @@ fun ChopProgressOverlay(
     ) {
         val shown = progress
         val view = session.view.snapshot
-        val here = shown?.let { view?.screenPosition(it.tile, FarmRenderer.TILE, GameState.GRID_SIZE) }
+        val here = shown?.let { view?.screenPosition(it.tile, TILE, GameState.GRID_SIZE) }
         val above =
             shown?.let {
-                view?.screenPosition(GridPoint(it.tile.row - 1, it.tile.col), FarmRenderer.TILE, GameState.GRID_SIZE)
+                view?.screenPosition(GridPoint(it.tile.row - 1, it.tile.col), TILE, GameState.GRID_SIZE)
             }
         if (shown != null && here != null && above != null && shownAlpha > 0f) {
             val lift = (here.y - above.y) * 0.9f

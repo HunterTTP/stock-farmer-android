@@ -11,6 +11,7 @@ import com.hunter.stockfarmer.farm.FarmRenderer
 import com.hunter.stockfarmer.farm.Standing
 import com.hunter.stockfarmer.farm.StandingSource
 import com.hunter.stockfarmer.farm.TextureLibrary
+import com.hunter.stockfarmer.game.TILE
 import java.time.Instant
 
 internal class FishSource(
@@ -66,8 +67,8 @@ internal class FishSource(
             val age = now.secondsSince(node.appeared)
             val size = 85f * fish.sizeFactor.toFloat() * fishBreathing(age)
             val angle = turnDegrees(node.fromAngle, orientation.degrees, now.secondsSince(node.turned))
-            val x = (pose.col + 0.5f) * FarmRenderer.TILE - size / 2
-            val y = (GameState.GRID_SIZE - pose.row - 0.5f) * FarmRenderer.TILE - size / 2
+            val x = (pose.col + 0.5f) * TILE - size / 2
+            val y = (GameState.GRID_SIZE - pose.row - 0.5f) * TILE - size / 2
             // All fish shadows sit directly over water and below every standing thing, including ducks.
             out +=
                 Standing(Float.NEGATIVE_INFINITY) {

@@ -73,7 +73,7 @@ class PulseMotionTest {
         val views =
             listOf(
                 null,
-                View(0.0, 0.0, FarmRenderer.WORLD.toDouble(), FarmRenderer.WORLD.toDouble()),
+                View(0.0, 0.0, WORLD, WORLD),
                 View(1_234.5, 2_000.0, 1_080.0, 2_340.0),
                 View(-300.0, 3_900.0, 900.0, 1_600.0),
             )

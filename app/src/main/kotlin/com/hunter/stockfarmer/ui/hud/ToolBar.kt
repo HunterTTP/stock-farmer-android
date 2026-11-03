@@ -61,6 +61,7 @@ import com.hunter.stockfarmer.core.rules.GameEvent
 import com.hunter.stockfarmer.core.rules.LevelRules
 import com.hunter.stockfarmer.farm.FarmRenderer
 import com.hunter.stockfarmer.game.GameSession
+import com.hunter.stockfarmer.game.TILE
 import com.hunter.stockfarmer.game.ToolDrag
 import com.hunter.stockfarmer.ui.fishing.FishingMode
 import com.hunter.stockfarmer.ui.menus.MenuAssetLoader
@@ -132,8 +133,7 @@ internal fun ToolBar(
     val farmTouches by session.farmTouches.collectAsStateWithLifecycle()
     LaunchedEffect(farmTouches, closeRequests) { closeMenus() }
 
-    fun tileAt(point: Offset) =
-        session.view.tileAt(point.x * density, point.y * density, FarmRenderer.TILE, GameState.GRID_SIZE)
+    fun tileAt(point: Offset) = session.view.tileAt(point.x * density, point.y * density, TILE, GameState.GRID_SIZE)
 
     val open = hud.dropdowns.firstOrNull { it.id == openDropdown }
     val lastOpen = remember { mutableStateOf<ToolDropdown?>(null) }

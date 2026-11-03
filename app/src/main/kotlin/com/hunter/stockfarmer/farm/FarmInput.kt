@@ -11,6 +11,7 @@ import com.hunter.stockfarmer.diagnostics.PerformanceWork
 import com.hunter.stockfarmer.diagnostics.measureOrRun
 import com.hunter.stockfarmer.game.GameSession
 import com.hunter.stockfarmer.game.PlacementDrag
+import com.hunter.stockfarmer.game.TILE
 import com.hunter.stockfarmer.game.gridTileAt
 import com.hunter.stockfarmer.game.hold
 import com.hunter.stockfarmer.game.touch
@@ -87,7 +88,7 @@ internal class FarmInput(
         y: Float,
     ): Vector3 = camera.unproject(world.set(x, y, 0f))
 
-    private fun tileAt(at: Vector3): GridPoint? = gridTileAt(at.x, at.y, FarmRenderer.TILE, GameState.GRID_SIZE)
+    private fun tileAt(at: Vector3): GridPoint? = gridTileAt(at.x, at.y, TILE, GameState.GRID_SIZE)
 
     private inner class Gestures : FarmGestureListener {
         override fun touchDown(

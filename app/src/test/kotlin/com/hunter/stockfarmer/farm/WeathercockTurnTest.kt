@@ -2,6 +2,7 @@ package com.hunter.stockfarmer.farm
 
 import com.hunter.stockfarmer.core.model.GameState
 import com.hunter.stockfarmer.core.model.GridPoint
+import com.hunter.stockfarmer.game.TILE
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.time.Instant
@@ -22,7 +23,7 @@ internal class WeathercockTurnTest {
 
     @Test
     fun `a reversing gust starts from the interrupted turn and waits for its sweep`() {
-        val width = GameState.GRID_SIZE * FarmRenderer.TILE
+        val width = GameState.GRID_SIZE * TILE
         val turn = WeathercockTurn()
         turn.scaleX(origin, width, start)
         turn.gust(false, start)
@@ -35,7 +36,7 @@ internal class WeathercockTurnTest {
 
     @Test
     fun `weathercocks at opposite edges turn independently as the gust reaches them`() {
-        val width = GameState.GRID_SIZE * FarmRenderer.TILE
+        val width = GameState.GRID_SIZE * TILE
         val other = GridPoint(10, GameState.GRID_SIZE - 1)
         val turn = WeathercockTurn()
         turn.scaleX(origin, 0f, start)
@@ -54,7 +55,7 @@ internal class WeathercockTurnTest {
 
     @Test
     fun `a gust sweeps across the map the way it pushes`() {
-        val width = GameState.GRID_SIZE * FarmRenderer.TILE
+        val width = GameState.GRID_SIZE * TILE
         assertEquals(0.0, WeathercockTurn.gustDelay(0f, true), 1e-9)
         assertEquals(1.5, WeathercockTurn.gustDelay(width, true), 1e-9)
         assertEquals(1.5, WeathercockTurn.gustDelay(0f, false), 1e-9)

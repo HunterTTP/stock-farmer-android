@@ -17,6 +17,7 @@ import com.hunter.stockfarmer.core.rules.minuteOfDay
 import com.hunter.stockfarmer.farm.FarmRenderer
 import com.hunter.stockfarmer.game.Feedback
 import com.hunter.stockfarmer.game.GameViewModel
+import com.hunter.stockfarmer.game.TILE
 import com.hunter.stockfarmer.haptics.Haptics
 import com.hunter.stockfarmer.notifications.DeferredPrompt
 import kotlinx.coroutines.delay
@@ -49,7 +50,7 @@ class GameFeedbackDriver(
                             landscapeTool = session.read { it.selectedLandscape },
                             petSpecies = { house -> session.read { it.pets[house]?.species } },
                             placement = { tile ->
-                                session.view.placement(tile, FarmRenderer.TILE, GameState.GRID_SIZE)
+                                session.view.placement(tile, TILE, GameState.GRID_SIZE)
                             },
                         )
                     }

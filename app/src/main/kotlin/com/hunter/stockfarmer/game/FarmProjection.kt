@@ -1,6 +1,13 @@
 package com.hunter.stockfarmer.game
 
+import com.hunter.stockfarmer.core.model.GameState
 import com.hunter.stockfarmer.core.model.GridPoint
+
+/** A tile's side in world units; the map is [GameState.GRID_SIZE] tiles square. */
+const val TILE = 100f
+
+/** The side of the whole map in world units. */
+const val WORLD = GameState.GRID_SIZE * TILE
 
 data class FarmScreenPoint(
     val x: Float,

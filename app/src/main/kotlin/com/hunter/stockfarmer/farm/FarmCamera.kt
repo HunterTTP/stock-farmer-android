@@ -2,7 +2,9 @@ package com.hunter.stockfarmer.farm
 
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.hunter.stockfarmer.farm.effects.FireworkArea
+import com.hunter.stockfarmer.game.TILE
 import com.hunter.stockfarmer.game.ViewSnapshot
+import com.hunter.stockfarmer.game.WORLD
 import kotlin.math.min
 
 /** The camera over the farm: scales are in logical points, while libGDX's camera covers physical pixels. */
@@ -26,8 +28,8 @@ internal class FarmCamera(
         camera.viewportWidth = width.toFloat()
         camera.viewportHeight = height.toFloat()
         if (!isPlaced) {
-            camera.position.set(FarmRenderer.WORLD / 2, FarmRenderer.WORLD / 2, 0f)
-            camera.zoom = 5 * FarmRenderer.TILE / min(width, height)
+            camera.position.set(WORLD / 2, WORLD / 2, 0f)
+            camera.zoom = 5 * TILE / min(width, height)
             isPlaced = true
         } else {
             camera.zoom = previousScale / this.density
@@ -75,8 +77,8 @@ internal class FarmCamera(
     }
 
     private fun clampPosition() {
-        camera.position.x = camera.position.x.coerceIn(0f, FarmRenderer.WORLD)
-        camera.position.y = camera.position.y.coerceIn(0f, FarmRenderer.WORLD)
+        camera.position.x = camera.position.x.coerceIn(0f, WORLD)
+        camera.position.y = camera.position.y.coerceIn(0f, WORLD)
     }
 
     companion object {

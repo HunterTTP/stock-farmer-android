@@ -15,6 +15,7 @@ import com.hunter.stockfarmer.diagnostics.PerformanceWork
 import com.hunter.stockfarmer.farm.effects.EffectOverlay
 import com.hunter.stockfarmer.farm.effects.EffectPhase
 import com.hunter.stockfarmer.farm.effects.preserve
+import com.hunter.stockfarmer.game.TILE
 import java.time.Instant
 import kotlin.math.ceil
 
@@ -90,9 +91,9 @@ class TractorLayer(
             } ?: return
         val facing = run?.let { TractorMotion.frame(it).facing } ?: TractorFacing.ofStyle(placed?.building?.styleID)
         val rise = if (facing == TractorFacing.up || facing == TractorFacing.down) 1.35 else 1.15
-        val x = center.x.toFloat() * FarmRenderer.TILE
+        val x = center.x.toFloat() * TILE
         val y =
-            (GameState.GRID_SIZE - center.y + rise).toFloat() * FarmRenderer.TILE +
+            (GameState.GRID_SIZE - center.y + rise).toFloat() * TILE +
                 VisualTiming.bob(now.secondsSince(loadAt))
         batch.preserve {
             batch.setColor(1f, 1f, 1f, 1f)
@@ -110,15 +111,15 @@ class TractorLayer(
     ) {
         val region = region(facing, column) ?: return
         val sideways = facing == TractorFacing.left || facing == TractorFacing.right
-        val scale = 2 * FarmRenderer.TILE / BODY_LENGTH * if (sideways) 0.9f else 0.8f
+        val scale = 2 * TILE / BODY_LENGTH * if (sideways) 0.9f else 0.8f
         val size = FRAME_SIZE * scale
         val bodyX = BODY_CENTER_X.getValue(facing)
         val bodyY = BODY_CENTER_Y.getValue(facing)
         val anchorX = bodyX / FRAME_SIZE
         // Sideways artwork reaches the frame's bottom, so it sits half a tile below the footprint center.
-        val anchorY = if (sideways) FarmRenderer.TILE / 2 / size else 1 - bodyY / FRAME_SIZE
-        val x = center.x.toFloat() * FarmRenderer.TILE - anchorX * size
-        val y = (GameState.GRID_SIZE - center.y.toFloat() + lift.toFloat()) * FarmRenderer.TILE - anchorY * size
+        val anchorY = if (sideways) TILE / 2 / size else 1 - bodyY / FRAME_SIZE
+        val x = center.x.toFloat() * TILE - anchorX * size
+        val y = (GameState.GRID_SIZE - center.y.toFloat() + lift.toFloat()) * TILE - anchorY * size
         val bottomOffset = if (sideways) 0.5 else 0.8
         out += Standing(ceil(center.y + bottomOffset).toFloat() + TRACTOR_OVER) { batch.draw(region, x, y, size, size) }
     }

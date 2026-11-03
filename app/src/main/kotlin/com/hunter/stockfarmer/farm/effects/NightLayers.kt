@@ -62,7 +62,7 @@ class NightPulseLayer(
         val red = color.red / 255f
         val green = color.green / 255f
         val blue = color.blue / 255f
-        val size = FarmRenderer.TILE
+        val size = TILE.toFloat()
         val glow = textures.glow()
         val patterns = patterns ?: PulsePatterns.regions(textures).also { patterns = it }
         batch.preserve {

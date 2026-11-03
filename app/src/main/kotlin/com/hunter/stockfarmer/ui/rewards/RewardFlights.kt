@@ -47,6 +47,7 @@ import com.hunter.stockfarmer.core.model.GameState
 import com.hunter.stockfarmer.core.model.dollars
 import com.hunter.stockfarmer.farm.FarmRenderer
 import com.hunter.stockfarmer.game.GameSession
+import com.hunter.stockfarmer.game.TILE
 import com.hunter.stockfarmer.game.screenPosition
 import com.hunter.stockfarmer.ui.menus.MenuAssetLoader
 import com.hunter.stockfarmer.ui.menus.MenuImage
@@ -152,7 +153,7 @@ fun RewardFlights(
                 val now = System.nanoTime() / 1_000_000_000.0
                 val view = session.view.snapshot
                 state.tracker.launch(events, now) { tile ->
-                    view?.screenPosition(tile, FarmRenderer.TILE, GameState.GRID_SIZE)?.let {
+                    view?.screenPosition(tile, TILE, GameState.GRID_SIZE)?.let {
                         RewardPoint(
                             (it.x - bounds.left) / density.toDouble(),
                             (it.y - bounds.top) / density.toDouble(),

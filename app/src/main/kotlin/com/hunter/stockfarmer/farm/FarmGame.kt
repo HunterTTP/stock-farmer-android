@@ -26,6 +26,7 @@ import com.hunter.stockfarmer.farm.effects.FireworkArea
 import com.hunter.stockfarmer.farm.effects.effectLayers
 import com.hunter.stockfarmer.game.GameSession
 import com.hunter.stockfarmer.game.PlacementDrag
+import com.hunter.stockfarmer.game.TILE
 import com.hunter.stockfarmer.game.ViewSnapshot
 import com.hunter.stockfarmer.game.WATERING_INTERVAL_SECONDS
 import com.hunter.stockfarmer.game.hold
@@ -232,7 +233,7 @@ class FarmGame(
                 camera.position.y,
                 camera.viewportWidth * camera.zoom,
                 camera.viewportHeight * camera.zoom,
-            ).padded(FarmRenderer.TILE)
+            ).padded(TILE)
 
     /** Tells the sound side where the camera is looking. */
     private fun publishView() {

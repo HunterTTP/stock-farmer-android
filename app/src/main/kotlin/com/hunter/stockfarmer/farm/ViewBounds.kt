@@ -1,6 +1,7 @@
 package com.hunter.stockfarmer.farm
 
 import com.hunter.stockfarmer.core.model.GameState
+import com.hunter.stockfarmer.game.TILE
 import kotlin.math.floor
 
 /** The part of the map the camera shows, in world units, so the renderer can skip what lies wholly outside it. */
@@ -39,7 +40,6 @@ internal class ViewBounds(
     private fun tileIndex(world: Float): Int = floor((world / TILE).coerceIn(-1f, GameState.GRID_SIZE + 1f)).toInt()
 
     companion object {
-        private const val TILE = FarmRenderer.TILE
         private const val LAST = GameState.GRID_SIZE - 1
 
         /** No culling: for a photo of the whole map. */

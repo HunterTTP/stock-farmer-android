@@ -190,8 +190,12 @@ internal fun rain(
     now: Instant,
 ) = Weather.rainAmount(now, state.clockOffset)
 
-internal const val TILE = FarmRenderer.TILE.toDouble()
-internal const val WORLD = FarmRenderer.WORLD.toDouble()
+internal const val TILE =
+    com.hunter.stockfarmer.game.TILE
+        .toDouble()
+internal const val WORLD =
+    com.hunter.stockfarmer.game.WORLD
+        .toDouble()
 
 internal fun envelope(
     age: Double,

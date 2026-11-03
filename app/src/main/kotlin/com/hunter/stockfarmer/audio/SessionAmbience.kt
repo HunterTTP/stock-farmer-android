@@ -16,6 +16,7 @@ import com.hunter.stockfarmer.core.rules.livestock
 import com.hunter.stockfarmer.core.rules.position
 import com.hunter.stockfarmer.farm.FarmRenderer
 import com.hunter.stockfarmer.game.GameSession
+import com.hunter.stockfarmer.game.TILE
 import com.hunter.stockfarmer.game.isOnScreen
 import com.hunter.stockfarmer.game.screenPosition
 import java.time.Instant
@@ -30,7 +31,7 @@ fun GameSession.ambienceSnapshot(now: Instant): AmbienceSnapshot =
                 val tile = engine.position(animal) ?: return@mapNotNull null
                 if (camera == null || engine.isInside(animal, now)) return@mapNotNull null
                 val point =
-                    camera.screenPosition(tile, FarmRenderer.TILE, GameState.GRID_SIZE)
+                    camera.screenPosition(tile, TILE, GameState.GRID_SIZE)
                         ?: return@mapNotNull null
                 if (!camera.isOnScreen(point)) return@mapNotNull null
                 val cue =
@@ -53,7 +54,7 @@ fun GameSession.ambienceSnapshot(now: Instant): AmbienceSnapshot =
                             }
                         }
                     } ?: return@mapNotNull null
-                AnimalVoice(cue, this.view.placement(tile, FarmRenderer.TILE, GameState.GRID_SIZE))
+                AnimalVoice(cue, this.view.placement(tile, TILE, GameState.GRID_SIZE))
             }
         AmbienceSnapshot(
             rain = Weather.rainAmount(now, state.clockOffset),

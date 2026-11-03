@@ -1,6 +1,7 @@
 ﻿package com.hunter.stockfarmer.farm
 
 import com.badlogic.gdx.graphics.OrthographicCamera
+import com.hunter.stockfarmer.game.WORLD
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
@@ -12,8 +13,8 @@ internal class FarmCameraTest {
     @Test
     fun `first layout centers the world and shows five tiles on the short side`() {
         controls.resize(1600, 1000, 2f)
-        assertEquals(FarmRenderer.WORLD / 2, camera.position.x)
-        assertEquals(FarmRenderer.WORLD / 2, camera.position.y)
+        assertEquals(WORLD / 2, camera.position.x)
+        assertEquals(WORLD / 2, camera.position.y)
         assertEquals(500f, camera.viewportHeight * camera.zoom)
         assertEquals(0.5f, camera.zoom)
     }
@@ -38,8 +39,8 @@ internal class FarmCameraTest {
         assertEquals(0f, camera.position.x)
         assertEquals(0f, camera.position.y)
         controls.pan(-100_000f, 100_000f)
-        assertEquals(FarmRenderer.WORLD, camera.position.x)
-        assertEquals(FarmRenderer.WORLD, camera.position.y)
+        assertEquals(WORLD, camera.position.x)
+        assertEquals(WORLD, camera.position.y)
     }
 
     @Test

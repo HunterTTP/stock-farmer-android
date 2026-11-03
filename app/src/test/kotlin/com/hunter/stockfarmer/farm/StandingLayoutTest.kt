@@ -4,11 +4,12 @@ import com.hunter.stockfarmer.core.catalog.FenceConnections
 import com.hunter.stockfarmer.core.catalog.FencePiece
 import com.hunter.stockfarmer.core.model.GameState
 import com.hunter.stockfarmer.core.model.GridPoint
+import com.hunter.stockfarmer.game.TILE
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
 internal class StandingLayoutTest {
-    private val tile = FarmRenderer.TILE
+    private val tile = TILE
 
     private fun rowBottom(row: Int) = (GameState.GRID_SIZE - 1 - row) * tile
 
