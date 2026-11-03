@@ -131,6 +131,12 @@ class GameSession(
         confirmations.value = confirmation
     }
 
+    /** The player turned the question down, by Cancel or by dismissing it. */
+    fun cancelConfirmation() {
+        confirmations.value = null
+        cue(SoundCue.cancel)
+    }
+
     /** The building, animal or fish whose sheet is open; null when none is. */
     val sheets = MutableStateFlow<SheetTarget?>(null)
 

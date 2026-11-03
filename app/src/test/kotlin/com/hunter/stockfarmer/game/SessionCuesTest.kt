@@ -42,6 +42,13 @@ class SessionCuesTest {
     }
 
     @Test
+    fun `turning a question down plays cancel and clears it`() {
+        session.ask(Confirmation("Sell?", "", "Sell") {})
+        assertEquals(listOf(SoundCue.cancel), collectingCues { session.cancelConfirmation() })
+        assertEquals(null, session.confirmations.value)
+    }
+
+    @Test
     fun `tapping an animal opens its menu with the popup sound and a missing animal makes none`() {
         val animal = AnimalRef.Pet(tile)
         engine.state.pets[tile] = Pet(breed = Cat.starter.id, name = "Cat", position = GridPoint(20, 20))

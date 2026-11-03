@@ -22,7 +22,7 @@ fun ConfirmationDialog(
     asked: Confirmation,
 ) {
     AlertDialog(
-        onDismissRequest = { session.confirmations.value = null },
+        onDismissRequest = session::cancelConfirmation,
         containerColor = Theme.panelFill,
         titleContentColor = Theme.textPrimary,
         textContentColor = Theme.textSecondary,
@@ -49,7 +49,7 @@ fun ConfirmationDialog(
             }
         },
         dismissButton = {
-            PillButton(title = "Cancel", onClick = { session.confirmations.value = null })
+            PillButton(title = "Cancel", onClick = session::cancelConfirmation)
         },
     )
 }
