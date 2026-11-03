@@ -194,7 +194,7 @@ private fun QuestCard(
             ObjectiveRow(objective, icons.getOrElse(index) { emptyList() })
         }
         TextButton(onClick = onReplace, modifier = Modifier.heightIn(min = 44.dp)) {
-            Text("Replace quest", style = HudType.subheadline, color = Theme.textSecondary)
+            Text("Replace quest", style = HudType.subheadline, color = Theme.textPrimary)
         }
     }
 }

@@ -196,7 +196,7 @@ private fun StockTradeDialog(
     val buttonFill = if (buying) Theme.accent else Theme.danger
     val buttonText = if (buying) Theme.onAccent else Theme.onDanger
 
-    HudSheet(onDismiss = onDismiss) {
+    HudSheet(onDismiss = onDismiss, isOpaque = true) {
         Row(
             Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically,

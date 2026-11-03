@@ -23,6 +23,7 @@ import com.hunter.stockfarmer.ui.rememberPolledState
 import com.hunter.stockfarmer.ui.screens.LaunchPresentation
 import com.hunter.stockfarmer.ui.screens.LaunchScreen
 import com.hunter.stockfarmer.ui.screens.SaveSlotsScreen
+import com.hunter.stockfarmer.ui.theme.Theme
 
 private const val RENDERER_POLL_MILLIS = 16L
 private const val FAILED_POLL_MILLIS = 500L
@@ -74,7 +75,7 @@ fun BoxScope.LaunchOverlay(model: GameViewModel) {
                 Column(Modifier.align(Alignment.BottomCenter).padding(24.dp)) {
                     persistence.backups.forEach { backup ->
                         TextButton(onClick = { model.restore(backup) }) {
-                            Text(stringResource(R.string.restore_backup, backup.kind.name))
+                            Text(stringResource(R.string.restore_backup, backup.kind.name), color = Theme.accent)
                         }
                     }
                 }
