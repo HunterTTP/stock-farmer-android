@@ -34,6 +34,7 @@ class ShadowLayer(
     )
 
     private val casters = ShadowCasters(textures)
+    private val casterInputs = ShadowCasterInputs()
     private var wanted = emptyList<ShadowCaster>()
     private var shapes = emptySet<ShadowShape>()
     private val masks = mutableMapOf<String, AlphaMask>()
@@ -71,7 +72,7 @@ class ShadowLayer(
         if (!enabled || intensity == 0.0 || sun.strength <= 0) return
         val sunStep = Sun.step(minute)
         val softnessStep = (intensity * 4).roundToInt()
-        val rebuilt = true
+        val rebuilt = casterInputs.changed(state, leftOut, sunStep)
         if (rebuilt) {
             wanted = casters.collect(state, leftOut)
             shapes = wanted.map { it.shape }.toSet()

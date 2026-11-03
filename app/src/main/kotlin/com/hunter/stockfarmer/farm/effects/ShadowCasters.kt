@@ -124,6 +124,92 @@ internal class ShadowCasters(
         }
 }
 
+/**
+ * Everything [ShadowCasters.collect] reads, compared exactly and in order each frame without allocating, so the casters
+ * are rebuilt only when one of them could come out differently. Catalog entries and placed values are immutable, so an
+ * unchanged reference is an unchanged value; a new reference with equal contents costs only a needless rebuild.
+ */
+internal class ShadowCasterInputs {
+    private var numbers = IntArray(256)
+    private var objects = arrayOfNulls<Any>(256)
+    private var numberCount = 0
+    private var objectCount = 0
+    private var numbersSeen = 0
+    private var objectsSeen = 0
+    private var differs = false
+
+    fun changed(
+        state: GameState,
+        moving: MovingOrigins,
+        sunStep: Int,
+    ): Boolean {
+        numbersSeen = 0
+        objectsSeen = 0
+        differs = false
+        number(sunStep)
+        number(state.season.ordinal)
+        point(moving.building)
+        point(moving.fruitTree)
+        point(moving.decoration)
+        point(moving.tree)
+        point(state.tractorRun?.home)
+        number(state.placedBuildings.size)
+        for (placed in state.placedBuildings) {
+            point(placed.origin)
+            reference(placed.building)
+        }
+        number(state.trees.size)
+        for ((origin, placed) in state.trees) {
+            point(origin)
+            reference(placed)
+        }
+        number(state.rocks.size)
+        for ((origin, size) in state.rocks) {
+            point(origin)
+            number(size.ordinal)
+        }
+        number(state.decorations.size)
+        for ((origin, placed) in state.decorations) {
+            point(origin)
+            reference(placed)
+        }
+        // Only which tiles hold a fence shapes its shadow, not the fence's color.
+        number(state.fences.size)
+        for (tile in state.fences.keys) point(tile)
+        for ((tile, plot) in state.plots) {
+            val crop = Crop.named(plot.cropID) ?: continue
+            if (!crop.isFruitTree || !plot.isAnchor(tile)) continue
+            point(tile)
+            point(plot.origin)
+            reference(crop)
+        }
+        if (numbersSeen != numberCount || objectsSeen != objectCount) differs = true
+        numberCount = numbersSeen
+        objectCount = objectsSeen
+        return differs
+    }
+
+    private fun point(tile: GridPoint?) = number(if (tile == null) Int.MIN_VALUE else (tile.row shl 16) xor tile.col)
+
+    private fun number(value: Int) {
+        if (numbersSeen == numbers.size) numbers = numbers.copyOf(numbersSeen * 2)
+        if (numbersSeen >= numberCount || numbers[numbersSeen] != value) {
+            numbers[numbersSeen] = value
+            differs = true
+        }
+        numbersSeen++
+    }
+
+    private fun reference(value: Any) {
+        if (objectsSeen == objects.size) objects = objects.copyOf(objectsSeen * 2)
+        if (objectsSeen >= objectCount || objects[objectsSeen] !== value) {
+            objects[objectsSeen] = value
+            differs = true
+        }
+        objectsSeen++
+    }
+}
+
 /** The buildings that cast a shadow: a Tractor out driving casts its own, so the home it left casts none, and one being moved casts none where it stood. */
 internal fun GameState.shadowCastingBuildings(moving: MovingOrigins = MovingOrigins.NONE) =
     placedBuildings.filter { it.origin != tractorRun?.home && it.origin != moving.building }
