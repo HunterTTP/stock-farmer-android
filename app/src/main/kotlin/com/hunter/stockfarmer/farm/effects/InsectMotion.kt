@@ -156,16 +156,16 @@ internal class ButterflyMotion(
 
     fun guide(
         fine: Boolean,
-        attractions: List<Butterflies.Attraction>,
-        landingPoints: List<TilePosition>,
+        attractions: () -> List<Butterflies.Attraction>,
+        landingPoints: () -> List<TilePosition>,
     ) {
         if (releasedID == null) return
         if (!fine && !sleeping) {
             sleeping = true
-            schedule(listOf(base, Butterflies.restingSpot(base, attractions)), emptyList())
+            schedule(listOf(base, Butterflies.restingSpot(base, attractions())), emptyList())
         } else if (fine && (sleeping || travel >= path.lifespan)) {
             sleeping = false
-            schedule(Butterflies.wander(base, attractions, random), landingPoints)
+            schedule(Butterflies.wander(base, attractions(), random), landingPoints())
         }
     }
 
@@ -216,6 +216,7 @@ internal class ButterflyMotion(
 
 internal class ButterflyPopulation(
     private val random: RandomSource = SystemRandomSource,
+    private val attractionsOf: (GameState) -> List<Butterflies.Attraction> = Butterflies::attractions,
 ) {
     val flies = mutableListOf<ButterflyMotion>()
 
@@ -225,8 +226,10 @@ internal class ButterflyPopulation(
         darkness: Double,
         rain: Double,
     ) {
-        val attractions = Butterflies.attractions(state)
-        val landings = attractions.flatMap { it.landingPoints }
+        // Only a spawn, a new released butterfly or a released one changing course reads these, and building them
+        // is the costly part of a frame on a big farm. They draw no random numbers, so being late changes nothing.
+        val attractions by lazy(LazyThreadSafetyMode.NONE) { attractionsOf(state) }
+        val landings by lazy(LazyThreadSafetyMode.NONE) { attractions.flatMap { it.landingPoints } }
         val released = state.releasedButterflies.associateBy { it.id }
         flies.removeAll { it.releasedID != null && it.releasedID !in released }
         val present = flies.mapNotNull { it.releasedID }.toSet()
@@ -237,7 +240,7 @@ internal class ButterflyPopulation(
         }
         val fine = darkness < 0.25 && rain < 0.15
         flies.forEach {
-            it.guide(fine, attractions, landings)
+            it.guide(fine, { attractions }, { landings })
             it.advance(seconds, fine && state.season != Season.winter)
         }
         flies.removeAll { it.done }
