@@ -104,7 +104,7 @@ fun GameEngine.growTrees(now: Instant): Boolean {
                     placed.grewAt.advancedBy(Tree.growthInterval),
                     placed.isNaturallyGenerated,
                 )
-            state.moveTreeUnsettled(position, newOrigin, grown)
+            state.growTreeUnsettled(position, newOrigin, grown)
             placed = grown
             position = newOrigin
             if (!placed.isNaturallyGenerated) noteTerrain(CareerRecord.terrainID(next, placed.color))

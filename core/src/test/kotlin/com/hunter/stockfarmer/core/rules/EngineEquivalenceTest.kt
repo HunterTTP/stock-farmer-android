@@ -17,6 +17,7 @@ import com.hunter.stockfarmer.core.model.Herd
 import com.hunter.stockfarmer.core.model.Livestock
 import com.hunter.stockfarmer.core.model.Plot
 import com.hunter.stockfarmer.core.model.WaterLayoutCache
+import com.hunter.stockfarmer.core.model.bottomRow
 import com.hunter.stockfarmer.core.util.RandomSource
 import com.hunter.stockfarmer.core.util.advancedBy
 import com.hunter.stockfarmer.core.util.nextUnit
@@ -275,26 +276,16 @@ class EngineEquivalenceTest {
         }
     }
 
-    /** Heavily overlapped ground, asked about mid-run through [GameEngine.isBareGround] as growth itself asks. */
+    /** What lets growing a tree leave nothing to take out of the indexes: it only ever gains ground. */
     @Test
-    fun `a tree's tiles stay known as covered between moves until the last tree over them has gone`() {
-        val state = GameState()
-        val now = LateFarm.start
-        val oak = Tree.all.first { it.side == 3 }.species
-        val first = GridPoint(10, 10)
-        val second = GridPoint(10, 11)
-        state.putTree(first, PlacedTree(oak.trees[1], TreeColor.green, now))
-        state.putTree(second, PlacedTree(oak.trees[1], TreeColor.green, now))
-        val shared = GridPoint(11, 11)
-        state.moveTreeUnsettled(second, GridPoint(20, 20), PlacedTree(oak.trees[1], TreeColor.green, now))
-        assertEquals(first, state.tree(shared)?.first)
-        assertEquals(true, state.hasObstacle(shared))
-        assertNull(state.tree(GridPoint(11, 12)))
-        assertEquals(false, state.hasObstacle(GridPoint(11, 12)))
-        assertEquals(GridPoint(20, 20), state.tree(GridPoint(21, 21))?.first)
-        assertEquals(true, state.hasObstacle(GridPoint(21, 21)))
-        state.moveTreeUnsettled(first, GridPoint(30, 30), PlacedTree(oak.trees[1], TreeColor.green, now))
-        assertNull(state.tree(shared))
-        assertEquals(false, state.hasObstacle(shared))
+    fun `every tree's next size stands on all the ground of the last, and its bottom row on all of the last's`() {
+        val at = GridPoint(20, 20)
+        for (tree in Tree.all) {
+            val next = tree.next ?: continue
+            val nextGround = next.footprint(next.origin(tree.trunk(at)))
+            val ground = tree.footprint(at)
+            assertEquals(true, nextGround.containsAll(ground), tree.id)
+            assertEquals(true, nextGround.bottomRow.containsAll(ground.bottomRow), tree.id)
+        }
     }
 }
