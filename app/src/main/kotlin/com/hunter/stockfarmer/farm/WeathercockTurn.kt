@@ -3,6 +3,7 @@ package com.hunter.stockfarmer.farm
 import com.hunter.stockfarmer.core.model.GameState
 import com.hunter.stockfarmer.core.model.GridPoint
 import com.hunter.stockfarmer.core.util.secondsSince
+import com.hunter.stockfarmer.game.TILE
 import java.time.Instant
 
 /**
@@ -70,7 +71,7 @@ class WeathercockTurn {
             x: Float,
             pushesRight: Boolean,
         ): Double {
-            val along = x / (GameState.GRID_SIZE * FarmRenderer.TILE)
+            val along = x / (GameState.GRID_SIZE * TILE)
             return SWEEP_SECONDS * (if (pushesRight) along else 1 - along)
         }
     }

@@ -15,8 +15,8 @@ import com.hunter.stockfarmer.core.rules.buyShares
 import com.hunter.stockfarmer.core.rules.select
 import com.hunter.stockfarmer.core.rules.sellShares
 import com.hunter.stockfarmer.core.util.RandomSource
+import com.hunter.stockfarmer.game.SheetTarget
 import com.hunter.stockfarmer.ui.sheets.SheetAction
-import com.hunter.stockfarmer.ui.sheets.SheetTarget
 import com.hunter.stockfarmer.ui.sheets.sheetAction
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.launch

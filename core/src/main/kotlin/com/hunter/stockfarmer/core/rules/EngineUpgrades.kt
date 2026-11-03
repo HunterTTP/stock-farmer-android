@@ -7,7 +7,7 @@ import com.hunter.stockfarmer.core.util.RandomSource
 import java.time.Instant
 
 /** Why the house can't be upgraded to the luxury house right now, or null if it can. */
-fun GameEngine.houseUpgradeRejection(
+fun GameEngine.farmhouseUpgradeRejection(
     origin: GridPoint,
     now: Instant,
 ): Rejection? {
@@ -28,11 +28,11 @@ fun GameEngine.houseUpgradeRejection(
 }
 
 /** Swaps the house for the luxury house where it stands, which lets the player own more stocks. */
-fun GameEngine.upgradeHouse(
+fun GameEngine.upgradeFarmhouse(
     origin: GridPoint,
     now: Instant,
 ): List<GameEvent> {
-    houseUpgradeRejection(origin, now)?.let { return reject(it) }
+    farmhouseUpgradeRejection(origin, now)?.let { return reject(it) }
     val upgraded = Building.upgradedHouse
     state.money -= StockMarketRules.HOUSE_UPGRADE_COST
     for (tile in upgraded.footprint(origin).bottomRow) {

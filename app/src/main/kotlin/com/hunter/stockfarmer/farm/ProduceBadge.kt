@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.hunter.stockfarmer.core.catalog.StorageItem
 import com.hunter.stockfarmer.core.rules.FruitTreePhase
 import com.hunter.stockfarmer.core.rules.GrowthPhase
+import com.hunter.stockfarmer.game.TILE
 
 internal class ProduceBadge(
     private val textures: TextureLibrary,
@@ -89,6 +90,6 @@ internal class ProduceBadge(
     ): Texture = labels.getOrPut(text to black) { textures.label(text, size, black) }
 
     companion object {
-        const val SIZE = FarmRenderer.TILE * 0.34f
+        const val SIZE = TILE * 0.34f
     }
 }

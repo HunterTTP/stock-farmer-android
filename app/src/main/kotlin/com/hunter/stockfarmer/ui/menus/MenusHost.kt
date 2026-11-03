@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -29,7 +28,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -37,15 +35,15 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import com.hunter.stockfarmer.core.catalog.Building
 import com.hunter.stockfarmer.core.catalog.StorageItem
 import com.hunter.stockfarmer.core.model.Lesson
 import com.hunter.stockfarmer.core.model.ShopItem
 import com.hunter.stockfarmer.core.rules.currentLesson
+import com.hunter.stockfarmer.core.rules.isNew
 import com.hunter.stockfarmer.core.rules.learn
 import com.hunter.stockfarmer.game.GameSession
+import com.hunter.stockfarmer.game.learnLesson
 import com.hunter.stockfarmer.ui.FAST_POLL_MILLIS
 import com.hunter.stockfarmer.ui.rememberPolledState
 import com.hunter.stockfarmer.ui.theme.BuildingPriceLine
@@ -55,14 +53,12 @@ import com.hunter.stockfarmer.ui.theme.HudIcon
 import com.hunter.stockfarmer.ui.theme.HudIcons
 import com.hunter.stockfarmer.ui.theme.HudSheet
 import com.hunter.stockfarmer.ui.theme.HudType
-import com.hunter.stockfarmer.ui.theme.MoneyBadge
 import com.hunter.stockfarmer.ui.theme.MoneyPriceLine
 import com.hunter.stockfarmer.ui.theme.Theme
 import com.hunter.stockfarmer.ui.theme.ToastView
 import com.hunter.stockfarmer.ui.theme.categoryCard
 import com.hunter.stockfarmer.ui.theme.glassCard
 import com.hunter.stockfarmer.ui.theme.lessonPulse
-import com.hunter.stockfarmer.ui.theme.newDot
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 
@@ -114,16 +110,7 @@ fun MenusHost(
     val isStorage = openMenu == Menu.Storage
     val pulsesClose = isStorage && state.currentLesson == Lesson.closeStorage
     val closeWithLesson = {
-        val completed =
-            session.act {
-                if (isStorage && it.currentLesson == Lesson.closeStorage) {
-                    it.learn(Lesson.closeStorage)
-                    true
-                } else {
-                    false
-                }
-            }
-        if (completed) {
+        if (isStorage && session.learnLesson(Lesson.closeStorage)) {
             val msg = "Have fun building your farm!"
             onToast(msg)
             session.showToast(msg)
@@ -155,24 +142,7 @@ fun MenusHost(
             } else {
                 CatalogMenuScreen(state, loader, choose, onInfo = { detail = it }, Modifier.weight(1f))
             }
-            message?.let { text ->
-                val tone = if (messageIsRejection) Theme.spend else Theme.textPrimary
-                Box(
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 8.dp)
-                            .glassCard(12.dp, tint = if (messageIsRejection) Theme.spend else null)
-                            .padding(14.dp),
-                ) {
-                    Text(
-                        text,
-                        style = HudType.body,
-                        color = tone,
-                        modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
-                    )
-                }
-            }
+            message?.let { MenuMessageBox(it, messageIsRejection) }
             Box(
                 modifier =
                     Modifier
@@ -375,102 +345,25 @@ private fun catalogPriceLine(
     }
 }
 
-/** HUD entry point for seed/fertilizer/tool info and tool upgrades; catalog info buttons use this host too. */
+/** The line under a menu: what a purchase or sale came to, in the error style when it was refused. */
 @Composable
-fun MenusHost(
-    session: GameSession,
-    screen: ItemScreen,
-    onClose: () -> Unit,
-    onSelected: () -> Unit = onClose,
-    onUpgradeResult: (ToolUpgradeResult) -> Unit = {},
+internal fun MenuMessageBox(
+    text: String,
+    isRejection: Boolean,
 ) {
-    var message by remember(session, screen) { mutableStateOf<String?>(null) }
-    val money by rememberPolledState(session to screen, FAST_POLL_MILLIS) { session.read { it.money } }
-    HudSheet(onDismiss = onClose) {
-        Row(
-            Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                when (screen) {
-                    is ItemScreen.Item -> {
-                        session.act { ItemInfo.from(screen.item, it).name }
-                    }
-
-                    ItemScreen.Eraser -> {
-                        "Grass"
-                    }
-
-                    is ItemScreen.Harvest -> {
-                        screen.tool.displayName
-                    }
-
-                    is ItemScreen.Upgrade -> {
-                        "Upgrade ${screen.tool.displayName}"
-                    }
-                },
-                Modifier.weight(1f),
-                style = HudType.headline,
-                color = Theme.textPrimary,
-            )
-            MoneyBadge(money)
-            Box(
-                modifier =
-                    Modifier
-                        .padding(start = 12.dp)
-                        .glassCard(12.dp)
-                        .clickable(role = Role.Button, onClick = onClose)
-                        .padding(horizontal = 14.dp, vertical = 8.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = "Close",
-                    style = HudType.subheadline.copy(fontWeight = FontWeight.SemiBold),
-                    color = Theme.textPrimary,
-                )
-            }
-        }
-        Column(Modifier.weight(1f)) {
-            when (screen) {
-                is ItemScreen.Item -> {
-                    ItemDetailScreen(session, screen.item, onSelected, { message = it })
-                }
-
-                ItemScreen.Eraser -> {
-                    EraserDetailScreen(session, onSelected)
-                }
-
-                is ItemScreen.Harvest -> {
-                    HarvestToolDetailScreen(session, screen.tool, onSelected)
-                }
-
-                is ItemScreen.Upgrade -> {
-                    ToolUpgradeScreen(session, screen.tool, onBought = {
-                        onUpgradeResult(ToolUpgradeResult(true, it))
-                        onClose()
-                    }, onMessage = {
-                        message = it
-                        onUpgradeResult(ToolUpgradeResult(false, it))
-                    })
-                }
-            }
-        }
-        message?.let { text ->
-            Box(
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                        .glassCard(12.dp, tint = Theme.spend)
-                        .padding(14.dp),
-            ) {
-                Text(
-                    text,
-                    style = HudType.body,
-                    color = Theme.spend,
-                    modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
-                )
-            }
-        }
+    Box(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .glassCard(12.dp, tint = if (isRejection) Theme.spend else null)
+                .padding(14.dp),
+    ) {
+        Text(
+            text,
+            style = HudType.body,
+            color = if (isRejection) Theme.spend else Theme.textPrimary,
+            modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+        )
     }
 }

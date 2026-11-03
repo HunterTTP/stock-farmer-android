@@ -82,8 +82,8 @@ class ToolPaletteTest {
     @Test
     fun `fertilize holds fertilizer by default and shows no stock for it`() {
         val state = GameState()
-        GameEngine(state).pickUp(HudTool.Tilling)
-        val fertilize = ToolPalette.dropdowns(state, HudTool.Tilling).single()
+        GameEngine(state).pickUp(HudTool.Fertilizing)
+        val fertilize = ToolPalette.dropdowns(state, HudTool.Fertilizing).single()
         assertEquals("Fertilizer", fertilize.value)
         assertNull(fertilize.stock)
     }
@@ -92,12 +92,12 @@ class ToolPaletteTest {
     fun `a tool setting things down from storage lists what is in storage instead of its usual choices`() {
         val state = GameState().apply { storage[StorageItem.Fertilizer.id] = 3 }
         val engine = GameEngine(state)
-        engine.pickUp(HudTool.Tilling)
-        val usual = ToolPalette.dropdowns(state, HudTool.Tilling).single()
+        engine.pickUp(HudTool.Fertilizing)
+        val usual = ToolPalette.dropdowns(state, HudTool.Fertilizing).single()
         assertTrue(usual.choices.size > 1 && usual.choices.none { it.id.startsWith("stored-") })
         assertTrue(engine.equip(StorageItem.Fertilizer))
         assertTrue(engine.isPlacingFromStorage)
-        val stored = ToolPalette.dropdowns(state, HudTool.Tilling).single()
+        val stored = ToolPalette.dropdowns(state, HudTool.Fertilizing).single()
         assertEquals(listOf("stored-${StorageItem.Fertilizer.id}"), stored.choices.map { it.id })
         assertEquals(3, stored.stock)
         assertTrue(stored.choices.single().isSelected)
@@ -113,7 +113,7 @@ class ToolPaletteTest {
         assertEquals(
             usual.choices.map { it.id },
             ToolPalette
-                .dropdowns(state, HudTool.Tilling)
+                .dropdowns(state, HudTool.Fertilizing)
                 .single()
                 .choices
                 .map { it.id },

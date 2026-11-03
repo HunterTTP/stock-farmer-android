@@ -3,6 +3,7 @@ package com.hunter.stockfarmer.farm
 import com.hunter.stockfarmer.core.catalog.FenceConnections
 import com.hunter.stockfarmer.core.catalog.FencePlacement
 import com.hunter.stockfarmer.core.model.GridPoint
+import com.hunter.stockfarmer.game.TILE
 import kotlin.math.min
 
 /** Where a picture is drawn: its lower left corner and size in world units. */
@@ -23,7 +24,6 @@ internal object StandingLayout {
 
     private const val FIT_IN_SQUARE = 0.95f
     private const val FENCE_STRETCH = 1.5f
-    private const val TILE = FarmRenderer.TILE
 
     /** The picture's size shrunk to fit inside [width] by [height], keeping its proportions. */
     fun fit(

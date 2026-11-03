@@ -7,12 +7,11 @@ import com.hunter.stockfarmer.core.model.GameState
 import com.hunter.stockfarmer.core.rules.DayNightCycle
 import com.hunter.stockfarmer.core.rules.Weather
 import com.hunter.stockfarmer.core.util.secondsSince
-import com.hunter.stockfarmer.farm.FarmRenderer
+import com.hunter.stockfarmer.diagnostics.PerformanceMonitor
+import com.hunter.stockfarmer.diagnostics.PerformanceWork
+import com.hunter.stockfarmer.diagnostics.measureOrRun
 import com.hunter.stockfarmer.farm.StandingSource
 import com.hunter.stockfarmer.farm.TextureLibrary
-import com.hunter.stockfarmer.ui.screens.PerformanceMonitor
-import com.hunter.stockfarmer.ui.screens.PerformanceWork
-import com.hunter.stockfarmer.ui.screens.measureOrRun
 import java.time.Instant
 import kotlin.math.hypot
 import kotlin.math.roundToInt
@@ -190,8 +189,12 @@ internal fun rain(
     now: Instant,
 ) = Weather.rainAmount(now, state.clockOffset)
 
-internal const val TILE = FarmRenderer.TILE.toDouble()
-internal const val WORLD = FarmRenderer.WORLD.toDouble()
+internal const val TILE =
+    com.hunter.stockfarmer.game.TILE
+        .toDouble()
+internal const val WORLD =
+    com.hunter.stockfarmer.game.WORLD
+        .toDouble()
 
 internal fun envelope(
     age: Double,

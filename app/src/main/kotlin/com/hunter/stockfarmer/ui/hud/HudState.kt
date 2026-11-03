@@ -1,6 +1,8 @@
 package com.hunter.stockfarmer.ui.hud
 
+import com.hunter.stockfarmer.core.rules.UnlockCategory
 import com.hunter.stockfarmer.core.rules.buildingPlacement
+import com.hunter.stockfarmer.core.rules.hasNewItems
 import com.hunter.stockfarmer.core.rules.isChopping
 import com.hunter.stockfarmer.core.rules.isPlacing
 import com.hunter.stockfarmer.core.rules.storageCapacity
@@ -8,8 +10,6 @@ import com.hunter.stockfarmer.core.rules.storedCount
 import com.hunter.stockfarmer.game.GameSession
 import com.hunter.stockfarmer.game.canDestroyWhilePlacing
 import com.hunter.stockfarmer.ui.menus.MenuPicture
-import com.hunter.stockfarmer.ui.menus.UnlockCategory
-import com.hunter.stockfarmer.ui.menus.hasNewItems
 import com.hunter.stockfarmer.ui.screens.LessonGuideState
 
 /** What the heads-up display shows, read from the game a few times a second. */
@@ -57,7 +57,7 @@ internal fun GameSession.hud(reach: Float = ToolCircleMetrics.DEFAULT_REACH): Hu
             newTools =
                 buildSet {
                     if (engine.hasNewItems(UnlockCategory.PLANT)) add(HudTool.Planting)
-                    if (engine.hasNewItems(UnlockCategory.FERTILIZE)) add(HudTool.Tilling)
+                    if (engine.hasNewItems(UnlockCategory.FERTILIZE)) add(HudTool.Fertilizing)
                     if (engine.hasNewItems(UnlockCategory.TERRAIN)) add(HudTool.Terrain)
                     if (engine.hasNewItems(UnlockCategory.BUILD)) add(HudTool.Building)
                     if (engine.hasNewItems(UnlockCategory.DECORATE)) add(HudTool.Decorating)

@@ -1,4 +1,4 @@
-package com.hunter.stockfarmer.ui.screens
+package com.hunter.stockfarmer.diagnostics
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -28,7 +28,7 @@ class PerformanceMonitorTest {
         assertEquals(20.0, monitor.snapshot.liveFrameMS!!, 0.001)
         assertEquals(2.0, monitor.snapshot.liveUpdateMS!!, 0.001)
         assertEquals(64.0, monitor.snapshot.memoryMB)
-        assertEquals(42, monitor.snapshot.nodeCount)
+        assertEquals(42, monitor.snapshot.spriteCount)
         now = 2.0
         monitor.sample()
         assertNull(monitor.snapshot.liveFPS)
@@ -120,7 +120,7 @@ class PerformanceMonitorTest {
         assertTrue(report.hitches.zipWithNext().all { (a, b) -> a.milliseconds >= b.milliseconds })
         assertTrue(report.hitches.all { it.nearbyWork.startsWith("Crop visuals & growth:") })
         assertEquals(80.0, report.peakMemoryMB)
-        assertEquals(50, report.peakNodes)
+        assertEquals(50, report.peakSprites)
         assertTrue(report.thermalStates.containsAll(setOf("Warm", "Nominal")))
         assertTrue(report.text.contains("Test farm"))
         assertTrue(report.text.contains("System | Calls | Total ms | Average ms | p95 ms | Worst ms"))

@@ -17,10 +17,11 @@ import com.hunter.stockfarmer.core.rules.GrowthTimelines
 import com.hunter.stockfarmer.core.rules.Season
 import com.hunter.stockfarmer.core.rules.fullBuildings
 import com.hunter.stockfarmer.core.rules.workshopRecipe
+import com.hunter.stockfarmer.diagnostics.PerformanceMonitor
+import com.hunter.stockfarmer.diagnostics.PerformanceWork
+import com.hunter.stockfarmer.diagnostics.measureOrRun
 import com.hunter.stockfarmer.game.SceneInteractions
-import com.hunter.stockfarmer.ui.screens.PerformanceMonitor
-import com.hunter.stockfarmer.ui.screens.PerformanceWork
-import com.hunter.stockfarmer.ui.screens.measureOrRun
+import com.hunter.stockfarmer.game.TILE
 import java.time.Instant
 import kotlin.math.max
 
@@ -563,9 +564,6 @@ class FarmRenderer(
         private val SHALLOW_WATER = Color(0.45f, 0.72f, 0.86f, 1f)
         private val BY_BOTTOM_EDGE = Comparator<Standing> { a, b -> a.bottomEdge.compareTo(b.bottomEdge) }
 
-        /** A tile's side in world units; the map is [GameState.GRID_SIZE] tiles square. */
-        const val TILE = 100f
-        const val WORLD = GameState.GRID_SIZE * TILE
         private const val QUADRANTS = 4
 
         // Standing uses rows rather than SpriteKit's thousandths, so its local depth offsets scale with the rows.

@@ -19,13 +19,12 @@ import com.hunter.stockfarmer.core.rules.TractorCropSummary
 import com.hunter.stockfarmer.core.rules.WorkshopStatus
 import com.hunter.stockfarmer.core.rules.animals
 import com.hunter.stockfarmer.core.rules.chicken
-import com.hunter.stockfarmer.core.rules.demolishRejection
+import com.hunter.stockfarmer.core.rules.farmhouseUpgradeRejection
 import com.hunter.stockfarmer.core.rules.farmlandLimit
 import com.hunter.stockfarmer.core.rules.favoriteCrop
 import com.hunter.stockfarmer.core.rules.homeCapacity
 import com.hunter.stockfarmer.core.rules.homeLevel
 import com.hunter.stockfarmer.core.rules.homeUpgradeRejection
-import com.hunter.stockfarmer.core.rules.houseUpgradeRejection
 import com.hunter.stockfarmer.core.rules.livestock
 import com.hunter.stockfarmer.core.rules.materialRefund
 import com.hunter.stockfarmer.core.rules.meal
@@ -44,6 +43,7 @@ import com.hunter.stockfarmer.core.rules.tractorCropOverview
 import com.hunter.stockfarmer.core.rules.workshopRecipe
 import com.hunter.stockfarmer.core.rules.workshopStatus
 import com.hunter.stockfarmer.core.util.secondsSince
+import com.hunter.stockfarmer.game.SheetTarget
 import java.time.Instant
 
 internal data class RecipeChoice(
@@ -175,7 +175,7 @@ internal data class SheetState(
                             "Upgrade to Luxury House · ${StockMarketRules.HOUSE_UPGRADE_COST.dollars}",
                             "${StockMarketRules.UPGRADED_SLOT_LIMIT} stock slots · " +
                                 "Unlocks at Level ${StockMarketRules.HOUSE_UPGRADE_LEVEL}",
-                            engine.houseUpgradeRejection(origin, now)?.message,
+                            engine.farmhouseUpgradeRejection(origin, now)?.message,
                         )
                     }
 

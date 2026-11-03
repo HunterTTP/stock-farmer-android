@@ -16,12 +16,12 @@ import com.hunter.stockfarmer.core.util.RandomSource
 import com.hunter.stockfarmer.core.util.SystemRandomSource
 import com.hunter.stockfarmer.core.util.advancedBy
 import com.hunter.stockfarmer.core.util.nextInt
-import com.hunter.stockfarmer.farm.animals.AnimalGesture
-import com.hunter.stockfarmer.farm.animals.AnimalHitTarget
-import com.hunter.stockfarmer.farm.animals.AnimalReaction
-import com.hunter.stockfarmer.farm.animals.animalReaction
-import com.hunter.stockfarmer.ui.sheets.AnimalInteraction
-import com.hunter.stockfarmer.ui.sheets.SheetTarget
+import com.hunter.stockfarmer.game.AnimalGesture
+import com.hunter.stockfarmer.game.AnimalHitTarget
+import com.hunter.stockfarmer.game.AnimalInteraction
+import com.hunter.stockfarmer.game.AnimalReaction
+import com.hunter.stockfarmer.game.SheetTarget
+import com.hunter.stockfarmer.game.animalReaction
 import java.time.Instant
 import java.util.concurrent.ConcurrentLinkedQueue
 

@@ -18,14 +18,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -37,18 +34,18 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.hunter.stockfarmer.audio.SoundCenter
 import com.hunter.stockfarmer.core.feedback.SoundCue
-import com.hunter.stockfarmer.core.model.DaySummary
-import com.hunter.stockfarmer.core.rules.GameEvent
-import com.hunter.stockfarmer.core.rules.LevelUnlocks
 import com.hunter.stockfarmer.core.rules.select
+import com.hunter.stockfarmer.diagnostics.PerformanceMonitor
 import com.hunter.stockfarmer.game.FarmSlots
 import com.hunter.stockfarmer.game.Feedback
 import com.hunter.stockfarmer.game.GameSession
+import com.hunter.stockfarmer.game.SheetTarget
 import com.hunter.stockfarmer.game.ToastMessage
 import com.hunter.stockfarmer.game.askToDestroyWhilePlacing
 import com.hunter.stockfarmer.game.cancelPlacement
 import com.hunter.stockfarmer.game.confirmPlacement
 import com.hunter.stockfarmer.game.interactWithAnimal
+import com.hunter.stockfarmer.settings.PlaySettings
 import com.hunter.stockfarmer.ui.fishing.FishingCanvas
 import com.hunter.stockfarmer.ui.fishing.FishingCatch
 import com.hunter.stockfarmer.ui.fishing.FishingMode
@@ -81,24 +78,13 @@ import com.hunter.stockfarmer.ui.rewards.rewardTarget
 import com.hunter.stockfarmer.ui.screens.DaySummaryBanner
 import com.hunter.stockfarmer.ui.screens.LevelUpScreen
 import com.hunter.stockfarmer.ui.screens.LocalScreenAudio
-import com.hunter.stockfarmer.ui.screens.PerformanceMonitor
-import com.hunter.stockfarmer.ui.screens.PlaySettings
 import com.hunter.stockfarmer.ui.screens.QuestBanner
-import com.hunter.stockfarmer.ui.screens.QuestReward
 import com.hunter.stockfarmer.ui.screens.SoundCenterScreenAudio
 import com.hunter.stockfarmer.ui.sheets.SheetHost
-import com.hunter.stockfarmer.ui.sheets.SheetTarget
 import com.hunter.stockfarmer.ui.theme.LocalHudScale
-import com.hunter.stockfarmer.ui.theme.PillButton
-import com.hunter.stockfarmer.ui.theme.PillRole
 import com.hunter.stockfarmer.ui.theme.PlacementButtons
 import com.hunter.stockfarmer.ui.theme.ScalesHudForTablets
-import com.hunter.stockfarmer.ui.theme.Theme
 import com.hunter.stockfarmer.ui.theme.ToastView
-import kotlinx.coroutines.delay
-
-/** This branch uses the launch background as the fill for HUD dialogs. */
-private val Theme.panelFill get() = launchBackground
 
 /**
  * The heads-up display over the farm, in composition order: the money and level panels on top, the
@@ -119,45 +105,15 @@ fun Hud(
     val context = LocalContext.current
     val play = remember(context) { PlaySettings.of(context) }
     val hud by rememberPolledState(session, HUD_REFRESH_MILLIS) { session.hud(play.toolReach) }
-    var toolRoute by remember { mutableStateOf<ToolRoute?>(null) }
-    var isShowingDetailFromList by remember { mutableStateOf(false) }
-    var isTimeShown by remember { mutableStateOf(false) }
-    var levelUnlocks by remember { mutableStateOf<LevelUnlocks?>(null) }
-    var rewards by remember { mutableStateOf(emptyList<QuestReward>()) }
-    var daySummary by remember { mutableStateOf<DaySummary?>(null) }
-    var toast by remember { mutableStateOf<ToastMessage?>(null) }
     var isDraggingTool by remember { mutableStateOf(false) }
-    var closeRequests by remember { mutableIntStateOf(0) }
     val regions = remember { MenuInteractionRegions() }
     val cast by session.casts.collectAsStateWithLifecycle()
     val sheet by session.sheets.collectAsStateWithLifecycle()
     val confirmation by session.confirmations.collectAsStateWithLifecycle()
-    LaunchedEffect(session) { session.newDays.collect { daySummary = it } }
-    LaunchedEffect(session) { session.toasts.collect { toast = it } }
-    LaunchedEffect(session) {
-        session.events.collect { events ->
-            Feedback.toast(events)?.let { toast = it }
-            events.filterIsInstance<GameEvent.LeveledUp>().lastOrNull()?.let {
-                levelUnlocks = LevelUnlocks.unlocked(it.from, it.level)
-            }
-            Feedback.questBanner(events)?.let { rewards = it }
-        }
-    }
-    LaunchedEffect(toast) {
-        val shown = toast ?: return@LaunchedEffect
-        delay(shown.durationMillis)
-        if (toast == shown) toast = null
-    }
-    val opensOverFarm = toolRoute != null || isTimeShown || sheet != null
-    LaunchedEffect(opensOverFarm) {
-        if (!opensOverFarm) {
-            isShowingDetailFromList = false
-        } else if (!isShowingDetailFromList) {
-            closeRequests++
-        }
-    }
+    val messages = rememberHudMessages(session)
+    val navigation = rememberHudNavigation(isSheetOpen = sheet != null)
     val panels = remember(sound) { PanelCues { sound.play(it) } }
-    val isPanelOpen = toolRoute != null || isTimeShown || sheet is SheetTarget.Building
+    val isPanelOpen = navigation.isOpen || sheet is SheetTarget.Building
     LaunchedEffect(isPanelOpen) { panels.update(isPanelOpen) }
     ScalesHudForTablets {
         BoxWithConstraints(modifier) {
@@ -187,27 +143,14 @@ fun Hud(
                 play = play,
                 regions = regions,
                 isDraggingTool = isDraggingTool,
-                closeRequests = closeRequests,
-                onCloseMenus = { closeRequests++ },
-                onCareer = {
-                    isShowingDetailFromList = false
-                    toolRoute = ToolRoute.Career
-                },
-                onRingScreen = {
-                    isShowingDetailFromList = false
-                    when (it) {
-                        RingScreen.Storage -> toolRoute = ToolRoute.Storage
-                        RingScreen.Settings -> toolRoute = ToolRoute.Settings
-                        RingScreen.Time -> isTimeShown = true
-                    }
-                },
-                onOpenRoute = {
-                    isShowingDetailFromList = true
-                    toolRoute = it
-                },
+                closeRequests = navigation.closeRequests,
+                onCloseMenus = navigation::closeMenus,
+                onCareer = navigation::openCareer,
+                onRingScreen = navigation::open,
+                onOpenRoute = navigation::openFromList,
                 onDraggingChanged = { isDraggingTool = it },
             )
-            toolRoute?.let { root ->
+            navigation.toolRoute?.let { root ->
                 val audio = remember(sound) { SoundCenterScreenAudio(sound) }
                 CompositionLocalProvider(LocalScreenAudio provides audio) {
                     ToolsSheet(
@@ -216,61 +159,28 @@ fun Hud(
                         performance = performance,
                         root = root,
                         onTakePhoto = { report -> takeFarmPhoto(context, session, report) },
-                        onClose = { toolRoute = null },
+                        onClose = navigation::closeRoute,
                         onSelected = {
                             panels.closeQuietly()
-                            toolRoute = null
-                            closeRequests++
+                            navigation.selectedFromRoute()
                         },
                         onToast = { message ->
-                            toast = ToastMessage(message, durationMillis = 4_000L)
+                            messages.toast = ToastMessage(message, durationMillis = 4_000L)
                         },
                         onUpgradeResult = { result ->
                             if (result.bought) {
                                 sound.play(SoundCue.built)
-                                toast = ToastMessage(result.message)
+                                messages.toast = ToastMessage(result.message)
                             }
                         },
                     )
                 }
             }
-            if (isTimeShown) TimeSheet(session, onDismiss = { isTimeShown = false })
-            levelUnlocks?.takeIf { rewards.isEmpty() }?.let { unlocks ->
-                LevelUpScreen(session, onClose = { levelUnlocks = null }, unlocks = unlocks)
+            if (navigation.isTimeShown) TimeSheet(session, onDismiss = navigation::closeTime)
+            messages.levelUnlocks?.takeIf { messages.rewards.isEmpty() }?.let { unlocks ->
+                LevelUpScreen(session, onClose = { messages.levelUnlocks = null }, unlocks = unlocks)
             }
-            confirmation?.let { asked ->
-                AlertDialog(
-                    onDismissRequest = { session.confirmations.value = null },
-                    containerColor = Theme.panelFill,
-                    titleContentColor = Theme.textPrimary,
-                    textContentColor = Theme.textSecondary,
-                    title = { Text(asked.title) },
-                    text = { Text(asked.message) },
-                    confirmButton = {
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            asked.alternative?.let { alt ->
-                                PillButton(
-                                    title = alt.title,
-                                    onClick = {
-                                        session.confirmations.value = null
-                                        alt.action()
-                                    },
-                                )
-                            }
-                            PillButton(
-                                role = PillRole.accent,
-                                onClick = {
-                                    session.confirmations.value = null
-                                    asked.action()
-                                },
-                            ) { Text(asked.confirmTitle, color = Theme.onAccent) }
-                        }
-                    },
-                    dismissButton = {
-                        PillButton(title = "Cancel", onClick = { session.confirmations.value = null })
-                    },
-                )
-            }
+            confirmation?.let { ConfirmationDialog(session, it) }
             sheet?.let { open ->
                 SheetHost(
                     session = session,
@@ -283,9 +193,9 @@ fun Hud(
                     onAnimalInteraction = session::interactWithAnimal,
                 )
             }
-            ToastBanner(session, toast) { toast = null }
-            QuestBanner(session, onClose = { rewards = emptyList() }, rewards = rewards)
-            DaySummaryBanner(session, onClose = { daySummary = null }, summary = daySummary)
+            ToastBanner(session, messages.toast) { messages.toast = null }
+            QuestBanner(session, onClose = { messages.rewards = emptyList() }, rewards = messages.rewards)
+            DaySummaryBanner(session, onClose = { messages.daySummary = null }, summary = messages.daySummary)
             if (saveError != null) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     SaveStatusView(saveError, onRetrySave, Modifier.padding(16.dp))

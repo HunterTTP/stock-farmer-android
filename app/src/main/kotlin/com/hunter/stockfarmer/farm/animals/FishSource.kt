@@ -6,11 +6,11 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion
 import com.hunter.stockfarmer.core.model.GameState
 import com.hunter.stockfarmer.core.model.GridPoint
 import com.hunter.stockfarmer.core.util.secondsSince
-import com.hunter.stockfarmer.farm.FarmRenderer
+import com.hunter.stockfarmer.diagnostics.PerformanceWork
 import com.hunter.stockfarmer.farm.Standing
 import com.hunter.stockfarmer.farm.StandingSource
 import com.hunter.stockfarmer.farm.TextureLibrary
-import com.hunter.stockfarmer.ui.screens.PerformanceWork
+import com.hunter.stockfarmer.game.TILE
 import java.time.Instant
 
 internal class FishSource(
@@ -18,7 +18,7 @@ internal class FishSource(
 ) : StandingSource {
     override val work = PerformanceWork.animals
 
-    private class Node(
+    private class AnimalTrack(
         val kind: String,
         val size: Double,
         point: GridPoint,
@@ -35,7 +35,7 @@ internal class FishSource(
             region?.takeIf { it.texture === texture } ?: TextureRegion(texture).also { region = it }
     }
 
-    private val nodes = mutableMapOf<GridPoint, Node>()
+    private val tracks = mutableMapOf<GridPoint, AnimalTrack>()
 
     override fun collect(
         batch: SpriteBatch,
@@ -49,10 +49,10 @@ internal class FishSource(
             val kind = fish.kind ?: continue
             val texture = textures.texture("animals/Fish", kind.assetName) ?: continue
             wanted += anchor
-            val old = nodes[anchor]
+            val old = tracks[anchor]
             val node =
                 if (old == null || old.kind != kind.id || old.size != fish.sizeFactor) {
-                    Node(kind.id, fish.sizeFactor, fish.position, now).also { nodes[anchor] = it }
+                    AnimalTrack(kind.id, fish.sizeFactor, fish.position, now).also { tracks[anchor] = it }
                 } else {
                     old
                 }
@@ -66,8 +66,8 @@ internal class FishSource(
             val age = now.secondsSince(node.appeared)
             val size = 85f * fish.sizeFactor.toFloat() * fishBreathing(age)
             val angle = turnDegrees(node.fromAngle, orientation.degrees, now.secondsSince(node.turned))
-            val x = (pose.col + 0.5f) * FarmRenderer.TILE - size / 2
-            val y = (GameState.GRID_SIZE - pose.row - 0.5f) * FarmRenderer.TILE - size / 2
+            val x = (pose.col + 0.5f) * TILE - size / 2
+            val y = (GameState.GRID_SIZE - pose.row - 0.5f) * TILE - size / 2
             // All fish shadows sit directly over water and below every standing thing, including ducks.
             out +=
                 Standing(Float.NEGATIVE_INFINITY) {
@@ -91,6 +91,6 @@ internal class FishSource(
                     }
                 }
         }
-        nodes.keys.retainAll(wanted)
+        tracks.keys.retainAll(wanted)
     }
 }

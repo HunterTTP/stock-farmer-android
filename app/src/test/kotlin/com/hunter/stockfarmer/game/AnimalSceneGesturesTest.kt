@@ -8,8 +8,8 @@ import com.hunter.stockfarmer.core.rules.AnimalRef
 import com.hunter.stockfarmer.core.rules.GameEngine
 import com.hunter.stockfarmer.core.rules.position
 import com.hunter.stockfarmer.core.util.RandomSource
-import com.hunter.stockfarmer.farm.animals.AnimalGesture
-import com.hunter.stockfarmer.farm.animals.AnimalHitTarget
+import com.hunter.stockfarmer.game.AnimalGesture
+import com.hunter.stockfarmer.game.AnimalHitTarget
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue

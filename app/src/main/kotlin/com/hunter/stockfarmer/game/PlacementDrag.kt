@@ -2,7 +2,7 @@ package com.hunter.stockfarmer.game
 
 import com.hunter.stockfarmer.core.feedback.HapticCue
 import com.hunter.stockfarmer.core.model.GridPoint
-import com.hunter.stockfarmer.core.rules.buildingPlacement
+import com.hunter.stockfarmer.core.rules.currentPlacementOrigin
 import com.hunter.stockfarmer.core.rules.isPlacing
 import com.hunter.stockfarmer.core.rules.movePlacement
 import java.time.Instant
@@ -30,11 +30,9 @@ class PlacementDrag(
         val grab = offset ?: return false
         if (tile != null) {
             session.act { engine ->
-                val before =
-                    engine.buildingPlacement?.origin ?: engine.fruitPlacement?.origin ?: engine.objectPlacement?.origin
+                val before = engine.currentPlacementOrigin
                 engine.movePlacement(GridPoint(tile.row - grab.row, tile.col - grab.col))
-                val after =
-                    engine.buildingPlacement?.origin ?: engine.fruitPlacement?.origin ?: engine.objectPlacement?.origin
+                val after = engine.currentPlacementOrigin
                 if (before != after) session.haptic(HapticCue.Light)
             }
         }

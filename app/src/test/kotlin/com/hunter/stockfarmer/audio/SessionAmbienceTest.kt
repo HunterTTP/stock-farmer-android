@@ -16,8 +16,8 @@ import com.hunter.stockfarmer.core.model.Plot
 import com.hunter.stockfarmer.core.rules.DayNightCycle
 import com.hunter.stockfarmer.core.rules.GameEngine
 import com.hunter.stockfarmer.core.rules.Season
-import com.hunter.stockfarmer.farm.FarmRenderer
 import com.hunter.stockfarmer.game.GameSession
+import com.hunter.stockfarmer.game.TILE
 import com.hunter.stockfarmer.game.ViewSnapshot
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -34,8 +34,8 @@ class SessionAmbienceTest {
         return GameSession(GameEngine(state)).apply {
             view.snapshot =
                 ViewSnapshot(
-                    (tile.col + 0.5f) * FarmRenderer.TILE,
-                    (GameState.GRID_SIZE - tile.row - 0.5f) * FarmRenderer.TILE,
+                    (tile.col + 0.5f) * TILE,
+                    (GameState.GRID_SIZE - tile.row - 0.5f) * TILE,
                     1f,
                     800,
                     600,

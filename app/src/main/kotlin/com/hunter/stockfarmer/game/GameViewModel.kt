@@ -11,8 +11,8 @@ import androidx.lifecycle.viewModelScope
 import com.hunter.stockfarmer.core.persistence.SaveBackup
 import com.hunter.stockfarmer.core.persistence.SaveSlots
 import com.hunter.stockfarmer.core.persistence.TimelapseStore
+import com.hunter.stockfarmer.diagnostics.PerformanceMonitor
 import com.hunter.stockfarmer.notifications.NotificationPermissionPolicy
-import com.hunter.stockfarmer.ui.screens.PerformanceMonitor
 import kotlinx.coroutines.Dispatchers
 
 /** Keeps the game alive across screen rotations, loads and saves it, and lets time pass in it. */

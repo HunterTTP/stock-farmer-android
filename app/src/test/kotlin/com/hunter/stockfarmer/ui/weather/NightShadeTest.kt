@@ -1,4 +1,4 @@
-package com.hunter.stockfarmer.farm
+package com.hunter.stockfarmer.ui.weather
 
 import com.hunter.stockfarmer.core.rules.DayNightCycle
 import org.junit.jupiter.api.Assertions.assertEquals

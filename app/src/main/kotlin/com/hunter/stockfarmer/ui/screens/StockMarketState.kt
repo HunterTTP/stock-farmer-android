@@ -1,8 +1,6 @@
 package com.hunter.stockfarmer.ui.screens
 
 import com.hunter.stockfarmer.core.catalog.Building
-import com.hunter.stockfarmer.core.market.StockQuoteError
-import com.hunter.stockfarmer.core.market.StockQuoteException
 import com.hunter.stockfarmer.core.market.StockQuoteProvider
 import com.hunter.stockfarmer.core.model.GridPoint
 import com.hunter.stockfarmer.core.model.Holding
@@ -14,8 +12,8 @@ import com.hunter.stockfarmer.core.rules.PriceJitter
 import com.hunter.stockfarmer.core.rules.StockMarketRules
 import com.hunter.stockfarmer.core.rules.buyShares
 import com.hunter.stockfarmer.core.rules.claimStockPull
+import com.hunter.stockfarmer.core.rules.farmhouseUpgradeRejection
 import com.hunter.stockfarmer.core.rules.holdings
-import com.hunter.stockfarmer.core.rules.houseUpgradeRejection
 import com.hunter.stockfarmer.core.rules.sellShares
 import com.hunter.stockfarmer.core.rules.stockSlotLimit
 import com.hunter.stockfarmer.core.rules.updatePrices
@@ -164,7 +162,7 @@ private fun houseUpgrade(
             "Unlocked at Level ${StockMarketRules.HOUSE_UPGRADE_LEVEL}",
         ),
         StockMarketRules.HOUSE_UPGRADE_COST.dollars,
-        engine.houseUpgradeRejection(origin, time)?.message,
+        engine.farmhouseUpgradeRejection(origin, time)?.message,
     )
 }
 

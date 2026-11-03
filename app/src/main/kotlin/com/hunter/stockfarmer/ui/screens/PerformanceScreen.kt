@@ -20,6 +20,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.hunter.stockfarmer.diagnostics.PerformanceMonitor
+import com.hunter.stockfarmer.diagnostics.PerformanceReport
+import com.hunter.stockfarmer.diagnostics.PerformanceState
 import com.hunter.stockfarmer.game.GameSession
 import com.hunter.stockfarmer.ui.rememberPolledState
 import com.hunter.stockfarmer.ui.theme.HudType
@@ -168,7 +171,7 @@ private fun PerformanceLiveStats(state: PerformanceState) {
                 PerformanceMetric("Memory", state.memoryMB?.let { "${number(it)} MiB" } ?: "—", "App footprint")
             }
         }
-        PerformanceRow("Farm nodes", ScreenFormat.number(state.nodeCount.toLong()))
+        PerformanceRow("Sprites drawn", ScreenFormat.number(state.spriteCount.toLong()))
         PerformanceRow("Thermal state", state.thermal)
         if (state.liveFPS == null) {
             Text(
@@ -258,7 +261,7 @@ private fun PerformanceRecordingReport(
         )
         PerformanceRow("Hitches (>50 ms)", ScreenFormat.number(report.frames.hitches))
         PerformanceRow("Sampled peak memory", report.peakMemoryMB?.let { "${number(it)} MiB" } ?: "—")
-        PerformanceRow("Peak farm nodes", ScreenFormat.number(report.peakNodes.toLong()))
+        PerformanceRow("Peak sprites", ScreenFormat.number(report.peakSprites.toLong()))
         Text(
             "Percentiles show the interval that 50%, 95% or 99% of frames stayed within. Lower is better.",
             style = HudType.caption,

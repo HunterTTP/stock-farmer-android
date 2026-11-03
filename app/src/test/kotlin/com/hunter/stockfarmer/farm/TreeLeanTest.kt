@@ -3,6 +3,7 @@ package com.hunter.stockfarmer.farm
 import com.hunter.stockfarmer.core.model.GameState
 import com.hunter.stockfarmer.core.model.GridPoint
 import com.hunter.stockfarmer.core.util.RandomSource
+import com.hunter.stockfarmer.game.TILE
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -22,7 +23,7 @@ internal class TreeLeanTest {
     }
 
     private val start = Instant.ofEpochSecond(1_000)
-    private val width = GameState.GRID_SIZE * FarmRenderer.TILE
+    private val width = GameState.GRID_SIZE * TILE
     private val tree = GridPoint(10, 10)
 
     private fun lean() = TreeLean(SeededRandom(7))

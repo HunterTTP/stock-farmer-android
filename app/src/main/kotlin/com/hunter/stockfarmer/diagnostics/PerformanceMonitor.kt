@@ -1,12 +1,15 @@
-package com.hunter.stockfarmer.ui.screens
+package com.hunter.stockfarmer.diagnostics
 
 import com.hunter.stockfarmer.core.feedback.PerformanceDurations
 import com.hunter.stockfarmer.core.feedback.PerformanceFrames
+import com.hunter.stockfarmer.diagnostics.PerformanceHitch
+import com.hunter.stockfarmer.diagnostics.PerformanceReport
+import com.hunter.stockfarmer.diagnostics.PerformanceWork
 import java.time.Instant
 
 data class PerformanceResources(
     val memoryMB: Double? = null,
-    val nodeCount: Int = 0,
+    val spriteCount: Int = 0,
     val thermal: String = "Unknown",
 )
 
@@ -18,7 +21,7 @@ data class PerformanceState(
     val liveFrameMS: Double? = null,
     val liveUpdateMS: Double? = null,
     val memoryMB: Double? = null,
-    val nodeCount: Int = 0,
+    val spriteCount: Int = 0,
     val thermal: String = "Unknown",
     val elapsed: Double = 0.0,
     val report: PerformanceReport? = null,
@@ -145,7 +148,7 @@ class PerformanceMonitor(
                 liveFrameMS = window.durations.averageMilliseconds.takeIf { window.durations.count > 0 },
                 liveUpdateMS = updates.averageMilliseconds.takeIf { updates.count > 0 },
                 memoryMB = resources.memoryMB,
-                nodeCount = resources.nodeCount,
+                spriteCount = resources.spriteCount,
                 thermal = resources.thermal,
             )
         window = PerformanceFrames(state.targetFPS)
@@ -160,7 +163,7 @@ class PerformanceMonitor(
                     peakMemoryMB =
                         resources.memoryMB?.let { maxOf(it, recording.peakMemoryMB ?: 0.0) }
                             ?: recording.peakMemoryMB,
-                    peakNodes = maxOf(recording.peakNodes, resources.nodeCount),
+                    peakSprites = maxOf(recording.peakSprites, resources.spriteCount),
                     thermalStates = recording.thermalStates + resources.thermal,
                 )
         }

@@ -1,4 +1,4 @@
-package com.hunter.stockfarmer.ui.screens
+package com.hunter.stockfarmer.diagnostics
 
 import com.hunter.stockfarmer.core.feedback.PerformanceDurations
 import com.hunter.stockfarmer.core.feedback.PerformanceFrames
@@ -44,7 +44,7 @@ data class PerformanceReport(
     val activeSeconds: Double = 0.0,
     val work: Map<PerformanceWork, PerformanceDurations> = emptyMap(),
     val peakMemoryMB: Double? = null,
-    val peakNodes: Int = 0,
+    val peakSprites: Int = 0,
     val hitches: List<PerformanceHitch> = emptyList(),
     val thermalStates: Set<String> = emptySet(),
 ) {
@@ -81,7 +81,7 @@ data class PerformanceReport(
             )
             add(
                 "Sampled peak memory: ${peakMemoryMB?.let { number(it) + " MiB" } ?: "unavailable"}; " +
-                    "peak farm nodes: $peakNodes",
+                    "peak sprites: $peakSprites",
             )
             add("Thermal states: ${thermalStates.sorted().joinToString(", ")}")
             add("")
@@ -110,7 +110,7 @@ data class PerformanceReport(
                 "System timings are elapsed work on the instrumented thread, include nested calls, " +
                 "and must not be added together. Rendering, background save writes and uninstrumented work " +
                 "are not separately timed. Percentiles round up to 0.25 ms; values above 250 ms use the observed " +
-                "maximum. Memory (Android proportional set size) and farm node counts are sampled once a second " +
+                "maximum. Memory (Android proportional set size) and farm sprite counts are sampled once a second " +
                 "when the host supplies them. Recording adds some overhead. Reports stay in memory until the app " +
                 "closes; Share exports a copy."
     }

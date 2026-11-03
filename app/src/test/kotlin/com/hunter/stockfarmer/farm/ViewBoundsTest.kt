@@ -1,13 +1,15 @@
 package com.hunter.stockfarmer.farm
 
 import com.hunter.stockfarmer.core.model.GameState
+import com.hunter.stockfarmer.game.TILE
+import com.hunter.stockfarmer.game.WORLD
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 internal class ViewBoundsTest {
-    private val tile = FarmRenderer.TILE
+    private val tile = TILE
 
     @Test
     fun `everything shows every tile of the map`() {
@@ -29,10 +31,10 @@ internal class ViewBoundsTest {
 
     @Test
     fun `a view past the map edge is clamped to the grid`() {
-        val view = ViewBounds.around(0f, FarmRenderer.WORLD, 10 * tile, 10 * tile)
+        val view = ViewBounds.around(0f, WORLD, 10 * tile, 10 * tile)
         assertEquals(0..5, view.columns)
         assertEquals(0..4, view.rows)
-        val far = ViewBounds.around(FarmRenderer.WORLD, 0f, 10 * tile, 10 * tile)
+        val far = ViewBounds.around(WORLD, 0f, 10 * tile, 10 * tile)
         assertEquals(GameState.GRID_SIZE - 5..GameState.GRID_SIZE - 1, far.columns)
         assertEquals(GameState.GRID_SIZE - 6..GameState.GRID_SIZE - 1, far.rows)
     }

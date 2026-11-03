@@ -50,8 +50,8 @@ class HudLayoutTest {
         assertEquals(HudTool.Planting, engine.currentTool)
         engine.pickUp(HudTool.Building)
         assertEquals(HudTool.Building, engine.currentTool)
-        engine.pickUp(HudTool.Tilling)
-        assertEquals(HudTool.Tilling, engine.currentTool)
+        engine.pickUp(HudTool.Fertilizing)
+        assertEquals(HudTool.Fertilizing, engine.currentTool)
         engine.pickUp(HudTool.Harvest)
         assertEquals(PlayMode.harvest, engine.state.mode)
     }
@@ -65,7 +65,7 @@ class HudLayoutTest {
         assertNull(engine.activationDelayMillis)
         engine.pickUp(HudTool.Building)
         assertEquals(120L, engine.activationDelayMillis)
-        engine.pickUp(HudTool.Tilling)
+        engine.pickUp(HudTool.Fertilizing)
         assertEquals(70L, engine.activationDelayMillis)
     }
 

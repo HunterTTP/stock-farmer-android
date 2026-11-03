@@ -9,8 +9,8 @@ import com.hunter.stockfarmer.core.model.GameState
 import com.hunter.stockfarmer.core.rules.Season
 import com.hunter.stockfarmer.core.rules.Weather
 import com.hunter.stockfarmer.core.rules.Wind
+import com.hunter.stockfarmer.diagnostics.PerformanceWork
 import com.hunter.stockfarmer.farm.TextureLibrary
-import com.hunter.stockfarmer.ui.screens.PerformanceWork
 import java.time.Instant
 import kotlin.math.hypot
 import kotlin.math.max

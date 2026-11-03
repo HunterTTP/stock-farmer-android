@@ -10,6 +10,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.font.FontWeight
+import com.hunter.stockfarmer.diagnostics.PerformanceMonitor
 import com.hunter.stockfarmer.game.FarmSlots
 import com.hunter.stockfarmer.game.GameSession
 import com.hunter.stockfarmer.ui.menus.ItemScreen
@@ -21,7 +22,6 @@ import com.hunter.stockfarmer.ui.screens.CareerScreen
 import com.hunter.stockfarmer.ui.screens.ChangelogScreen
 import com.hunter.stockfarmer.ui.screens.GameplaySettingsScreen
 import com.hunter.stockfarmer.ui.screens.GraphicsSettingsScreen
-import com.hunter.stockfarmer.ui.screens.PerformanceMonitor
 import com.hunter.stockfarmer.ui.screens.PerformanceScreen
 import com.hunter.stockfarmer.ui.screens.PrivacyScreen
 import com.hunter.stockfarmer.ui.screens.SaveSlotsScreen

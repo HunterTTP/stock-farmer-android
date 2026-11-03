@@ -41,6 +41,7 @@ import com.hunter.stockfarmer.core.model.dollars
 import com.hunter.stockfarmer.core.rules.GameEngine
 import com.hunter.stockfarmer.core.rules.farmlandLimit
 import com.hunter.stockfarmer.core.rules.isSelling
+import com.hunter.stockfarmer.core.rules.markSeen
 import com.hunter.stockfarmer.core.rules.placedOnMap
 import com.hunter.stockfarmer.core.rules.requiredLevel
 import com.hunter.stockfarmer.core.rules.select
@@ -49,8 +50,6 @@ import com.hunter.stockfarmer.core.rules.setSprinklersRunConstantly
 import com.hunter.stockfarmer.game.GameSession
 import com.hunter.stockfarmer.ui.FAST_POLL_MILLIS
 import com.hunter.stockfarmer.ui.rememberPolledState
-import com.hunter.stockfarmer.ui.screens.ScreenArt
-import com.hunter.stockfarmer.ui.screens.ScreenIcon
 import com.hunter.stockfarmer.ui.sheets.SheetChoice
 import com.hunter.stockfarmer.ui.theme.BarScrollView
 import com.hunter.stockfarmer.ui.theme.DetailLayout
@@ -61,7 +60,6 @@ import com.hunter.stockfarmer.ui.theme.LevelRequirementNotice
 import com.hunter.stockfarmer.ui.theme.Requirement
 import com.hunter.stockfarmer.ui.theme.Theme
 import com.hunter.stockfarmer.ui.theme.categoryCard
-import kotlinx.coroutines.delay
 
 /** Public routes for the HUD's info and Upgrade buttons, hosted by MenusHost. */
 sealed interface ItemScreen {

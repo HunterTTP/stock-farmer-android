@@ -29,9 +29,9 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import com.hunter.stockfarmer.core.rules.AnimalRef
 import com.hunter.stockfarmer.core.rules.GameEngine
+import com.hunter.stockfarmer.game.AnimalInteraction
 import com.hunter.stockfarmer.game.GameSession
-import com.hunter.stockfarmer.ui.menus.Menu
-import com.hunter.stockfarmer.ui.menus.MenusHost
+import com.hunter.stockfarmer.game.SheetTarget
 import com.hunter.stockfarmer.ui.screens.BuildingUpgradeScreen
 import com.hunter.stockfarmer.ui.screens.ScreenArt
 import com.hunter.stockfarmer.ui.screens.ScreenIcon
@@ -46,8 +46,6 @@ import com.hunter.stockfarmer.ui.theme.Theme
 import com.hunter.stockfarmer.ui.theme.categoryCard
 import kotlinx.coroutines.delay
 import java.time.Instant
-
-enum class AnimalInteraction { PET, NUDGE }
 
 private enum class BuildingPage { CHICK, RECIPES, UPGRADE }
 

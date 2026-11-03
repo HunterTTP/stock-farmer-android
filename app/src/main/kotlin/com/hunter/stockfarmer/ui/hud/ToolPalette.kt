@@ -10,10 +10,14 @@ import com.hunter.stockfarmer.core.model.PlayMode
 import com.hunter.stockfarmer.core.model.ShopItem
 import com.hunter.stockfarmer.core.rules.GameEngine
 import com.hunter.stockfarmer.core.rules.Rejection
+import com.hunter.stockfarmer.core.rules.UnlockCategory
 import com.hunter.stockfarmer.core.rules.equippedStock
+import com.hunter.stockfarmer.core.rules.hasNewItems
+import com.hunter.stockfarmer.core.rules.isNew
 import com.hunter.stockfarmer.core.rules.isPlacingFromStorage
 import com.hunter.stockfarmer.core.rules.isSelling
 import com.hunter.stockfarmer.core.rules.level
+import com.hunter.stockfarmer.core.rules.markSeen
 import com.hunter.stockfarmer.core.rules.name
 import com.hunter.stockfarmer.core.rules.offersUpgrade
 import com.hunter.stockfarmer.core.rules.price
@@ -30,10 +34,6 @@ import com.hunter.stockfarmer.ui.menus.MenuPrice
 import com.hunter.stockfarmer.ui.menus.MenuSection
 import com.hunter.stockfarmer.ui.menus.MenuSelection
 import com.hunter.stockfarmer.ui.menus.MenuState
-import com.hunter.stockfarmer.ui.menus.UnlockCategory
-import com.hunter.stockfarmer.ui.menus.hasNewItems
-import com.hunter.stockfarmer.ui.menus.isNew
-import com.hunter.stockfarmer.ui.menus.markSeen
 import com.hunter.stockfarmer.ui.menus.shopItem
 import com.hunter.stockfarmer.ui.screens.LessonGuideState
 import java.util.Locale
@@ -112,7 +112,7 @@ internal object ToolPalette {
         return when (tool) {
             HudTool.Planting -> planting(engine)
             HudTool.Harvest -> harvest(engine)
-            HudTool.Tilling -> tilling(engine, fromStorage)
+            HudTool.Fertilizing -> fertilizing(engine, fromStorage)
             HudTool.Terrain -> catalog(state, Menu.Terrain, "Terrain", setOf("Ground", "Trees"))
             HudTool.Building -> catalog(state, Menu.Build, "Build", setOf("Buildings"))
             HudTool.Decorating -> catalog(state, Menu.Decorate, "Decorate", setOf("Decorations"), fromStorage)
@@ -135,7 +135,7 @@ internal object ToolPalette {
         when (tool) {
             HudTool.Planting -> MenuPictures.stored(StorageItem.CropItem(Crop.starter))
             HudTool.Harvest -> harvestPicture(HarvestTool.scythe)
-            HudTool.Tilling -> fertilizerPicture
+            HudTool.Fertilizing -> fertilizerPicture
             HudTool.Terrain -> MenuPictures.terrain("farmland")
             HudTool.Building -> MenuPictures.building(Building.starter)
             HudTool.Decorating -> MenuPictures.decoration(requireNotNull(Decoration.named("scarecrow")))
@@ -266,7 +266,7 @@ internal object ToolPalette {
             destination
     }
 
-    private fun tilling(
+    private fun fertilizing(
         engine: GameEngine,
         fromStorage: Boolean,
     ): List<ToolDropdown> {

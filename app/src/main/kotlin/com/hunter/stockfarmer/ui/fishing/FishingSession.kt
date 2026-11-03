@@ -8,6 +8,7 @@ import com.hunter.stockfarmer.core.rules.containsRejection
 import com.hunter.stockfarmer.core.rules.landFish
 import com.hunter.stockfarmer.core.rules.loseFish
 import com.hunter.stockfarmer.core.util.RandomSource
+import com.hunter.stockfarmer.game.FishingCast
 import java.time.Instant
 
 /** UI-independent contest lifecycle. Coordinates are density-independent screen points. */

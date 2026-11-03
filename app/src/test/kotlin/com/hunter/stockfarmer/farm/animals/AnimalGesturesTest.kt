@@ -2,6 +2,11 @@ package com.hunter.stockfarmer.farm.animals
 
 import com.hunter.stockfarmer.core.model.GridPoint
 import com.hunter.stockfarmer.core.rules.AnimalRef
+import com.hunter.stockfarmer.game.AnimalGesture
+import com.hunter.stockfarmer.game.AnimalHitTarget
+import com.hunter.stockfarmer.game.AnimalReaction
+import com.hunter.stockfarmer.game.animalAtTouch
+import com.hunter.stockfarmer.game.animalReaction
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNull

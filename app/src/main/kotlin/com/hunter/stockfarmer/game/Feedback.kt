@@ -4,7 +4,7 @@ import com.hunter.stockfarmer.core.catalog.HarvestTool
 import com.hunter.stockfarmer.core.model.dollars
 import com.hunter.stockfarmer.core.rules.GameEvent
 import com.hunter.stockfarmer.core.rules.firstRejection
-import com.hunter.stockfarmer.ui.screens.QuestReward
+import com.hunter.stockfarmer.game.QuestReward
 
 /** A short message over the farm, with the implement it offers to pick up. */
 data class ToastMessage(

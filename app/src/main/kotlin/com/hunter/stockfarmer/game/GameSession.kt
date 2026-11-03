@@ -9,12 +9,12 @@ import com.hunter.stockfarmer.core.model.GridPoint
 import com.hunter.stockfarmer.core.rules.GameEngine
 import com.hunter.stockfarmer.core.rules.GameEvent
 import com.hunter.stockfarmer.core.rules.claimCompletedQuests
+import com.hunter.stockfarmer.core.rules.countCurrentUnlocksAsSeen
 import com.hunter.stockfarmer.core.rules.newGame
 import com.hunter.stockfarmer.core.util.RandomSource
 import com.hunter.stockfarmer.core.util.SystemRandomSource
-import com.hunter.stockfarmer.ui.fishing.FishingCast
-import com.hunter.stockfarmer.ui.menus.countCurrentUnlocksAsSeen
-import com.hunter.stockfarmer.ui.sheets.SheetTarget
+import com.hunter.stockfarmer.game.FishingCast
+import com.hunter.stockfarmer.game.SheetTarget
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -129,6 +129,12 @@ class GameSession(
         haptic(HapticCue.Medium)
         cue(SoundCue.openPopup)
         confirmations.value = confirmation
+    }
+
+    /** The player turned the question down, by Cancel or by dismissing it. */
+    fun cancelConfirmation() {
+        confirmations.value = null
+        cue(SoundCue.cancel)
     }
 
     /** The building, animal or fish whose sheet is open; null when none is. */

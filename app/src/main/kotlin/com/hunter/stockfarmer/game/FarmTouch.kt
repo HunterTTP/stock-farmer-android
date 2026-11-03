@@ -3,32 +3,27 @@ package com.hunter.stockfarmer.game
 import com.hunter.stockfarmer.core.catalog.Building
 import com.hunter.stockfarmer.core.feedback.HapticCue
 import com.hunter.stockfarmer.core.model.GridPoint
-import com.hunter.stockfarmer.core.model.PlayMode
 import com.hunter.stockfarmer.core.rules.GameEngine
 import com.hunter.stockfarmer.core.rules.GameEvent
-import com.hunter.stockfarmer.core.rules.beginPlacing
-import com.hunter.stockfarmer.core.rules.beginPlacingFruitTree
-import com.hunter.stockfarmer.core.rules.beginPlacingSelectedDecoration
+import com.hunter.stockfarmer.core.rules.beginPlacingSelection
 import com.hunter.stockfarmer.core.rules.buildingPlacement
 import com.hunter.stockfarmer.core.rules.cancelPlacement
-import com.hunter.stockfarmer.core.rules.cannotStartPlacingSelectedBuilding
-import com.hunter.stockfarmer.core.rules.cannotStartPlacingSelectedDecoration
-import com.hunter.stockfarmer.core.rules.cannotStartPlacingSelectedFruitTree
+import com.hunter.stockfarmer.core.rules.cannotStartPlacingSelection
 import com.hunter.stockfarmer.core.rules.confirmPlacement
 import com.hunter.stockfarmer.core.rules.containsRejection
+import com.hunter.stockfarmer.core.rules.currentPlacementFootprint
 import com.hunter.stockfarmer.core.rules.isChopping
-import com.hunter.stockfarmer.core.rules.isFruitTreeSelected
 import com.hunter.stockfarmer.core.rules.isPlacing
 import com.hunter.stockfarmer.core.rules.isPlacingFirstOfItsKind
-import com.hunter.stockfarmer.core.rules.isSprinklerSelected
 import com.hunter.stockfarmer.core.rules.liftTool
 import com.hunter.stockfarmer.core.rules.nudgePlacement
 import com.hunter.stockfarmer.core.rules.placementRejection
+import com.hunter.stockfarmer.core.rules.selectionPlaces
 import com.hunter.stockfarmer.core.rules.tapCrop
-import com.hunter.stockfarmer.farm.animals.animalAtTouch
-import com.hunter.stockfarmer.ui.fishing.FishingCast
-import com.hunter.stockfarmer.ui.sheets.SheetTarget
-import com.hunter.stockfarmer.ui.sheets.SheetTargets
+import com.hunter.stockfarmer.game.FishingCast
+import com.hunter.stockfarmer.game.SheetTarget
+import com.hunter.stockfarmer.game.SheetTargets
+import com.hunter.stockfarmer.game.animalAtTouch
 import java.time.Instant
 
 /** What a touch on a tile does: carry a thing being placed there, start placing the selected one, or use the tool. */
@@ -65,30 +60,12 @@ private fun GameSession.tapTile(
     }
 }
 
-private fun GameEngine.tryPlaceOnTap(point: GridPoint): List<GameEvent>? =
-    when {
-        state.mode == PlayMode.build -> {
-            cannotStartPlacingSelectedBuilding?.let { return listOf(GameEvent.Rejected(it)) }
-            beginPlacing(point)
-            emptyList()
-        }
-
-        isFruitTreeSelected -> {
-            cannotStartPlacingSelectedFruitTree?.let { return listOf(GameEvent.Rejected(it)) }
-            beginPlacingFruitTree(point)
-            emptyList()
-        }
-
-        state.mode == PlayMode.decorate && isSprinklerSelected -> {
-            cannotStartPlacingSelectedDecoration?.let { return listOf(GameEvent.Rejected(it)) }
-            beginPlacingSelectedDecoration(point)
-            emptyList()
-        }
-
-        else -> {
-            null
-        }
-    }
+private fun GameEngine.tryPlaceOnTap(point: GridPoint): List<GameEvent>? {
+    if (!selectionPlaces) return null
+    cannotStartPlacingSelection?.let { return listOf(GameEvent.Rejected(it)) }
+    beginPlacingSelection(point)
+    return emptyList()
+}
 
 internal fun GameSession.flash(
     tiles: List<GridPoint>,
@@ -122,28 +99,6 @@ internal fun GameSession.hookFish(
 ) {
     if (casts.value == null) FishingCast.start(engine, events)?.let { casts.value = it }
 }
-
-internal fun GameEngine.startsPlacing(point: GridPoint): Boolean =
-    when {
-        state.mode == PlayMode.build -> {
-            beginPlacing(point)
-            isPlacing
-        }
-
-        isFruitTreeSelected -> {
-            beginPlacingFruitTree(point)
-            isPlacing
-        }
-
-        state.mode == PlayMode.decorate && isSprinklerSelected -> {
-            beginPlacingSelectedDecoration(point)
-            isPlacing
-        }
-
-        else -> {
-            false
-        }
-    }
 
 /** Puts down whatever is being placed, or says why it cannot be. */
 fun GameSession.confirmPlacement(now: Instant = Instant.now()): List<GameEvent> =
@@ -184,10 +139,7 @@ fun GameSession.preview(now: Instant = Instant.now()): PlacementPreview? = place
 
 private fun GameSession.placementPreview(now: Instant): PlacementPreview? =
     act { engine ->
-        val footprint =
-            engine.buildingPlacement?.footprint
-                ?: engine.fruitPlacement?.footprint
-                ?: engine.objectPlacement?.footprint
+        val footprint = engine.currentPlacementFootprint
         footprint?.let {
             PlacementPreview(
                 it,

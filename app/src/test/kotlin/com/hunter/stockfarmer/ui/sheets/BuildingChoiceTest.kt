@@ -8,6 +8,7 @@ import com.hunter.stockfarmer.core.model.Pet
 import com.hunter.stockfarmer.core.rules.GameEngine
 import com.hunter.stockfarmer.core.rules.LevelRules
 import com.hunter.stockfarmer.game.GameSession
+import com.hunter.stockfarmer.game.SheetTarget
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull

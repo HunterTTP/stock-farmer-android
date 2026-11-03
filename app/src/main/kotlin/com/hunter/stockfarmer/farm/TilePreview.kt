@@ -4,6 +4,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.hunter.stockfarmer.core.model.GridPoint
 import com.hunter.stockfarmer.core.util.secondsSince
 import com.hunter.stockfarmer.game.PlacementPreview
+import com.hunter.stockfarmer.game.TILE
 import java.time.Instant
 
 /** Persistent placement feedback, or a tool flash that disappears after 0.7 seconds. */
@@ -49,9 +50,9 @@ internal fun drawTiles(
     val green = if (preview.canPlace) 0.77f else 0.27f
     val blue = if (preview.canPlace) 0.37f else 0.27f
     for (tile in preview.footprint) {
-        val x = tile.col * FarmRenderer.TILE
+        val x = tile.col * TILE
         val y = FarmRenderer.worldY(tile.row)
-        val side = FarmRenderer.TILE
+        val side = TILE
         batch.setColor(red, green, blue, 0.35f * alpha)
         batch.draw(textures.white, x, y, side, side)
         batch.setColor(red, green, blue, 0.9f * alpha)

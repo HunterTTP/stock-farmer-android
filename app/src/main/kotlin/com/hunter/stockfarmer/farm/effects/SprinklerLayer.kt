@@ -2,11 +2,11 @@ package com.hunter.stockfarmer.farm.effects
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.hunter.stockfarmer.core.model.GameState
+import com.hunter.stockfarmer.diagnostics.PerformanceWork
 import com.hunter.stockfarmer.farm.Standing
 import com.hunter.stockfarmer.farm.StandingSource
 import com.hunter.stockfarmer.farm.TextureLibrary
 import com.hunter.stockfarmer.farm.ViewBounds
-import com.hunter.stockfarmer.ui.screens.PerformanceWork
 import java.time.Instant
 
 /**

@@ -12,6 +12,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
+import com.hunter.stockfarmer.diagnostics.PerformanceMonitor
+import com.hunter.stockfarmer.diagnostics.PerformanceResources
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -20,11 +22,11 @@ import kotlinx.coroutines.withContext
 @Composable
 fun PerformanceSampling(
     monitor: PerformanceMonitor,
-    nodeCount: () -> Int,
+    spriteCount: () -> Int,
 ) {
     val context = LocalContext.current.applicationContext
     val owner = LocalLifecycleOwner.current
-    val currentNodes by rememberUpdatedState(nodeCount)
+    val currentSprites by rememberUpdatedState(spriteCount)
     LaunchedEffect(monitor, owner, context) {
         monitor.setActive(false)
         owner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
@@ -32,8 +34,8 @@ fun PerformanceSampling(
             try {
                 while (true) {
                     if (monitor.isSampling) {
-                        val nodes = currentNodes()
-                        monitor.sample(withContext(Dispatchers.Default) { readPerformanceResources(context, nodes) })
+                        val sprites = currentSprites()
+                        monitor.sample(withContext(Dispatchers.Default) { readPerformanceResources(context, sprites) })
                     }
                     delay(1000)
                 }
@@ -46,7 +48,7 @@ fun PerformanceSampling(
 
 private fun readPerformanceResources(
     context: Context,
-    nodes: Int,
+    sprites: Int,
 ): PerformanceResources {
     val memory = runCatching { Debug.getPss() / 1024.0 }.getOrNull()
     val thermal =
@@ -68,5 +70,5 @@ private fun readPerformanceResources(
         } else {
             "Unknown"
         }
-    return PerformanceResources(memory, nodes, thermal)
+    return PerformanceResources(memory, sprites, thermal)
 }

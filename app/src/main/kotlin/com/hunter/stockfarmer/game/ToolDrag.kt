@@ -1,23 +1,20 @@
 package com.hunter.stockfarmer.game
 
 import com.hunter.stockfarmer.core.model.GridPoint
-import com.hunter.stockfarmer.core.model.PlayMode
 import com.hunter.stockfarmer.core.rules.GameEngine
 import com.hunter.stockfarmer.core.rules.GameEvent
 import com.hunter.stockfarmer.core.rules.Rejection
 import com.hunter.stockfarmer.core.rules.ToolStroke
-import com.hunter.stockfarmer.core.rules.cannotStartPlacingSelectedBuilding
-import com.hunter.stockfarmer.core.rules.cannotStartPlacingSelectedDecoration
-import com.hunter.stockfarmer.core.rules.cannotStartPlacingSelectedFruitTree
+import com.hunter.stockfarmer.core.rules.beginPlacingSelection
+import com.hunter.stockfarmer.core.rules.cannotStartPlacingSelection
 import com.hunter.stockfarmer.core.rules.containsRejection
 import com.hunter.stockfarmer.core.rules.firstRejection
 import com.hunter.stockfarmer.core.rules.isChopping
-import com.hunter.stockfarmer.core.rules.isFruitTreeSelected
 import com.hunter.stockfarmer.core.rules.isPlacing
-import com.hunter.stockfarmer.core.rules.isSprinklerSelected
 import com.hunter.stockfarmer.core.rules.missingHarvestToolRejection
 import com.hunter.stockfarmer.core.rules.movePlacement
 import com.hunter.stockfarmer.core.rules.placementRejection
+import com.hunter.stockfarmer.core.rules.selectionPlaces
 import com.hunter.stockfarmer.core.rules.toolFootprint
 import java.time.Instant
 import kotlin.math.abs
@@ -46,7 +43,7 @@ class ToolDrag(
         }
         val events =
             session.act { engine ->
-                if (engine.carriesWhatItPlaces()) {
+                if (engine.selectionPlaces) {
                     carry(engine, tile)
                 } else {
                     use(engine, tile, now)
@@ -58,7 +55,7 @@ class ToolDrag(
 
     /** Why the tool can not be used where the finger rests, as a direct tap would say: null when it can. */
     fun explain(now: Instant = Instant.now()): Rejection? =
-        session.act { engine -> if (engine.carriesWhatItPlaces()) engine.placementRejection(now) else lastRejection }
+        session.act { engine -> if (engine.selectionPlaces) engine.placementRejection(now) else lastRejection }
 
     /** The finger lifted: a carried thing stays put awaiting the player's OK, and the stroke is over. */
     fun end() {
@@ -70,9 +67,6 @@ class ToolDrag(
         session.view.toolPreview = null
     }
 
-    private fun GameEngine.carriesWhatItPlaces() =
-        state.mode == PlayMode.build || isFruitTreeSelected || (state.mode == PlayMode.decorate && isSprinklerSelected)
-
     private fun carry(
         engine: GameEngine,
         tile: GridPoint,
@@ -82,28 +76,11 @@ class ToolDrag(
             return emptyList()
         }
         val isFirst = last == null
-        val rejection =
-            when {
-                engine.state.mode == PlayMode.build -> {
-                    engine.cannotStartPlacingSelectedBuilding
-                }
-
-                engine.isFruitTreeSelected -> {
-                    engine.cannotStartPlacingSelectedFruitTree
-                }
-
-                engine.state.mode == PlayMode.decorate && engine.isSprinklerSelected -> {
-                    engine.cannotStartPlacingSelectedDecoration
-                }
-
-                else -> {
-                    null
-                }
-            }
+        val rejection = engine.cannotStartPlacingSelection
         if (rejection != null) {
             return if (isFirst) listOf(GameEvent.Rejected(rejection)) else emptyList()
         }
-        engine.startsPlacing(tile)
+        engine.beginPlacingSelection(tile)
         return emptyList()
     }
 

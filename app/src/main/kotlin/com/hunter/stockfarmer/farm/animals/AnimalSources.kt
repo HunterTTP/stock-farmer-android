@@ -10,6 +10,7 @@ import com.hunter.stockfarmer.core.rules.Sun
 import com.hunter.stockfarmer.core.rules.SunShadow
 import com.hunter.stockfarmer.core.rules.needsShelter
 import com.hunter.stockfarmer.core.util.secondsSince
+import com.hunter.stockfarmer.diagnostics.PerformanceWork
 import com.hunter.stockfarmer.farm.FarmRenderer
 import com.hunter.stockfarmer.farm.ProduceBadge
 import com.hunter.stockfarmer.farm.Standing
@@ -18,8 +19,9 @@ import com.hunter.stockfarmer.farm.TextureLibrary
 import com.hunter.stockfarmer.farm.VisualTiming
 import com.hunter.stockfarmer.farm.effects.WaterDrops
 import com.hunter.stockfarmer.farm.label
+import com.hunter.stockfarmer.game.AnimalHitTarget
 import com.hunter.stockfarmer.game.AnimalSceneGestures
-import com.hunter.stockfarmer.ui.screens.PerformanceWork
+import com.hunter.stockfarmer.game.TILE
 import java.time.Instant
 import kotlin.math.sqrt
 
@@ -37,7 +39,7 @@ private class AnimalSource(
 ) : StandingSource {
     override val work = PerformanceWork.animals
 
-    private data class Node(
+    private data class AnimalTrack(
         val look: AnimalSprites,
         val motion: AnimalMotion,
         val animation: AnimalAnimation,
@@ -49,7 +51,7 @@ private class AnimalSource(
         var shadowWidth: Float? = null,
     )
 
-    private val nodes = mutableMapOf<AnimalKey, Node>()
+    private val tracks = mutableMapOf<AnimalKey, AnimalTrack>()
     private val badges = ProduceBadge(textures)
     private val heartTexture by lazy { textures.label("❤️", 28f) }
 
@@ -70,10 +72,10 @@ private class AnimalSource(
         for (animal in AnimalSnapshot.all(state, now)) {
             val (key, point, look) = animal
             wanted += key
-            if (nodes[key]?.look?.copy(sheared = false) != look.copy(sheared = false)) nodes.remove(key)
+            if (tracks[key]?.look?.copy(sheared = false) != look.copy(sheared = false)) tracks.remove(key)
             val node =
-                nodes.getOrPut(key) {
-                    Node(
+                tracks.getOrPut(key) {
+                    AnimalTrack(
                         look,
                         AnimalMotion(point, look.defaultFacing, now),
                         AnimalAnimation(key.hashCode()),
@@ -93,8 +95,8 @@ private class AnimalSource(
                 targets +=
                     AnimalHitTarget(
                         key.ref,
-                        (pose.col + 0.5f) * FarmRenderer.TILE,
-                        (GameState.GRID_SIZE - pose.row - 0.5f) * FarmRenderer.TILE,
+                        (pose.col + 0.5f) * TILE,
+                        (GameState.GRID_SIZE - pose.row - 0.5f) * TILE,
                         inside = true,
                     )
                 continue
@@ -109,8 +111,8 @@ private class AnimalSource(
             val waterline = look.waterline(pose.facing)
             val center = feet?.center(waterline, look.duck && pose.facing == Facing.UP) ?: (0.5f to 0.5f)
             val mirror = look.kind == AnimalKind.CAT && pose.mirrored
-            val centerX = (pose.col + 0.5f) * FarmRenderer.TILE
-            val centerY = (GameState.GRID_SIZE - pose.row - 0.5f) * FarmRenderer.TILE
+            val centerX = (pose.col + 0.5f) * TILE
+            val centerY = (GameState.GRID_SIZE - pose.row - 0.5f) * TILE
             targets +=
                 AnimalHitTarget(
                     key.ref,
@@ -187,7 +189,7 @@ private class AnimalSource(
                     }
                 }
         }
-        nodes.keys.retainAll(wanted)
+        tracks.keys.retainAll(wanted)
         gestures?.targets = targets.toList()
     }
 

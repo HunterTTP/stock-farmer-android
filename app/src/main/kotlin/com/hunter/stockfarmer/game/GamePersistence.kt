@@ -8,12 +8,12 @@ import com.hunter.stockfarmer.core.persistence.SaveSlotInfo
 import com.hunter.stockfarmer.core.persistence.SaveSlots
 import com.hunter.stockfarmer.core.persistence.TimelapseStore
 import com.hunter.stockfarmer.core.rules.GameEngine
+import com.hunter.stockfarmer.core.rules.countCurrentUnlocksAsSeen
 import com.hunter.stockfarmer.core.rules.holdClockWhileAway
 import com.hunter.stockfarmer.core.rules.markSaved
 import com.hunter.stockfarmer.core.rules.newGame
 import com.hunter.stockfarmer.core.util.RandomSource
 import com.hunter.stockfarmer.core.util.SystemRandomSource
-import com.hunter.stockfarmer.ui.menus.countCurrentUnlocksAsSeen
 import java.time.Instant
 
 /** The saved games, by slot (null where nothing is saved), and the slot being played. */
