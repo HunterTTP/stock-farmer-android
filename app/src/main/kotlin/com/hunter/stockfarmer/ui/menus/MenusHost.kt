@@ -199,7 +199,7 @@ fun MenusHost(
             onConfirm = { quantity ->
                 val outcome = session.act { MenuActions.transact(it, action.item, quantity, action.sell) }
                 message = outcome.message
-                messageIsRejection = false
+                messageIsRejection = outcome.events.isEmpty()
                 session.publish(outcome.events)
                 state = session.menuState(openMenu)
                 transaction = null
