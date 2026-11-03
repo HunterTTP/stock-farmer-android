@@ -84,7 +84,6 @@ enum class SoundCue(
     openPopup(SoundCategory.`interface`, SoundClips("Menus", "popup_open"), -6.5),
     cancel(SoundCategory.`interface`, SoundClips("Feedback", "cancel"), -6.5),
     toggleOn(SoundCategory.`interface`, SoundClips("Toggles", "toggle_on"), -6.5),
-    toggleOff(SoundCategory.`interface`, SoundClips("Toggles", "toggle_off"), -6.5),
     ;
 
     /** Whether it is heard quieter the further the camera is zoomed out, or the further from the screen it is made: only the animals are. */

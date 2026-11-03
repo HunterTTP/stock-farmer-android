@@ -179,7 +179,6 @@ class SheetStateTest {
         engine.state.storage[StorageItem.Log.id] = 120
         val storage = building(engine)
         assertTrue(storage.storage!!.contains("120 / 150"))
-        assertNotNull(storage.demolishRefusal)
         engine.state.putBuilding(origin, "house1", null)
         val house = building(engine)
         assertEquals("Stock slots: 0 / 5", house.stocks)

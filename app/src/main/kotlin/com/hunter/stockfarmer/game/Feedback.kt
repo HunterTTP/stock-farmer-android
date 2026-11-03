@@ -18,9 +18,6 @@ object Feedback {
     const val TOAST_MILLIS = 2_000L
     const val TOOL_TOAST_MILLIS = 4_000L
 
-    /** A quest banner says what was asked and what it paid, which takes a moment to read. */
-    const val QUEST_BANNER_MILLIS = 4_000L
-
     /** The message for a refusal, which takes precedence over everything else in the batch. */
     fun toast(events: List<GameEvent>): ToastMessage? =
         events.firstRejection?.let { ToastMessage(it.message, it.suggestedTool) }

@@ -191,16 +191,3 @@ internal fun SheetCard(
         content = content,
     )
 }
-
-@Composable
-internal fun SheetButton(
-    title: String,
-    onClick: () -> Unit,
-) {
-    com.hunter.stockfarmer.ui.theme.PillButton(
-        title = title,
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
-        role = com.hunter.stockfarmer.ui.theme.PillRole.accent,
-    )
-}

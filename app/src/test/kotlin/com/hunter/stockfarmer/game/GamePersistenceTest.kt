@@ -87,7 +87,7 @@ class GamePersistenceTest {
             )
         ambience.tick(scheduler.now)
         session.celebrations.celebrate(BuildingCelebration(tile, 2, 2))
-        session.publish(listOf(GameEvent.LeveledUp(2, emptyList(), 0, 1)))
+        session.publish(listOf(GameEvent.LeveledUp(2, 0, 1)))
         session.beginDay(123)
 
         ambience.clear()

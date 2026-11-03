@@ -261,16 +261,6 @@ fun GameEngine.castRod(point: GridPoint): List<GameEvent> =
 /** The kind of fish swimming in the tile at a point, if there is one. */
 fun GameEngine.fishBiting(point: GridPoint): FishKind? = biting(point)?.second
 
-/** The contest for the fish swimming in the tile at a point, if one is, played out within [bounds]. */
-fun GameEngine.fishingContest(
-    point: GridPoint,
-    bounds: FishingContest.Bounds,
-    using: RandomSource,
-): FishingContest? {
-    val kind = biting(point)?.second ?: return null
-    return FishingContest(kind.rarity, bounds, fishingReachFactor, using)
-}
-
 /** How much the fish in a pond weighs, in pounds, within what its kind may: settled when the fish appears. */
 fun GameEngine.fishWeight(anchor: GridPoint): Double? {
     val pond = state.fishPonds[anchor] ?: return null

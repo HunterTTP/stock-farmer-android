@@ -109,7 +109,6 @@ internal data class BuildingState(
     val storage: String?,
     val stored: List<StoredState>,
     val stocks: String?,
-    val demolishRefusal: String?,
     val refund: String,
     val moving: Boolean,
 )
@@ -261,7 +260,6 @@ internal data class SheetState(
                 storage,
                 stored,
                 if (building.isHouse) "Stock slots: ${engine.stockSlotsUsed} / ${engine.stockSlotLimit}" else null,
-                engine.demolishRejection(placed)?.message,
                 "Refund: ${engine.refund(building).dollars}, $logs Logs, $stones Stones",
                 run?.home == origin,
             )

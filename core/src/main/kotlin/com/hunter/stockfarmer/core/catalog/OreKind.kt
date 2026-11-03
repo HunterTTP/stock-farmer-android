@@ -2,14 +2,12 @@
 
 package com.hunter.stockfarmer.core.catalog
 
-enum class OreKind(
-    val productID: String,
-) {
-    copper("copperBar"),
-    silver("silverBar"),
-    gold("goldBar"),
-    ruby("polishedRuby"),
-    sapphire("polishedSapphire"),
+enum class OreKind {
+    copper,
+    silver,
+    gold,
+    ruby,
+    sapphire,
     ;
 
     val rawValue: String get() = name

@@ -136,7 +136,13 @@ class ToolUpgradeTest {
         for (level in 1..3) {
             val engine = engine(tool = HarvestTool.rod, toolLevel = level)
             engine.state.fishPonds[anchor] = FishPond(PondFish("carp", spot), now)
-            reaches += engine.fishingContest(spot, bounds, SystemRandomSource)!!.reach
+            reaches +=
+                FishingContest(
+                    engine.fishBiting(spot)!!.rarity,
+                    bounds,
+                    engine.fishingReachFactor,
+                    SystemRandomSource,
+                ).reach
         }
         assertTrue(
             reaches[0] == FishingContest.REACH && reaches[1] == reaches[0] * 1.5 && reaches[2] == reaches[1] * 1.5,

@@ -43,13 +43,6 @@ fun animalReaction(
         AnimalReaction(animal, gesture, if (gesture == AnimalGesture.PET) 0.0 else it.stepRemaining.coerceAtLeast(0.0))
     }
 
-fun reactionAtTouch(
-    x: Float,
-    y: Float,
-    gesture: AnimalGesture,
-    animals: List<AnimalHitTarget>,
-): AnimalReaction? = animalAtTouch(x, y, animals)?.let { animalReaction(it, gesture, animals) }
-
 internal data class Heart(
     val rise: Float,
     val alpha: Float,

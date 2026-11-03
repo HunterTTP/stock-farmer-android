@@ -44,6 +44,12 @@ class RodFishingEngineTest {
         return engine
     }
 
+    /** The contest the app plays for the fish biting at a point, built as FishingSession builds it. */
+    private fun GameEngine.contestAt(
+        point: GridPoint,
+        random: SeededRandom,
+    ): FishingContest? = fishBiting(point)?.let { FishingContest(it.rarity, bounds, fishingReachFactor, random) }
+
     private fun GameEngine.setFish(fish: PondFish?) {
         state.fishPonds[anchor] = state.fishPonds[anchor]!!.copy(fish = fish)
     }
@@ -115,15 +121,15 @@ class RodFishingEngineTest {
     @Test fun `the rod hooks the fish of each tier with the contest for its kind`() {
         val random = SeededRandom(1)
         val engine = engine()
-        val common = engine.fishingContest(anchor, bounds, random)
+        val common = engine.contestAt(anchor, random)
         engine.setFish(PondFish("mackerel", anchor))
-        val fine = engine.fishingContest(anchor, bounds, random)
+        val fine = engine.contestAt(anchor, random)
         engine.setFish(PondFish("kingsalmon", anchor))
-        val rare = engine.fishingContest(anchor, bounds, random)
+        val rare = engine.contestAt(anchor, random)
         assertTrue((common?.fillSeconds ?: 99.0) < (fine?.fillSeconds ?: 0.0))
         assertTrue((fine?.fillSeconds ?: 99.0) < (rare?.fillSeconds ?: 0.0))
         engine.setFish(null)
-        assertNull(engine.fishingContest(anchor, bounds, random))
+        assertNull(engine.contestAt(anchor, random))
     }
 
     @Test fun `each rarity has its own contest getting harder up to legendary`() {
@@ -139,14 +145,14 @@ class RodFishingEngineTest {
             )
         for ((kind, speed, seconds) in expected) {
             engine.setFish(PondFish(kind, anchor))
-            val contest = engine.fishingContest(anchor, bounds, random)!!
+            val contest = engine.contestAt(anchor, random)!!
             assertEquals(speed, contest.speed, kind)
             assertEquals(seconds, contest.fillSeconds, kind)
         }
         val contests =
             expected.map { (kind, _, _) ->
                 engine.setFish(PondFish(kind, anchor))
-                engine.fishingContest(anchor, bounds, random)!!
+                engine.contestAt(anchor, random)!!
             }
         assertEquals(contests.map { it.speed }.sorted(), contests.map { it.speed })
         assertEquals(5, contests.map { it.speed }.toSet().size)

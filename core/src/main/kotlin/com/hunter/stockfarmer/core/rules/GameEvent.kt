@@ -89,7 +89,6 @@ sealed interface GameEvent {
 
     data class LeveledUp(
         val level: Int,
-        val unlockedCrops: List<String>,
         val farmlandTiles: Int,
         val from: Int,
     ) : GameEvent

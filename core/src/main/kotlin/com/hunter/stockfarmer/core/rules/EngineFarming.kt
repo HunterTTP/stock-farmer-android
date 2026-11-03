@@ -191,9 +191,8 @@ internal fun GameEngine.notFinished(
 internal fun GameEngine.levelUpEvents(levelBefore: Int): List<GameEvent> {
     val level = state.level
     if (level <= levelBefore) return emptyList()
-    val newCrops = Crop.all.filter { it.unlockLevel > levelBefore && it.unlockLevel <= level }.map { it.name }
     val newTiles = FarmlandRules.tilesUnlocked(level) - FarmlandRules.tilesUnlocked(levelBefore)
-    return listOf(GameEvent.LeveledUp(level, newCrops, newTiles, levelBefore))
+    return listOf(GameEvent.LeveledUp(level, newTiles, levelBefore))
 }
 
 private fun GameEngine.plant(

@@ -28,9 +28,6 @@ val GameEngine.stockSlotLimit: Int
 /** What the shares owned are worth at their last known prices. */
 val GameEngine.portfolioValue: Double get() = StockMarketRules.dollars(state.holdings.values.sumOf { it.valueCents })
 
-/** What the shares owned cost, at each holding's average cost, in cents. */
-val GameEngine.costBasisCents: Long get() = state.holdings.values.sumOf { it.shares * it.averageCostCents }
-
 /**
  * Buys whole shares, at the quote's price unless a price is given, for money, taking a slot if the ticker is new. The
  * holding keeps the quote's price as its last real one.

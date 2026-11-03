@@ -23,6 +23,14 @@ import java.time.Instant
 class OreTest {
     private val now = Instant.ofEpochSecond(40_000_000)
     private val point = GridPoint(15, 15)
+    private val products =
+        mapOf(
+            OreKind.copper to "copperBar",
+            OreKind.silver to "silverBar",
+            OreKind.gold to "goldBar",
+            OreKind.ruby to "polishedRuby",
+            OreKind.sapphire to "polishedSapphire",
+        )
 
     @Test
     fun `natural veins mine with the pickaxe and keep their ore through saving`() {
@@ -38,7 +46,7 @@ class OreTest {
             val ore = size.ore!!
             assertEquals(mapOf(StorageItem.Ore(ore).id to 6), engine.state.storage)
             assertTrue(engine.state.rocks.isEmpty())
-            val recipe = Recipe.named(ore.productID)!!
+            val recipe = Recipe.named(products.getValue(ore))!!
             assertTrue(recipe.input == StorageItem.Ore(ore) && recipe.inputCount == 6)
             assertEquals(72.0, recipe.output.sellValue)
         }

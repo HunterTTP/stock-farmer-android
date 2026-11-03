@@ -67,7 +67,7 @@ internal class RainMotion(
         val lifeBase = (height + 80) / fall
         val drift = (height + 80) * tan(slant)
         if (!built || snow != snowing || this.width != width || this.height != height) {
-            build(snowing, width, height, lifeBase, drift, fall)
+            build(snowing, width, lifeBase, drift, fall)
         }
         snow = snowing
         this.width = width
@@ -92,7 +92,6 @@ internal class RainMotion(
     private fun build(
         snowing: Boolean,
         width: Double,
-        height: Double,
         lifeBase: Double,
         drift: Double,
         fall: Double,

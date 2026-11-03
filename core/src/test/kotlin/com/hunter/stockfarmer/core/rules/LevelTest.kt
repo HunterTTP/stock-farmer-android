@@ -118,13 +118,13 @@ class LevelTest {
     }
 
     @Test
-    fun `crossing a level reports it and the crops it unlocks`() {
+    fun `crossing a level reports it`() {
         val engine = GameEngine(stateWith(xp = LevelRules.xpToReach(2) - 1))
         engine.tap(tile, now)
         engine.select(HarvestTool.scythe)
         val events = engine.tap(tile, now.advancedBy(30.0))
         assertEquals(
-            listOf(GameEvent.Stored(tile, Crop.starter.id, 2), GameEvent.LeveledUp(2, listOf("Carrot"), 4, 1)),
+            listOf(GameEvent.Stored(tile, Crop.starter.id, 2), GameEvent.LeveledUp(2, 4, 1)),
             events,
         )
         assertTrue(engine.isUnlocked(Crop.named("carrot")!!))

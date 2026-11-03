@@ -23,22 +23,6 @@ import com.hunter.stockfarmer.ui.theme.Pulse
 import com.hunter.stockfarmer.ui.theme.pulseGlow
 import kotlin.math.cos
 
-/** Place above the tool circle; the owner uses state.pulses and the targets to highlight its existing controls. */
-@Composable
-fun LessonGuide(
-    state: LessonGuideState,
-    modifier: Modifier = Modifier,
-) {
-    val message = state.message ?: return
-    LessonBubble(
-        text = message,
-        modifier =
-            modifier
-                .widthIn(max = 280.dp)
-                .semantics { liveRegion = LiveRegionMode.Polite },
-    )
-}
-
 /** Keep the graphics layer in place as teaching changes so an in-progress tool drag keeps its pointer handler. */
 @Composable
 fun Modifier.lessonPulse(
