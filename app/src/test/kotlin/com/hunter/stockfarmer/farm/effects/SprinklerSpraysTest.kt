@@ -129,6 +129,24 @@ class SprinklerSpraysTest {
     }
 
     @Test
+    fun `a sprinkler taken away mid spray lets its drops finish without spraying again`() {
+        sprays.sync(standing(placedAt = minute), minute)
+        sprays.tick(minute, false, false)
+        val before = sprays.only()
+        sprays.sync(emptyMap(), at(3.0))
+        assertSame(before, sprays.only())
+        assertTrue(before.sprayingAt(3.0))
+        // Its next shared spray, a minute on, does not come.
+        sprays.tick(at(8.0), false, false)
+        assertTrue(before.sprayingAt(8.0))
+        assertEquals(1, before.sprays.count { it.count > 0 })
+        sprays.tick(at(13.0), false, false)
+        assertTrue(sprays.sprinklers.isEmpty())
+        sprays.tick(at(61.0), false, false)
+        assertFalse(before.sprayingAt(61.0))
+    }
+
+    @Test
     fun `a sprinkler picked up and put down in place keeps its picture and sprays at the next tick`() {
         sprays.sync(standing(placedAt = minute.minusSeconds(3600)), minute)
         val before = sprays.only()

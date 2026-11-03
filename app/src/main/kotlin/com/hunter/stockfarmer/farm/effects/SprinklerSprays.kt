@@ -86,6 +86,9 @@ internal class Sprinkler(
     var fountainAt = Double.NEGATIVE_INFINITY
     var seenIn = -1L
 
+    /** Taken off the farm while its drops were still in the air, which finish without it, as they do in iOS. */
+    var isGone = false
+
     /** Drawn in its turn each frame; made once so a frame allocates nothing for it. */
     var standing: Standing? = null
 
@@ -105,8 +108,9 @@ internal class SprinklerSprays(
     private var fingerprint = 0
     private var knownSize = -1
 
-    /** The sprinklers standing now, as a list so a frame can walk it without allocating. */
+    /** The sprinklers standing now, as a list so a frame can walk it without allocating, then those still finishing. */
     val sprinklers = ArrayList<Sprinkler>()
+    private val finishing = ArrayList<Sprinkler>()
 
     /**
      * Notices sprinklers set down, moved or taken away. The decorations are walked only when they have changed, which
@@ -127,7 +131,10 @@ internal class SprinklerSprays(
             if (decoration == null || !decoration.isSprinkler) continue
             seen++
             var sprinkler = byOrigin[origin]
-            if (sprinkler != null && !looksTheSame(sprinkler.placed, placed)) sprinkler = null
+            if (sprinkler != null && !looksTheSame(sprinkler.placed, placed)) {
+                letFinish(sprinkler, now)
+                sprinkler = null
+            }
             if (sprinkler == null) {
                 sprinkler = place(origin, decoration, placed, now)
                 byOrigin[origin] = sprinkler
@@ -137,9 +144,41 @@ internal class SprinklerSprays(
             sprinkler.placed = placed
             sprinkler.seenIn = frame
         }
-        if (seen != byOrigin.size) byOrigin.values.removeAll { it.seenIn != frame }
+        if (seen != byOrigin.size) {
+            val iterator = byOrigin.values.iterator()
+            while (iterator.hasNext()) {
+                val sprinkler = iterator.next()
+                if (sprinkler.seenIn == frame) continue
+                letFinish(sprinkler, now)
+                iterator.remove()
+            }
+        }
         sprinklers.clear()
         sprinklers.addAll(byOrigin.values)
+        sprinklers.addAll(finishing)
+    }
+
+    /** A sprinkler gone from the farm keeps drawing until the drops it has thrown have landed. */
+    private fun letFinish(
+        sprinkler: Sprinkler,
+        now: Instant,
+    ) {
+        val seconds = seconds(now)
+        if (sprinkler.sprays.all { it.isOver(seconds) }) return
+        sprinkler.isGone = true
+        finishing += sprinkler
+    }
+
+    private fun forgetFinished(seconds: Double) {
+        var index = finishing.size - 1
+        while (index >= 0) {
+            val sprinkler = finishing[index]
+            if (sprinkler.sprays.all { it.isOver(seconds) }) {
+                finishing.removeAt(index)
+                sprinklers.remove(sprinkler)
+            }
+            index--
+        }
     }
 
     private fun place(
@@ -174,8 +213,10 @@ internal class SprinklerSprays(
         runsConstantly: Boolean,
     ) {
         val seconds = seconds(now)
+        if (finishing.isNotEmpty()) forgetFinished(seconds)
         for (index in sprinklers.indices) {
             val sprinkler = sprinklers[index]
+            if (sprinkler.isGone) continue
             if (runsConstantly) {
                 if (seconds - sprinkler.fountainAt < FOUNTAIN_INTERVAL) continue
                 sprinkler.fountainAt = seconds
