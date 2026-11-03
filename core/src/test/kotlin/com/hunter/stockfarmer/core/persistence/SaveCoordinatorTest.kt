@@ -172,7 +172,7 @@ class SaveCoordinatorTest {
 
         saver.saveSoon(stateWith(money = 1.0), 0)
         assertTrue(files.written.tryAcquire(60, TimeUnit.SECONDS))
-        assertEquals(Thread.MIN_PRIORITY, files.priority)
+        assertEquals(SaveCoordinator.YIELDING_PRIORITY, files.priority)
 
         saver.saveNow(stateWith(money = 2.0), 0)
         assertEquals(Thread.NORM_PRIORITY, files.priority, "a flush has someone waiting on it")

@@ -16,6 +16,11 @@ class SaveCoordinator(
     private val slots: SaveSlots,
     private val onResult: (Int, Result<Unit>) -> Unit = { _, _ -> },
 ) : AutoCloseable {
+    companion object {
+        /** Yields to the game, yet Android maps it to background nice 10: its minimum, nice 19, can starve saves past a second. */
+        internal const val YIELDING_PRIORITY = 4
+    }
+
     private class Pending(
         val state: GameState,
         val alwaysWrite: Boolean,
@@ -28,7 +33,7 @@ class SaveCoordinator(
         Executors.newSingleThreadExecutor { task ->
             Thread(task, "StockFarmer.saves").apply {
                 isDaemon = true
-                priority = if (waiting.get() > 0) Thread.NORM_PRIORITY else Thread.MIN_PRIORITY
+                priority = if (waiting.get() > 0) Thread.NORM_PRIORITY else YIELDING_PRIORITY
                 worker = this
             }
         }
@@ -86,7 +91,7 @@ class SaveCoordinator(
         return try {
             work()
         } finally {
-            if (waiting.decrementAndGet() == 0) worker?.priority = Thread.MIN_PRIORITY
+            if (waiting.decrementAndGet() == 0) worker?.priority = YIELDING_PRIORITY
         }
     }
 
