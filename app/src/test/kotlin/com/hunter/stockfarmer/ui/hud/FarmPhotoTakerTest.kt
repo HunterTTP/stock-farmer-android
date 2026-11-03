@@ -8,22 +8,58 @@ import com.hunter.stockfarmer.game.HapticRequest
 import com.hunter.stockfarmer.game.collectingHaptics
 import com.hunter.stockfarmer.ui.PhotoSaver
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
 import java.nio.file.Path
 import java.util.concurrent.CountDownLatch
+import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 
 class FarmPhotoTakerTest {
     @TempDir
     lateinit var tempDir: Path
 
-    @BeforeEach
-    fun setUp() {
-        FarmPhotoTaker.isTakingPhoto.set(false)
+    @Test
+    fun `a request lost with its farm view does not leave photos stuck`() {
+        val session = GameSession(GameEngine())
+        session.photos.handler = { _, _ -> } // The view queues the work and is destroyed before running it.
+        val context = FakePhotoContext(externalDir = tempDir.resolve("Lost").toFile())
+        val outcomes = LinkedBlockingQueue<String>()
+
+        takeFarmPhoto(context, session) { outcomes.add(it) }
+        assertTrue(session.photos.isTakingPhoto.get())
+        takeFarmPhoto(context, session) { outcomes.add("second tap") }
+        assertNull(outcomes.poll())
+
+        val png = byteArrayOf(1, 2)
+        session.photos.handler = { _, done -> done(png) } // The next farm view.
+
+        assertEquals("Farm photo saved", outcomes.poll(5, TimeUnit.SECONDS))
+        assertFalse(session.photos.isTakingPhoto.get())
+    }
+
+    @Test
+    fun `losing the farm view with none to follow reports failure and frees photos`() {
+        val session = GameSession(GameEngine())
+        session.photos.handler = { _, _ -> }
+        val outcomes = LinkedBlockingQueue<String>()
+
+        takeFarmPhoto(FakePhotoContext(externalDir = tempDir.toFile()), session) { outcomes.add(it) }
+        session.photos.handler = null
+
+        assertEquals("The farm photo could not be created. Please try again.", outcomes.poll(5, TimeUnit.SECONDS))
+        assertFalse(session.photos.isTakingPhoto.get())
+    }
+
+    @Test
+    fun `each session keeps its own photo flag`() {
+        val stuck = GameSession(GameEngine())
+        stuck.photos.isTakingPhoto.set(true)
+        assertFalse(GameSession(GameEngine()).photos.isTakingPhoto.get())
     }
 
     @Test

@@ -4,7 +4,10 @@ import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.TextureRegion
 import com.hunter.stockfarmer.farm.TextureLibrary
 
-/** Regions and alpha measurements share the TextureLibrary's ownership of their backing textures. */
+/**
+ * Regions and alpha measurements share the TextureLibrary's ownership of their backing textures. One lives with the
+ * farm's library and serves the live scene and its photos, both on the graphics thread, so sheets are measured once.
+ */
 internal class AnimalArt(
     private val textures: TextureLibrary,
 ) {
