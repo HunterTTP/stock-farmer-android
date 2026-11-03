@@ -271,6 +271,28 @@ class GameTickTest {
     }
 
     @Test
+    fun `forgetting the clocks does not count the gap as play but keeps the summary still to come`() {
+        val engine = GameEngine()
+        val session = GameSession(engine)
+        val tick = GameTick(session, RandomSource(Random(1)::nextLong))
+        tick.tick(midnight.minusSeconds(1))
+        val minuteOne = midnight.advancedBy(1.0)
+        tick.tick(minuteOne)
+        val played = engine.state.playTime
+
+        tick.forgetClocks()
+        val summaries =
+            collecting(session.newDays) {
+                tick.tick(minuteOne.advancedBy(2.0))
+                assertEquals(played, engine.state.playTime)
+                tick.tick(minuteOne.advancedBy(20.0))
+                tick.tick(minuteOne.advancedBy(21.0))
+            }
+        assertEquals(1, summaries.size)
+        assertTrue(engine.state.playTime > played)
+    }
+
+    @Test
     fun `the time spent changing farms is not counted as play on the next farm`() {
         val engine = GameEngine()
         val session = GameSession(engine)

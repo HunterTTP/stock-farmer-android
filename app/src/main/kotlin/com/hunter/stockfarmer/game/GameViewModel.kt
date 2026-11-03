@@ -13,8 +13,7 @@ import com.hunter.stockfarmer.core.persistence.SaveSlots
 import com.hunter.stockfarmer.core.persistence.TimelapseStore
 import com.hunter.stockfarmer.notifications.NotificationPermissionPolicy
 import com.hunter.stockfarmer.ui.screens.PerformanceMonitor
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
 
 /** Keeps the game alive across screen rotations, loads and saves it, and lets time pass in it. */
 class GameViewModel(
@@ -39,18 +38,24 @@ class GameViewModel(
     val notificationPolicy = NotificationPermissionPolicy()
     private val tick = GameTick(persistence.session)
 
-    init {
-        viewModelScope.launch {
-            while (true) {
-                if (persistenceState.isReady) session.publish(tick.tick())
-                delay(TICK_MILLIS)
-            }
+    /**
+     * The tick catches up on time away and plans each night, so it runs off the main thread. Everything it touches is
+     * behind the session lock, a thread-safe flow or an atomic, and its events are handed on from here.
+     */
+    private val tickLoop =
+        TickLoop(viewModelScope, Dispatchers.Default, TICK_MILLIS, onStart = tick::forgetClocks) {
+            if (persistenceState.isReady) session.publish(tick.tick())
         }
+
+    fun resume() {
+        persistence.resume()
+        tickLoop.start()
     }
 
-    fun resume() = persistence.resume()
-
-    fun pause() = persistence.pause()
+    fun pause() {
+        tickLoop.stop()
+        persistence.pause()
+    }
 
     fun retry() = persistence.retry()
 
