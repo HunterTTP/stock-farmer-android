@@ -46,6 +46,16 @@ class GameEngine(
     /** A number from 0 up to but not including 1 for each chance the game takes, which tests replace to settle it. */
     internal var bonusRoll: () -> Double = { SystemRandomSource.nextUnit() }
 
+    /** Puts another farm in play. Nothing under way on the last one carries over, as placing a building there would. */
+    fun open(farm: GameState) {
+        state = farm
+        placement = null
+        fruitPlacement = null
+        objectPlacement = null
+        chopPass = null
+        storagePlacementQuietUntil = null
+    }
+
     /** An independent engine in the same situation, so an action can be previewed without changing this one. */
     fun copy(): GameEngine =
         GameEngine(state.copy()).also {

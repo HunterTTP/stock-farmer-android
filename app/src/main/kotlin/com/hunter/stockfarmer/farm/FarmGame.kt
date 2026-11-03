@@ -23,7 +23,6 @@ import com.hunter.stockfarmer.farm.effects.effectLayers
 import com.hunter.stockfarmer.game.GameSession
 import com.hunter.stockfarmer.game.PlacementDrag
 import com.hunter.stockfarmer.game.ViewSnapshot
-import com.hunter.stockfarmer.game.animalGestures
 import com.hunter.stockfarmer.game.hold
 import com.hunter.stockfarmer.game.preview
 import com.hunter.stockfarmer.game.touch

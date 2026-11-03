@@ -22,12 +22,27 @@ data class SavedGames(
     val active: Int,
 )
 
+/** Each kind of failure has its own field and its own way out, so clearing one can never erase another. */
 data class PersistenceState(
     val isLoading: Boolean = true,
     val isReady: Boolean = false,
-    val error: String? = null,
+    /** Why the farm could not be opened; lasts until another load. */
+    val loadError: String? = null,
+    /** The latest changes did not reach the disk; only a later save of this farm clears it. */
+    val isSaveFailing: Boolean = false,
+    /** Why a change to the saved farms failed; lasts until a retry or the next such change. */
+    val slotError: String? = null,
     val backups: List<SaveBackup> = emptyList(),
-)
+) {
+    /** What to tell the player. A failing save comes first, as it is the one still losing play. */
+    val error: String? get() = if (isSaveFailing) SAVE_ERROR else slotError ?: loadError
+
+    val isSaveBlocked: Boolean get() = !isReady || isSaveFailing
+
+    private companion object {
+        const val SAVE_ERROR = "Your latest changes could not be saved. Please retry before leaving this farm."
+    }
+}
 
 /** Owns startup and lifecycle saves. Only the scheduler touches this class's mutable state. */
 class GamePersistence(
@@ -47,9 +62,12 @@ class GamePersistence(
     private var cancelTimer: (() -> Unit)? = null
     private var cancelSave: (() -> Unit)? = null
     private val saver =
-        SaveCoordinator(slots) { _, result ->
+        SaveCoordinator(slots) { saved, result ->
             scheduler.execute {
-                if (!closed) publish(state.copy(error = if (result.isFailure) SAVE_ERROR else null))
+                // A farm that has been left, or one that never opened, has nothing to say about the one on screen now.
+                if (!closed && saved == slot && state.isReady && state.isSaveFailing != result.isFailure) {
+                    publish(state.copy(isSaveFailing = result.isFailure))
+                }
             }
         }
 
@@ -60,7 +78,12 @@ class GamePersistence(
     fun retry() =
         scheduler.execute {
             if (closed) return@execute
-            if (state.isReady) save(flush = true) else load()
+            if (state.isReady) {
+                clearSlotError()
+                save(flush = true)
+            } else {
+                load()
+            }
         }
 
     /** Recovery is an explicit choice; a failed load never creates a replacement farm. */
@@ -85,7 +108,7 @@ class GamePersistence(
     /** Leaves the farm being played, saved, for another saved game. */
     fun switchTo(target: Int) =
         if (target in 0 until SaveSlots.COUNT) {
-            changeFarm { it.setActive(target) }
+            changeFarm(SWITCH_ERROR) { it.setActive(target) }
         } else {
             Unit
         }
@@ -95,7 +118,7 @@ class GamePersistence(
         target: Int,
         name: String,
     ) = if (target in 0 until SaveSlots.COUNT) {
-        changeFarm {
+        changeFarm(NEW_FARM_ERROR) {
             val previousHistory = runCatching { it.load(target)?.timelapse?.historyID }.getOrNull()
             it.create(target, name, newGame(random, now()), now())
             it.setActive(target)
@@ -110,7 +133,7 @@ class GamePersistence(
         name: String,
         done: () -> Unit,
     ) = if (target in 0 until SaveSlots.COUNT) {
-        changeSlots(done) { it.rename(target, name) }
+        changeSlots(RENAME_ERROR, done) { it.rename(target, name) }
     } else {
         done()
     }
@@ -120,7 +143,7 @@ class GamePersistence(
         target: Int,
         done: () -> Unit,
     ) = if (target in 0 until SaveSlots.COUNT && target != slot) {
-        changeSlots(done) {
+        changeSlots(DELETE_ERROR, done) {
             val previousHistory = runCatching { it.load(target)?.timelapse?.historyID }.getOrNull()
             it.delete(target)
             previousHistory?.let { id -> runCatching { timelapseStore?.remove(id) } }
@@ -135,31 +158,31 @@ class GamePersistence(
         done: () -> Unit,
     ) = if (backup.slot in 0 until SaveSlots.COUNT) {
         if (backup.slot == slot) {
-            changeFarm(saveFirst = false, done = done) { it.restore(backup, now()) }
+            changeFarm(RESTORE_ERROR, saveFirst = false, done = done) { it.restore(backup, now()) }
         } else {
-            changeSlots(done) { it.restore(backup, now()) }
+            changeSlots(RESTORE_ERROR, done) { it.restore(backup, now()) }
         }
     } else {
         done()
     }
 
     private fun changeFarm(
+        failure: String,
         saveFirst: Boolean = true,
         done: (() -> Unit)? = null,
         change: (SaveSlots) -> Unit,
     ) = scheduler.execute {
         if (closed) return@execute
-        if (saveFirst && state.isReady) {
-            save(flush = true)
-            if (state.error != null) {
-                done?.invoke()
-                return@execute
-            }
+        clearSlotError()
+        // This flush's own answer decides: results of earlier saves may still be queued behind this task.
+        if (saveFirst && state.isReady && !save(flush = true)) {
+            done?.invoke()
+            return@execute
         }
         try {
             saver.whenIdle(change)
         } catch (_: Exception) {
-            publish(state.copy(error = SLOT_ERROR))
+            publish(state.copy(slotError = failure))
             done?.invoke()
             return@execute
         }
@@ -168,16 +191,22 @@ class GamePersistence(
     }
 
     private fun changeSlots(
+        failure: String,
         done: () -> Unit,
         change: (SaveSlots) -> Unit,
     ) = scheduler.execute {
         if (closed) return@execute
+        clearSlotError()
         try {
             saver.whenIdle(change)
         } catch (_: Exception) {
-            publish(state.copy(error = SLOT_ERROR))
+            publish(state.copy(slotError = failure))
         }
         done()
+    }
+
+    private fun clearSlotError() {
+        if (state.slotError != null) publish(state.copy(slotError = null))
     }
 
     fun resume() =
@@ -218,16 +247,9 @@ class GamePersistence(
                 }
             slot = startup.slot
             session.act {
-                it.state = startup.engine.state
+                it.open(startup.engine.state)
                 it.countCurrentUnlocksAsSeen()
-                session.wildGrowth.clear()
-                session.tractor.clear()
-                session.sceneFeedback.clear()
-                session.celebrations.clear()
-                session.beginDay(null)
-                session.casts.value = null
-                session.sheets.value = null
-                session.confirmations.value = null
+                session.resetForNewFarm()
             }
             leftAt = startup.preparedAt
             if (active) holdClock()
@@ -244,7 +266,7 @@ class GamePersistence(
                 } else {
                     "This farm could not be opened. Its save has been kept safe. Retry, or restore a backup."
                 }
-            publish(PersistenceState(isLoading = false, error = message, backups = backups))
+            publish(PersistenceState(isLoading = false, loadError = message, backups = backups))
         }
     }
 
@@ -269,31 +291,35 @@ class GamePersistence(
         cancelSave = scheduler.after(SAVE_DEBOUNCE_MS) { save(flush = false) }
     }
 
-    private fun save(flush: Boolean) {
+    /**
+     * A flush always writes; an autosave writes only if the farm holds something new, so a quiet farm stays off the disk.
+     * Says whether the save went through or, for an autosave, was handed on: its result arrives through the saver.
+     */
+    private fun save(flush: Boolean): Boolean {
         cancelSave?.invoke()
         cancelSave = null
-        if (!state.isReady) return
+        if (!state.isReady) return false
         val date = now()
         val snapshot =
             session.act { engine ->
                 engine.markSaved(date)
-                engine
-                    .copy()
-                    .also { copy ->
-                        // A second inactive save must not count the pause-to-stop delay as playing time on relaunch.
-                        leftAt?.let { copy.holdClockWhileAway(it, date) }
-                    }.state
+                engine.state.saveSnapshot().also { copy ->
+                    // A second inactive save must not count the pause-to-stop delay as playing time on relaunch.
+                    leftAt?.let { GameEngine(copy).holdClockWhileAway(it, date) }
+                }
             }
-        try {
-            if (flush) saver.saveNow(snapshot, slot) else saver.saveSoon(snapshot, slot)
+        return try {
+            if (flush) saver.saveNow(snapshot, slot) else saver.saveIfChanged(snapshot, slot)
+            true
         } catch (_: Exception) {
-            publish(state.copy(error = SAVE_ERROR))
+            publish(state.copy(isSaveFailing = true))
+            false
         }
     }
 
     private fun publish(value: PersistenceState) {
         state = value
-        session.isSaveBlocked = !value.isReady || value.error != null
+        session.isSaveBlocked = value.isSaveBlocked
         session.isActive = active && value.isReady
         onState(value)
     }
@@ -311,7 +337,11 @@ class GamePersistence(
     companion object {
         const val AUTOSAVE_INTERVAL_MS = 1_000L
         const val SAVE_DEBOUNCE_MS = 250L
-        private const val SAVE_ERROR = "Your latest changes could not be saved. Please retry before leaving this farm."
-        private const val SLOT_ERROR = "The farm could not be changed. Please try again."
+        private const val SWITCH_ERROR =
+            "This farm could not be opened. Its save has been kept safe. Retry, or choose another farm."
+        private const val NEW_FARM_ERROR = "The new farm could not be saved. Please retry."
+        private const val RESTORE_ERROR = "The backup could not be restored. Please retry."
+        private const val RENAME_ERROR = "The farm could not be renamed. Please retry."
+        private const val DELETE_ERROR = "The farm could not be deleted. Please retry."
     }
 }

@@ -239,12 +239,13 @@ class GameTickTest {
     }
 
     @Test
-    fun `reset forgets a summary that has not appeared yet`() {
+    fun `a farm opened between two ticks takes the summary still to come with it`() {
         val session = GameSession(GameEngine())
         val tick = GameTick(session).apply { tick(midnight.minusSeconds(1)) }
         val minuteOne = midnight.advancedBy(1.0)
         tick.tick(minuteOne)
-        tick.reset()
+        // No tick sees the farm in between, as when a small save loads in under a second.
+        session.resetForNewFarm()
 
         val summaries =
             collecting(session.newDays) {
@@ -252,5 +253,38 @@ class GameTickTest {
                 tick.tick(minuteOne.advancedBy(21.0))
             }
         assertTrue(summaries.isEmpty())
+    }
+
+    @Test
+    fun `without another farm opening the summary still arrives`() {
+        val session = GameSession(GameEngine())
+        val tick = GameTick(session).apply { tick(midnight.minusSeconds(1)) }
+        val minuteOne = midnight.advancedBy(1.0)
+        tick.tick(minuteOne)
+
+        val summaries =
+            collecting(session.newDays) {
+                tick.tick(minuteOne.advancedBy(20.0))
+                tick.tick(minuteOne.advancedBy(21.0))
+            }
+        assertEquals(1, summaries.size)
+    }
+
+    @Test
+    fun `the time spent changing farms is not counted as play on the next farm`() {
+        val engine = GameEngine()
+        val session = GameSession(engine)
+        val tick = GameTick(session, RandomSource(Random(1)::nextLong))
+        tick.tick(midnight)
+        tick.tick(midnight.plusSeconds(1))
+        val played = engine.state.playTime
+        assertEquals(1.0, played)
+
+        session.resetForNewFarm()
+        tick.tick(midnight.plusSeconds(3))
+        assertEquals(played, engine.state.playTime)
+
+        tick.tick(midnight.plusSeconds(4))
+        assertEquals(played + 1.0, engine.state.playTime)
     }
 }

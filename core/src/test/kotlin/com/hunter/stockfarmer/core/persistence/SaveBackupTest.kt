@@ -132,4 +132,40 @@ class SaveBackupTest {
         slots.save(game(7.0, 2), 0, minutes(301.0))
         assertEquals(1.0, slots.backups(0).first { it.kind == SaveBackup.Kind.daily }.money)
     }
+
+    @Test
+    fun `backups rotate the same through one long-lived instance that remembers its file`() {
+        val saving = slots
+        saving.save(game(1.0, 1), 0, start)
+        saving.save(game(2.0, 1), 0, minutes(1.0))
+        saving.save(game(3.0, 1), 0, minutes(12.0))
+        saving.save(game(4.0, 2), 0, minutes(13.0))
+        assertEquals(4.0, saving.load(0)?.money)
+        assertEquals(
+            listOf(SaveBackup.Kind.latest to 3.0, SaveBackup.Kind.older to 1.0, SaveBackup.Kind.daily to 3.0),
+            saving.backups(0).map { it.kind to it.money },
+        )
+    }
+
+    @Test
+    fun `quiet autosaves do not wear the backups away`() {
+        val saving = slots
+        val farm = game(1.0, 1)
+        saving.saveIfChanged(farm, 0, start)
+        farm.money = 2.0
+        saving.saveIfChanged(farm, 0, minutes(1.0))
+        for (minute in 2..60) saving.saveIfChanged(farm, 0, minutes(minute.toDouble()))
+        assertEquals(listOf(SaveBackup.Kind.latest to 1.0), saving.backups(0).map { it.kind to it.money })
+    }
+
+    @Test
+    fun `a damaged game refuses to save rather than becoming the backup of the next one`() {
+        slots.save(game(1.0, 1), 0, start)
+        slots.save(game(2.0, 1), 0, minutes(1.0))
+        val damaged = "damaged".toByteArray()
+        Files.write(directory.resolve("slot-1.json"), damaged)
+        assertThrows(Exception::class.java) { slots.save(game(3.0, 2), 0, minutes(20.0)) }
+        assertEquals(listOf(SaveBackup.Kind.latest to 1.0), slots.backups(0).map { it.kind to it.money })
+        assertTrue(Files.readAllBytes(directory.resolve("slot-1.json")).contentEquals(damaged))
+    }
 }

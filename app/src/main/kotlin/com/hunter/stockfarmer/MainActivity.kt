@@ -68,7 +68,6 @@ import com.hunter.stockfarmer.ui.screens.PerformanceSampling
 import com.hunter.stockfarmer.ui.screens.SaveSlotsScreen
 import com.hunter.stockfarmer.ui.timelapse.LocalTimelapseRecorder
 import com.hunter.stockfarmer.ui.timelapse.TimelapseRecorder
-import com.hunter.stockfarmer.ui.timelapse.rememberTimelapseRecorder
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -111,8 +110,8 @@ class MainActivity :
                     // leaves libGDX waiting for a pause that never completes, and it kills the process.
                     FarmHost()
                     if (persistence.isReady) {
-                        val recorder = rememberTimelapseRecorder(model.session)
-                        TimelapseCapture(recorder, ready = persistence.error == null)
+                        val recorder = remember(model) { TimelapseRecorder(model.session, model.timelapseStore) }
+                        TimelapseCapture(recorder, ready = !persistence.isSaveBlocked)
                         FarmWeather(model.session) {
                             RewardFlightsHost(model.session) {
                                 CompositionLocalProvider(LocalTimelapseRecorder provides recorder) {

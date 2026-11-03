@@ -22,7 +22,6 @@ import com.hunter.stockfarmer.farm.animals.animalReaction
 import com.hunter.stockfarmer.ui.sheets.AnimalInteraction
 import com.hunter.stockfarmer.ui.sheets.SheetTarget
 import java.time.Instant
-import java.util.WeakHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
 
 /** Scene requests cross threads here; all movement stays in the game driver and uses existing core rules. */
@@ -51,6 +50,15 @@ class AnimalSceneGestures(
     private val nudges = mutableMapOf<AnimalRef, Nudge>()
 
     @Volatile var targets: List<AnimalHitTarget> = emptyList()
+
+    /** The animals of the farm being left: a nudge kept for a house would otherwise move a pet on the next farm. */
+    fun clear() {
+        requests.clear()
+        hearts.clear()
+        nudging.clear()
+        nudges.clear()
+        targets = emptyList()
+    }
 
     fun interact(
         animal: AnimalRef,
@@ -104,11 +112,6 @@ class AnimalSceneGestures(
         }
     }
 }
-
-private val sceneGestures = WeakHashMap<GameSession, AnimalSceneGestures>()
-
-val GameSession.animalGestures: AnimalSceneGestures
-    get() = synchronized(sceneGestures) { sceneGestures.getOrPut(this) { AnimalSceneGestures() } }
 
 /** SheetHost hook for the scene reaction and its direct feedback. */
 fun GameSession.interactWithAnimal(

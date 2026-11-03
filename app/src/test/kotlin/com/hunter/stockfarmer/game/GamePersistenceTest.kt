@@ -2,15 +2,22 @@ package com.hunter.stockfarmer.game
 
 import com.hunter.stockfarmer.audio.AmbienceDriver
 import com.hunter.stockfarmer.audio.ambienceSnapshot
+import com.hunter.stockfarmer.core.catalog.Cat
 import com.hunter.stockfarmer.core.feedback.SoundCue
 import com.hunter.stockfarmer.core.model.GameState
 import com.hunter.stockfarmer.core.model.GridPoint
+import com.hunter.stockfarmer.core.model.Pet
 import com.hunter.stockfarmer.core.model.Plot
 import com.hunter.stockfarmer.core.persistence.LocalSaveFileSystem
 import com.hunter.stockfarmer.core.persistence.SaveFileSystem
 import com.hunter.stockfarmer.core.persistence.SaveSlots
+import com.hunter.stockfarmer.core.persistence.TimelapseStore
+import com.hunter.stockfarmer.core.rules.AnimalRef
 import com.hunter.stockfarmer.core.rules.GameEvent
+import com.hunter.stockfarmer.core.rules.beginMovingFruitTree
 import com.hunter.stockfarmer.core.util.RandomSource
+import com.hunter.stockfarmer.farm.animals.AnimalGesture
+import com.hunter.stockfarmer.farm.animals.AnimalHitTarget
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -27,9 +34,13 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Instant
 import java.util.Random
+import java.util.UUID
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
+
+/** Only ever waited out by a failing test: on a busy machine the disk thread, at minimum priority, can take seconds. */
+private const val WAIT_SECONDS = 60L
 
 class GamePersistenceTest {
     @TempDir
@@ -41,13 +52,40 @@ class GamePersistenceTest {
     private var status = PersistenceState()
     private lateinit var persistence: GamePersistence
 
-    private fun start() {
+    private fun start(timelapseStore: TimelapseStore? = null) {
         val random = Random(42)
         persistence =
-            GamePersistence(slots, scheduler, { scheduler.now }, RandomSource(random::nextLong)) {
+            GamePersistence(slots, scheduler, { scheduler.now }, RandomSource(random::nextLong), timelapseStore) {
                 status = it
             }
         scheduler.runCurrent()
+    }
+
+    /** Lets the disk queue finish, then hands over what it reported. */
+    private fun settle() {
+        persistence.slots { }
+        scheduler.runCurrent()
+    }
+
+    /** A farm in play that has had its first autosave, so that only real changes are left to write. */
+    private fun startPlaying(farm: GameState = GameState().apply { money = 100.0 }) {
+        slots.save(farm, 0, scheduler.now)
+        start()
+        persistence.resume()
+        scheduler.runCurrent()
+        scheduler.advance(GamePersistence.SAVE_DEBOUNCE_MS)
+        settle()
+    }
+
+    private val activeFile get() = directory.resolve("slot-1.json")
+
+    private fun ticksPassing(
+        tick: GameTick,
+        seconds: Int,
+    ) = repeat(seconds) {
+        tick.tick(scheduler.now)
+        scheduler.advance(1_000)
+        settle()
     }
 
     @AfterEach
@@ -212,7 +250,7 @@ class GamePersistenceTest {
         scheduler.runCurrent()
         files.saved.drainPermits()
         scheduler.advance(250)
-        assertTrue(files.saved.tryAcquire(5, TimeUnit.SECONDS))
+        assertTrue(files.saved.tryAcquire(WAIT_SECONDS, TimeUnit.SECONDS))
         // Block disk access before the snapshot is serialized, then mutate the live maps.
         files.blockReads = true
         persistence.session.act {
@@ -220,13 +258,13 @@ class GamePersistenceTest {
             it.state.storage["wheat"] = 7
         }
         scheduler.advance(1_000)
-        assertTrue(files.entered.await(5, TimeUnit.SECONDS))
+        assertTrue(files.entered.await(WAIT_SECONDS, TimeUnit.SECONDS))
         persistence.session.act {
             it.state.money = 99.0
             it.state.storage["wheat"] = 9
         }
         files.release.countDown()
-        assertTrue(files.written.await(5, TimeUnit.SECONDS))
+        assertTrue(files.written.await(WAIT_SECONDS, TimeUnit.SECONDS))
         val snapshot = slots.load(0)
         assertEquals(42.0, snapshot?.money)
         assertEquals(7, snapshot?.storage?.get("wheat"))
@@ -340,11 +378,389 @@ class GamePersistenceTest {
         assertEquals(100.0, persistence.session.read { it.money })
     }
 
+    @Test
+    fun `a quiet farm writes nothing while the clock and the time played run on`() {
+        startPlaying()
+        val session = persistence.session
+        val tick = GameTick(session, RandomSource(Random(7)::nextLong))
+        ticksPassing(tick, 3)
+        val writes = files.allWrites
+        val saved = Files.readAllBytes(activeFile)
+        val played = session.read { it.playTime }
+
+        ticksPassing(tick, 60)
+
+        assertEquals(played + 60.0, session.read { it.playTime })
+        assertEquals(writes, files.allWrites)
+        assertArrayEquals(saved, Files.readAllBytes(activeFile))
+        assertNull(status.error)
+    }
+
+    @ParameterizedTest
+    @ValueSource(longs = [1, 249, 250, 251, 999, 1_000])
+    fun `a real change reaches the disk within a second at any point between autosaves`(wait: Long) {
+        startPlaying()
+        scheduler.advance(wait)
+        settle()
+        persistence.session.act { it.state.money = 4_321.0 }
+
+        scheduler.advance(1_000)
+        settle()
+
+        assertEquals(4_321.0, slots.load(0)?.money)
+    }
+
+    @Test
+    fun `the time played goes along with the next real change`() {
+        startPlaying()
+        val session = persistence.session
+        ticksPassing(GameTick(session, RandomSource(Random(7)::nextLong)), 30)
+
+        session.act { it.state.money = 4_321.0 }
+        scheduler.advance(1_000)
+        settle()
+
+        val saved = slots.load(0)!!
+        assertEquals(4_321.0, saved.money)
+        assertEquals(session.read { it.playTime }, saved.playTime)
+    }
+
+    @Test
+    fun `stopping writes a change that no autosave has reached yet`() {
+        startPlaying()
+        persistence.session.act { it.state.money = 4_321.0 }
+        persistence.pause()
+        scheduler.runCurrent()
+        assertEquals(4_321.0, slots.load(0)?.money)
+    }
+
+    @Test
+    fun `stopping a quiet farm still saves the time played and when it stopped`() {
+        startPlaying()
+        val session = persistence.session
+        ticksPassing(GameTick(session, RandomSource(Random(7)::nextLong)), 10)
+        val writes = files.gameWrites
+
+        persistence.pause()
+        scheduler.runCurrent()
+
+        assertEquals(writes + 1, files.gameWrites)
+        val saved = slots.load(0)!!
+        assertEquals(session.read { it.playTime }, saved.playTime)
+        assertEquals(scheduler.now, saved.lastSavedAt)
+    }
+
+    @Test
+    fun `closing flushes a farm that was quiet`() {
+        startPlaying()
+        persistence.session.act { it.state.playTime = 500.0 }
+        persistence.close()
+        scheduler.runCurrent()
+        assertEquals(500.0, slots.load(0)?.playTime)
+    }
+
+    @Test
+    fun `coming back writes the held clock once and then the farm is quiet again`() {
+        startPlaying()
+        persistence.pause()
+        scheduler.runCurrent()
+        scheduler.advance(20_000)
+        val writes = files.gameWrites
+
+        persistence.resume()
+        scheduler.runCurrent()
+        scheduler.advance(GamePersistence.SAVE_DEBOUNCE_MS)
+        settle()
+        assertEquals(writes + 1, files.gameWrites)
+        assertEquals(persistence.session.read { it.clockOffset }, slots.load(0)?.clockOffset)
+
+        scheduler.advance(10_000)
+        settle()
+        assertEquals(writes + 1, files.gameWrites)
+    }
+
+    @Test
+    fun `a save damaged between autosaves is detected at the next write and kept`() {
+        startPlaying()
+        Files.writeString(activeFile, "damaged")
+
+        // Nothing is being written, so nothing is at risk yet.
+        scheduler.advance(3_000)
+        settle()
+        assertNull(status.error)
+
+        persistence.session.act { it.state.money = 4_321.0 }
+        scheduler.advance(1_000)
+        settle()
+
+        assertTrue(status.isSaveFailing)
+        assertTrue(persistence.session.isSaveBlocked)
+        assertEquals("damaged", Files.readString(activeFile))
+
+        persistence.pause()
+        scheduler.runCurrent()
+        assertEquals("damaged", Files.readString(activeFile))
+    }
+
+    @Test
+    fun `a failing autosave keeps trying and recovers with no new change to prompt it`() {
+        startPlaying()
+        files.failWrites = true
+        persistence.session.act { it.state.money = 4_321.0 }
+        scheduler.advance(1_000)
+        settle()
+        assertTrue(status.isSaveFailing)
+
+        files.failWrites = false
+        scheduler.advance(1_000)
+        settle()
+
+        assertFalse(status.isSaveFailing)
+        assertNull(status.error)
+        assertEquals(4_321.0, slots.load(0)?.money)
+    }
+
+    @Test
+    fun `a queued save result does not erase why the next farm could not be opened`() {
+        slots.save(GameState(), 0, scheduler.now)
+        Files.writeString(directory.resolve("slot-2.json"), """{"schemaVersion":999,"state":{}}""")
+        start()
+        persistence.resume()
+        scheduler.runCurrent()
+
+        persistence.switchTo(1)
+        scheduler.runCurrent()
+        settle()
+
+        assertFalse(status.isReady)
+        assertEquals("This farm needs a newer version of Stock Farmer. Its save has been kept safe.", status.error)
+    }
+
+    @Test
+    fun `a result still queued from an earlier failure does not stop a farm switch that saved first`() {
+        startPlaying()
+        slots.save(GameState().apply { money = 888.0 }, 1, scheduler.now)
+        files.failWrites = true
+        persistence.pause()
+        scheduler.runCurrent()
+        settle()
+        assertTrue(status.isSaveFailing)
+
+        files.failWrites = false
+        // Both run before the retry's good news is delivered, as it queues behind them.
+        persistence.retry()
+        persistence.switchTo(1)
+        scheduler.runCurrent()
+        settle()
+
+        assertEquals(1, slots.activeSlot)
+        assertEquals(888.0, persistence.session.read { it.money })
+        assertNull(status.error)
+    }
+
+    @Test
+    fun `a farm switch does not leave a farm whose last changes could not be saved`() {
+        startPlaying()
+        slots.save(GameState().apply { money = 888.0 }, 1, scheduler.now)
+        val generation = persistence.session.read { persistence.session.farmGeneration }
+        persistence.session.act { it.state.money = 4_321.0 }
+        files.failWrites = true
+
+        persistence.switchTo(1)
+        scheduler.runCurrent()
+        settle()
+
+        assertTrue(status.isSaveFailing)
+        assertEquals(4_321.0, persistence.session.read { it.money })
+        assertEquals(generation, persistence.session.read { persistence.session.farmGeneration })
+        files.failWrites = false
+        assertEquals(0, slots.activeSlot)
+    }
+
+    @Test
+    fun `a failed change to the saved farms stays up through autosaves without stopping the farm`() {
+        startPlaying()
+        files.manifestWritesLeft = 0
+        persistence.rename(0, "Home") {}
+        scheduler.runCurrent()
+        assertEquals("The farm could not be renamed. Please retry.", status.error)
+        assertFalse(persistence.session.isSaveBlocked, "the tractor and wild growth carry on")
+        assertFalse(status.isSaveBlocked)
+
+        files.manifestWritesLeft = Int.MAX_VALUE
+        persistence.session.act { it.state.money = 4_321.0 }
+        scheduler.advance(2_000)
+        settle()
+        assertEquals(4_321.0, slots.load(0)?.money, "saving went on")
+        assertEquals("The farm could not be renamed. Please retry.", status.error)
+
+        persistence.retry()
+        settle()
+        assertNull(status.error)
+    }
+
+    @Test
+    fun `the next change to the saved farms clears a failure of the last one`() {
+        startPlaying()
+        files.manifestWritesLeft = 0
+        persistence.rename(0, "Home") {}
+        scheduler.runCurrent()
+        assertNotNull(status.error)
+
+        files.manifestWritesLeft = Int.MAX_VALUE
+        persistence.rename(0, "Home") {}
+        scheduler.runCurrent()
+        assertNull(status.error)
+        assertEquals("Home", slots.slots()[0]?.name)
+    }
+
+    @Test
+    fun `each change to the saved farms says what failed, as on iOS`() {
+        startPlaying()
+        slots.save(GameState().apply { money = 888.0 }, 1, scheduler.now)
+        slots.save(GameState().apply { money = 889.0 }, 1, scheduler.now)
+        val backup = slots.backups(1).first()
+
+        files.manifestWritesLeft = 0
+        persistence.delete(1) {}
+        scheduler.runCurrent()
+        assertEquals("The farm could not be deleted. Please retry.", status.error)
+
+        files.manifestWritesLeft = 0
+        persistence.restoreSaved(backup) {}
+        scheduler.runCurrent()
+        assertEquals("The backup could not be restored. Please retry.", status.error)
+
+        // These two save the farm being left first, which is allowed through.
+        files.manifestWritesLeft = 1
+        persistence.startNew(2, "New")
+        scheduler.runCurrent()
+        assertEquals("The new farm could not be saved. Please retry.", status.error)
+
+        files.manifestWritesLeft = 1
+        persistence.switchTo(1)
+        scheduler.runCurrent()
+        assertEquals(
+            "This farm could not be opened. Its save has been kept safe. Retry, or choose another farm.",
+            status.error,
+        )
+        assertTrue(status.isReady, "the farm being played stays in play")
+    }
+
+    @Test
+    fun `saving clears only its own failure and a failing save is what the player hears about first`() {
+        startPlaying()
+        files.manifestWritesLeft = 0
+        persistence.rename(0, "Home") {}
+        scheduler.runCurrent()
+        val renameFailure = status.error
+
+        files.manifestWritesLeft = Int.MAX_VALUE
+        files.failWrites = true
+        persistence.session.act { it.state.money = 4_321.0 }
+        scheduler.advance(1_000)
+        settle()
+        assertEquals("Your latest changes could not be saved. Please retry before leaving this farm.", status.error)
+        assertTrue(persistence.session.isSaveBlocked)
+
+        files.failWrites = false
+        scheduler.advance(1_000)
+        settle()
+        assertEquals(renameFailure, status.error)
+        assertFalse(persistence.session.isSaveBlocked)
+    }
+
+    @Test
+    fun `a failed load keeps its message through a failed change made from the failure screen`() {
+        Files.writeString(activeFile, "corrupt")
+        start()
+        val loadFailure = status.error
+        assertNotNull(loadFailure)
+        files.manifestWritesLeft = 0
+        persistence.switchTo(1)
+        scheduler.runCurrent()
+        assertEquals(
+            "This farm could not be opened. Its save has been kept safe. Retry, or choose another farm.",
+            status.error,
+        )
+        assertTrue(persistence.session.isSaveBlocked)
+
+        files.manifestWritesLeft = Int.MAX_VALUE
+        persistence.rename(0, "Home") {}
+        scheduler.runCurrent()
+        assertEquals(loadFailure, status.error)
+    }
+
+    @Test
+    fun `opening another farm drops what was under way on the last one, however quickly it loads`() {
+        val house = GridPoint(10, 10)
+        val tree = GridPoint(24, 24)
+
+        fun farm(money: Double) =
+            GameState().apply {
+                this.money = money
+                pets[house] = Pet(breed = Cat.starter.id, name = "Cat", position = GridPoint(20, 20))
+                plots[tree] = Plot("apple", scheduler.now)
+            }
+        slots.save(farm(1.0), 0, scheduler.now)
+        slots.save(farm(2.0), 1, scheduler.now)
+        start()
+        persistence.resume()
+        scheduler.runCurrent()
+        val session = persistence.session
+        val gestures = session.animalGestures
+        val pet = AnimalRef.Pet(house)
+        gestures.targets = listOf(AnimalHitTarget(pet, 100f, 100f))
+        assertTrue(gestures.interact(pet, AnimalGesture.NUDGE, scheduler.now))
+        session.act { gestures.advance(it, scheduler.now) }
+        assertTrue(gestures.isNudging(pet))
+        assertTrue(gestures.interact(pet, AnimalGesture.PET, scheduler.now))
+        session.act {
+            it.beginMovingFruitTree(tree)
+            assertNotNull(it.fruitPlacement)
+        }
+        val generation = session.read { session.farmGeneration }
+
+        persistence.switchTo(1)
+        scheduler.runCurrent()
+
+        assertEquals(2.0, session.read { it.money })
+        assertEquals(generation + 1, session.read { session.farmGeneration })
+        assertFalse(gestures.isNudging(pet))
+        assertTrue(gestures.targets.isEmpty())
+        session.act { gestures.advance(it, scheduler.now.plusSeconds(5)) }
+        assertEquals(GridPoint(20, 20), session.read { it.pets[house]?.position }, "a pet at the same house stays put")
+        assertTrue(gestures.drainPetting().isEmpty())
+        session.act { assertNull(it.fruitPlacement) }
+    }
+
+    @Test
+    fun `replacing a farm removes its timelapse from the store it was given`() {
+        val store = TimelapseStore(directory.resolve("Timelapse"))
+        val history = UUID(0, 1)
+        slots.save(GameState().apply { timelapse = timelapse.copy(historyID = history) }, 1, scheduler.now)
+        val archive = store.archive(history)
+        store.append(byteArrayOf(1, 2, 3), history, archive.generation, 1, 540, scheduler.now)
+        assertEquals(1, store.archive(history).frames.size)
+        start(store)
+
+        persistence.startNew(1, "New")
+        scheduler.runCurrent()
+
+        assertTrue(store.archive(history).frames.isEmpty())
+    }
+
     private class TestSaveFiles : SaveFileSystem by LocalSaveFileSystem() {
         private val local = LocalSaveFileSystem()
-        var failWrites = false
+
+        @Volatile var failWrites = false
+
+        /** Lets this many more manifests be written, then refuses them. */
+        @Volatile var manifestWritesLeft = Int.MAX_VALUE
 
         @Volatile var blockReads = false
+
+        @Volatile var allWrites = 0
 
         @Volatile var gameWrites = 0
         val entered = CountDownLatch(1)
@@ -355,7 +771,7 @@ class GamePersistenceTest {
         override fun read(url: Path): ByteArray? {
             if (blockReads && url.fileName.toString() == "slot-1.json") {
                 entered.countDown()
-                check(release.await(5, TimeUnit.SECONDS))
+                check(release.await(WAIT_SECONDS, TimeUnit.SECONDS))
             }
             return local.read(url)
         }
@@ -365,7 +781,12 @@ class GamePersistenceTest {
             to: Path,
         ) {
             if (failWrites) throw IOException("Disk full")
+            if (to.fileName.toString() == "slots.json") {
+                if (manifestWritesLeft <= 0) throw IOException("Disk full")
+                if (manifestWritesLeft != Int.MAX_VALUE) manifestWritesLeft--
+            }
             local.write(data, to)
+            allWrites++
             if (to.fileName.toString() == "slot-1.json") gameWrites++
             if (blockReads && to.fileName.toString() == "slots.json") written.countDown()
             if (to.fileName.toString() == "slots.json") saved.release()

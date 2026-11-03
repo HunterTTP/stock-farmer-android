@@ -1,3 +1,9 @@
+## 2026-11-02
+- Your farm is safer if the battery dies mid-game, and a farm where nothing is happening no longer writes to storage every second.
+- If renaming, deleting or restoring a farm fails, the message now stays up and says what went wrong, and the reason a farm
+  could not be opened no longer disappears.
+- Switching farms no longer carries a day summary, an animal's walk or a half-placed building over to the next farm.
+
 ## 2026-11-01
 - The money and level panels no longer sit right against the top of the screen on some phones and tablets; there is
   always a comfortable gap under the status bar or camera cutout.

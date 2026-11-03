@@ -445,7 +445,13 @@ class GameState {
     }
 
     /** An independent copy, so a preview that changes it leaves this farm alone. */
-    fun copy(): GameState =
+    fun copy(): GameState = saveSnapshot().also { it.reindex() }
+
+    /**
+     * An independent copy for writing to disk. It skips the derived indexes, all of them `@Transient` and so unseen by the
+     * encoder, which makes it cheaper under the game's lock. No rule may run on it: they would find nothing on any tile.
+     */
+    fun saveSnapshot(): GameState =
         GameState().also { copy ->
             copy.money = money
             copy.mode = mode
@@ -518,7 +524,6 @@ class GameState {
             copy.completedMarketQuests = completedMarketQuests
             copy.toolLevels = toolLevels.toMutableMap()
             copy.career = career.copy()
-            copy.reindex()
         }
 
     companion object {

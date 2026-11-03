@@ -46,9 +46,10 @@ class GameTick(
     private var lastPlayTick: Instant? = null
     private var petDwell = emptyMap<GridPoint, Double>()
     private var pendingSummary: Pair<DaySummary, Instant>? = null
+    private var farmGeneration = session.read { session.farmGeneration }
 
-    /** Forgets the running clocks and any day summary still to come, as when another farm is opened. */
-    fun reset() {
+    /** Forgets the running clocks and any day summary still to come, as another farm has been opened. */
+    private fun forgetFarm() {
         lastTend = null
         lastPlayTick = null
         petDwell = emptyMap()
@@ -62,6 +63,10 @@ class GameTick(
      */
     fun tick(now: Instant = Instant.now()): List<GameEvent> =
         session.act { engine ->
+            if (farmGeneration != session.farmGeneration) {
+                farmGeneration = session.farmGeneration
+                forgetFarm()
+            }
             if (!session.isActive || session.isTimelapseViewerOpen) {
                 lastTend = null
                 lastPlayTick = null
