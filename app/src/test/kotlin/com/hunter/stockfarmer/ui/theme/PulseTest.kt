@@ -14,6 +14,16 @@ internal class PulseTest {
     }
 
     @Test
+    fun swellAtFollowsTheFrameClockAndHoldsStillWhenMotionIsReduced() {
+        assertEquals(0f, Pulse.swellAt(0L, reduceMotion = false), 1e-6f)
+        val halfPeriodNanos = (Pulse.PERIOD_SECONDS / 2 * 1e9).toLong()
+        assertEquals(1f, Pulse.swellAt(halfPeriodNanos, reduceMotion = false), 1e-6f)
+        assertEquals(Pulse.swell(0.37).toFloat(), Pulse.swellAt(370_000_000L, reduceMotion = false), 1e-6f)
+        assertEquals(0.5f, Pulse.swellAt(0L, reduceMotion = true), 1e-6f)
+        assertEquals(0.5f, Pulse.swellAt(halfPeriodNanos, reduceMotion = true), 1e-6f)
+    }
+
+    @Test
     fun scaleSwellsUnlessMotionIsReduced() {
         assertEquals(1.05f, Pulse.scale(1f, reduceMotion = false), 1e-6f)
         assertEquals(1f, Pulse.scale(1f, reduceMotion = true), 1e-6f)

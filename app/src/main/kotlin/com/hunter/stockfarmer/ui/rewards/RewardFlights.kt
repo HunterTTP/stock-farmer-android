@@ -16,6 +16,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
@@ -61,8 +62,20 @@ import kotlinx.coroutines.launch
 class RewardFlightsState internal constructor() {
     val tracker = RewardFlightTracker()
     internal val frames = mutableStateMapOf<HUDTarget, Rect>()
+
+    /** Read in composition; moves when the flights, tally, held totals or pulses change, never for time passing alone. */
     internal var revision by mutableIntStateOf(0)
-    internal var now by mutableStateOf(0.0)
+
+    /** The flight clock. Read only inside draw and layer lambdas, so a frame invalidates those and recomposes nothing. */
+    internal var now by mutableDoubleStateOf(0.0)
+    private var syncedVersion = tracker.version
+
+    /** Moves [revision] if the tracker changed what is shown since the last call. */
+    internal fun sync() {
+        if (tracker.version == syncedVersion) return
+        syncedVersion = tracker.version
+        revision++
+    }
 
     fun displayedMoney(money: Double): Double {
         revision
@@ -76,7 +89,7 @@ class RewardFlightsState internal constructor() {
 
     fun clear() {
         tracker.clear()
-        revision++
+        sync()
     }
 }
 
@@ -147,7 +160,7 @@ fun RewardFlights(
                     }
                 }
                 state.now = now
-                state.revision++
+                state.sync()
             }
         }
         snapshotFlow {
@@ -159,7 +172,7 @@ fun RewardFlights(
                     withFrameNanos {
                         state.now = System.nanoTime() / 1_000_000_000.0
                         state.tracker.tick(state.now)
-                        state.revision++
+                        state.sync()
                     }
                 }
             }
@@ -206,13 +219,17 @@ fun RewardFlights(
                         )
                     }
                 if (flight.route != RewardRoute.Direct || target != null) {
-                    val pose = flight.pose(state.now, tallyPoint, bannerPoint, target)
+                    // The pose follows the clock, which only the layer blocks read: a frame moves the label without recomposing.
                     Box(
-                        Modifier.at(pose.position, density).graphicsLayer {
-                            alpha = pose.alpha
-                            scaleX = pose.scale
-                            scaleY = pose.scale
-                        },
+                        Modifier
+                            .graphicsLayer {
+                                val pose = flight.pose(state.now, tallyPoint, bannerPoint, target)
+                                translationX = (pose.position.x * density).toFloat() - size.width / 2
+                                translationY = (pose.position.y * density).toFloat() - size.height / 2
+                                alpha = pose.alpha
+                                scaleX = pose.scale
+                                scaleY = pose.scale
+                            },
                     ) { RewardLabel(flight.kind, images) }
                 }
             }

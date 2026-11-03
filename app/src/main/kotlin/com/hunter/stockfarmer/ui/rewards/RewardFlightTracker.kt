@@ -17,6 +17,13 @@ class RewardFlightTracker {
     var storagePulse = 0
         private set
 
+    /**
+     * Counts every change to what the HUD shows from this tracker: the flights and tally, the held totals and the pulses.
+     * A tick that only moves time leaves it alone, so a screen can recompose on a change and not on every frame.
+     */
+    var version = 0
+        private set
+
     private var heldSpending = 0.0
     private var heldEarnings = 0.0
     private var heldXP = 0
@@ -28,6 +35,7 @@ class RewardFlightTracker {
     fun displayedXP(xp: Int): Int = maxOf(0, xp - heldXP)
 
     fun clear() {
+        version++
         flights = emptyList()
         tally = null
         flushAt = null
@@ -62,6 +70,7 @@ class RewardFlightTracker {
                 flights = flights.filterNot { it.id == landing.id }
                 land(landing)
             } else {
+                version++
                 val finished = tally
                 tally = null
                 flushAt = null
@@ -198,6 +207,7 @@ class RewardFlightTracker {
         source: HarvestSource,
         now: Double,
     ) {
+        version++
         tally = (tally ?: HarvestTally()).add(kind, source)
         flushAt = now + 0.9
     }
@@ -211,10 +221,12 @@ class RewardFlightTracker {
         source: HarvestSource? = null,
         startsAtBanner: Boolean = false,
     ) {
+        version++
         flights = flights + RewardFlight(nextID++, kind, start, now, startsAtBanner, delay, route, source)
     }
 
     private fun land(flight: RewardFlight) {
+        version++
         if (flight.route == RewardRoute.ToTally && flight.source != null) {
             addToTally(flight.kind, flight.source, flight.landingAt)
             return

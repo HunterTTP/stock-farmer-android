@@ -5,14 +5,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.ClipOp
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
@@ -21,6 +18,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -44,6 +42,12 @@ object Pulse {
 
     /** 0 to 1 and back once a period. */
     fun swell(seconds: Double): Double = (1 - cos(seconds * 2 * PI / PERIOD_SECONDS)) / 2
+
+    /** The swell at a frame clock reading in nanoseconds; under Reduce Motion it holds at half swell. */
+    fun swellAt(
+        nanos: Long,
+        reduceMotion: Boolean,
+    ): Float = (if (reduceMotion) REDUCED_MOTION_SWELL else swell(nanos / 1e9)).toFloat()
 
     /** The scale of the swell; a view under Reduce Motion does not scale. */
     fun scale(
@@ -123,20 +127,20 @@ fun Modifier.pulsing(
 ): Modifier {
     if (!keepsPlace && !isOn) return this
     val reduceMotion = rememberReduceMotion()
-    var nanos by remember { mutableLongStateOf(0L) }
+    val nanos = remember { mutableLongStateOf(0L) }
     LaunchedEffect(isOn, reduceMotion) {
-        if (isOn && !reduceMotion) while (true) withFrameNanos { nanos = it }
+        if (isOn && !reduceMotion) while (true) withFrameNanos { nanos.longValue = it }
     }
-    val swell =
-        when {
-            !isOn -> 0.0
-            reduceMotion -> Pulse.REDUCED_MOTION_SWELL
-            else -> Pulse.swell(nanos / 1e9)
-        }.toFloat()
-    if (swell == 0f) return this
+    if (!isOn) return this
+    // The clock is read only in the draw and layer blocks, so a frame redraws this view and recomposes nothing.
+    val swell = { Pulse.swellAt(nanos.longValue, reduceMotion) }
     return this
-        .pulseGlow(shape, inside) { swell }
-        .scale(Pulse.scale(swell, reduceMotion, inside))
+        .pulseGlow(shape, inside, swell)
+        .graphicsLayer {
+            val scale = Pulse.scale(swell(), reduceMotion, inside)
+            scaleX = scale
+            scaleY = scale
+        }
 }
 
 /** Highlights targets during the first-time tutorial walk through. */
