@@ -4,9 +4,10 @@
 Stock Farmer has an iOS repo and an Android remake. Each commit carries
 `Port:`, `Port-Size:` and `Port-Note:` trailers; a commit that ports one
 from the other repo carries `Ported-From: ios@<sha>` or `android@<sha>`.
-This repo's docs/SYNC.md names the other repo's watermark
-(`iOS synced through: <sha>` or `Android synced through: <sha>`) and both
-repos' docs/SYNC.md hold legacy tables for commits made before trailers.
+The shared ../stock-farm-research/porting/SYNC.md, next to both repos, names
+each side's watermark (`iOS synced through: <sha>` for what Android has
+ported, `Android synced through: <sha>` for what iOS has ported) and holds
+the legacy tables for commits made before trailers.
 
 The two copies of this script (stock-farmer-ios and stock-farmer-android)
 must stay identical; change them together.
@@ -35,7 +36,7 @@ AGENT_BY_SIZE = {
 }
 UNCLASSIFIED = "unclassified"
 FIELD, RECORD, VALUES = "\x1f", "\x1e", "\x1d"
-WATERMARK = re.compile(r"^(iOS|Android) synced through:\s*`?([0-9a-fA-F]{7,40})`?", re.MULTILINE)
+SYNC_PATH = Path("stock-farm-research", "porting", "SYNC.md")  # relative to the folder holding both repos
 LEGACY_ROW = re.compile(r"^\|\s*`?(ios|android)@([0-9a-fA-F]{7,40})`?\s*\|(.*)\|\s*$", re.MULTILINE)
 
 
@@ -69,16 +70,31 @@ def git_ok(repo, *args):
 
 
 def read_sync(repo):
-    path = Path(repo) / "docs" / "SYNC.md"
-    return path.read_text(encoding="utf-8") if path.exists() else ""
+    """The shared porting file: ../stock-farm-research/porting/SYNC.md from the repo root."""
+    path = Path(repo).resolve().parent / SYNC_PATH
+    if not path.parent.is_dir():
+        raise SystemExit(f"{path.parent} is missing: the porting watermarks and tables live there, next to both repos")
+    if not path.is_file():
+        raise SystemExit(f"{path} is missing")
+    return path.read_text(encoding="utf-8")
 
 
-def watermark(sync_text):
-    """Returns (other repo name, sha) from this repo's SYNC.md."""
-    match = WATERMARK.search(sync_text)
+def platform(repo):
+    """Which repo this is: the Android one builds with Gradle, the iOS one holds the StockFarmer Swift package."""
+    if (Path(repo) / "settings.gradle.kts").is_file():
+        return "android"
+    if (Path(repo) / "StockFarmer").is_dir():
+        return "ios"
+    raise SystemExit(f"{repo} is neither stock-farmer-ios nor stock-farmer-android")
+
+
+def watermark(sync_text, source):
+    """The newest `source` commit this repo has fully ported, from the shared SYNC.md."""
+    name = REPO_NAMES[source]
+    match = re.search(rf"^{name} synced through:\s*`?([0-9a-fA-F]{{7,40}})`?", sync_text, re.MULTILINE)
     if not match:
-        raise SystemExit("docs/SYNC.md has no 'iOS synced through:' or 'Android synced through:' line")
-    return match.group(1).lower(), match.group(2)
+        raise SystemExit(f"{SYNC_PATH.as_posix()} has no '{name} synced through:' line")
+    return match.group(1)
 
 
 def legacy_rows(sync_texts, source):
@@ -135,11 +151,11 @@ def is_credited(sha, prefixes):
 
 def backlog(this_repo, other_repo, since=None):
     """Returns (source name, since, ref, items to port)."""
-    this_sync = read_sync(this_repo)
-    source, mark = watermark(this_sync)
-    since = since or mark
+    sync = read_sync(this_repo)
+    source = "ios" if platform(this_repo) == "android" else "android"
+    since = since or watermark(sync, source)
     ref = main_ref(other_repo)
-    legacy = legacy_rows([this_sync, read_sync(other_repo)], source)
+    legacy = legacy_rows([sync], source)
     used = set()
 
     def classify(item):
@@ -184,7 +200,7 @@ def render(source, since, ref, items):
 def run(argv):
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("--from", dest="other", help="path to the other repo")
-    parser.add_argument("--since", help="other repo's sha to start after (default: this repo's docs/SYNC.md watermark)")
+    parser.add_argument("--since", help="other repo's sha to start after (default: its watermark in the shared SYNC.md)")
     parser.add_argument("--repo", default=str(Path(__file__).resolve().parents[1]), help="this repo (default: the script's repo)")
     parser.add_argument("--self-test", action="store_true", help="run the built-in tests")
     args = parser.parse_args(argv)
@@ -217,6 +233,9 @@ def self_test():
         for repo in (ios, android):
             repo.mkdir()
             git(repo, "init", "-q", "-b", "main")
+        (ios / "StockFarmer").mkdir()
+        (ios / "StockFarmer" / "Package.swift").write_text("", encoding="utf-8")
+        (android / "settings.gradle.kts").write_text("", encoding="utf-8")
         base = commit(ios, "Base")
         rules = commit(ios, "Rebalance wheat\n\nWhy.\n\nPort: rules\nPort-Size: M\nPort-Note: port CropEconomyTests first\nCo-Authored-By: X <x@example.com>")
         commit(ios, "Bump the Xcode Cloud script\n\nPort: none\nCo-Authored-By: X <x@example.com>")
@@ -232,15 +251,23 @@ def self_test():
         open_before = commit(ios, "Older squashed change", "older.txt")  # an object, but not before the watermark
         git(ios, "reset", "-q", "--hard", "HEAD~1")
 
-        commit(android, "\n".join([
-            "# Sync", "", f"iOS synced through: {base[:7]}", "",
+        try:
+            backlog(android, ios)
+            missing_folder = ""
+        except SystemExit as error:
+            missing_folder = str(error)
+        sync = Path(root) / SYNC_PATH
+        sync.parent.mkdir(parents=True)
+        sync.write_text("\n".join([
+            "# Sync", "", "## Android to iOS", "", f"Android synced through: {legacy[:7]}", "",
+            "## iOS to Android", "", f"iOS synced through: {base[:7]}", "",
             "| Commit | Date | Subject | Port | Size | Note |", "| --- | --- | --- | --- | --- | --- |",
             f"| ios@{legacy[:9]} | 2026-11-06 | Grey out locked rows | ui | S | grey the whole row |",
             "| ios@0000000 | 2026-11-06 | Hold the loading screen | ui | M | matched by subject |",
             f"| ios@{open_before[:7]} | 2026-11-05 | Older squashed change | rules | L | still open |",
             "| ios@1111111 | 2026-11-05 | Already ported squashed change | rules | S | credited |",
             f"| android@{base[:7]} | 2026-11-06 | Not an iOS row | rules | S | ignored |",
-        ]), "docs/SYNC.md")
+        ]), encoding="utf-8")
         commit(android, f"Port ducks\n\nPort: none\nPorted-From: ios@{ported[:8]}\nPorted-From: ios@1111111\nCo-Authored-By: X <x@example.com>")
 
         source, since, ref, items = backlog(android, ios)
@@ -253,6 +280,7 @@ def self_test():
             if not condition:
                 failures.append(what)
 
+        expect("porting" in missing_folder and "missing" in missing_folder, f"missing porting folder reported: {missing_folder!r}")
         expect((source, since, ref) == ("ios", base[:7], "main"), f"source/since/ref were {source} {since} {ref}")
         found = get(rules)
         expect((found.subject, found.port, found.size, found.note, found.source)

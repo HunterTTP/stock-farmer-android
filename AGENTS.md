@@ -4,7 +4,7 @@ Shared instructions for Claude, Codex and other coding agents. Start with `docs/
 
 ## What this is
 
-An Android remake of the iOS game at `../stock-farmer-ios` (ported from iOS commit `d01e7bb`; [docs/SYNC.md](docs/SYNC.md) records how far it has caught up since). Gameplay, mechanics, balance, visuals and sound match it; the iOS Swift code and its tests are the spec for what the player sees and experiences. Check whether iOS already has a feature before building it, and port it rather than reinventing it. Gameplay changes may start on either side and sync both ways through [docs/SYNC.md](docs/SYNC.md); platform-specific tweaks (Android performance, Gradle, libGDX, Play Store, device setup) stay here and are tagged `Port: none`.
+An Android remake of the iOS game at `../stock-farmer-ios` (ported from iOS commit `d01e7bb`; the shared `../stock-farm-research/porting/SYNC.md` records how far it has caught up since). Gameplay, mechanics, balance, visuals and sound match it; the iOS Swift code and its tests are the spec for what the player sees and experiences. Check whether iOS already has a feature before building it, and port it rather than reinventing it. Gameplay changes may start on either side and sync both ways through that file; platform-specific tweaks (Android performance, Gradle, libGDX, Play Store, device setup) stay here and are tagged `Port: none`.
 
 How Android does it underneath is its own. Rendering, threading, caching, persistence, audio, input and lifecycle may differ from iOS wherever Android's performance and hardware call for it, as long as the player-visible result is the same. Build those parts the modern Android way: current Jetpack and Kotlin practice (coroutines and Flow, Compose state hoisting, lifecycle-aware components, WorkManager, Material guidance for system bars and edge-to-edge), measured performance work, and no iOS idioms carried over for their own sake. Android saves are separate from iOS saves and need no compatibility.
 
@@ -40,7 +40,7 @@ How Android does it underneath is its own. Rendering, threading, caching, persis
 
 ## Syncing with the iOS repo
 
-Gameplay changes flow both ways between this repo and `../stock-farmer-ios`. [docs/SYNC.md](docs/SYNC.md) holds the watermark, the how-to and the table for commits made before these rules. This section is the same in both repos' `AGENTS.md`, apart from the repo names; change both together.
+Gameplay changes flow both ways between this repo and `../stock-farmer-ios`. `../stock-farm-research/porting/SYNC.md`, in the research folder beside both repos that belongs to neither, holds both watermarks, the how-to and the tables for commits made before these rules; `scripts/port-backlog.py` reads it from there. This section is the same in both repos' `AGENTS.md`, apart from the repo names; change both together.
 
 - **Trailers.** Every commit message ends with these lines in its last paragraph, directly above `Co-Authored-By` with no blank line between them (git reads trailers only from the last paragraph, so a blank line hides them from `scripts/port-backlog.py`):
 
@@ -51,7 +51,7 @@ Gameplay changes flow both ways between this repo and `../stock-farmer-ios`. [do
   ```
 
   Leave out `Port-Size` when `Port: none`; `Port-Note` is optional. `none` covers platform-only work. iOS: xtool, Xcode Cloud, versioning and release scripts, SpriteKit/iOS performance tuning, old-save migrations (Android skips those on purpose). Android: Gradle, libGDX, Play Store, ADB/device setup, Android performance work. Both: documentation-only commits.
-- **Ported work.** A commit that ports a change from the other repo adds one `Ported-From: ios@<sha>` or `Ported-From: android@<sha>` line per source commit and uses `Port: none`, so the change never bounces back. Once ported work is merged, move the watermark in `docs/SYNC.md` forward to the newest source commit that is now fully ported.
+- **Ported work.** A commit that ports a change from the other repo adds one `Ported-From: ios@<sha>` or `Ported-From: android@<sha>` line per source commit and uses `Port: none`, so the change never bounces back. Once ported work is merged, move this repo's watermark in that `SYNC.md` forward to the newest source commit that is now fully ported, and commit it in `../stock-farm-research`, which is its own local git repository.
 - **Finding work.** `python scripts/port-backlog.py --from ../stock-farmer-ios` lists the other repo's commits since the watermark that are not `Port: none` and not yet credited by a `Ported-From` here, with size, suggested agent and note; untagged commits come from the legacy tables or show as `unclassified`. `scripts/port-backlog.py` is identical in both repos: change both copies together and run `python scripts/port-backlog.py --self-test`.
 - **Porting contract.** Port a rule change by porting the matching Core tests first; the port is done when the Kotlin tests pass. If both repos changed the same thing differently (the tests disagree), stop and ask the owner rather than overwrite either side.
 
