@@ -65,12 +65,16 @@ class PlaySettings(
     private var gridShownState by mutableStateOf(storage.boolean(GRID_LINES, DEFAULT_SHOWN))
     private var moneyShownState by mutableStateOf(storage.boolean(MONEY_PILL, DEFAULT_SHOWN))
     private var levelShownState by mutableStateOf(storage.boolean(LEVEL_PILL, DEFAULT_SHOWN))
+    private var developerTimeState by mutableStateOf(storage.boolean(DEVELOPER_TIME, false))
     private var reach by mutableStateOf(clampedReach(storage.float(TOOL_REACH, DEFAULT_TOOL_REACH)))
 
     val isGridShown: Boolean get() = gridShownState
     val isMoneyShown: Boolean get() = moneyShownState
     val isLevelShown: Boolean get() = levelShownState
     val toolReach: Float get() = reach
+
+    /** Shows the time presets on the Time sheet; the owner flips it with the hidden taps on the About version line. */
+    val isDeveloperTimeShown: Boolean get() = developerTimeState
 
     fun setGridShown(shown: Boolean) {
         gridShownState = shown
@@ -85,6 +89,11 @@ class PlaySettings(
     fun setLevelShown(shown: Boolean) {
         levelShownState = shown
         storage.putBoolean(LEVEL_PILL, shown)
+    }
+
+    fun setDeveloperTimeShown(shown: Boolean) {
+        developerTimeState = shown
+        storage.putBoolean(DEVELOPER_TIME, shown)
     }
 
     fun setToolReach(points: Float) {
@@ -110,6 +119,7 @@ class PlaySettings(
         private const val LEVEL_PILL = "levelPillShown"
         private const val GRID_LINES = "gridLinesShown"
         private const val TOOL_REACH = "toolReach"
+        private const val DEVELOPER_TIME = "developerTimeControls"
 
         fun clampedReach(points: Float): Float = points.roundToInt().toFloat().coerceIn(0f, MAX_TOOL_REACH)
 

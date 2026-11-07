@@ -23,6 +23,19 @@ class PlaySettingsTest {
     }
 
     @Test
+    fun `developer time controls start off, persist and survive both resets`() {
+        val storage = MemoryStorage()
+        val settings = PlaySettings(storage)
+        assertFalse(settings.isDeveloperTimeShown)
+        settings.setDeveloperTimeShown(true)
+        settings.resetGraphicsDefaults()
+        settings.resetGameplayDefaults()
+        assertTrue(settings.isDeveloperTimeShown)
+        assertEquals(true, storage.values["developerTimeControls"])
+        assertTrue(PlaySettings(storage).isDeveloperTimeShown)
+    }
+
+    @Test
     fun `reach rounds half points upward before persisting the bounded value`() {
         val storage = MemoryStorage()
         val settings = PlaySettings(storage)

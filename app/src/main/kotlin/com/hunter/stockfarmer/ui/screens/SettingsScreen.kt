@@ -25,13 +25,16 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.edit
 import com.hunter.stockfarmer.audio.AudioChannel
 import com.hunter.stockfarmer.audio.SoundCenter
 import com.hunter.stockfarmer.audio.SoundSettings
+import com.hunter.stockfarmer.core.feedback.RepeatedTap
 import com.hunter.stockfarmer.core.feedback.SoundCue
 import com.hunter.stockfarmer.game.GameSession
+import com.hunter.stockfarmer.settings.PlaySettings
 import com.hunter.stockfarmer.ui.hud.ToolRoute
 import com.hunter.stockfarmer.ui.rememberPolledState
 import com.hunter.stockfarmer.ui.theme.HudIcon
@@ -39,6 +42,8 @@ import com.hunter.stockfarmer.ui.theme.HudIcons
 import com.hunter.stockfarmer.ui.theme.HudType
 import com.hunter.stockfarmer.ui.theme.Theme
 import com.hunter.stockfarmer.ui.theme.glassCard
+import java.time.Duration
+import java.time.Instant
 import kotlin.math.roundToInt
 
 interface ScreenAudio {
@@ -137,14 +142,35 @@ fun AboutScreen(
     onClose: () -> Unit,
 ) {
     val uri = LocalUriHandler.current
+    val context = LocalContext.current
+    val play = remember(context) { PlaySettings.of(context) }
+    val version = remember(context) { appVersion(context) }
+    val versionTaps = remember { RepeatedTap(required = VERSION_TAPS, window = VERSION_TAP_WINDOW) }
     SettingsPage("About", session, onClose) {
         ScreenLink("Changelog", HudIcons.listBulletRectangle) { onOpen(ToolRoute.Changelog) }
         ScreenLink("Source Code", HudIcons.codeBrackets, trailing = HudIcons.arrowUpRight) {
             uri.openUri(SOURCE_CODE_URL)
         }
         ScreenLink("Privacy", HudIcons.handRaised) { onOpen(ToolRoute.Privacy) }
+        BasicText(
+            if (play.isDeveloperTimeShown) "Version $version · dev" else "Version $version",
+            Modifier
+                .fillMaxWidth()
+                .padding(top = 8.dp)
+                .clickable(interactionSource = null, indication = null) {
+                    if (versionTaps.register(Instant.now())) play.setDeveloperTimeShown(!play.isDeveloperTimeShown)
+                },
+            style = HudType.footnote.copy(color = Theme.textSecondary, textAlign = TextAlign.Center),
+        )
     }
 }
+
+/** Seven quick taps on the version line flip the time presets on the Time sheet, which the line confirms by ending in "dev". */
+private const val VERSION_TAPS = 7
+private val VERSION_TAP_WINDOW = Duration.ofSeconds(2)
+
+private fun appVersion(context: Context): String =
+    runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }.getOrNull() ?: "?"
 
 /** The page body every settings screen shares: rows 12 apart, as on iOS. */
 @Composable

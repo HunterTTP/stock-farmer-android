@@ -24,6 +24,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -36,6 +37,7 @@ import com.hunter.stockfarmer.core.rules.setTimeOfDay
 import com.hunter.stockfarmer.core.rules.setTimeToMidnight
 import com.hunter.stockfarmer.core.rules.skipNewDayInProgress
 import com.hunter.stockfarmer.game.GameSession
+import com.hunter.stockfarmer.settings.PlaySettings
 import com.hunter.stockfarmer.ui.rememberPolledState
 import com.hunter.stockfarmer.ui.theme.HudSheet
 import com.hunter.stockfarmer.ui.theme.HudType
@@ -126,13 +128,14 @@ object TimeSky {
     }
 }
 
-/** The Time sheet: the clock, the sky, a button for each time of day worth trying and for each season. */
+/** The Time sheet: the clock, the sky, a button for each season and, when developer time controls are on, for each time of day worth trying. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TimeSheet(
     session: GameSession,
     onDismiss: () -> Unit,
 ) {
+    val presetsShown = PlaySettings.of(LocalContext.current).isDeveloperTimeShown
     val now by rememberPolledState(Unit, CLOCK_POLL_MILLIS) { Instant.now() }
     val (minute, day, season) = session.act { Triple(it.minuteOfDay(now), it.state.day, it.state.season) }
     HudSheet(onDismiss) {
@@ -186,17 +189,19 @@ fun TimeSheet(
                         ),
                 )
             }
-            Column(Modifier.categoryCard(false), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                TimePreset.entries.chunked(2).forEach { pair ->
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        pair.forEach { preset ->
-                            TimeButton(
-                                "${preset.symbol} ${preset.title}",
-                                preset.clockText,
-                                false,
-                                Modifier.weight(1f),
-                            ) {
-                                session.setTime(preset)
+            if (presetsShown) {
+                Column(Modifier.categoryCard(false), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    TimePreset.entries.chunked(2).forEach { pair ->
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            pair.forEach { preset ->
+                                TimeButton(
+                                    "${preset.symbol} ${preset.title}",
+                                    preset.clockText,
+                                    false,
+                                    Modifier.weight(1f),
+                                ) {
+                                    session.setTime(preset)
+                                }
                             }
                         }
                     }
