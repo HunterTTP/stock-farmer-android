@@ -10,3 +10,4 @@ captures/
 keystore.properties
 *:Zone.Identifier
 tools/node_modules/
+.claude/
