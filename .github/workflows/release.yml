@@ -37,19 +37,17 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '24'
 
       - name: Validate tag and compute version code
         id: version
         run: echo "code=$(node tools/release.mjs version-code "$TAG")" >> "$GITHUB_OUTPUT"
 
       - name: Test release tooling
-        run: node --test tools/
+        run: node --test tools/*.test.mjs
 
       - name: Gate
-        run: |
-          chmod +x gradlew
-          ./gradlew spotlessCheck :core:test :app:testDebugUnitTest :app:lintDebug
+        run: ./gradlew spotlessCheck :core:test :app:testDebugUnitTest :app:lintDebug
 
       - name: Decode upload keystore
         run: echo "$UPLOAD_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/upload.jks"

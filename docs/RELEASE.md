@@ -23,7 +23,7 @@ Everyday work is committed and pushed to `main`; those pushes ship nothing. A re
    git tag -a "$day-ga-$n" -m "Release to testers" && git push origin "$day-ga-$n"
    ```
 
-3. The workflow rejects a tag not matching `YYYY.M.D-ga-N`, runs `node --test tools/` and the gate (`spotlessCheck`, `:core:test`, `:app:testDebugUnitTest`, `:app:lintDebug`), builds a signed bundle with `:app:bundleRelease -PversionCode=<code>`, and uploads it to the internal testing track (status completed) with the R8 mapping and the notes. The AAB and mapping are also kept as a workflow artifact for 90 days.
+3. The workflow rejects a tag not matching `YYYY.M.D-ga-N`, runs `node --test tools/*.test.mjs` and the gate (`spotlessCheck`, `:core:test`, `:app:testDebugUnitTest`, `:app:lintDebug`), builds a signed bundle with `:app:bundleRelease -PversionCode=<code>`, and uploads it to the internal testing track (status completed) with the R8 mapping and the notes. The AAB and mapping are also kept as a workflow artifact for 90 days.
 4. The build appears in Play within minutes. Testers update from the Play Store.
 
 Testers need a Google account and open the opt-in link once. Internal testing allows up to 100 testers and needs no Google review.
