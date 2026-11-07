@@ -15,13 +15,28 @@ android {
         applicationId = "com.hunter.stockfarmer"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
+        // CI passes the code derived from the release tag; local builds stay at 1.
+        versionCode = providers.gradleProperty("versionCode").map(String::toInt).getOrElse(1)
         versionName = "0.1.0"
         ndk { abiFilters += nativeAbis }
     }
 
+    // Signing only applies when the upload keystore is provided, so local builds and the gate stay unsigned.
+    val uploadKeystore = providers.environmentVariable("STOCKFARMER_UPLOAD_KEYSTORE").orNull
+    signingConfigs {
+        if (uploadKeystore != null) {
+            create("release") {
+                storeFile = file(uploadKeystore)
+                storePassword = providers.environmentVariable("STOCKFARMER_UPLOAD_KEYSTORE_PASSWORD").orNull
+                keyAlias = providers.environmentVariable("STOCKFARMER_UPLOAD_KEY_ALIAS").orNull
+                keyPassword = providers.environmentVariable("STOCKFARMER_UPLOAD_KEY_PASSWORD").orNull
+            }
+        }
+    }
+
     buildTypes {
         release {
+            if (uploadKeystore != null) signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
