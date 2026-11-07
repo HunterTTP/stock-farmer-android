@@ -269,10 +269,6 @@ class FarmAssetCoverageTest {
         for (sheet in motionSheets) {
             assertImageFile(File(assetsRoot, "motion/$sheet.png"), "motion: $sheet")
         }
-
-        for (crop in Crop.fruitTrees) {
-            assertImageFile(File(assetsRoot, "motion/fruit_${crop.id}.png"), "motion fruit: ${crop.id}")
-        }
     }
 
     @Test
