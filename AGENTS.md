@@ -37,6 +37,12 @@ How Android does it underneath is its own. Rendering, threading, caching, persis
 - Use fixed times and a seeded generator in tests. Never rely on wall-clock or system randomness in rules tests.
 - Add a dependency only when the current slice needs it.
 
+## Releases
+
+Pushes to `main` do not build or ship anything. Any tag pushed to GitHub makes `.github/workflows/release.yml` build the app and upload it to the Google Play internal testers (see `docs/RELEASE.md`). Release tags are named `YYYY.M.D-ga-N`: the date without leading zeros and a counter for the day, for example `2026.11.6-ga-1`.
+
+- Only tag when the owner explicitly asks to ship or release to testers; never create, push, move or delete any other tag, since every pushed tag ships. When asked, tag exactly as `docs/RELEASE.md` describes, from a clean `main` that has been pushed.
+
 ## Models and tools
 
 Agents run on the Claude Max plan only. Opus 5.5 at high reasoning is for planning and very complex tasks; Sonnet 5.5 at medium does the rest. Start a fresh session per slice and keep context small.

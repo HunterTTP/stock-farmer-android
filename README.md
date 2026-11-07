@@ -1,6 +1,6 @@
 # Stock Farmer (Android)
 
-A farming game with a live stock market. Kotlin, Jetpack Compose and libGDX. See [AGENTS.md](AGENTS.md) for the workflow and [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) for setup.
+A farming game with a live stock market. Kotlin, Jetpack Compose and libGDX. See [AGENTS.md](AGENTS.md) for the workflow and [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) for setup and [docs/RELEASE.md](docs/RELEASE.md) for releases to testers.
 
 ## Layout
 
