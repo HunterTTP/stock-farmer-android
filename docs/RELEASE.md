@@ -6,7 +6,7 @@ Testers get the app from the Google Play **internal testing** track. A productio
 
 - `versionName` is maintained by hand in `app/build.gradle.kts` (currently `0.1.0`). Bump it for a new release.
 - `versionCode` comes from the tag: `node tools/release.mjs version-code 2026.11.6-ga-1` prints `2026110601`. The build gets it as `-PversionCode=<code>`. Play accepts each versionCode only once.
-- Release notes ("what's new") come from `app/src/main/assets/information/Changelog.md`. `node tools/release.mjs notes` writes the lines added since the previous release tag (falling back to the newest day), cut at Play's 500-character limit.
+- Release notes ("what's new") come from `app/src/main/assets/information/Changelog.md`. `node tools/release.mjs notes <tag> <file>` writes the entries added since the previous release tag (falling back to the newest day), cut at Play's 500-character limit.
 - Signing: Play App Signing holds the app key. The build signs with an upload keystore that lives outside Git, read from `STOCKFARMER_UPLOAD_KEYSTORE` (path), `STOCKFARMER_UPLOAD_KEYSTORE_PASSWORD`, `STOCKFARMER_UPLOAD_KEY_ALIAS` and `STOCKFARMER_UPLOAD_KEY_PASSWORD`. With them unset the build is unsigned.
 
 ## Change to tester
