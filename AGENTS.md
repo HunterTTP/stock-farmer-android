@@ -41,7 +41,7 @@ How Android does it underneath is its own. Rendering, threading, caching, persis
 
 Gameplay changes flow both ways between this repo and `../stock-farmer-ios`. [docs/SYNC.md](docs/SYNC.md) holds the watermark, the how-to and the table for commits made before these rules. This section is the same in both repos' `AGENTS.md`, apart from the repo names; change both together.
 
-- **Trailers.** Every commit message ends, just before `Co-Authored-By`, with:
+- **Trailers.** Every commit message ends with these lines in its last paragraph, directly above `Co-Authored-By` with no blank line between them (git reads trailers only from the last paragraph, so a blank line hides them from `scripts/port-backlog.py`):
 
   ```
   Port: rules | ui | assets | none

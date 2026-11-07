@@ -2,7 +2,7 @@
 
 The iOS game at `../stock-farmer-ios` and this remake port gameplay changes to each other. The rules (commit trailers, `Ported-From`, the size-to-agent table and the porting contract) are in [AGENTS.md](../AGENTS.md), under Syncing with the iOS repo.
 
-iOS synced through: 5279b68
+iOS synced through: 94c2765
 
 This repo has everything iOS had up to and including that iOS commit, except the open rows below that sit before it. Move it forward only when ported work is merged here.
 
@@ -43,9 +43,13 @@ Commits still in flight on iOS when this table was written (item description sta
 | ios@cb75089 | 2026-11-06 | Ask about notifications after the planting drag ends, not in the middle of it | none | | Started on Android (dfbd6e6) |
 | ios@262b8ab | 2026-11-06 | Stop saving a quiet farm with ponds or animal buildings every second | none | | Started on Android (74123d9) |
 | ios@da3bb70 | 2026-11-06 | Rebalance audio around Master, Music, Effects and Ambience buses | rules | L | Port SoundMixTests and SoundCueTests first: Master bus, sliders in dB over 40 dB, one limiter per bus, music at -30 LUFS ducking 6 dB under fanfares, rain -10 dB; convert the re-mastered clips; skip SoundSettingsMigration |
-| ios@6d8a184 | 2026-11-06 | Hide the Time sheet presets behind a version-tap unlock | ui | M | Port RepeatedTapTests first; Time sheet shows only seasons, 7 taps on the About version line toggle a device-wide developer time controls preference |
+| ios@6d8a184 | 2026-11-06 | Hide the Time sheet presets behind a version-tap unlock | none | | Ported as bdb1fa5 (its Ported-From trailer sat after a blank line, so git did not read it) |
 | ios@b91cbe8 | 2026-11-06 | Remove the night-hours line from the Time sheet | ui | S | Delete the night-hours text from TimeSheet |
 | ios@43798fe | 2026-11-06 | Grey out the whole row of locked items, name included | ui | S | Dim a locked choice row's name too, not only when unaffordable or at its limit (ChoiceList) |
 | ios@8760285 | 2026-11-06 | Hold the loading screen until the audio is ready | ui | M | Launch overlay waits for effect clips loaded, the rain loop opened and the season's first music track prepared; a clip that fails is logged and skipped |
 | ios@bfa8f5f | 2026-11-06 | Balance the effect trims and lower the Music, Effects and Ambience buses | rules | M | After da3bb70: port SoundCueTests trims (shared -8, fanfares -4, drag-repeated cues 3 dB lower) and SoundMixTests (100% = -8/-10/-12 dB for Music/Effects/Ambience) |
 | ios@353b261 | 2026-11-06 | Set the app version from the release tag in Xcode Cloud | none | | iOS release tooling |
+| ios@7e196d7 | 2026-11-06 | Open the Level-Up screen only once a tool drag ends | ui | S | Hold the level-up screen while a tool drag is active; show it on drag end (trailers sat after a blank line) |
+| ios@9488328 | 2026-11-06 | Describe a level-up as cards of rows with pictures and stats | rules | M | Port LevelUpNoticeTests first, then LevelUpNotice as a Kotlin core model built from LevelUnlocks (trailers sat after a blank line) |
+| ios@7a6ad97 | 2026-11-06 | Show a level-up as a LEVEL UP headline, then its details under it | ui | M | After 9488328: rebuild NoticeScreens.LevelUpScreen as headline-then-details with the 1.5 s delay (trailers sat after a blank line) |
+| ios@1f589c6 | 2026-11-06 | Fold the finger-lift line into today's Level-Up changelog entry | none | | iOS changelog wording only |
