@@ -36,6 +36,7 @@ How Android does it underneath is its own. Rendering, threading, caching, persis
 - `GameState` is a mutable object owned by one `GameEngine`; `GameState.copy()` is a deep copy, so a preview runs on `engine.copy()` and never touches the real farm. Value types inside it (plots, animals, buildings) are immutable data classes. Maps that feed derived indexes (buildings, trees, decorations) change only through `GameState`'s put and remove methods.
 - Use fixed times and a seeded generator in tests. Never rely on wall-clock or system randomness in rules tests.
 - Add a dependency only when the current slice needs it.
+- Unused assets (pictures, sounds, reference art) do not stay in the repo: move them to `../stock-farm-research/assets/android/<path in this repo>`, so they can be restored, and delete broken ones (corrupt or mis-cut).
 
 ## Syncing with the iOS repo
 

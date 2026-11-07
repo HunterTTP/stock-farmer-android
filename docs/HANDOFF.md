@@ -40,7 +40,7 @@ $env:JAVA_HOME = "C:\Program Files\Eclipse Adoptium\jdk-25.0.4.7-hotspot"
 ## Remaining steps (owned by the user)
 
 1. Physical phone and tablet pass with sound: the changes above, plus every new cue (Storage sale, panels, popups, photo saved, cancel), which no emulator run could hear.
-2. Decided by the user: the game stays fullscreen with the Activity as sole owner of the system bars; Release keeps no confirmation, as on iOS (a quick second tap on an animal releases it); the 274 unreferenced sound effects and other unused art (about 5 MB) stay in the APK.
+2. Decided by the user: the game stays fullscreen with the Activity as sole owner of the system bars; Release keeps no confirmation, as on iOS (a quick second tap on an animal releases it). The 274 unreferenced sound effects and 51 unused pictures were moved out of the APK to `../stock-farm-research/assets/android` on 2026-11-07, and the mis-cut `motion/fruit_*.png` strips deleted; `Effects/Toggles/toggle_off.ogg` stays for the iOS toggle-off cue, not yet ported.
 
 ## Standing rules
 
