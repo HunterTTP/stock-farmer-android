@@ -132,12 +132,20 @@ class SoundCueTest {
 
     @Test
     fun `the trims set the mix`() {
-        assertEquals(0.0, SoundCue.levelUp.trimDB)
-        assertEquals(-4.0, SoundCue.cowMoo.trimDB)
-        assertEquals(-5.0, SoundCue.plant.trimDB)
-        assertEquals(-5.0, SoundCue.sell.trimDB)
+        assertEquals(-4.0, SoundCue.levelUp.trimDB)
+        assertEquals(-8.0, SoundCue.cowMoo.trimDB)
+        assertEquals(-8.0, SoundCue.plant.trimDB)
+        assertEquals(-11.0, SoundCue.sell.trimDB)
         assertEquals(-10.0, SoundCue.birdChirp.trimDB)
-        assertEquals(-10.0, SoundCue.openPanel.trimDB)
+        assertEquals(-8.0, SoundCue.openPanel.trimDB)
+        assertEquals(-4.0, SoundCue.locked.trimDB)
+    }
+
+    @Test
+    fun `harvesting is no louder than a menu even when a drag repeats it`() {
+        val ringingOverItselfDB = 3.0
+        assertTrue(SoundCue.sell.trimDB + ringingOverItselfDB <= SoundCue.openPanel.trimDB)
+        assertEquals(SoundCue.openPanel.trimDB, SoundCue.selectItem.trimDB)
     }
 
     @Test

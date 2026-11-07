@@ -11,11 +11,13 @@ import com.hunter.stockfarmer.core.feedback.SoundMix
  */
 enum class AudioChannel(
     val preferenceKey: String,
+    /** How loud the channel plays with its slider at 100%, in decibels. */
+    val fullDB: Double,
 ) {
-    master("masterVolume"),
-    music("musicVolume"),
-    effects("effectsVolume"),
-    ambience("ambienceVolume"),
+    master("masterVolume", 0.0),
+    music("musicVolume", SoundMix.musicFullDB),
+    effects("effectsVolume", SoundMix.effectsFullDB),
+    ambience("ambienceVolume", SoundMix.ambienceFullDB),
     ;
 
     companion object {
@@ -41,7 +43,7 @@ data class SoundSettings private constructor(
     operator fun get(channel: AudioChannel): Double = levels.getValue(channel)
 
     /** The share of full volume the channel's slider leaves, evenly in decibels along the slider. */
-    fun gain(channel: AudioChannel): Double = SoundMix.gain(forSlider = this[channel])
+    fun gain(channel: AudioChannel): Double = SoundMix.gain(forSlider = this[channel], fullDB = channel.fullDB)
 
     /** The share of full volume the channel plays at once the master is applied. */
     fun mixedGain(channel: AudioChannel): Double =

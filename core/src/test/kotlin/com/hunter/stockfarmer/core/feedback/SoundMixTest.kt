@@ -20,6 +20,31 @@ class SoundMixTest {
     }
 
     @Test
+    fun `each bus at full plays what its slider used to give part way`() {
+        assertEquals(
+            SoundMix.gain(forSlider = 0.8),
+            SoundMix.gain(forSlider = 1.0, fullDB = SoundMix.musicFullDB),
+            1e-12,
+        )
+        assertEquals(
+            SoundMix.gain(forSlider = 0.75),
+            SoundMix.gain(forSlider = 1.0, fullDB = SoundMix.effectsFullDB),
+            1e-12,
+        )
+        assertEquals(
+            SoundMix.gain(forSlider = 0.7),
+            SoundMix.gain(forSlider = 1.0, fullDB = SoundMix.ambienceFullDB),
+            1e-12,
+        )
+    }
+
+    @Test
+    fun `a bus slider scales down evenly from its full level`() {
+        assertEquals(10.0.pow(-30.0 / 20), SoundMix.gain(forSlider = 0.5, fullDB = -10.0), 1e-12)
+        assertEquals(0.0, SoundMix.gain(forSlider = 0.0, fullDB = -10.0))
+    }
+
+    @Test
     fun `the duck and the rain are in decibels`() {
         assertEquals(10.0.pow(-6.0 / 20), SoundMix.musicDuckGain, 1e-12)
         assertEquals(10.0.pow(-10.0 / 20), SoundMix.rainTrimGain, 1e-12)

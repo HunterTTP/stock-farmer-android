@@ -65,6 +65,14 @@ class SoundPlaybackTest {
         assertEquals(1.0, settings.withLevel(AudioChannel.ambience, Double.NaN)[AudioChannel.ambience])
     }
 
+    @Test fun `music effects and ambience at full sit 8, 10 and 12 dB down, the master at full`() {
+        val full = SoundSettings()
+        assertEquals(SoundMix.gain(forSlider = 1.0, fullDB = -8.0), full.gain(AudioChannel.music), 1e-12)
+        assertEquals(SoundMix.gain(forSlider = 1.0, fullDB = -10.0), full.gain(AudioChannel.effects), 1e-12)
+        assertEquals(SoundMix.gain(forSlider = 1.0, fullDB = -12.0), full.gain(AudioChannel.ambience), 1e-12)
+        assertEquals(1.0, full.gain(AudioChannel.master))
+    }
+
     @Test fun `every kind of sound but the ambience is an effect`() {
         for (category in SoundCategory.entries) {
             val channel = if (category == SoundCategory.ambience) AudioChannel.ambience else AudioChannel.effects
@@ -74,13 +82,10 @@ class SoundPlaybackTest {
 
     @Test fun `a slider is in decibels and every channel follows the master`() {
         val settings = SoundSettings().withLevel(AudioChannel.effects, 0.5).withLevel(AudioChannel.master, 0.75)
-        assertEquals(SoundMix.gain(forSlider = 0.5), settings.gain(AudioChannel.effects))
+        val effects = SoundMix.gain(forSlider = 0.5, fullDB = SoundMix.effectsFullDB)
+        assertEquals(effects, settings.gain(AudioChannel.effects))
         assertEquals(SoundMix.gain(forSlider = 0.75), settings.mixedGain(AudioChannel.master))
-        assertEquals(
-            SoundMix.gain(forSlider = 0.5) * SoundMix.gain(forSlider = 0.75),
-            settings.mixedGain(AudioChannel.effects),
-            1e-12,
-        )
+        assertEquals(effects * SoundMix.gain(forSlider = 0.75), settings.mixedGain(AudioChannel.effects), 1e-12)
         val silent = settings.withLevel(AudioChannel.master, 0.0)
         assertTrue(AudioChannel.entries.none(silent::isAudible))
         assertTrue(AudioChannel.entries.all(SoundSettings()::isAudible))
@@ -88,11 +93,12 @@ class SoundPlaybackTest {
 
     @Test fun `only animals fall off but every placed cue pans`() {
         val placement = SoundPlacement(1.0, 200.0, 0.0, 400.0, 800.0)
+        val effects = SoundSettings().mixedGain(AudioChannel.effects)
         val animals = StereoVolume.forCue(SoundCue.cowMoo, placement, SoundSettings())!!
-        assertEquals(0.4 * SoundCue.cowMoo.trimGain, animals.right.toDouble(), 0.000001)
-        assertEquals(0.16 * SoundCue.cowMoo.trimGain, animals.left.toDouble(), 0.000001)
+        assertEquals(0.4 * SoundCue.cowMoo.trimGain * effects, animals.right.toDouble(), 0.000001)
+        assertEquals(0.16 * SoundCue.cowMoo.trimGain * effects, animals.left.toDouble(), 0.000001)
         val farm = StereoVolume.forCue(SoundCue.plant, placement, SoundSettings())!!
-        assertEquals(SoundCue.plant.trimGain, farm.right.toDouble(), 0.000001)
+        assertEquals(SoundCue.plant.trimGain * effects, farm.right.toDouble(), 0.000001)
         assertEquals(farm.right * 0.4, farm.left.toDouble(), 0.000001)
         val left = StereoVolume.forCue(SoundCue.cowMoo, placement.copy(pan = -0.6), SoundSettings())!!
         assertEquals(animals.left, left.right)
@@ -100,12 +106,13 @@ class SoundPlaybackTest {
     }
 
     @Test fun `a distant animal is dropped once its trim, distance and sliders leave it inaudible`() {
-        // The cow's trim leaves 63% of full volume, so a distance gain of 3.2% is just over the 2% worth a voice.
-        assertEquals(null, StereoVolume.forCue(SoundCue.cowMoo, SoundPlacement(0.031, 0.0, false), SoundSettings()))
-        assertTrue(StereoVolume.forCue(SoundCue.cowMoo, SoundPlacement(0.032, 0.0, false), SoundSettings()) != null)
-        val half = SoundSettings().withLevel(AudioChannel.effects, 0.5)
-        assertEquals(null, StereoVolume.forCue(SoundCue.cowMoo, SoundPlacement(0.3, 0.0, false), half))
-        assertTrue(StereoVolume.forCue(SoundCue.cowMoo, SoundPlacement(0.4, 0.0, false), half) != null)
+        // The cow's trim (-8 dB) and the Effects bus at full (-10 dB) leave 12.6% of full volume, so a distance gain of
+        // 16% is just over the 2% worth a voice, and the slider at 90% (4 dB lower) needs 25%.
+        assertEquals(null, StereoVolume.forCue(SoundCue.cowMoo, SoundPlacement(0.15, 0.0, false), SoundSettings()))
+        assertTrue(StereoVolume.forCue(SoundCue.cowMoo, SoundPlacement(0.16, 0.0, false), SoundSettings()) != null)
+        val lower = SoundSettings().withLevel(AudioChannel.effects, 0.9)
+        assertEquals(null, StereoVolume.forCue(SoundCue.cowMoo, SoundPlacement(0.24, 0.0, false), lower))
+        assertTrue(StereoVolume.forCue(SoundCue.cowMoo, SoundPlacement(0.26, 0.0, false), lower) != null)
         val quiet = SoundSettings().withLevel(AudioChannel.effects, 0.001)
         assertTrue(StereoVolume.forCue(SoundCue.plant, SoundPlacement.centered, quiet) != null)
         val muted = quiet.withLevel(AudioChannel.effects, 0.0)

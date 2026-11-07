@@ -3,7 +3,7 @@
 - Locked items in the tool lists now show their whole row greyed out, including the name, even when you could afford them.
 - The Time sheet no longer shows the line about when night lasts.
 - The Time sheet now only offers the seasons; the time presets are hidden.
-- Sounds are rebalanced and quieter overall, and the music softly lowers while the level-up, quest and all-crops-ready fanfares play.
+- Sounds are rebalanced and quieter overall, harvesting and other drag sounds no longer drown out the menus and buttons, and the music softly lowers while the level-up, quest and all-crops-ready fanfares play.
 - Sound settings are now Master, Music, Effects and Ambience (Interface, Farm and Animals are joined as Effects); the sliders work evenly across their range and change sounds that are already playing.
 
 ## 2026-11-03
