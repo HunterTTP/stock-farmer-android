@@ -57,5 +57,16 @@ data class ToolUpgrade(
             level: Int,
             tool: HarvestTool,
         ): ToolUpgrade? = all.firstOrNull { it.tool == tool && it.level == level }
+
+        /** How many passes a thing that takes `base` of them needs with a tool upgraded to an effect. */
+        internal fun passes(
+            base: Int,
+            effect: ToolEffect?,
+        ): Int =
+            when (effect) {
+                ToolEffect.HalvedPasses -> (base + 1) / 2
+                ToolEffect.SinglePass -> 1
+                else -> base
+            }
     }
 }

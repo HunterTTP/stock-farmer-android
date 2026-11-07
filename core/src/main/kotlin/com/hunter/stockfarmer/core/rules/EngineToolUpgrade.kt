@@ -41,12 +41,7 @@ fun GameEngine.upgrade(tool: HarvestTool): List<GameEvent> {
 internal fun GameEngine.passes(
     base: Int,
     tool: HarvestTool,
-): Int =
-    when (ToolUpgrade.reaching(level(tool), tool)?.effect) {
-        ToolEffect.HalvedPasses -> (base + 1) / 2
-        ToolEffect.SinglePass -> 1
-        else -> base
-    }
+): Int = ToolUpgrade.passes(base, ToolUpgrade.reaching(level(tool), tool)?.effect)
 
 fun GameEngine.hitsToFell(tree: Tree): Int = passes(tree.hitsToFell, HarvestTool.axe)
 
