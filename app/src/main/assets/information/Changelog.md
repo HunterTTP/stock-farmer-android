@@ -1,3 +1,6 @@
+## 2026-11-06
+- Locked items in the tool lists now show their whole row greyed out, including the name, even when you could afford them.
+
 ## 2026-11-03
 - The Dynamic Shadows setting is gone, along with the shadows the sun cast on buildings, trees, rocks, decorations and fences. Animals still stand on their own soft shadow.
 - A failed rename, delete or restore on the Load Game screen now shows its message at the top of that screen, with Retry, instead of only behind it.

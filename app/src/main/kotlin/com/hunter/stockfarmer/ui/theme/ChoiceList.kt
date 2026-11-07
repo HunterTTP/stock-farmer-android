@@ -202,7 +202,7 @@ fun ChoiceRow(
     Row(
         modifier
             .fillMaxWidth()
-            .alpha(if (choice.isAffordable && !choice.isAtLimit) 1f else 0.45f)
+            .alpha(if (choice.isAffordable && !choice.isAtLimit && !choice.isLocked) 1f else 0.45f)
             .padding(
                 start = (14 * scale).dp,
                 end = (trailing * scale).dp,
@@ -216,7 +216,6 @@ fun ChoiceRow(
             Box(
                 Modifier
                     .size((36 * scale).dp)
-                    .alpha(if (choice.isLocked) 0.45f else 1f)
                     .newDot(choice.isNew, offset = DpOffset(4.dp, (-4).dp)),
             ) { it() }
         }
