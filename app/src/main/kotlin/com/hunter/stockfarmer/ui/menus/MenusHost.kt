@@ -56,6 +56,7 @@ import com.hunter.stockfarmer.ui.theme.HudType
 import com.hunter.stockfarmer.ui.theme.MoneyPriceLine
 import com.hunter.stockfarmer.ui.theme.Theme
 import com.hunter.stockfarmer.ui.theme.ToastView
+import com.hunter.stockfarmer.ui.theme.UnlockLine
 import com.hunter.stockfarmer.ui.theme.categoryCard
 import com.hunter.stockfarmer.ui.theme.glassCard
 import com.hunter.stockfarmer.ui.theme.lessonPulse
@@ -325,6 +326,7 @@ private fun catalogPriceLine(
     choice: MenuChoice,
     loader: MenuAssetLoader,
 ): (@Composable () -> Unit)? {
+    choice.requiredLevel?.let { level -> return { UnlockLine(level) } }
     val money = choice.prices.firstOrNull() ?: return null
     val building =
         (choice.selection.shopItem as? ShopItem.BuildingItem)?.let { Building.named(it.id) }

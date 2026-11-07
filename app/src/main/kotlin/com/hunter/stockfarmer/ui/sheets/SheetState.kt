@@ -12,6 +12,7 @@ import com.hunter.stockfarmer.core.model.Pet
 import com.hunter.stockfarmer.core.model.PondFish
 import com.hunter.stockfarmer.core.model.dollars
 import com.hunter.stockfarmer.core.model.durationText
+import com.hunter.stockfarmer.core.presentation.StatValue
 import com.hunter.stockfarmer.core.rules.AnimalRef
 import com.hunter.stockfarmer.core.rules.GameEngine
 import com.hunter.stockfarmer.core.rules.StockMarketRules
@@ -51,6 +52,8 @@ internal data class RecipeChoice(
     val selected: Boolean,
     val requiredLevel: Int?,
     val isNew: Boolean = false,
+    /** What the recipe makes, how long it takes and what that sells for, as its row shows them. */
+    val values: List<StatValue> = emptyList(),
 )
 
 internal data class WorkshopState(

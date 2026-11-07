@@ -15,43 +15,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import java.text.NumberFormat
 import java.util.Locale
 
-/** One bullet in an item's description: plain text with colored values. */
-data class EffectLine(
-    val segments: List<Segment>,
-) {
-    constructor(vararg segments: Segment) : this(segments.toList())
-
-    data class Segment(
-        val text: String,
-        val tint: Tint? = null,
-    ) {
-        enum class Tint(
-            val color: Color,
-        ) {
-            Money(Theme.money),
-            Blue(Theme.blue),
-            Purple(Theme.xp),
-            Green(Theme.accent),
-        }
-    }
-}
-
-/** A count shown under an item's picture: green while positive, white otherwise. */
+/** A count shown under an item's picture. */
 data class DetailStat(
     val title: String,
     val value: Int,
 ) {
     val display: String get() = NumberFormat.getIntegerInstance(Locale.US).format(value)
-    val color: Color get() = if (value > 0) Theme.accent else Color.White
 }
 
 /** One thing placing an item takes, shown as a square under its picture. */
@@ -62,41 +37,33 @@ data class Requirement(
     val icon: @Composable () -> Unit,
 )
 
-/** The bulleted effects of an item, in a glass card. */
+/** A card of an item's notes: at most two short plain bullets, for what its stats can't say. */
 @Composable
 fun EffectsCard(
-    effects: List<EffectLine>,
+    notes: List<String>,
     modifier: Modifier = Modifier,
 ) {
     Column(
         modifier.fillMaxWidth().glassCard(14.dp).padding(14.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        effects.forEach { effect ->
+        notes.forEach { note ->
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 HudIcon(HudIcons.sparkle, Theme.textPrimary, size = 15.dp)
-                BasicText(styled(effect), style = HudType.subheadline.copy(color = Theme.textPrimary))
+                BasicText(note, style = HudType.subheadline.copy(color = Theme.textPrimary))
             }
         }
     }
 }
 
-private fun styled(line: EffectLine): AnnotatedString =
-    buildAnnotatedString {
-        line.segments.forEach { segment ->
-            val color = segment.tint?.color
-            if (color == null) append(segment.text) else withStyle(SpanStyle(color = color)) { append(segment.text) }
-        }
-    }
-
 /**
- * Icon, name, effects and counts, with the panel's actions underneath. When [onSelect] is set a Select button is pinned to the
- * bottom of the panel.
+ * Icon, name, stats, notes and counts, with the panel's actions underneath. [facts] draws the stat and note cards. When
+ * [onSelect] is set a Select button is pinned to the bottom of the panel.
  */
 @Composable
 fun DetailLayout(
     name: String,
-    effects: List<EffectLine>,
+    facts: @Composable () -> Unit,
     stats: List<DetailStat>,
     modifier: Modifier = Modifier,
     isHighlighted: Boolean = false,
@@ -127,7 +94,7 @@ fun DetailLayout(
                 }
                 dropdowns?.invoke()
                 if (requirements.isNotEmpty()) RequirementTiles(requirements)
-                if (effects.isNotEmpty()) EffectsCard(effects)
+                facts()
                 if (stats.isNotEmpty()) StatTiles(stats)
                 actions()
             }
@@ -179,7 +146,7 @@ private fun StatTiles(stats: List<DetailStat>) {
                     style =
                         HudType.title2.copy(
                             fontWeight = FontWeight.ExtraBold,
-                            color = stat.color,
+                            color = Theme.textPrimary,
                             textAlign = TextAlign.Center,
                         ),
                 )

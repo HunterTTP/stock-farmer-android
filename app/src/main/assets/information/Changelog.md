@@ -1,4 +1,5 @@
 ## 2026-11-06
+- Item, building and upgrade pages are shorter: each shows its key numbers as rows (cost, sale price, time, XP, limit, what an upgrade changes) in one set of colors used in the lists too, with at most two short notes, and times read "Grows in 1m".
 - Locked items in the tool lists now show their whole row greyed out, including the name, even when you could afford them.
 - The Time sheet no longer shows the line about when night lasts.
 - The Time sheet now only offers the seasons; the time presets are hidden.

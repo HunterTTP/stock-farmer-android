@@ -6,6 +6,7 @@ import com.hunter.stockfarmer.core.model.GridPoint
 import com.hunter.stockfarmer.core.model.Holding
 import com.hunter.stockfarmer.core.model.StockQuote
 import com.hunter.stockfarmer.core.model.dollars
+import com.hunter.stockfarmer.core.presentation.houseUpgradeFacts
 import com.hunter.stockfarmer.core.rules.GameEngine
 import com.hunter.stockfarmer.core.rules.GameEvent
 import com.hunter.stockfarmer.core.rules.PriceJitter
@@ -150,21 +151,13 @@ private fun houseUpgrade(
     engine: GameEngine,
     origin: GridPoint,
     time: Instant,
-): UpgradeState {
-    val baseLimit = StockMarketRules.BASE_SLOT_LIMIT
-    val upgradedLimit = StockMarketRules.UPGRADED_SLOT_LIMIT
-    return UpgradeState(
+): UpgradeState =
+    UpgradeState(
         "Luxury House",
-        listOf(
-            "Your House becomes a Luxury House where it stands",
-            "Own up to $upgradedLimit different stocks, up from $baseLimit",
-            "It is a little taller, so it needs one more row of free space",
-            "Unlocked at Level ${StockMarketRules.HOUSE_UPGRADE_LEVEL}",
-        ),
+        engine.houseUpgradeFacts,
         StockMarketRules.HOUSE_UPGRADE_COST.dollars,
         engine.farmhouseUpgradeRejection(origin, time)?.message,
     )
-}
 
 internal data class StockTradeState(
     val maximum: Long,

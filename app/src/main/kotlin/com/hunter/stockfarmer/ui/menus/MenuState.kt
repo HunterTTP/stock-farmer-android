@@ -192,7 +192,6 @@ internal class MenuCatalog(
             title = title,
             picture = picture(item),
             selection = MenuSelection.Shop(item),
-            subtitle = requiredLevel?.let { "Unlocks at Level $it" } ?: "",
             prices = if (requiredLevel == null) prices(item) else emptyList(),
             selected = engine.isSelected(item) && engine.equippedItem == null,
             requiredLevel = requiredLevel,

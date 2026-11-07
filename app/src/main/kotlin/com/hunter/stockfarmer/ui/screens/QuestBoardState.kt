@@ -8,6 +8,8 @@ import com.hunter.stockfarmer.core.model.GridPoint
 import com.hunter.stockfarmer.core.model.MarketQuest
 import com.hunter.stockfarmer.core.model.QuestGoal
 import com.hunter.stockfarmer.core.model.dollars
+import com.hunter.stockfarmer.core.presentation.ItemFacts
+import com.hunter.stockfarmer.core.presentation.marketUpgradeFacts
 import com.hunter.stockfarmer.core.rules.GameEngine
 import com.hunter.stockfarmer.core.rules.LevelRules
 import com.hunter.stockfarmer.core.rules.QuestRules
@@ -135,13 +137,7 @@ internal data class QuestBoardState(
                         } else {
                             UpgradeState(
                                 "Upgrade Market Stand",
-                                listOf(
-                                    "Your Market Stand becomes bigger where it stands",
-                                    "Its quests are harder and in two parts and reward more XP",
-                                    "Needs ${QuestRules.QUESTS_TO_UPGRADE} completed quests",
-                                    "Quests completed: ${engine.state.completedMarketQuests}/" +
-                                        QuestRules.QUESTS_TO_UPGRADE,
-                                ),
+                                GameEngine.marketUpgradeFacts,
                                 QuestRules.UPGRADE_COST.dollars,
                                 engine.marketUpgradeRejection(it.key, now)?.message,
                             )
@@ -156,7 +152,7 @@ internal data class QuestBoardState(
 
 internal data class UpgradeState(
     val title: String,
-    val effects: List<String>,
+    val facts: ItemFacts,
     val cost: String,
     val lockReason: String?,
 )

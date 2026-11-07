@@ -31,6 +31,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.hunter.stockfarmer.core.model.dollars
 import com.hunter.stockfarmer.game.GameSession
+import com.hunter.stockfarmer.ui.menus.FactsCards
 import com.hunter.stockfarmer.ui.rememberPolledState
 import com.hunter.stockfarmer.ui.theme.HudMaterialTheme
 import com.hunter.stockfarmer.ui.theme.HudType
@@ -118,11 +119,7 @@ internal fun UpgradeCard(
             style = HudType.title2.copy(fontWeight = FontWeight.Bold),
             color = Theme.textPrimary,
         )
-        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            state.effects.forEach {
-                Text(it, style = HudType.subheadline, color = Theme.textPrimary)
-            }
-        }
+        FactsCards(state.facts)
         state.lockReason?.let {
             Text(it, style = HudType.subheadline, color = Theme.spend)
         }

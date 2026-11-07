@@ -54,11 +54,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.hunter.stockfarmer.core.catalog.StorageItem
 import com.hunter.stockfarmer.core.model.GameState
 import com.hunter.stockfarmer.core.model.PlayMode
-import com.hunter.stockfarmer.core.model.compactDollars
-import com.hunter.stockfarmer.core.model.compactDurationText
 import com.hunter.stockfarmer.core.rules.DayNightCycle
 import com.hunter.stockfarmer.core.rules.GameEvent
-import com.hunter.stockfarmer.core.rules.LevelRules
 import com.hunter.stockfarmer.game.GameSession
 import com.hunter.stockfarmer.game.TILE
 import com.hunter.stockfarmer.game.ToolDrag
@@ -77,6 +74,7 @@ import com.hunter.stockfarmer.ui.theme.LessonBubble
 import com.hunter.stockfarmer.ui.theme.LocalHudScale
 import com.hunter.stockfarmer.ui.theme.MoneyPriceLine
 import com.hunter.stockfarmer.ui.theme.Theme
+import com.hunter.stockfarmer.ui.theme.UnlockLine
 import com.hunter.stockfarmer.ui.theme.hudPanel
 import com.hunter.stockfarmer.ui.theme.newDot
 import com.hunter.stockfarmer.ui.theme.pulsing
@@ -416,15 +414,8 @@ private fun priceLine(
     choice: ToolChoice,
     loader: MenuAssetLoader,
 ): (@Composable () -> Unit)? {
-    choice.crop?.let { crop ->
-        return {
-            CropPriceLine(
-                crop.growDuration.compactDurationText,
-                crop.sellValue.compactDollars,
-                "${LevelRules.harvestXP(crop)} XP",
-            )
-        }
-    }
+    choice.requiredLevel?.let { level -> return { UnlockLine(level) } }
+    choice.crop?.let { crop -> return { CropPriceLine(crop) } }
     val building = choice.building
     val money = choice.prices.firstOrNull() ?: return null
     if (building == null) return { MoneyPriceLine(money.text, money.affordable) }

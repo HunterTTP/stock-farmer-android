@@ -1,10 +1,11 @@
 package com.hunter.stockfarmer.ui.menus
 
 import com.hunter.stockfarmer.core.catalog.HarvestTool
+import com.hunter.stockfarmer.core.presentation.facts
 import com.hunter.stockfarmer.core.rules.GameEngine
 import com.hunter.stockfarmer.core.rules.LevelRules
-import com.hunter.stockfarmer.core.rules.ToolUpgrade
 import com.hunter.stockfarmer.core.rules.level
+import com.hunter.stockfarmer.core.rules.nextUpgrade
 import com.hunter.stockfarmer.game.GameSession
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -14,30 +15,10 @@ import org.junit.jupiter.api.Test
 
 class ToolInfoTest {
     @Test
-    fun `every implement describes both upgrade levels and the rod does not promise selling`() {
-        assertEquals(
-            "Upgrade to Level 2 at Level 5 and to Level 3 at Level 15",
-            ToolInfo.effects(HarvestTool.axe).last().text(),
-        )
-        assertEquals(
-            "Catches go into storage",
-            ToolInfo
-                .effects(HarvestTool.rod)
-                .dropLast(1)
-                .last()
-                .text(),
-        )
-        assertTrue(ToolInfo.effects(HarvestTool.bucket).any { it.text().contains("butterfly") })
-        HarvestTool.entries.forEach { assertTrue(ToolInfo.effects(it).size >= 5) }
-    }
-
-    @Test
-    fun `upgrade descriptions cover all effects and preserve decimal rod reach`() {
-        val effects = ToolUpgrade.all.map { ToolInfo.upgradeEffect(it).text() }
-        assertTrue(effects.contains("Takes half as many passes on everything it works on, rounded up"))
-        assertTrue(effects.contains("Takes 1 pass on everything it works on"))
-        assertTrue(effects.contains("The circle in fishing mode is 2.25× as wide"))
-        assertTrue(effects.contains("35% chance of gathering a second item each time"))
+    fun `an upgrade page shows the next upgrade's Core facts`() {
+        val engine = GameEngine()
+        val upgrade = engine.nextUpgrade(HarvestTool.axe)!!
+        assertEquals(engine.facts(upgrade), ToolUpgradeState.from(engine, HarvestTool.axe).facts)
     }
 
     @Test
@@ -67,7 +48,7 @@ class ToolInfoTest {
         val state = ToolUpgradeState.from(engine, HarvestTool.axe)
         assertEquals("Axe Level 3", state.title)
         assertNull(state.upgrade)
-        assertTrue(state.effects.isEmpty())
+        assertNull(state.facts)
         assertFalse(GameSession(engine).upgradeTool(HarvestTool.axe).bought)
     }
 }

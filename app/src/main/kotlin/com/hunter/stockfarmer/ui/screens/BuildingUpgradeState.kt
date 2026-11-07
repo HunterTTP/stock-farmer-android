@@ -1,9 +1,10 @@
 package com.hunter.stockfarmer.ui.screens
 
 import com.hunter.stockfarmer.core.catalog.Building
-import com.hunter.stockfarmer.core.catalog.HomeUpgrade
 import com.hunter.stockfarmer.core.model.GridPoint
 import com.hunter.stockfarmer.core.model.dollars
+import com.hunter.stockfarmer.core.presentation.facts
+import com.hunter.stockfarmer.core.presentation.houseUpgradeFacts
 import com.hunter.stockfarmer.core.rules.GameEngine
 import com.hunter.stockfarmer.core.rules.StockMarketRules
 import com.hunter.stockfarmer.core.rules.farmhouseUpgradeRejection
@@ -50,11 +51,7 @@ internal data class BuildingUpgradeState(
                         BuildingUpgradeKind.HOME,
                         UpgradeState(
                             "${building.name} Level ${next.level}",
-                            listOf(
-                                "Holds ${HomeUpgrade.capacity(it.value, next.level)} animals, " +
-                                    "up from ${HomeUpgrade.capacity(it.value, next.level - 1)}",
-                                "Unlocked at Level ${next.unlockLevel}",
-                            ),
+                            engine.facts(next),
                             next.cost.dollars,
                             engine.homeUpgradeRejection(it.key)?.message,
                         ),
@@ -66,20 +63,12 @@ internal data class BuildingUpgradeState(
                         Building.named(it.value)?.isHouse == true && Building.named(it.value)?.isUpgradedHouse == false
                     }?.let { entry ->
                         val origin = entry.key
-                        val baseLimit = StockMarketRules.BASE_SLOT_LIMIT
-                        val upgradedLimit = StockMarketRules.UPGRADED_SLOT_LIMIT
                         BuildingUpgradeState(
                             origin,
                             BuildingUpgradeKind.HOUSE,
                             UpgradeState(
                                 "Luxury House",
-                                listOf(
-                                    "Your House becomes a Luxury House where it stands",
-                                    "Own up to $upgradedLimit different stocks, up from $baseLimit",
-                                    "It is a little taller, so it needs one more row of free space",
-                                    "Costs ${StockMarketRules.HOUSE_UPGRADE_COST.dollars} and is unlocked at " +
-                                        "Level ${StockMarketRules.HOUSE_UPGRADE_LEVEL}",
-                                ),
+                                engine.houseUpgradeFacts,
                                 StockMarketRules.HOUSE_UPGRADE_COST.dollars,
                                 engine.farmhouseUpgradeRejection(origin, now)?.message,
                             ),

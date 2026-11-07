@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.hunter.stockfarmer.core.rules.name
 import com.hunter.stockfarmer.game.GameSession
 import com.hunter.stockfarmer.ui.FAST_POLL_MILLIS
 import com.hunter.stockfarmer.ui.rememberPolledState
@@ -47,7 +48,7 @@ fun MenusHost(
             Text(
                 when (screen) {
                     is ItemScreen.Item -> {
-                        session.act { ItemInfo.from(screen.item, it).name }
+                        session.act { it.name(screen.item) }
                     }
 
                     ItemScreen.Eraser -> {

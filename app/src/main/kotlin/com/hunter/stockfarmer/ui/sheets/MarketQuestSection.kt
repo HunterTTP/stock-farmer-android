@@ -39,6 +39,7 @@ import com.hunter.stockfarmer.core.catalog.StorageItem
 import com.hunter.stockfarmer.core.catalog.Tree
 import com.hunter.stockfarmer.core.model.GridPoint
 import com.hunter.stockfarmer.core.model.QuestGoal
+import com.hunter.stockfarmer.core.presentation.StatKind
 import com.hunter.stockfarmer.core.rules.FruitTreePhase
 import com.hunter.stockfarmer.core.rules.GameEvent
 import com.hunter.stockfarmer.core.rules.QuestRules
@@ -63,6 +64,8 @@ import com.hunter.stockfarmer.ui.theme.HudMaterialTheme
 import com.hunter.stockfarmer.ui.theme.HudType
 import com.hunter.stockfarmer.ui.theme.Theme
 import com.hunter.stockfarmer.ui.theme.categoryCard
+import com.hunter.stockfarmer.ui.theme.color
+import com.hunter.stockfarmer.ui.theme.icon
 import java.time.Instant
 import java.util.UUID
 
@@ -187,8 +190,8 @@ private fun QuestCard(
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            HudIcon(HudIcons.starFill, Theme.accent, size = 17.dp)
-            Text(quest.reward, color = Theme.accent, style = HudType.headline)
+            HudIcon(StatKind.xp.icon, StatKind.xp.color, size = 17.dp)
+            Text(quest.reward, color = StatKind.xp.color, style = HudType.headline)
         }
         quest.objectives.forEachIndexed { index, objective ->
             ObjectiveRow(objective, icons.getOrElse(index) { emptyList() })

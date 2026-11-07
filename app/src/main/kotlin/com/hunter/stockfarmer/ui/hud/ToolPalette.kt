@@ -193,7 +193,6 @@ internal object ToolPalette {
                     title = engine.name(item),
                     action = PaletteAction.Seed(crop),
                     picture = MenuPictures.stored(StorageItem.CropItem(crop)),
-                    subtitle = needed?.let { "Unlocks at Level $it" } ?: "",
                     crop = crop.takeIf { needed == null },
                     isSelected = isPlanting && crop == engine.selectedCrop,
                     requiredLevel = needed,

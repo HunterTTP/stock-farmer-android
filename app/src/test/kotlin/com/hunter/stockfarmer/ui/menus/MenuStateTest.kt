@@ -42,7 +42,7 @@ class MenuStateTest {
         val locked = choices.filter { it.requiredLevel != null }
         assertTrue(locked.isNotEmpty())
         locked.forEach {
-            assertEquals("Unlocks at Level ${it.requiredLevel}", it.subtitle)
+            assertTrue(it.subtitle.isEmpty())
             assertTrue(it.prices.isEmpty())
         }
     }

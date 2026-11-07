@@ -38,6 +38,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.hunter.stockfarmer.core.catalog.Crop
+import com.hunter.stockfarmer.core.model.dollars
+import com.hunter.stockfarmer.core.model.durationText
+import com.hunter.stockfarmer.core.presentation.StatValue
+import com.hunter.stockfarmer.core.rules.LevelRules
 
 /** One row of a [ChoiceList]: reduced to what the row draws. */
 data class HudChoice(
@@ -302,21 +307,27 @@ fun MoneyPriceLine(
     PriceAmount(priceText, hasMoney, modifier)
 }
 
-/** How long a crop takes to grow, what harvesting it pays in green and the XP it earns in purple: "26m 18s / $5 / 3 XP". */
+/**
+ * How long a crop takes to grow, what harvesting it pays and the XP it earns, as bare numbers in their stat colors:
+ * "26m 18s / $5 / +3 XP".
+ */
 @Composable
 fun CropPriceLine(
-    durationText: String,
-    sellText: String,
-    xpText: String,
+    crop: Crop,
     modifier: Modifier = Modifier,
 ) {
-    val scale = LocalHudScale.current
-    Row(modifier, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-        listOf(durationText to Theme.textSecondary, null, sellText to Theme.money, null, xpText to Theme.xp).forEach {
-            val (text, color) = it ?: ("/" to Theme.textSecondary)
-            BasicText(text, maxLines = 1, style = hudText(12 * scale, FontWeight.SemiBold, color))
-        }
-    }
+    StatValuesLine(
+        listOf(
+            StatValue.Duration(crop.growDuration),
+            StatValue.Money(crop.sellValue),
+            StatValue.XP(LevelRules.harvestXP(crop)),
+        ),
+        modifier.semantics(mergeDescendants = true) {
+            contentDescription =
+                "Grows in ${crop.growDuration.durationText}, harvest for ${crop.sellValue.dollars} and " +
+                "${LevelRules.harvestXP(crop)} XP"
+        },
+    )
 }
 
 @Composable

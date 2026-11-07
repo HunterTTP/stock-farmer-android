@@ -22,7 +22,8 @@ import androidx.compose.ui.unit.dp
 import com.hunter.stockfarmer.core.catalog.ChickenVariant
 import com.hunter.stockfarmer.core.catalog.Recipe
 import com.hunter.stockfarmer.core.model.GridPoint
-import com.hunter.stockfarmer.core.model.durationText
+import com.hunter.stockfarmer.core.presentation.StatKind
+import com.hunter.stockfarmer.core.presentation.facts
 import com.hunter.stockfarmer.core.rules.GameEngine
 import com.hunter.stockfarmer.core.rules.hasSeen
 import com.hunter.stockfarmer.core.rules.workshopRecipe
@@ -41,7 +42,9 @@ import com.hunter.stockfarmer.ui.theme.HudSheet
 import com.hunter.stockfarmer.ui.theme.HudType
 import com.hunter.stockfarmer.ui.theme.PillButton
 import com.hunter.stockfarmer.ui.theme.PillRole
+import com.hunter.stockfarmer.ui.theme.StatValuesLine
 import com.hunter.stockfarmer.ui.theme.Theme
+import com.hunter.stockfarmer.ui.theme.UnlockLine
 import com.hunter.stockfarmer.ui.theme.categoryCard
 import java.time.Instant
 
@@ -79,6 +82,11 @@ internal fun recipeChoices(
             engine.state.workshopRecipe(origin)?.id == recipe.id,
             recipe.unlockLevel.takeIf { locked },
             !locked && !engine.hasSeen("recipe:${recipe.id}"),
+            engine
+                .facts(recipe)
+                .stats
+                .filter { it.kind != StatKind.unlock }
+                .map { it.value },
         )
     }
 }
@@ -153,9 +161,10 @@ fun WorkshopRecipeScreen(
                     recipe.id,
                     "${recipe.output.name} from ${recipe.input.name}",
                     pick,
-                    subtitle =
-                        choice.requiredLevel?.let { "Unlocks at Level $it" }
-                            ?: "${recipe.inputCount} → ${recipe.outputCount} · ${recipe.duration.durationText}",
+                    priceLine = {
+                        val level = choice.requiredLevel
+                        if (level != null) UnlockLine(level) else StatValuesLine(choice.values)
+                    },
                     icon = { MenuImage(MenuPictures.stored(recipe.output), loader) },
                     isSelected = choice.selected,
                     isNew = choice.isNew,

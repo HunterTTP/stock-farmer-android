@@ -38,10 +38,14 @@ import com.hunter.stockfarmer.core.catalog.StorageItem
 import com.hunter.stockfarmer.core.model.PlayMode
 import com.hunter.stockfarmer.core.model.ShopItem
 import com.hunter.stockfarmer.core.model.dollars
+import com.hunter.stockfarmer.core.presentation.ItemFacts
+import com.hunter.stockfarmer.core.presentation.eraserFacts
+import com.hunter.stockfarmer.core.presentation.facts
 import com.hunter.stockfarmer.core.rules.GameEngine
 import com.hunter.stockfarmer.core.rules.farmlandLimit
 import com.hunter.stockfarmer.core.rules.isSelling
 import com.hunter.stockfarmer.core.rules.markSeen
+import com.hunter.stockfarmer.core.rules.name
 import com.hunter.stockfarmer.core.rules.placedOnMap
 import com.hunter.stockfarmer.core.rules.requiredLevel
 import com.hunter.stockfarmer.core.rules.select
@@ -54,7 +58,6 @@ import com.hunter.stockfarmer.ui.sheets.SheetChoice
 import com.hunter.stockfarmer.ui.theme.BarScrollView
 import com.hunter.stockfarmer.ui.theme.DetailLayout
 import com.hunter.stockfarmer.ui.theme.DetailStat
-import com.hunter.stockfarmer.ui.theme.EffectsCard
 import com.hunter.stockfarmer.ui.theme.HudType
 import com.hunter.stockfarmer.ui.theme.LevelRequirementNotice
 import com.hunter.stockfarmer.ui.theme.Requirement
@@ -88,7 +91,8 @@ internal data class ItemRequirement(
 )
 
 internal data class ItemDetailState(
-    val info: ItemInfo,
+    val name: String,
+    val facts: ItemFacts,
     val choice: MenuChoice,
     val stats: List<DetailStat>,
     val requirements: List<ItemRequirement>,
@@ -100,7 +104,6 @@ internal data class ItemDetailState(
             engine: GameEngine,
             item: ShopItem,
         ): ItemDetailState {
-            val info = ItemInfo.from(item, engine)
             val locked = engine.requiredLevel(item) != null
             val building = (item as? ShopItem.BuildingItem)?.let { Building.named(it.id) }
             val requirements =
@@ -120,14 +123,15 @@ internal data class ItemDetailState(
                         )
                     }.orEmpty()
             return ItemDetailState(
-                info,
+                engine.name(item),
+                engine.facts(item),
                 MenuCatalog(engine).choice(item),
                 if (locked) {
                     emptyList()
                 } else {
                     buildList {
                         if (item == ShopItem.Farmland) add(DetailStat("Unlocked", engine.state.farmlandLimit))
-                        add(DetailStat(info.placedLabel, engine.placedOnMap(item)))
+                        add(DetailStat(if (item is ShopItem.Seed) "Planted" else "Placed", engine.placedOnMap(item)))
                     }
                 },
                 requirements,
@@ -174,8 +178,8 @@ fun ItemDetailScreen(
         polledState.refresh()
     }
     DetailLayout(
-        name = state.info.name,
-        effects = state.info.effects,
+        name = state.name,
+        facts = { FactsCards(state.facts) },
         stats = state.stats,
         isHighlighted = state.choice.selected,
         dropdowns =
@@ -248,7 +252,7 @@ fun EraserDetailScreen(
     val stats = session.read { listOf(DetailStat("Placed", it.grassTileCount)) }
     DetailLayout(
         name = LandscapeTool.grass.name,
-        effects = plain("Clears farmland or water back to grass", "Tiles with crops growing can't be cleared"),
+        facts = { FactsCards(GameEngine.eraserFacts) },
         stats = stats,
         isHighlighted = session.act { it.isSelected(LandscapeTool.grass) },
         onSelect = {
@@ -269,7 +273,7 @@ fun HarvestToolDetailScreen(
     var selling by remember(session, tool) { mutableStateOf(session.act { it.isSelling(tool) }) }
     DetailLayout(
         name = tool.displayName,
-        effects = ToolInfo.effects(tool),
+        facts = { FactsCards(session.act { it.facts(tool) }) },
         stats = emptyList(),
         isHighlighted = session.read { it.mode == PlayMode.harvest && it.harvestTool == tool },
         dropdowns =
@@ -317,7 +321,7 @@ fun ToolUpgradeScreen(
                 HarvestToolImage(tool, Modifier.size(120.dp))
                 Text(state.title, style = HudType.title2.copy(fontWeight = FontWeight.Bold), color = Theme.textPrimary)
             }
-            if (state.effects.isNotEmpty()) EffectsCard(state.effects)
+            state.facts?.let { FactsCards(it) }
             state.upgrade?.let { upgrade ->
                 val level = state.requiredLevel
                 if (level != null) {

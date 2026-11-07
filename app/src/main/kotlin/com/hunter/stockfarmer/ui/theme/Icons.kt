@@ -301,6 +301,58 @@ object HudIcons {
             }
         }
 
+    /** A big four-pointed sparkle with two small ones, for XP. */
+    val sparkles =
+        icon("sparkles") {
+            filled {
+                sparklePoint(9.5f, 14f, 7.5f)
+                sparklePoint(18.5f, 5.5f, 3.5f)
+                sparklePoint(19f, 16.5f, 2.5f)
+            }
+        }
+
+    val clockFill =
+        icon("clock.fill") {
+            filled(PathFillType.EvenOdd) {
+                circle(12f, 12f, 10f)
+                polygon(
+                    listOf(11f to 6f, 13f to 6f, 13f to 11.4f, 16.6f to 13.5f, 15.6f to 15.2f, 11f to 12.6f),
+                )
+            }
+        }
+
+    val squareStackFill =
+        icon("square.stack.fill") {
+            filled {
+                moveTo(6f, 9f)
+                lineTo(18f, 9f)
+                arcTo(2f, 2f, 0f, false, true, 20f, 11f)
+                lineTo(20f, 19f)
+                arcTo(2f, 2f, 0f, false, true, 18f, 21f)
+                lineTo(6f, 21f)
+                arcTo(2f, 2f, 0f, false, true, 4f, 19f)
+                lineTo(4f, 11f)
+                arcTo(2f, 2f, 0f, false, true, 6f, 9f)
+                close()
+                polygon(listOf(6.5f to 5.8f, 17.5f to 5.8f, 17.5f to 7.4f, 6.5f to 7.4f))
+                polygon(listOf(8.5f to 2.8f, 15.5f to 2.8f, 15.5f to 4.4f, 8.5f to 4.4f))
+            }
+        }
+
+    private fun PathBuilder.sparklePoint(
+        cx: Float,
+        cy: Float,
+        r: Float,
+    ) {
+        val bend = r * 0.1f
+        moveTo(cx, cy - r)
+        quadTo(cx + bend, cy - bend, cx + r, cy)
+        quadTo(cx + bend, cy + bend, cx, cy + r)
+        quadTo(cx - bend, cy + bend, cx - r, cy)
+        quadTo(cx - bend, cy - bend, cx, cy - r)
+        close()
+    }
+
     val musicNote =
         icon("music.note") {
             filled {

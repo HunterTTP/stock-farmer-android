@@ -21,17 +21,18 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.hunter.stockfarmer.core.catalog.StorageItem
 import com.hunter.stockfarmer.core.model.durationText
+import com.hunter.stockfarmer.core.presentation.facts
+import com.hunter.stockfarmer.core.rules.GameEngine
 import com.hunter.stockfarmer.core.rules.GameEvent
 import com.hunter.stockfarmer.core.rules.WorkshopStatus
 import com.hunter.stockfarmer.game.GameSession
-import com.hunter.stockfarmer.ui.menus.ItemInfo
+import com.hunter.stockfarmer.ui.menus.FactsCards
 import com.hunter.stockfarmer.ui.menus.MenuImage
 import com.hunter.stockfarmer.ui.menus.MenuPictures
 import com.hunter.stockfarmer.ui.menus.rememberMenuAssetLoader
 import com.hunter.stockfarmer.ui.screens.MarketQuestSection
 import com.hunter.stockfarmer.ui.screens.ScreenFormat
 import com.hunter.stockfarmer.ui.screens.ScreenIcon
-import com.hunter.stockfarmer.ui.theme.EffectsCard
 import com.hunter.stockfarmer.ui.theme.HudIcon
 import com.hunter.stockfarmer.ui.theme.HudIcons
 import com.hunter.stockfarmer.ui.theme.HudType
@@ -72,7 +73,7 @@ internal fun BuildingSections(
                     style = HudType.title2.copy(fontWeight = FontWeight.Bold, color = Theme.textPrimary),
                 )
             }
-            EffectsCard(ItemInfo.descriptionLines(building))
+            FactsCards(GameEngine.facts(building))
         }
     }
     when {

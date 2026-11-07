@@ -3,6 +3,7 @@ package com.hunter.stockfarmer.ui.theme
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import com.hunter.stockfarmer.core.catalog.Rarity
+import com.hunter.stockfarmer.core.presentation.StatKind
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -108,10 +109,17 @@ internal class HudLogicTest {
     }
 
     @Test
-    fun `detail stats are green only while positive`() {
-        assertEquals(Theme.accent, DetailStat("Owned", 3).color)
-        assertEquals(Color.White, DetailStat("Owned", 0).color)
+    fun `detail stats show their count with thousands separated`() {
         assertEquals("1,200", DetailStat("Owned", 1200).display)
+    }
+
+    @Test
+    fun `each kind of stat has one color, money green, XP and levels purple, time blue, boosts gold, counts white`() {
+        assertEquals(Theme.money, StatKind.money.color)
+        listOf(StatKind.xp, StatKind.unlock, StatKind.level).forEach { assertEquals(Theme.xp, it.color) }
+        assertEquals(Theme.blue, StatKind.time.color)
+        assertEquals(Theme.gold, StatKind.boost.color)
+        assertEquals(Theme.textPrimary, StatKind.count.color)
     }
 
     @Test
