@@ -25,7 +25,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hunter.stockfarmer.core.rules.DayNightCycle
@@ -215,11 +214,6 @@ fun TimeSheet(
                     }
                 }
             }
-            BasicText(
-                "Night lasts from 9 PM to 5 AM",
-                Modifier.fillMaxWidth(),
-                style = HudType.footnote.copy(color = Theme.textSecondary, textAlign = TextAlign.Center),
-            )
         }
     }
 }
