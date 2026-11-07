@@ -5,7 +5,8 @@ import kotlin.math.pow
 
 /** Measured loudness lets the soundtrack play at one loudness whichever track is on. */
 object MusicLoudness {
-    val target = -35.0
+    /** The loudness every track is played at, in LUFS. No track plays above full volume, so a track quieter than this sits slightly under it. */
+    val target = -30.0
     internal val measured: Map<String, Double> =
         mapOf(
             "Far Far Away" to -19.4,

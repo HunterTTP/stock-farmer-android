@@ -76,12 +76,12 @@ class SoundCenterScreenAudio(
         center.play(SoundCue.toggleOn)
     }
 
+    /** A short sound of its kind at the new loudness: a click for the master and the effects, a bird for the ambience. */
     override fun playSample(channel: AudioChannel) {
         when (channel) {
-            AudioChannel.`interface` -> SoundCue.selectItem
-            AudioChannel.farm -> SoundCue.placeGround
-            AudioChannel.animals -> SoundCue.henCluck
-            AudioChannel.music, AudioChannel.ambience -> null
+            AudioChannel.master, AudioChannel.effects -> SoundCue.selectItem
+            AudioChannel.ambience -> SoundCue.birdChirp
+            AudioChannel.music -> null
         }?.let { center.play(it) }
     }
 }
@@ -307,20 +307,18 @@ private fun SongRow(
 private val AudioChannel.title: String
     get() =
         when (this) {
+            AudioChannel.master -> "Master"
             AudioChannel.music -> "Music"
-            AudioChannel.`interface` -> "Interface"
-            AudioChannel.farm -> "Farm"
-            AudioChannel.animals -> "Animals"
+            AudioChannel.effects -> "Effects"
             AudioChannel.ambience -> "Ambience"
         }
 
 private val AudioChannel.icon: ImageVector
     get() =
         when (this) {
+            AudioChannel.master -> HudIcons.speakerWave3Fill
             AudioChannel.music -> HudIcons.musicNote
-            AudioChannel.`interface` -> HudIcons.speakerWave2Fill
-            AudioChannel.farm -> HudIcons.leafFill
-            AudioChannel.animals -> HudIcons.pawprintFill
+            AudioChannel.effects -> HudIcons.handTapFill
             AudioChannel.ambience -> HudIcons.cloudRainFill
         }
 

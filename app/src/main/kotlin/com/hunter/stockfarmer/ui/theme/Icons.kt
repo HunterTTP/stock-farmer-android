@@ -373,29 +373,35 @@ object HudIcons {
             }
         }
 
-    val leafFill =
-        icon("leaf.fill") {
-            filled {
-                moveTo(4f, 20f)
-                curveTo(4f, 10f, 10f, 4f, 20f, 4f)
-                curveTo(20f, 14f, 14f, 20f, 4f, 20f)
-                close()
+    val speakerWave3Fill =
+        icon("speaker.wave.3.fill") {
+            filled { polygon(listOf(2f to 9f, 5.5f to 9f, 10.5f to 4.5f, 10.5f to 19.5f, 5.5f to 15f, 2f to 15f)) }
+            stroked(1.8f) {
+                moveTo(13.5f, 9.5f)
+                arcTo(3f, 3f, 0f, false, true, 13.5f, 14.5f)
+                moveTo(16f, 7f)
+                arcTo(6f, 6f, 0f, false, true, 16f, 17f)
+                moveTo(18.5f, 4.5f)
+                arcTo(9f, 9f, 0f, false, true, 18.5f, 19.5f)
             }
         }
 
-    val pawprintFill =
-        icon("pawprint.fill") {
+    val handTapFill =
+        icon("hand.tap.fill") {
             filled {
-                circle(6.2f, 10.2f, 2.2f)
-                circle(10f, 6f, 2.2f)
-                circle(14f, 6f, 2.2f)
-                circle(17.8f, 10.2f, 2.2f)
-                moveTo(12f, 11.5f)
-                curveTo(8.5f, 11.5f, 6f, 15f, 6.5f, 17.5f)
-                curveTo(7f, 19.5f, 9.5f, 19f, 12f, 19f)
-                curveTo(14.5f, 19f, 17f, 19.5f, 17.5f, 17.5f)
-                curveTo(18f, 15f, 15.5f, 11.5f, 12f, 11.5f)
+                circle(10.75f, 9f, 1.75f)
+                polygon(listOf(9f to 9f, 12.5f to 9f, 12.5f to 14f, 9f to 14f))
+                moveTo(6.5f, 14.5f)
+                lineTo(18f, 13f)
+                lineTo(18f, 17.5f)
+                curveTo(18f, 20.2f, 15.8f, 22f, 13f, 22f)
+                lineTo(11.5f, 22f)
+                curveTo(8.7f, 22f, 6.5f, 20f, 6.5f, 17.5f)
                 close()
+            }
+            stroked(1.6f) {
+                moveTo(7f, 6.5f)
+                arcTo(4f, 4f, 0f, false, true, 14.5f, 6.5f)
             }
         }
 

@@ -89,6 +89,13 @@ internal class SoundPoolOutput(
         volume: StereoVolume,
     ): Int = if (closed) 0 else pool.play(clip.id, volume.left, volume.right, 1, 0, 1f)
 
+    override fun setVolume(
+        stream: Int,
+        volume: StereoVolume,
+    ) {
+        if (!closed) pool.setVolume(stream, volume.left, volume.right)
+    }
+
     override fun stop(stream: Int) {
         if (!closed) pool.stop(stream)
     }

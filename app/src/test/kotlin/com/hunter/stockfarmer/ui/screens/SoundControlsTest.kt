@@ -19,10 +19,10 @@ class SoundControlsTest {
 
     @Test
     fun `levels are clamped and reset restores the defaults`() {
-        val controls = SoundControls(SoundSettings().withLevel(AudioChannel.animals, 0.0))
-        controls.setLevel(AudioChannel.farm, 2.0)
-        assertEquals(1.0, controls.settings[AudioChannel.farm])
-        assertEquals(0.0, controls.settings[AudioChannel.animals])
+        val controls = SoundControls(SoundSettings().withLevel(AudioChannel.effects, 0.0))
+        controls.setLevel(AudioChannel.ambience, 2.0)
+        assertEquals(1.0, controls.settings[AudioChannel.ambience])
+        assertEquals(0.0, controls.settings[AudioChannel.effects])
         controls.reset()
         assertEquals(SoundSettings(), controls.settings)
     }

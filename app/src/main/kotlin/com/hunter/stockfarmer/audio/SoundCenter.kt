@@ -2,6 +2,8 @@ package com.hunter.stockfarmer.audio
 
 import android.content.Context
 import android.media.AudioManager
+import android.os.Handler
+import android.os.Looper
 import android.os.SystemClock
 import androidx.annotation.MainThread
 import androidx.lifecycle.DefaultLifecycleObserver
@@ -13,6 +15,7 @@ import com.hunter.stockfarmer.core.model.GridPoint
 import com.hunter.stockfarmer.core.model.PetSpecies
 import com.hunter.stockfarmer.core.rules.GameEvent
 import com.hunter.stockfarmer.core.rules.Season
+import kotlin.math.ceil
 
 /** Activity-owned facade. All calls, including event batches from the game, belong on the main thread. */
 @MainThread
@@ -22,7 +25,8 @@ class SoundCenter(
     AutoCloseable {
     private val app = context.applicationContext
     private val preferences = app.getSharedPreferences("sound", Context.MODE_PRIVATE)
-    private val effects = SoundEffectsPlayer(SoundPoolOutput(app.assets), { SystemClock.elapsedRealtime() / 1000.0 })
+    private val handler = Handler(Looper.getMainLooper())
+    private val effects = SoundEffectsPlayer(SoundPoolOutput(app.assets), ::seconds)
     private val musicOutput = MediaPlayerOutput(app.assets)
     private val music =
         MusicPlayer(
@@ -45,6 +49,7 @@ class SoundCenter(
     private var closed = false
     private var easedRain = 0.0
     private var snowing = false
+    private val endDuck = Runnable { music.endDuck() }
 
     val isActive: Boolean get() = active && !closed
 
@@ -65,7 +70,8 @@ class SoundCenter(
 
     init {
         effects.settings = settings
-        music.setLevel(settings[AudioChannel.music])
+        effects.onMusicDuck = ::duckMusic
+        music.setGain(settings.mixedGain(AudioChannel.music))
         music.setOtherAudioPlaying(true)
     }
 
@@ -95,11 +101,18 @@ class SoundCenter(
         settings = settings.withLevel(channel, level)
         preferences.edit().putString(channel.preferenceKey, settings[channel].toString()).apply()
         effects.settings = settings
-        if (channel == AudioChannel.music) {
-            music.setLevel(settings[channel])
-            focus.setActive(active && settings[channel] > 0)
+        if (channel == AudioChannel.music || channel == AudioChannel.master) {
+            music.setGain(settings.mixedGain(AudioChannel.music))
+            focus.setActive(active && settings.isAudible(AudioChannel.music))
         }
         refreshRain()
+    }
+
+    /** A fanfare has started and will play for [duration] seconds: the music steps down under it. */
+    private fun duckMusic(duration: Double) {
+        if (closed || !music.duck(duration, seconds())) return
+        handler.removeCallbacks(endDuck)
+        handler.postDelayed(endDuck, ceil(duration * 1000).toLong())
     }
 
     fun updateMusic(
@@ -127,14 +140,14 @@ class SoundCenter(
     }
 
     private fun refreshRain() {
-        ambience.update(easedRain, snowing, settings[AudioChannel.ambience])
+        ambience.update(easedRain, snowing, settings.mixedGain(AudioChannel.ambience))
     }
 
     fun resume() {
         if (closed) return
         active = true
         effects.resume()
-        focus.setActive(settings[AudioChannel.music] > 0)
+        focus.setActive(settings.isAudible(AudioChannel.music))
         music.setActive(true)
         ambience.setActive(true)
     }
@@ -156,10 +169,13 @@ class SoundCenter(
         owner.lifecycle.removeObserver(this)
     }
 
+    private fun seconds(): Double = SystemClock.elapsedRealtime() / 1000.0
+
     override fun close() {
         if (closed) return
         pause()
         closed = true
+        handler.removeCallbacks(endDuck)
         focus.close()
         effects.close()
         music.close()

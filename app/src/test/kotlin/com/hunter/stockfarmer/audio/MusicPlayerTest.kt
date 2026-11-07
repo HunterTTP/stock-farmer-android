@@ -1,6 +1,7 @@
 package com.hunter.stockfarmer.audio
 
 import com.hunter.stockfarmer.core.feedback.MusicLoudness
+import com.hunter.stockfarmer.core.feedback.SoundMix
 import com.hunter.stockfarmer.core.rules.Season
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -114,18 +115,34 @@ class MusicPlayerTest {
         assertEquals(0, empty.output.loads)
     }
 
-    @Test fun `level and measured loudness multiply and zero pauses at the same track`() {
+    @Test fun `gain and measured loudness multiply and zero pauses at the same track`() {
         val h = Harness()
         h.start()
-        h.player.setLevel(0.5)
+        h.player.setGain(0.5)
         assertEquals(0.5 * MusicLoudness.gain("Chickens In The Meadow"), h.output.volume)
-        h.player.setLevel(0.0)
+        h.player.setGain(0.0)
         assertFalse(h.output.playing)
         h.player.skip()
         assertEquals(1, h.output.loads)
-        h.player.setLevel(1.0)
+        h.player.setGain(1.0)
         assertTrue(h.output.playing)
         assertEquals(1, h.output.loads)
+    }
+
+    @Test fun `a fanfare ducks the music 6 dB until the latest one ends`() {
+        val h = Harness()
+        h.start()
+        val full = h.output.volume
+        assertTrue(h.player.duck(2.0, now = 10.0))
+        assertEquals(full * SoundMix.musicDuckGain, h.output.volume, 1e-12)
+        assertEquals(SoundMix.duckFade, h.output.fade)
+        assertFalse(h.player.duck(1.0, now = 10.5))
+        assertTrue(h.player.duck(3.0, now = 11.0))
+        assertEquals(full * SoundMix.musicDuckGain, h.output.volume, 1e-12)
+        assertTrue(h.output.playing)
+        h.player.endDuck()
+        assertEquals(full, h.output.volume)
+        assertEquals(SoundMix.duckFade, h.output.fade)
     }
 
     @Test fun `night hush fades only for the current chime and lets playback continue`() {

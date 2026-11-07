@@ -1,5 +1,6 @@
 package com.hunter.stockfarmer.audio
 
+import com.hunter.stockfarmer.core.feedback.SoundMix
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -49,7 +50,7 @@ class AmbientPlayerTest {
         }
     }
 
-    @Test fun `rain fades for a second at half volume times amount and channel level`() {
+    @Test fun `rain fades for a second at its trim times amount and gain`() {
         val output = Output()
         val player = AmbientPlayer(output)
         player.update(0.6, false, 0.8)
@@ -57,7 +58,7 @@ class AmbientPlayerTest {
         player.setActive(true)
         output.ready()
         assertTrue(output.playing)
-        assertEquals(0.24, output.volume)
+        assertEquals(0.8 * SoundMix.rainTrimGain * 0.6, output.volume, 1e-12)
         assertEquals(1.0, output.fade)
         player.update(0.0, false, 0.8)
         assertFalse(output.playing)

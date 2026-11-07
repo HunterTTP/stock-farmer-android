@@ -1,24 +1,27 @@
 package com.hunter.stockfarmer.audio
 
+import com.hunter.stockfarmer.core.feedback.SoundMix
+
 /** Rain is streamed separately from the bounded pool of short effects. Supply Weather.eased(rain). */
 class AmbientPlayer(
     private val output: MusicOutput,
 ) : AutoCloseable {
     private var amount = 0.0
-    private var level = 1.0
+    private var gain = 1.0
     private var active = false
     private var loaded = false
     private var ready = false
     private var playing = false
     private var closed = false
 
+    /** The gain is the share of full volume the Ambience and Master sliders leave. */
     fun update(
         easedRain: Double,
         isSnowing: Boolean,
-        level: Double,
+        gain: Double,
     ) {
         amount = if (isSnowing || !easedRain.isFinite()) 0.0 else easedRain.coerceIn(0.0, 1.0)
-        this.level = SoundSettings().withLevel(AudioChannel.ambience, level)[AudioChannel.ambience]
+        this.gain = if (gain.isFinite()) gain.coerceIn(0.0, 1.0) else 0.0
         refresh()
     }
 
@@ -29,7 +32,7 @@ class AmbientPlayer(
 
     private fun refresh() {
         if (closed) return
-        if (!active || amount <= 0.0 || level <= 0.0) {
+        if (!active || amount <= 0.0 || gain <= 0.0) {
             output.pause()
             playing = false
             return
@@ -58,7 +61,7 @@ class AmbientPlayer(
             output.start()
             playing = true
         }
-        output.setVolume(0.5 * level * amount, 1.0)
+        output.setVolume(gain * SoundMix.rainTrimGain * amount, 1.0)
     }
 
     override fun close() {

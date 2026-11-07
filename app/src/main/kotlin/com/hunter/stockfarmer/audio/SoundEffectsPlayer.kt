@@ -21,16 +21,34 @@ data class StereoVolume(
     val left: Float,
     val right: Float,
 ) {
+    operator fun times(gain: Double): StereoVolume = StereoVolume((left * gain).toFloat(), (right * gain).toFloat())
+
     companion object {
+        /** A sound quieter than this is not worth a voice. */
+        private const val AUDIBLE_GAIN = 0.02
+
+        /** The volume a cue plays at: its own, then its channel's and the master's. */
         fun forCue(
             cue: SoundCue,
             placement: SoundPlacement,
             settings: SoundSettings,
+        ): StereoVolume? =
+            beforeSliders(cue, placement, settings)?.times(settings.mixedGain(AudioChannel.of(cue.category)))
+
+        /**
+         * The cue's own volume, split by its pan: its trim and, for an animal, how far away it is. It is null when the
+         * sliders leave it unheard, or leave an animal too far away to be worth a voice.
+         */
+        fun beforeSliders(
+            cue: SoundCue,
+            placement: SoundPlacement,
+            settings: SoundSettings,
         ): StereoVolume? {
-            val heard = if (cue.fadesWithDistance) placement.gain else 1.0
-            val level = settings[AudioChannel.of(cue.category)]
-            if (!heard.isFinite() || heard < 0.02 || level <= 0.0) return null
-            val volume = (level * cue.trimGain * heard).coerceIn(0.0, 1.0)
+            val channel = AudioChannel.of(cue.category)
+            val heard = cue.trimGain * (if (cue.fadesWithDistance) placement.gain else 1.0)
+            if (!heard.isFinite() || !settings.isAudible(channel)) return null
+            if (cue.fadesWithDistance && heard * settings.mixedGain(channel) < AUDIBLE_GAIN) return null
+            val volume = heard.coerceIn(0.0, 1.0)
             val pan = if (placement.pan.isFinite()) placement.pan.coerceIn(-1.0, 1.0) else 0.0
             // SoundPool has independent channel gains rather than AVAudioPlayerNode's pan control.
             return StereoVolume(
@@ -49,10 +67,19 @@ interface EffectOutput : AutoCloseable {
         volume: StereoVolume,
     ): Int
 
+    /** Changes the volume of a stream that may still be playing. */
+    fun setVolume(
+        stream: Int,
+        volume: StereoVolume,
+    )
+
     fun stop(stream: Int)
 }
 
-/** Main-thread controller; the clock is monotonic seconds, independent of the farm's clock. */
+/**
+ * Main-thread controller; the clock is monotonic seconds, independent of the farm's clock. Each channel has its own voices,
+ * so a busy farm can never take the ambience's, and a volume change is heard at once on what is playing.
+ */
 class SoundEffectsPlayer(
     private val output: EffectOutput,
     private val seconds: () -> Double,
@@ -61,23 +88,43 @@ class SoundEffectsPlayer(
     private data class Voice(
         val cue: SoundCue,
         val stream: Int,
+        /** Its own volume, before the sliders. */
+        val volume: StereoVolume,
     )
 
-    private var limiter = VoiceLimiter<SoundCue>(VOICE_COUNT, 0.03, 6)
+    /** A channel's voices, which are [firstVoice] onwards in [voices]. */
+    private data class Bus(
+        val firstVoice: Int,
+        val limiter: VoiceLimiter<SoundCue>,
+    )
+
+    private var buses =
+        mapOf(
+            AudioChannel.effects to Bus(0, limiter(EFFECT_VOICES)),
+            AudioChannel.ambience to Bus(EFFECT_VOICES, limiter(AMBIENCE_VOICES)),
+        )
     private var variants = VariantPicker<SoundCue>()
     private val voices = arrayOfNulls<Voice>(VOICE_COUNT)
     private val lastStreams = mutableMapOf<SoundCue, Int>()
     private var suspended = true
     private var closed = false
 
+    /** Told how long a sound that turns the music down will play, in seconds, as it starts. */
+    var onMusicDuck: ((Double) -> Unit)? = null
+
     var settings = SoundSettings()
         set(value) {
             field = value
-            voices.indices
-                .filter { index ->
-                    voices[index]?.let { value[AudioChannel.of(it.cue.category)] == 0.0 } == true
-                }.forEach(::cutShort)
-            if (AudioChannel.entries.filter { it != AudioChannel.music }.all { value[it] == 0.0 }) silence()
+            voices.forEachIndexed { index, voice ->
+                if (voice == null) return@forEachIndexed
+                val channel = AudioChannel.of(voice.cue.category)
+                if (value.isAudible(channel)) {
+                    output.setVolume(voice.stream, voice.volume * value.mixedGain(channel))
+                } else {
+                    cutShort(index)
+                }
+            }
+            if (AudioChannel.effectChannels.none(value::isAudible)) silence()
         }
 
     fun play(
@@ -85,19 +132,22 @@ class SoundEffectsPlayer(
         placement: SoundPlacement = SoundPlacement.centered,
     ): Boolean {
         if (closed || suspended) return false
-        val volume = StereoVolume.forCue(cue, placement, settings) ?: return false
+        val channel = AudioChannel.of(cue.category)
+        val own = StereoVolume.beforeSliders(cue, placement, settings) ?: return false
         val choices = output.clips(cue)
         if (choices.isEmpty()) return false
         val (nextVariants, choice) = variants.pick(cue, choices.size, random)
         variants = nextVariants
         val clip = choices[choice]
-        val (nextLimiter, voice) = limiter.request(cue, clip.duration, seconds())
-        if (voice == null) return false
-        val stream = output.play(clip, volume)
+        val bus = buses.getValue(channel)
+        val (nextLimiter, slot) = bus.limiter.request(cue, clip.duration, seconds())
+        if (slot == null) return false
+        val stream = output.play(clip, own * settings.mixedGain(channel))
         if (stream == 0) return false
-        limiter = nextLimiter
-        voices[voice] = Voice(cue, stream)
+        buses = buses + (channel to bus.copy(limiter = nextLimiter))
+        voices[bus.firstVoice + slot] = Voice(cue, stream, own)
         lastStreams[cue] = stream
+        if (cue.ducksMusic) onMusicDuck?.invoke(clip.duration)
         return true
     }
 
@@ -147,10 +197,17 @@ class SoundEffectsPlayer(
     private fun silence() {
         voices.indices.forEach(::cutShort)
         lastStreams.clear()
-        limiter = limiter.reset()
+        buses = buses.mapValues { (_, bus) -> bus.copy(limiter = bus.limiter.reset()) }
     }
 
     companion object {
-        const val VOICE_COUNT = 16
+        /** How soon one sound may start again, and how many of it may sound at once. */
+        private const val COOLDOWN = 0.03
+        private const val MAX_COPIES_OF_ONE_EFFECT = 6
+        private const val EFFECT_VOICES = 12
+        private const val AMBIENCE_VOICES = 4
+        const val VOICE_COUNT = EFFECT_VOICES + AMBIENCE_VOICES
+
+        private fun limiter(voiceCount: Int) = VoiceLimiter<SoundCue>(voiceCount, COOLDOWN, MAX_COPIES_OF_ONE_EFFECT)
     }
 }

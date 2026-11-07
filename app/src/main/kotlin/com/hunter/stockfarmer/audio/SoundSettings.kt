@@ -3,36 +3,52 @@
 package com.hunter.stockfarmer.audio
 
 import com.hunter.stockfarmer.core.feedback.SoundCategory
+import com.hunter.stockfarmer.core.feedback.SoundMix
 
+/**
+ * The volumes the player can set: the master, which every sound follows, the music, the effects (the interface, the farm
+ * at work and the animals) and the farm's surroundings.
+ */
 enum class AudioChannel(
     val preferenceKey: String,
 ) {
+    master("masterVolume"),
     music("musicVolume"),
-    `interface`("menuSoundsVolume"),
-    farm("soundEffectsVolume"),
-    animals("animalSoundsVolume"),
+    effects("effectsVolume"),
     ambience("ambienceVolume"),
     ;
 
     companion object {
+        /** Every channel played through the effects pool. */
+        val effectChannels: List<AudioChannel> = listOf(effects, ambience)
+
         fun of(category: SoundCategory): AudioChannel =
             when (category) {
-                SoundCategory.`interface` -> `interface`
-                SoundCategory.farm -> farm
-                SoundCategory.animals -> animals
+                SoundCategory.`interface`, SoundCategory.farm, SoundCategory.animals -> effects
                 SoundCategory.ambience -> ambience
             }
     }
 }
 
-/** Zero is the off switch. */
+/** Zero is the off switch, for a channel or for the master. */
 @ConsistentCopyVisibility
 data class SoundSettings private constructor(
     private val levels: Map<AudioChannel, Double>,
 ) {
     constructor() : this(AudioChannel.entries.associateWith { 1.0 })
 
+    /** The slider's position, from 0 to 1. */
     operator fun get(channel: AudioChannel): Double = levels.getValue(channel)
+
+    /** The share of full volume the channel's slider leaves, evenly in decibels along the slider. */
+    fun gain(channel: AudioChannel): Double = SoundMix.gain(forSlider = this[channel])
+
+    /** The share of full volume the channel plays at once the master is applied. */
+    fun mixedGain(channel: AudioChannel): Double =
+        if (channel == AudioChannel.master) gain(channel) else gain(channel) * gain(AudioChannel.master)
+
+    /** Whether a kind of sound can be heard at all: a volume of nothing, its own or the master's, turns it off. */
+    fun isAudible(channel: AudioChannel): Boolean = mixedGain(channel) > 0
 
     fun withLevel(
         channel: AudioChannel,

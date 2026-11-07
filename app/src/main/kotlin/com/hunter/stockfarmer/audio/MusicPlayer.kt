@@ -2,6 +2,7 @@ package com.hunter.stockfarmer.audio
 
 import com.hunter.stockfarmer.core.catalog.SeasonalSoundtrack
 import com.hunter.stockfarmer.core.feedback.MusicLoudness
+import com.hunter.stockfarmer.core.feedback.SoundMix
 import com.hunter.stockfarmer.core.model.Playlist
 import com.hunter.stockfarmer.core.rules.NightPulse
 import com.hunter.stockfarmer.core.rules.Season
@@ -42,14 +43,21 @@ class MusicPlayer(
     private var ready = false
     private var closed = false
     private var generation = 0
-    private var level = 1.0
+    private var gain = 1.0
+
+    /** When the fanfare that turned the music down ends, in the caller's seconds, while one is playing. */
+    private var duckEndsAt: Double? = null
 
     var trackName: String? = null
         private set
     var onTrackChange: ((String?) -> Unit)? = null
 
-    private val canPlay: Boolean get() = active && level > 0 && !otherAudio && !closed
-    private val volume: Double get() = if (hushed) 0.0 else level * MusicLoudness.gain(trackName.orEmpty())
+    private val canPlay: Boolean get() = active && gain > 0 && !otherAudio && !closed
+    private val volume: Double get() {
+        if (hushed) return 0.0
+        val duck = if (duckEndsAt == null) 1.0 else SoundMix.musicDuckGain
+        return gain * MusicLoudness.gain(trackName.orEmpty()) * duck
+    }
 
     fun setSeason(requested: Season) {
         val next = if (playlists[requested]?.current == null) Season.spring else requested
@@ -59,10 +67,37 @@ class MusicPlayer(
         resume()
     }
 
-    fun setLevel(value: Double) {
-        level = SoundSettings().withLevel(AudioChannel.music, value)[AudioChannel.music]
+    /**
+     * The share of full volume the Music and Master sliders leave: the soundtrack follows at once, stops when it can't be
+     * heard, and starts again when turned up.
+     */
+    fun setGain(value: Double) {
+        gain = if (value.isFinite()) value.coerceIn(0.0, 1.0) else 0.0
         output.setVolume(volume)
         if (canPlay) resume() else output.pause()
+    }
+
+    /**
+     * Turns the soundtrack down while a fanfare plays, from [now] for [seconds]; a fanfare that starts during another keeps
+     * it down until the later one ends. Returns whether the duck now ends later, so the caller calls [endDuck] then.
+     */
+    fun duck(
+        seconds: Double,
+        now: Double,
+    ): Boolean {
+        val endsAt = now + seconds
+        if (closed || !endsAt.isFinite() || endsAt <= (duckEndsAt ?: Double.NEGATIVE_INFINITY)) return false
+        val wasDucked = duckEndsAt != null
+        duckEndsAt = endsAt
+        if (!wasDucked) output.setVolume(volume, SoundMix.duckFade)
+        return true
+    }
+
+    /** The fanfare is over: the soundtrack comes back up. */
+    fun endDuck() {
+        if (duckEndsAt == null || closed) return
+        duckEndsAt = null
+        output.setVolume(volume, SoundMix.duckFade)
     }
 
     fun setActive(value: Boolean) {

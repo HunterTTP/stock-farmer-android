@@ -125,6 +125,22 @@ class SoundCueTest {
     }
 
     @Test
+    fun `only the fanfares duck the music`() {
+        val fanfares = setOf(SoundCue.questComplete, SoundCue.levelUp, SoundCue.allCropsReady)
+        for (cue in SoundCue.entries) assertEquals(cue in fanfares, cue.ducksMusic, cue.name)
+    }
+
+    @Test
+    fun `the trims set the mix`() {
+        assertEquals(0.0, SoundCue.levelUp.trimDB)
+        assertEquals(-4.0, SoundCue.cowMoo.trimDB)
+        assertEquals(-5.0, SoundCue.plant.trimDB)
+        assertEquals(-5.0, SoundCue.sell.trimDB)
+        assertEquals(-10.0, SoundCue.birdChirp.trimDB)
+        assertEquals(-10.0, SoundCue.openPanel.trimDB)
+    }
+
+    @Test
     fun `every kind of sound has some cue`() {
         for (category in SoundCategory.entries) assertTrue(SoundCue.entries.any { it.category == category })
     }
