@@ -29,7 +29,10 @@ internal class SoundPoolOutput(
     private val pending = mutableMapOf<Int, Pair<SoundCue, EffectClip>>()
     private val loading = mutableMapOf<SoundCue, MutableList<EffectClip>>()
     private val ready = mutableMapOf<SoundCue, List<EffectClip>>()
+    private var catalogLoaded = false
     private var closed = false
+
+    override val isLoaded: Boolean get() = closed || (catalogLoaded && pending.isEmpty())
 
     init {
         pool.setOnLoadCompleteListener { _, id, status ->
@@ -62,6 +65,12 @@ internal class SoundPoolOutput(
                             }.onFailure { Log.w(TAG, "Could not read $path", it) }.getOrNull()
                         }
                 }
+            if (catalog.values.all { it.isEmpty() }) {
+                Log.e(
+                    TAG,
+                    "No sound effects could be read; the game plays without them.",
+                )
+            }
             handler.post { if (!closed) load(catalog) }
             loader.shutdown()
         }
@@ -80,6 +89,7 @@ internal class SoundPoolOutput(
                 }.onFailure { Log.w(TAG, "Could not load ${clip.path}", it) }
             }
         }
+        catalogLoaded = true
     }
 
     override fun clips(cue: SoundCue): List<EffectClip> = ready[cue].orEmpty()

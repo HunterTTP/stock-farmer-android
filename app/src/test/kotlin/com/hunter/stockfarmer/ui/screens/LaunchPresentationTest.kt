@@ -39,11 +39,19 @@ class LaunchPresentationTest {
     @Test
     fun `launch stages follow the loader and then the renderer`() {
         val stage = LaunchSequence.Stage.entries.associateBy { it.name }
-        assertEquals(stage["loadingFarm"], LaunchPresentation.stage(false, true, false, 0))
-        assertEquals(stage["failed"], LaunchPresentation.stage(false, false, false, 0))
-        assertEquals(stage["buildingScene"], LaunchPresentation.stage(true, false, false, 0))
-        assertEquals(stage["loadingTextures"], LaunchPresentation.stage(true, false, true, 0))
-        assertEquals(stage["waitingForFrame"], LaunchPresentation.stage(true, false, true, 1))
-        assertEquals(stage["ready"], LaunchPresentation.stage(true, false, true, 2))
+        assertEquals(stage["loadingFarm"], LaunchPresentation.stage(false, true, false, 0, true))
+        assertEquals(stage["failed"], LaunchPresentation.stage(false, false, false, 0, true))
+        assertEquals(stage["buildingScene"], LaunchPresentation.stage(true, false, false, 0, true))
+        assertEquals(stage["loadingTextures"], LaunchPresentation.stage(true, false, true, 0, true))
+        assertEquals(stage["waitingForFrame"], LaunchPresentation.stage(true, false, true, 1, true))
+        assertEquals(stage["ready"], LaunchPresentation.stage(true, false, true, 2, true))
+    }
+
+    @Test
+    fun `the launch waits for the audio alongside the textures`() {
+        assertEquals(LaunchSequence.Stage.loadingTextures, LaunchPresentation.stage(true, false, true, 1, false))
+        assertEquals(LaunchSequence.Stage.loadingTextures, LaunchPresentation.stage(true, false, true, 2, false))
+        assertEquals(LaunchSequence.Stage.buildingScene, LaunchPresentation.stage(true, false, false, 0, false))
+        assertEquals(LaunchSequence.Stage.failed, LaunchPresentation.stage(false, false, false, 0, false))
     }
 }

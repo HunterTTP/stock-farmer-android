@@ -20,19 +20,21 @@ internal data class LaunchPresentation(
 
         /**
          * The renderer's progress: the scene is built, then a first frame is drawn (textures load while it
-         * draws, so there is no separate preload), then one more frame confirms the farm is on screen.
+         * draws, so there is no separate preload) while the audio gets ready, then one more frame confirms the
+         * farm is on screen.
          */
         fun stage(
             isLoaded: Boolean,
             isLoading: Boolean,
             isSceneBuilt: Boolean,
             framesDrawn: Int,
+            isAudioReady: Boolean,
         ): LaunchSequence.Stage =
             when {
                 !isLoaded && isLoading -> LaunchSequence.Stage.loadingFarm
                 !isLoaded -> LaunchSequence.Stage.failed
                 !isSceneBuilt -> LaunchSequence.Stage.buildingScene
-                framesDrawn < 1 -> LaunchSequence.Stage.loadingTextures
+                framesDrawn < 1 || !isAudioReady -> LaunchSequence.Stage.loadingTextures
                 framesDrawn < 2 -> LaunchSequence.Stage.waitingForFrame
                 else -> LaunchSequence.Stage.ready
             }

@@ -22,6 +22,7 @@ $env:JAVA_HOME = "C:\Program Files\Eclipse Adoptium\jdk-25.0.4.7-hotspot"
 - Cancelling or dismissing a confirmation plays the cancel sound.
 - A sprinkler picked up or removed mid-spray lets its drops and mist finish.
 - The rebalanced mix from iOS: Master, Music, Effects and Ambience sliders in decibels, re-mastered effect clips, quieter rain, and music ducked under the level-up, quest and all-crops-ready fanfares. iOS also limits each bus with a peak limiter; SoundPool exposes no audio session to attach one to, so Android has none.
+- The launch screen waits for the effect clips to decode, the rain loop and the season's first track to open: check a cold start is not noticeably slower, and that the first sounds play without a stutter.
 
 - Camera culling: no pop-in at the screen edges while panning and zooming, and a farm photo still captures everything.
 - Timelapse frames still look right (they are now subsampled to the display size).

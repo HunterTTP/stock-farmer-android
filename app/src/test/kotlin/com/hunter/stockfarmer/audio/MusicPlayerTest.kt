@@ -86,6 +86,36 @@ class MusicPlayerTest {
         assertEquals(1, h.output.loads)
     }
 
+    @Test fun `the season's first track opens ahead of time and plays once the music can`() {
+        val h = Harness()
+        h.player.prepare(Season.fall)
+        assertEquals(1, h.output.loads)
+        assertEquals("Drifting Memories", h.player.trackName)
+        assertFalse(h.player.isPrepared)
+        h.output.ready()
+        assertTrue(h.player.isPrepared)
+        assertFalse(h.output.playing)
+        h.player.setActive(true)
+        assertTrue(h.output.playing)
+        assertEquals(1, h.output.loads)
+    }
+
+    @Test fun `a track that fails to open or a season with none still lets the launch go on`() {
+        val h = Harness()
+        h.player.prepare(Season.spring)
+        h.output.failed()
+        assertTrue(h.player.isPrepared)
+        assertNull(h.player.trackName)
+        val empty = Harness { false }
+        empty.player.prepare(Season.winter)
+        assertTrue(empty.player.isPrepared)
+        assertEquals(0, empty.output.loads)
+        val switched = Harness()
+        switched.player.prepare(Season.fall)
+        switched.player.setSeason(Season.winter)
+        assertTrue(switched.player.isPrepared)
+    }
+
     @Test fun `music follows alphabetical playlist and keeps each season's position`() {
         val h = Harness()
         h.start()

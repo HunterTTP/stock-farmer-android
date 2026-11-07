@@ -60,6 +60,9 @@ data class StereoVolume(
 }
 
 interface EffectOutput : AutoCloseable {
+    /** Whether every clip has been decoded, or given up on and logged. */
+    val isLoaded: Boolean
+
     fun clips(cue: SoundCue): List<EffectClip>
 
     fun play(
@@ -108,6 +111,9 @@ class SoundEffectsPlayer(
     private val lastStreams = mutableMapOf<SoundCue, Int>()
     private var suspended = true
     private var closed = false
+
+    /** Whether the clips are ready to play without a hitch, or have failed to load. */
+    val isLoaded: Boolean get() = closed || output.isLoaded
 
     /** Told how long a sound that turns the music down will play, in seconds, as it starts. */
     var onMusicDuck: ((Double) -> Unit)? = null

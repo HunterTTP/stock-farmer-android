@@ -14,6 +14,9 @@ class AmbientPlayer(
     private var playing = false
     private var closed = false
 
+    /** Whether the rain loop is not still opening: it is ready, failed to open, or was never asked for. */
+    val isPrepared: Boolean get() = closed || !loaded || ready
+
     /** The gain is the share of full volume the Ambience and Master sliders leave. */
     fun update(
         easedRain: Double,
@@ -23,6 +26,11 @@ class AmbientPlayer(
         amount = if (isSnowing || !easedRain.isFinite()) 0.0 else easedRain.coerceIn(0.0, 1.0)
         this.gain = if (gain.isFinite()) gain.coerceIn(0.0, 1.0) else 0.0
         refresh()
+    }
+
+    /** Opens the rain loop now, so the first rain does not wait for it; one that will not open is logged and rain falls silently. */
+    fun prepare() {
+        if (!closed && !loaded) load()
     }
 
     fun setActive(active: Boolean) {
@@ -37,24 +45,7 @@ class AmbientPlayer(
             playing = false
             return
         }
-        if (!loaded) {
-            loaded = true
-            output.load(
-                "audio/Effects/Ambience/steady-rain-loop.ogg",
-                ready = {
-                    if (!closed) {
-                        ready = true
-                        refresh()
-                    }
-                },
-                completed = {},
-                failed = {
-                    loaded = false
-                    ready = false
-                    playing = false
-                },
-            )
-        }
+        if (!loaded) load()
         if (!ready) return
         if (!playing) {
             output.setVolume(0.0)
@@ -62,6 +53,25 @@ class AmbientPlayer(
             playing = true
         }
         output.setVolume(gain * SoundMix.rainTrimGain * amount, 1.0)
+    }
+
+    private fun load() {
+        loaded = true
+        output.load(
+            "audio/Effects/Ambience/steady-rain-loop.ogg",
+            ready = {
+                if (!closed) {
+                    ready = true
+                    refresh()
+                }
+            },
+            completed = {},
+            failed = {
+                loaded = false
+                ready = false
+                playing = false
+            },
+        )
     }
 
     override fun close() {

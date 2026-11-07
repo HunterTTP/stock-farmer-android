@@ -58,7 +58,7 @@ fun GameRoot(
                 }
             }
         }
-        LaunchOverlay(model)
+        LaunchOverlay(model, sound)
     }
 }
 

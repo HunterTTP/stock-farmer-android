@@ -50,6 +50,10 @@ class MusicPlayer(
 
     var trackName: String? = null
         private set
+
+    /** Whether no track is still opening: the one [prepare] opened is ready, failed to open, or there was none. */
+    val isPrepared: Boolean get() = closed || !loaded || ready
+
     var onTrackChange: ((String?) -> Unit)? = null
 
     private val canPlay: Boolean get() = active && gain > 0 && !otherAudio && !closed
@@ -100,6 +104,15 @@ class MusicPlayer(
         output.setVolume(volume, SoundMix.duckFade)
     }
 
+    /**
+     * Opens the track the season will start with ahead of time, so the first play does not stall, whether or not the music
+     * can be heard yet; a track that will not open is left silent.
+     */
+    fun prepare(requested: Season) {
+        setSeason(requested)
+        if (!closed && !loaded) load()
+    }
+
     fun setActive(value: Boolean) {
         active = value
         if (canPlay) resume() else output.pause()
@@ -134,6 +147,10 @@ class MusicPlayer(
             if (ready) output.start()
             return
         }
+        load()
+    }
+
+    private fun load() {
         val track = playlists[season]?.current ?: return
         val token = ++generation
         loaded = true

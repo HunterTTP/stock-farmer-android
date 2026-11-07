@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.hunter.stockfarmer.audio.SoundCenter
 import com.hunter.stockfarmer.core.presentation.LaunchSequence
 import com.hunter.stockfarmer.game.GameViewModel
 import com.hunter.stockfarmer.ui.rememberPolledState
@@ -28,9 +29,15 @@ import com.hunter.stockfarmer.ui.theme.Theme
 private const val RENDERER_POLL_MILLIS = 16L
 private const val FAILED_POLL_MILLIS = 500L
 
-/** The launch screen over the farm: shown while the save loads and the scene builds, and again after a failed load. */
+/**
+ * The launch screen over the farm: shown while the save loads, the scene builds and the audio gets ready, and again after
+ * a failed load.
+ */
 @Composable
-fun BoxScope.LaunchOverlay(model: GameViewModel) {
+fun BoxScope.LaunchOverlay(
+    model: GameViewModel,
+    sound: SoundCenter,
+) {
     val persistence = model.persistenceState
     var launchId by remember { mutableIntStateOf(0) }
     var launching by remember { mutableStateOf(true) }
@@ -43,6 +50,9 @@ fun BoxScope.LaunchOverlay(model: GameViewModel) {
     if (launching || !persistence.isReady) {
         key(launchId) {
             var choosingFarm by remember { mutableStateOf(false) }
+            LaunchedEffect(persistence.isReady) {
+                if (persistence.isReady) sound.prepareAudio(model.session.read { it.season })
+            }
             // A failed load has no scene to wait for, so it only looks now and then.
             val failedToLoad = !persistence.isReady && !persistence.isLoading
             val rendered by rememberPolledState(
@@ -50,15 +60,16 @@ fun BoxScope.LaunchOverlay(model: GameViewModel) {
                 if (failedToLoad) FAILED_POLL_MILLIS else RENDERER_POLL_MILLIS,
             ) {
                 val view = model.session.view
-                view.isSceneBuilt to view.framesDrawn.coerceAtMost(2)
+                Triple(view.isSceneBuilt, view.framesDrawn.coerceAtMost(2), sound.isAudioReady)
             }
-            val (isSceneBuilt, framesDrawn) = rendered
+            val (isSceneBuilt, framesDrawn, isAudioReady) = rendered
             val stage =
                 LaunchPresentation.stage(
                     persistence.isReady,
                     persistence.isLoading,
                     isSceneBuilt,
                     framesDrawn,
+                    isAudioReady,
                 )
             LaunchScreen(
                 stage = stage,

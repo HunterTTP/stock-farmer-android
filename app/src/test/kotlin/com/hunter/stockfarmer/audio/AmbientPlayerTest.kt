@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test
 class AmbientPlayerTest {
     private class Output : MusicOutput {
         var ready: () -> Unit = {}
+        var failed: () -> Unit = {}
         var playing = false
         var loads = 0
         var volume = 0.0
@@ -22,6 +23,7 @@ class AmbientPlayerTest {
         ) {
             assertEquals("audio/Effects/Ambience/steady-rain-loop.ogg", path)
             this.ready = ready
+            this.failed = failed
             loads++
         }
 
@@ -65,6 +67,28 @@ class AmbientPlayerTest {
         player.update(0.6, false, 0.8)
         assertTrue(output.playing)
         assertEquals(1, output.loads)
+    }
+
+    @Test fun `the rain loop opens ahead of the first rain and is ready once it opens or fails`() {
+        val output = Output()
+        val player = AmbientPlayer(output)
+        player.prepare()
+        player.prepare()
+        assertEquals(1, output.loads)
+        assertFalse(player.isPrepared)
+        output.ready()
+        assertTrue(player.isPrepared)
+        assertFalse(output.playing)
+        player.setActive(true)
+        player.update(1.0, false, 1.0)
+        assertTrue(output.playing)
+        assertEquals(1, output.loads)
+
+        val failing = Output()
+        val silent = AmbientPlayer(failing)
+        silent.prepare()
+        failing.failed()
+        assertTrue(silent.isPrepared)
     }
 
     @Test fun `snow mute pause and close suppress rain including late preparation`() {

@@ -50,6 +50,7 @@ class SoundCenter(
     private var easedRain = 0.0
     private var snowing = false
     private val endDuck = Runnable { music.endDuck() }
+    private var audioRequested = false
 
     val isActive: Boolean get() = active && !closed
 
@@ -124,6 +125,20 @@ class SoundCenter(
         music.updateNight(minuteOfDay, chimeForCurrentNight)
         music.setSeason(season)
     }
+
+    /**
+     * Opens the rain loop and the first track of the farm's season ahead of time, so neither stalls the first time it plays;
+     * [isAudioReady] says when they and the effects are ready, or have failed to load.
+     */
+    fun prepareAudio(season: Season) {
+        if (closed) return
+        audioRequested = true
+        music.prepare(season)
+        ambience.prepare()
+    }
+
+    val isAudioReady: Boolean get() =
+        closed || (audioRequested && effects.isLoaded && ambience.isPrepared && music.isPrepared)
 
     fun skipMusic() {
         if (!closed) music.skip()

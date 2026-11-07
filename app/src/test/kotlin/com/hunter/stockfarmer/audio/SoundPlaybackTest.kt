@@ -21,6 +21,7 @@ class SoundPlaybackTest {
         val volumes = mutableMapOf<Int, StereoVolume>()
         var available = true
         var succeeds = true
+        override var isLoaded = false
 
         override fun clips(cue: SoundCue): List<EffectClip> =
             if (available) listOf(EffectClip(1, 10.0), EffectClip(2, 10.0)) else emptyList()
@@ -127,6 +128,16 @@ class SoundPlaybackTest {
         val expected = SoundCue.plant.trimGain * settings.mixedGain(AudioChannel.effects)
         assertEquals(expected, volume.left.toDouble(), 1e-6)
         assertEquals(expected, volume.right.toDouble(), 1e-6)
+    }
+
+    @Test fun `the effects are ready once every clip has loaded or failed, or they are closed`() {
+        val h = Harness()
+        assertFalse(h.player.isLoaded)
+        h.output.isLoaded = true
+        assertTrue(h.player.isLoaded)
+        h.output.isLoaded = false
+        h.player.close()
+        assertTrue(h.player.isLoaded)
     }
 
     @Test fun `suspended and unloaded effects are dropped without replay on resume`() {
